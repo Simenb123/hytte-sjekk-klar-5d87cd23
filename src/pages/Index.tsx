@@ -1,45 +1,16 @@
 
-import React from 'react';
-import { ChecklistProvider, useChecklist } from '../context/ChecklistContext';
-import MainMenu from '../components/MainMenu';
-import ArrivalChecklist from '../components/ArrivalChecklist';
-import DepartureAreas from '../components/DepartureAreas';
-import AreaChecklist from '../components/AreaChecklist';
-
-const HytteApp: React.FC = () => {
-  const { currentView, selectedArea } = useChecklist();
-
-  // Determine which view to show
-  const renderContent = () => {
-    if (selectedArea) {
-      return <AreaChecklist />;
-    }
-
-    switch (currentView) {
-      case 'arrival':
-        return <ArrivalChecklist />;
-      case 'departure':
-        return <DepartureAreas />;
-      default:
-        return <MainMenu />;
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-lg mx-auto p-4">
-        {renderContent()}
-      </div>
-    </div>
-  );
-};
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Index: React.FC = () => {
-  return (
-    <ChecklistProvider>
-      <HytteApp />
-    </ChecklistProvider>
-  );
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect to dashboard
+    navigate('/');
+  }, [navigate]);
+
+  return null; // This component just redirects, so no need to render anything
 };
 
 export default Index;
