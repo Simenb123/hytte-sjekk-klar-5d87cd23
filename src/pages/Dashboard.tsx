@@ -1,74 +1,65 @@
+import React from 'react';
+import { CheckSquare, CloudSun, Calendar, Layers, LogIn, User } from 'lucide-react';
+import AppHeader from '@/components/Header';
+import DashboardCard from '@/components/DashboardCard';
+import { useAuth } from '@/context/AuthContext';
 
-import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import DashboardCard from '../components/DashboardCard';
-import { ClipboardCheck, SunMedium, Calendar, AppWindow, LogIn } from 'lucide-react';
-import AppHeader from '../components/AppHeader';
-import { useAuth } from '../context/AuthContext';
-
-const Dashboard: React.FC = () => {
+const Dashboard = () => {
   const { user } = useAuth();
   
-  useEffect(() => {
-    // Logging for debugging purposes
-    console.log('[Dashboard] Rendering with user:', user?.id);
-  }, [user]);
-
+  console.log('[Dashboard] Rendering with user:', user?.id);
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader title="Hytte Dashboard" />
       
-      <div className="max-w-lg mx-auto p-4 pt-24">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Applikasjoner</h2>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <DashboardCard 
-              to="/checklist"
-              title="Sjekklister" 
-              description="Ankomst og avreise" 
-              icon={<ClipboardCheck size={24} />} 
-              color="bg-blue-500"
-            />
-            
-            <DashboardCard 
-              to="/weather"
-              title="Været" 
-              description="Lokal værmelding" 
-              icon={<SunMedium size={24} />} 
-              color="bg-orange-500"
-            />
-            
-            <DashboardCard 
-              to="/calendar"
-              title="Kalender" 
-              description="Hyttereservasjoner" 
-              icon={<Calendar size={24} />} 
-              color="bg-green-500"
-            />
-            
-            <DashboardCard 
-              to="/other-apps"
-              title="Andre apper" 
-              description="Flere smarte verktøy" 
-              icon={<AppWindow size={24} />} 
-              color="bg-purple-500"
-            />
-          </div>
-        </div>
-        
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Konto</h2>
-          
-          <DashboardCard 
-            to="/auth"
-            title={user ? "Administrer konto" : "Logg inn"} 
-            description={user ? "Endre innstillinger" : "Eller opprett ny konto"} 
-            icon={<LogIn size={24} />} 
-            color="bg-gray-700"
+      <main className="container max-w-5xl mx-auto px-4 py-8 pt-28">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <DashboardCard
+            title="Sjekklister"
+            description="Ankomst- og avreisesjekk"
+            icon={<CheckSquare className="h-6 w-6" />}
+            linkTo="/checklist"
           />
+          
+          <DashboardCard
+            title="Værmelding"
+            description="Lokalt vær og varsler"
+            icon={<CloudSun className="h-6 w-6" />}
+            linkTo="/weather"
+          />
+          
+          <DashboardCard
+            title="Kalender"
+            description="Booking og planlegging"
+            icon={<Calendar className="h-6 w-6" />}
+            linkTo="/calendar"
+          />
+          
+          <DashboardCard
+            title="Min Profil"
+            description="Se og endre profilen din"
+            icon={<User className="h-6 w-6" />}
+            linkTo="/profile"
+          />
+          
+          <DashboardCard
+            title="Andre tjenester"
+            description="Nyttige ressurser"
+            icon={<Layers className="h-6 w-6" />}
+            linkTo="/other-apps"
+          />
+          
+          {!user && (
+            <DashboardCard
+              title="Logg inn"
+              description="Få tilgang til alle funksjoner"
+              icon={<LogIn className="h-6 w-6" />}
+              linkTo="/auth"
+            />
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

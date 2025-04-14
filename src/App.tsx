@@ -12,6 +12,7 @@ import WeatherApp from "./pages/WeatherApp";
 import CalendarApp from "./pages/CalendarApp";
 import OtherApps from "./pages/OtherApps";
 import AuthPage from "./pages/AuthPage";
+import ProfilePage from "./pages/ProfilePage";
 import { ChecklistProvider } from "./context/ChecklistContext";
 import { AuthProvider } from "./context/AuthContext";
 import { StrictMode } from "react";
@@ -41,6 +42,11 @@ const App = () => {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
                 <Route path="/checklist" element={
                   <ProtectedRoute>
                     <ChecklistApp />
