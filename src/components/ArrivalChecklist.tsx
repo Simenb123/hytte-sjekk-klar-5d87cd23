@@ -31,7 +31,7 @@ const ArrivalChecklist: React.FC = () => {
   }
   
   return (
-    <div className="animate-fade-in">
+    <div className="relative z-10"> {/* Remove fade-in animation that might cause issues */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
         {arrivals && arrivals.length > 0 ? (
           arrivals.map((item) => (

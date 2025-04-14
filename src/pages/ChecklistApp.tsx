@@ -136,7 +136,7 @@ const ChecklistApp = () => {
         onBackClick={handleBack}
       />
       
-      <div className="max-w-lg mx-auto p-4 pt-28"> {/* Increase padding top to avoid content being under header */}
+      <div className="max-w-lg mx-auto p-4 pt-28 relative z-10"> {/* Increase z-index and padding at top */}
         {isLoaded ? renderContent() : (
           <div className="flex justify-center items-center h-64">
             <p className="text-gray-500">Laster innhold...</p>
