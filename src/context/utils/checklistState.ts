@@ -30,6 +30,7 @@ export const getInitialState = (): ChecklistState => {
       departureAreas,
       currentView,
       selectedArea,
+      isLoading: true, // Default to true when initializing
     };
   } catch (error) {
     console.error('[ChecklistContext] Error initializing state, using defaults', error);
@@ -38,6 +39,7 @@ export const getInitialState = (): ChecklistState => {
       departureAreas: initialDepartureAreas,
       currentView: null,
       selectedArea: null,
+      isLoading: true, // Default to true in error case
     };
   }
 };

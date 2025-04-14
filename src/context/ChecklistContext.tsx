@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode, useReducer, useEffect } from 'react';
 import { ChecklistContextType, ChecklistState, ChecklistAction } from './types/checklist.types';
 import { ChecklistType, ChecklistArea } from '../models/checklist';
@@ -70,6 +69,10 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
   
   const isAllDeparturesCompleted = () => {
     return state.departureAreas.every((area) => area.isCompleted);
+  };
+  
+  const setLoading = (isLoading: boolean) => {
+    dispatch({ type: 'SET_LOADING', payload: isLoading });
   };
   
   const contextValue: ChecklistContextType = {

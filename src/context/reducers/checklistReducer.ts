@@ -1,4 +1,3 @@
-
 import { ChecklistState, ChecklistAction } from '../types/checklist.types';
 import { saveToStorage } from '../../utils/storage.utils';
 import { toast } from 'sonner';
@@ -59,6 +58,9 @@ export const checklistReducer = (state: ChecklistState, action: ChecklistAction)
       
       saveToStorage('hytteDepartures', newDepartureAreas);
       return { ...state, departureAreas: newDepartureAreas };
+      
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
       
     case 'RESET_CHECKLISTS':
       try {
