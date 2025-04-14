@@ -6,6 +6,7 @@ export interface ChecklistContextType {
   departureAreas: ChecklistArea[];
   currentView: ChecklistType | null;
   selectedArea: ChecklistArea | null;
+  isLoading: boolean; // Added this property
   setCurrentView: (view: ChecklistType | null) => void;
   selectArea: (area: ChecklistArea | null) => void;
   toggleArrivalItem: (id: string) => void;

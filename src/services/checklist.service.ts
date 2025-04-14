@@ -31,7 +31,7 @@ export const fetchChecklistItems = async (type: 'arrival' | 'departure'): Promis
     throw error;
   }
 
-  return data || [];
+  return data as DbChecklistItem[] || [];
 };
 
 // Fetch completion logs for a user

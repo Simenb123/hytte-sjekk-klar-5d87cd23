@@ -23,55 +23,50 @@ const Dashboard: React.FC = () => {
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Applikasjoner</h2>
           
           <div className="grid grid-cols-2 gap-4">
-            <Link to="/checklist">
-              <DashboardCard 
-                title="Sjekklister" 
-                description="Ankomst og avreise" 
-                icon={<ClipboardCheck size={24} />} 
-                color="bg-blue-500"
-              />
-            </Link>
+            <DashboardCard 
+              to="/checklist"
+              title="Sjekklister" 
+              description="Ankomst og avreise" 
+              icon={<ClipboardCheck size={24} />} 
+              color="bg-blue-500"
+            />
             
-            <Link to="/weather">
-              <DashboardCard 
-                title="Været" 
-                description="Lokal værmelding" 
-                icon={<SunMedium size={24} />} 
-                color="bg-orange-500"
-              />
-            </Link>
+            <DashboardCard 
+              to="/weather"
+              title="Været" 
+              description="Lokal værmelding" 
+              icon={<SunMedium size={24} />} 
+              color="bg-orange-500"
+            />
             
-            <Link to="/calendar">
-              <DashboardCard 
-                title="Kalender" 
-                description="Hyttereservasjoner" 
-                icon={<Calendar size={24} />} 
-                color="bg-green-500"
-              />
-            </Link>
+            <DashboardCard 
+              to="/calendar"
+              title="Kalender" 
+              description="Hyttereservasjoner" 
+              icon={<Calendar size={24} />} 
+              color="bg-green-500"
+            />
             
-            <Link to="/other-apps">
-              <DashboardCard 
-                title="Andre apper" 
-                description="Flere smarte verktøy" 
-                icon={<AppWindow size={24} />} 
-                color="bg-purple-500"
-              />
-            </Link>
+            <DashboardCard 
+              to="/other-apps"
+              title="Andre apper" 
+              description="Flere smarte verktøy" 
+              icon={<AppWindow size={24} />} 
+              color="bg-purple-500"
+            />
           </div>
         </div>
         
         <div className="mt-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Konto</h2>
           
-          <Link to="/auth">
-            <DashboardCard 
-              title={user ? "Administrer konto" : "Logg inn"} 
-              description={user ? "Endre innstillinger" : "Eller opprett ny konto"} 
-              icon={<LogIn size={24} />} 
-              color="bg-gray-700"
-            />
-          </Link>
+          <DashboardCard 
+            to="/auth"
+            title={user ? "Administrer konto" : "Logg inn"} 
+            description={user ? "Endre innstillinger" : "Eller opprett ny konto"} 
+            icon={<LogIn size={24} />} 
+            color="bg-gray-700"
+          />
         </div>
       </div>
     </div>
