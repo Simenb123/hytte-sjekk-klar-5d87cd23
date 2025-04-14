@@ -21,46 +21,38 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   // Only try to use ChecklistContext if we're on the checklist page
   const isChecklistPage = location.pathname.includes('/checklist');
   
-  // Safe access to checklist functions
-  const handleChecklistAction = (action: 'back' | 'home') => {
+  // Use context conditionally based on path
+  let checklistContext;
+  if (isChecklistPage) {
     try {
-      const { setCurrentView, selectArea, currentView, selectedArea } = useChecklist();
-      
-      if (action === 'back') {
-        if (selectedArea) {
-          // If we're in an area, go back to departure view
-          selectArea(null);
-        } else if (currentView) {
-          // If we're in a view but not in an area, go back to main menu
-          setCurrentView(null);
-        }
-      } else if (action === 'home') {
-        // Reset checklist state
-        setCurrentView(null);
-        selectArea(null);
-      }
+      checklistContext = useChecklist();
     } catch (error) {
-      // If context is not available, default to regular navigation
-      if (action === 'back') {
-        navigate(-1);
-      } else if (action === 'home') {
-        navigate('/');
-      }
+      // Silent catch - we'll handle navigation fallbacks below
     }
-  };
+  }
 
   const handleBack = () => {
-    if (isChecklistPage) {
-      handleChecklistAction('back');
+    if (isChecklistPage && checklistContext) {
+      if (checklistContext.selectedArea) {
+        // If we're in an area, go back to departure view
+        checklistContext.selectArea(null);
+      } else if (checklistContext.currentView) {
+        // If we're in a view but not in an area, go back to main menu
+        checklistContext.setCurrentView(null);
+      } else {
+        navigate(-1);
+      }
     } else {
-      // If we're not on the checklist page, just use regular navigation
+      // If we're not on the checklist page or context is not available, use regular navigation
       navigate(-1);
     }
   };
 
   const handleHome = () => {
-    if (isChecklistPage) {
-      handleChecklistAction('home');
+    if (isChecklistPage && checklistContext) {
+      // Reset checklist state
+      checklistContext.setCurrentView(null);
+      checklistContext.selectArea(null);
     } else {
       // Navigate to dashboard
       navigate('/');
