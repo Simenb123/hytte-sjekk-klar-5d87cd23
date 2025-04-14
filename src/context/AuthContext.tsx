@@ -8,7 +8,15 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (
+    email: string, 
+    password: string, 
+    metadata?: { 
+      first_name?: string, 
+      last_name?: string, 
+      phone?: string 
+    }
+  ) => Promise<void>;
   signOut: () => Promise<void>;
   isLoading: boolean;
 }
@@ -75,16 +83,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    metadata?: { 
+      first_name?: string, 
+      last_name?: string, 
+      phone?: string 
+    }
+  ) => {
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({
+        email, 
+        password,
+        options: {
+          data: {
+            first_name: metadata?.first_name,
+            last_name: metadata?.last_name,
+            phone: metadata?.phone
+          }
+        }
+      });
       
       if (error) {
         toast.error(error.message);
         throw error;
-      } else {
-        toast.success('Konto opprettet! Sjekk e-posten din for bekreftelse.');
-      }
+      } 
     } catch (error: any) {
       console.error('[AuthContext] Sign up error:', error);
       throw error;

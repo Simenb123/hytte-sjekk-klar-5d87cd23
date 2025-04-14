@@ -8,10 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
 
 const AuthPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -28,9 +32,9 @@ const AuthPage: React.FC = () => {
     
     try {
       await signIn(email, password);
-      // User will be redirected by the useEffect above
     } catch (error) {
       console.error('Sign in error:', error);
+      toast.error('Kunne ikke logge inn. Sjekk e-post og passord.');
     } finally {
       setIsLoading(false);
     }
@@ -38,13 +42,26 @@ const AuthPage: React.FC = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate inputs
+    if (!firstName || !lastName || !phone) {
+      toast.error('Vennligst fyll ut alle felt');
+      return;
+    }
+
     setIsLoading(true);
     
     try {
-      await signUp(email, password);
-      // Feedback is handled in the Auth context
+      await signUp(email, password, {
+        first_name: firstName,
+        last_name: lastName,
+        phone: phone
+      });
+      
+      toast.success('Konto opprettet! Du kan nå logge inn.');
     } catch (error) {
       console.error('Sign up error:', error);
+      toast.error('Kunne ikke registrere konto');
     } finally {
       setIsLoading(false);
     }
@@ -104,6 +121,43 @@ const AuthPage: React.FC = () => {
               <h2 className="text-2xl font-semibold mb-6 text-center">Registrer ny konto</h2>
               
               <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="register-first-name">Fornavn</Label>
+                    <Input
+                      id="register-first-name"
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="Ola"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-last-name">Etternavn</Label>
+                    <Input
+                      id="register-last-name"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="Nordmann"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="register-phone">Telefon</Label>
+                  <Input
+                    id="register-phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="xxx xx xxx"
+                    required
+                  />
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="register-email">E-post</Label>
                   <Input
