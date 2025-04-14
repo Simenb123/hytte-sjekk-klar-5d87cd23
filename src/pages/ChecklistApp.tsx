@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import MainMenu from '../components/MainMenu';
 import ArrivalChecklist from '../components/ArrivalChecklist';
@@ -65,7 +65,7 @@ const ChecklistApp = () => {
     }, 100);
     
     return () => clearTimeout(timer);
-  }, [currentView, selectedArea]);
+  }, []);
   
   // Log explicit re-renders to debug when the component updates
   console.log('[ChecklistApp] Rendering with state:', { 
@@ -74,8 +74,8 @@ const ChecklistApp = () => {
     isLoaded
   });
 
-  // Safely handle back navigation
-  const handleBack = () => {
+  // Memoize the back handler to prevent recreation on every render
+  const handleBack = useCallback(() => {
     console.log('[ChecklistApp] handleBack called:', { 
       currentView, 
       selectedAreaId: selectedArea?.id 
@@ -86,10 +86,10 @@ const ChecklistApp = () => {
     } else if (currentView) {
       setCurrentView(null);
     }
-  };
+  }, [currentView, selectedArea, selectArea, setCurrentView]);
 
   // Determine which view to show based on current state
-  const renderContent = () => {
+  const renderContent = useCallback(() => {
     console.log('[ChecklistApp] Rendering content for:', { 
       currentView, 
       selectedAreaId: selectedArea?.id 
@@ -109,10 +109,10 @@ const ChecklistApp = () => {
       default:
         return <ErrorBoundary><MainMenu /></ErrorBoundary>;
     }
-  };
+  }, [currentView, selectedArea]);
 
   // Determine the header title based on current view and selected area
-  const getHeaderTitle = () => {
+  const getHeaderTitle = useCallback(() => {
     if (selectedArea) {
       return selectedArea.name;
     }
@@ -125,7 +125,7 @@ const ChecklistApp = () => {
       default:
         return 'Hytte-sjekk-klar';
     }
-  };
+  }, [currentView, selectedArea]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -136,7 +136,7 @@ const ChecklistApp = () => {
         onBackClick={handleBack}
       />
       
-      <div className="max-w-lg mx-auto p-4 pt-20">
+      <div className="max-w-lg mx-auto p-4 pt-24">
         {isLoaded ? renderContent() : (
           <div className="flex justify-center items-center h-64">
             <p className="text-gray-500">Laster innhold...</p>

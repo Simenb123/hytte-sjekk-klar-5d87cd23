@@ -19,7 +19,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   const navigate = useNavigate();
 
   const handleBack = (e: React.MouseEvent) => {
-    e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
     console.log('[AppHeader] Back button clicked');
     if (onBackClick) {
       onBackClick();
@@ -28,7 +28,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     }
   };
 
-  const handleHome = () => {
+  const handleHome = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
+    console.log('[AppHeader] Home button clicked');
     navigate('/');
   };
 
@@ -44,6 +46,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
                 onClick={handleBack}
                 className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center"
                 aria-label="Tilbake"
+                type="button" // Explicitly set type to prevent form submission
               >
                 <ArrowLeft size={24} />
               </button>
@@ -56,6 +59,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               onClick={handleHome}
               className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center"
               aria-label="Hjem"
+              type="button" // Explicitly set type to prevent form submission
             >
               <Home size={24} />
             </button>
