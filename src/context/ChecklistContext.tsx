@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, ReactNode, useReducer, useEffect } from 'react';
-import { ChecklistContextType } from './types/checklist.types';
+import { ChecklistContextType, ChecklistState, ChecklistAction } from './types/checklist.types';
+import { ChecklistType, ChecklistArea } from '../models/checklist';
 import { checklistReducer } from './reducers/checklistReducer';
 import { getInitialState } from './utils/checklistState';
 import { saveToStorage } from '../utils/storage.utils';
