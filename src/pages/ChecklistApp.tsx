@@ -131,17 +131,19 @@ const ChecklistApp = () => {
     <div className="min-h-screen bg-gray-50">
       <Header 
         title={getHeaderTitle()} 
-        showBackButton={true} // Always show back button
+        showBackButton={!!currentView || !!selectedArea}
         showHomeButton={true}
         onBackClick={handleBack}
       />
       
-      <div className="max-w-lg mx-auto p-4 pt-28 relative z-10"> {/* Increase z-index and padding at top */}
-        {isLoaded ? renderContent() : (
-          <div className="flex justify-center items-center h-64">
-            <p className="text-gray-500">Laster innhold...</p>
-          </div>
-        )}
+      <div className="max-w-lg mx-auto p-4 pt-28 relative z-20">
+        <div className="bg-gray-50 relative z-20">
+          {isLoaded ? renderContent() : (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-gray-500">Laster innhold...</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

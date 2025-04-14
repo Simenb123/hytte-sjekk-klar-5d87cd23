@@ -22,7 +22,7 @@ const DepartureAreas: React.FC = () => {
   };
   
   return (
-    <div className="relative z-10"> {/* Remove fade-in animation that might cause issues */}
+    <div className="relative z-20">
       <div className="mb-4">
         <h3 className="text-lg font-medium mb-3">Velg område</h3>
         

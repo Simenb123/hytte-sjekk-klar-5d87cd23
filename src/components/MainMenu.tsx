@@ -28,7 +28,7 @@ const MainMenu: React.FC = () => {
   console.log('[MainMenu] rendering');
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] animate-fade-in">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] relative z-20">
       <Logo />
       
       <div className="w-full max-w-xs space-y-4 mt-4">
@@ -37,7 +37,7 @@ const MainMenu: React.FC = () => {
             isAllArrivalsCompleted() 
               ? 'bg-green-600 hover:bg-green-700' 
               : 'bg-blue-600 hover:bg-blue-700'
-          } text-white py-3 px-4 rounded-lg`}
+          } text-white py-3 px-4 rounded-lg shadow-md`}
           onClick={handleArrivalClick}
         >
           <LogIn className="mr-2" size={20} />
@@ -49,7 +49,7 @@ const MainMenu: React.FC = () => {
             isAllDeparturesCompleted() 
               ? 'bg-green-600 hover:bg-green-700' 
               : 'bg-blue-600 hover:bg-blue-700'
-          } text-white py-3 px-4 rounded-lg`}
+          } text-white py-3 px-4 rounded-lg shadow-md`}
           onClick={handleDepartureClick}
         >
           <LogOut className="mr-2" size={20} />
