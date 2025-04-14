@@ -9,7 +9,88 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      areas: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      checklist_items: {
+        Row: {
+          area_id: string | null
+          created_at: string
+          id: string
+          text: string
+          type: string
+        }
+        Insert: {
+          area_id?: string | null
+          created_at?: string
+          id?: string
+          text: string
+          type: string
+        }
+        Update: {
+          area_id?: string | null
+          created_at?: string
+          id?: string
+          text?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_area"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      completion_logs: {
+        Row: {
+          completed_at: string
+          id: string
+          is_completed: boolean
+          item_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          is_completed?: boolean
+          item_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          is_completed?: boolean
+          item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "completion_logs_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

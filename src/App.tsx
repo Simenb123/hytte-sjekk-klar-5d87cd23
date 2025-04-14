@@ -11,8 +11,11 @@ import ChecklistApp from "./pages/ChecklistApp";
 import WeatherApp from "./pages/WeatherApp";
 import CalendarApp from "./pages/CalendarApp";
 import OtherApps from "./pages/OtherApps";
+import AuthPage from "./pages/AuthPage";
 import { ChecklistProvider } from "./context/ChecklistContext";
+import { AuthProvider } from "./context/AuthContext";
 import { StrictMode } from "react";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Create a stable QueryClient that won't change between renders
 const queryClient = new QueryClient({
@@ -32,19 +35,26 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner position="top-center" closeButton />
-        <ChecklistProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/checklist" element={<ChecklistApp />} />
-              <Route path="/weather" element={<WeatherApp />} />
-              <Route path="/calendar" element={<CalendarApp />} />
-              <Route path="/other-apps" element={<OtherApps />} />
-              {/* Redirect to dashboard if no route matches */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </ChecklistProvider>
+        <AuthProvider>
+          <ChecklistProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/checklist" element={
+                  <ProtectedRoute>
+                    <ChecklistApp />
+                  </ProtectedRoute>
+                } />
+                <Route path="/weather" element={<WeatherApp />} />
+                <Route path="/calendar" element={<CalendarApp />} />
+                <Route path="/other-apps" element={<OtherApps />} />
+                {/* Redirect to dashboard if no route matches */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </BrowserRouter>
+          </ChecklistProvider>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

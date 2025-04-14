@@ -1,11 +1,14 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
+import { useAuth } from '../context/AuthContext';
 import MainMenu from '../components/MainMenu';
 import ArrivalChecklist from '../components/ArrivalChecklist';
 import DepartureAreas from '../components/DepartureAreas';
 import AreaChecklist from '../components/AreaChecklist';
 import Header from '../components/Header';
+import { Button } from '../components/ui/button';
+import { LogOut } from 'lucide-react';
 
 // Simple error boundary to help debug rendering issues
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
@@ -47,21 +50,25 @@ const ChecklistApp = () => {
     currentView, 
     selectedArea, 
     setCurrentView, 
-    selectArea 
+    selectArea,
+    isLoading
   } = useChecklist();
   
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { user, signOut } = useAuth();
+  
+  const [isContentLoaded, setIsContentLoaded] = useState(false);
   
   // Log mounting and state
   useEffect(() => {
     console.log('[ChecklistApp] Component mounted with', { 
       currentView, 
-      selectedAreaId: selectedArea?.id 
+      selectedAreaId: selectedArea?.id,
+      userId: user?.id
     });
     
     // Mark as loaded after a small delay to ensure UI is ready
     const timer = setTimeout(() => {
-      setIsLoaded(true);
+      setIsContentLoaded(true);
     }, 100);
     
     return () => clearTimeout(timer);
@@ -71,7 +78,9 @@ const ChecklistApp = () => {
   console.log('[ChecklistApp] Rendering with state:', { 
     currentView, 
     selectedAreaId: selectedArea?.id,
-    isLoaded
+    isContentLoaded,
+    isLoading,
+    userId: user?.id
   });
 
   // Memoize the back handler to prevent recreation on every render
@@ -90,6 +99,14 @@ const ChecklistApp = () => {
 
   // Determine which view to show based on current state
   const renderContent = useCallback(() => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <p className="text-gray-500">Laster sjekklister...</p>
+        </div>
+      );
+    }
+    
     console.log('[ChecklistApp] Rendering content for:', { 
       currentView, 
       selectedAreaId: selectedArea?.id 
@@ -109,7 +126,7 @@ const ChecklistApp = () => {
       default:
         return <ErrorBoundary><MainMenu /></ErrorBoundary>;
     }
-  }, [currentView, selectedArea]);
+  }, [currentView, selectedArea, isLoading]);
 
   // Determine the header title based on current view and selected area
   const getHeaderTitle = useCallback(() => {
@@ -134,11 +151,22 @@ const ChecklistApp = () => {
         showBackButton={!!currentView || !!selectedArea}
         showHomeButton={true}
         onBackClick={handleBack}
+        rightContent={
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={signOut} 
+            className="text-gray-500"
+            title="Logg ut"
+          >
+            <LogOut size={20} />
+          </Button>
+        }
       />
       
       <div className="max-w-lg mx-auto p-4 pt-28 relative z-20">
         <div className="bg-gray-50 relative z-20">
-          {isLoaded ? renderContent() : (
+          {isContentLoaded ? renderContent() : (
             <div className="flex justify-center items-center h-64">
               <p className="text-gray-500">Laster innhold...</p>
             </div>

@@ -1,60 +1,91 @@
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { ChecklistItem, ChecklistArea, ChecklistType, initialArrivals, initialDepartureAreas } from '../models/checklist';
+import { ChecklistItem, ChecklistArea, ChecklistType } from '../models/checklist';
 import { loadFromStorage, saveToStorage } from '../utils/storage.utils';
+import { useAuth } from '../context/AuthContext';
+import { 
+  getArrivalItemsWithStatus, 
+  getDepartureAreasWithItems, 
+  logItemCompletion 
+} from '../services/checklist.service';
+import { AreaWithItems, ChecklistItemWithStatus } from '../types/database.types';
 
 export const useChecklistState = () => {
+  const { user } = useAuth();
   const isInitialMount = useRef(true);
   
-  const [arrivals, setArrivals] = useState<ChecklistItem[]>(() => {
-    try {
-      const loaded = loadFromStorage('hytteArrivals', initialArrivals);
-      console.log('[useChecklistState] Loaded arrivals:', loaded.length);
-      return loaded;
-    } catch (error) {
-      console.error('[useChecklistState] Failed to load arrivals, using initial data:', error);
-      return initialArrivals;
-    }
-  });
-  
-  const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>(() => {
-    try {
-      const loaded = loadFromStorage('hytteDepartures', initialDepartureAreas);
-      console.log('[useChecklistState] Loaded departure areas:', loaded.length);
-      return loaded;
-    } catch (error) {
-      console.error('[useChecklistState] Failed to load departure areas, using initial data:', error);
-      return initialDepartureAreas;
-    }
-  });
+  const [arrivals, setArrivals] = useState<ChecklistItem[]>([]);
+  const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>([]);
   
   const [currentView, setCurrentViewState] = useState<ChecklistType | null>(() => {
     try {
-      const view = loadFromStorage('hytteCurrentView', null);
-      console.log('[useChecklistState] Loaded current view:', view);
-      return view;
+      return loadFromStorage('hytteCurrentView', null);
     } catch (error) {
       console.error('[useChecklistState] Failed to load current view, using null:', error);
       return null;
     }
   });
   
-  const [selectedArea, setSelectedAreaState] = useState<ChecklistArea | null>(() => {
-    try {
-      const savedAreaId = localStorage.getItem('hytteSelectedAreaId');
-      console.log('[useChecklistState] Loaded selected area ID:', savedAreaId);
+  const [selectedArea, setSelectedAreaState] = useState<ChecklistArea | null>(null);
+  
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadChecklists = async () => {
+      if (!user) return;
       
-      if (!savedAreaId) return null;
-      
-      const areas = loadFromStorage('hytteDepartures', initialDepartureAreas);
-      const area = areas.find(area => area.id === savedAreaId) || null;
-      console.log('[useChecklistState] Found area object:', area?.id);
-      return area;
-    } catch (error) {
-      console.error('[useChecklistState] Error loading selected area from localStorage', error);
-      return null;
-    }
-  });
+      try {
+        setIsLoading(true);
+        
+        // Load data from Supabase
+        const [arrivalItems, departureAreasWithItems] = await Promise.all([
+          getArrivalItemsWithStatus(user.id),
+          getDepartureAreasWithItems(user.id)
+        ]);
+        
+        // Convert to the format expected by the app
+        const convertedArrivals = arrivalItems.map((item: ChecklistItemWithStatus): ChecklistItem => ({
+          id: item.id,
+          text: item.text,
+          isCompleted: item.isCompleted
+        }));
+        
+        const convertedDepartureAreas = departureAreasWithItems.map((area: AreaWithItems): ChecklistArea => ({
+          id: area.id,
+          name: area.name,
+          isCompleted: area.isCompleted,
+          items: area.items.map(item => ({
+            id: item.id,
+            text: item.text,
+            isCompleted: item.isCompleted
+          }))
+        }));
+        
+        setArrivals(convertedArrivals);
+        setDepartureAreas(convertedDepartureAreas);
+        
+        console.log('[useChecklistState] Loaded data from Supabase:', {
+          arrivals: convertedArrivals.length,
+          departureAreas: convertedDepartureAreas.length
+        });
+        
+        // If we have a saved selectedAreaId, find that area in the loaded data
+        const savedAreaId = localStorage.getItem('hytteSelectedAreaId');
+        if (savedAreaId) {
+          const area = convertedDepartureAreas.find(area => area.id === savedAreaId) || null;
+          setSelectedAreaState(area);
+        }
+      } catch (error) {
+        console.error('[useChecklistState] Error loading from Supabase:', error);
+        toast.error('Kunne ikke laste sjekklister. Prøv igjen senere.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadChecklists();
+  }, [user]);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -88,14 +119,30 @@ export const useChecklistState = () => {
     }
   }, []);
 
-  const toggleArrivalItem = useCallback((id: string) => {
+  const toggleArrivalItem = useCallback(async (id: string) => {
+    if (!user) {
+      toast.error('Du må være logget inn for å fullføre sjekklister');
+      return;
+    }
+    
     console.log('[ChecklistContext] Toggling arrival item:', id);
+    
     setArrivals((prevItems) => {
-      const newItems = prevItems.map((item) =>
-        item.id === id ? { ...item, isCompleted: !item.isCompleted } : item
-      );
+      const itemToToggle = prevItems.find(item => item.id === id);
+      if (!itemToToggle) return prevItems;
       
-      saveToStorage('hytteArrivals', newItems);
+      const newIsCompleted = !itemToToggle.isCompleted;
+      
+      // Log the change to the database
+      logItemCompletion(user.id, id, newIsCompleted)
+        .catch(error => {
+          console.error('[toggleArrivalItem] Failed to log completion:', error);
+          // If logging fails, we could revert the UI change here if needed
+        });
+      
+      const newItems = prevItems.map((item) =>
+        item.id === id ? { ...item, isCompleted: newIsCompleted } : item
+      );
       
       const allCompleted = newItems.every(item => item.isCompleted);
       if (allCompleted) {
@@ -106,16 +153,37 @@ export const useChecklistState = () => {
       
       return newItems;
     });
-  }, []);
+  }, [user]);
 
-  const toggleDepartureItem = useCallback((areaId: string, itemId: string) => {
+  const toggleDepartureItem = useCallback(async (areaId: string, itemId: string) => {
+    if (!user) {
+      toast.error('Du må være logget inn for å fullføre sjekklister');
+      return;
+    }
+    
     console.log('[ChecklistContext] Toggling departure item:', { areaId, itemId });
+    
     setDepartureAreas((prevAreas) => {
+      const area = prevAreas.find(a => a.id === areaId);
+      if (!area) return prevAreas;
+      
+      const itemToToggle = area.items.find(item => item.id === itemId);
+      if (!itemToToggle) return prevAreas;
+      
+      const newIsCompleted = !itemToToggle.isCompleted;
+      
+      // Log the change to the database
+      logItemCompletion(user.id, itemId, newIsCompleted)
+        .catch(error => {
+          console.error('[toggleDepartureItem] Failed to log completion:', error);
+          // If logging fails, we could revert the UI change here if needed
+        });
+      
       const newAreas = prevAreas.map((area) => {
         if (area.id !== areaId) return area;
         
         const newItems = area.items.map((item) =>
-          item.id === itemId ? { ...item, isCompleted: !item.isCompleted } : item
+          item.id === itemId ? { ...item, isCompleted: newIsCompleted } : item
         );
         
         const isAreaCompleted = newItems.every((item) => item.isCompleted);
@@ -127,8 +195,6 @@ export const useChecklistState = () => {
         };
       });
       
-      saveToStorage('hytteDepartures', newAreas);
-      
       const allAreasCompleted = newAreas.every(area => area.isCompleted);
       if (allAreasCompleted) {
         toast("God tur hjem! Hytta er nå sikret 🏠", {
@@ -138,24 +204,59 @@ export const useChecklistState = () => {
       
       return newAreas;
     });
-  }, []);
+  }, [user]);
 
-  const resetChecklists = useCallback(() => {
+  const resetChecklists = useCallback(async () => {
+    if (!user) {
+      toast.error('Du må være logget inn for å tilbakestille sjekklister');
+      return;
+    }
+    
     console.log('[ChecklistContext] Resetting all checklists');
-    setArrivals(initialArrivals);
-    setDepartureAreas(initialDepartureAreas);
-    setCurrentViewState(null);
-    setSelectedAreaState(null);
     
     try {
-      localStorage.removeItem('hytteArrivals');
-      localStorage.removeItem('hytteDepartures');
-      localStorage.removeItem('hytteCurrentView');
-      localStorage.removeItem('hytteSelectedAreaId');
+      // Reload data from Supabase to reset
+      const [arrivalItems, departureAreasWithItems] = await Promise.all([
+        getArrivalItemsWithStatus(user.id),
+        getDepartureAreasWithItems(user.id)
+      ]);
+      
+      // Convert to the format expected by the app
+      const convertedArrivals = arrivalItems.map((item: ChecklistItemWithStatus): ChecklistItem => ({
+        id: item.id,
+        text: item.text,
+        isCompleted: false // Reset to false
+      }));
+      
+      const convertedDepartureAreas = departureAreasWithItems.map((area: AreaWithItems): ChecklistArea => ({
+        id: area.id,
+        name: area.name,
+        isCompleted: false, // Reset to false
+        items: area.items.map(item => ({
+          id: item.id,
+          text: item.text,
+          isCompleted: false // Reset to false
+        }))
+      }));
+      
+      setArrivals(convertedArrivals);
+      setDepartureAreas(convertedDepartureAreas);
+      setCurrentViewState(null);
+      setSelectedAreaState(null);
+      
+      toast.success('Sjekklister er tilbakestilt!');
+      
+      try {
+        localStorage.removeItem('hytteCurrentView');
+        localStorage.removeItem('hytteSelectedAreaId');
+      } catch (error) {
+        console.error('Error removing items from localStorage', error);
+      }
     } catch (error) {
-      console.error('Error removing items from localStorage', error);
+      console.error('[resetChecklists] Error:', error);
+      toast.error('Kunne ikke tilbakestille sjekklister. Prøv igjen senere.');
     }
-  }, []);
+  }, [user]);
 
   const isAllArrivalsCompleted = useCallback(() => {
     return arrivals.every((item) => item.isCompleted);
@@ -177,5 +278,6 @@ export const useChecklistState = () => {
     resetChecklists,
     isAllArrivalsCompleted,
     isAllDeparturesCompleted,
+    isLoading
   };
 };
