@@ -6,15 +6,29 @@ import ChecklistItem from './ChecklistItem';
 const ArrivalChecklist: React.FC = () => {
   const { arrivals, toggleArrivalItem } = useChecklist();
   
-  // Logg montering og avmontering for debugging
+  // Log mounting but remove unmounting to prevent side effects
   useEffect(() => {
-    console.log('[ArrivalChecklist] Component mounted with', { itemCount: arrivals.length });
-    return () => {
-      console.log('[ArrivalChecklist] Component unmounted');
-    };
-  }, [arrivals.length]);
+    console.log('[ArrivalChecklist] Component mounted with', { 
+      itemCount: arrivals?.length || 0,
+      arrivals: JSON.stringify(arrivals)
+    });
+    // No return function to prevent unmounting side effects
+  }, [arrivals]);
   
-  console.log('[ArrivalChecklist] rendering', { itemCount: arrivals.length });
+  console.log('[ArrivalChecklist] rendering', { 
+    itemCount: arrivals?.length || 0,
+    hasItems: Array.isArray(arrivals) && arrivals.length > 0
+  });
+  
+  // Additional safety check to handle potential undefined arrivals
+  if (!arrivals) {
+    console.error('[ArrivalChecklist] arrivals is undefined');
+    return (
+      <div className="p-4 text-center text-gray-500">
+        Laster sjekkliste...
+      </div>
+    );
+  }
   
   return (
     <div className="animate-fade-in">

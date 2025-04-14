@@ -50,15 +50,14 @@ const ChecklistApp = () => {
     selectArea 
   } = useChecklist();
   
+  // Remove unmount logging since it could be part of the problem
   useEffect(() => {
     console.log('[ChecklistApp] Component mounted with', { 
       currentView, 
       selectedAreaId: selectedArea?.id 
     });
-
-    return () => {
-      console.log('[ChecklistApp] Component unmounting');
-    };
+    
+    // Don't include any return function here that might trigger state changes
   }, []);
   
   // Log explicit re-renders to debug when the component updates
@@ -67,13 +66,14 @@ const ChecklistApp = () => {
     selectedAreaId: selectedArea?.id 
   });
 
-  // Handle back button functionality
+  // Handle back button functionality - be extra careful not to cause unexpected state changes
   const handleBack = () => {
     console.log('[ChecklistApp] handleBack called:', { 
       currentView, 
       selectedAreaId: selectedArea?.id 
     });
     
+    // Safely handle back navigation
     if (selectedArea) {
       selectArea(null);
     } else if (currentView) {
@@ -88,10 +88,12 @@ const ChecklistApp = () => {
       selectedAreaId: selectedArea?.id 
     });
     
+    // First check if selectedArea exists
     if (selectedArea) {
       return <ErrorBoundary><AreaChecklist /></ErrorBoundary>;
     }
 
+    // Then check the current view
     switch (currentView) {
       case 'arrival':
         return <ErrorBoundary><ArrivalChecklist /></ErrorBoundary>;

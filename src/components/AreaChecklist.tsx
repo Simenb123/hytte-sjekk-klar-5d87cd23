@@ -6,21 +6,20 @@ import ChecklistItem from './ChecklistItem';
 const AreaChecklist: React.FC = () => {
   const { selectedArea, toggleDepartureItem } = useChecklist();
   
-  // Log mounting and unmounting for debugging
+  // Log mounting for debugging, but remove unmounting logs
   useEffect(() => {
     console.log('[AreaChecklist] Component mounted', { 
       selectedAreaId: selectedArea?.id,
       itemCount: selectedArea?.items?.length || 0
     });
-    return () => {
-      console.log('[AreaChecklist] Component unmounted');
-    };
-  }, [selectedArea?.id]);
+    // No return function to prevent unmounting side effects
+  }, [selectedArea?.id, selectedArea?.items?.length]);
   
-  // Log every render to track re-rendering
+  // Add more detailed logging
   console.log('[AreaChecklist] Rendering with', { 
     selectedAreaId: selectedArea?.id,
-    hasItems: selectedArea?.items?.length > 0
+    hasItems: selectedArea?.items?.length > 0,
+    selectedAreaObject: JSON.stringify(selectedArea)
   });
   
   // Safety check - if no area is selected, show a message
@@ -35,7 +34,11 @@ const AreaChecklist: React.FC = () => {
   
   const handleToggleItem = (itemId: string) => {
     console.log('[AreaChecklist] Toggling item:', itemId);
-    toggleDepartureItem(selectedArea.id, itemId);
+    if (selectedArea && selectedArea.id) {
+      toggleDepartureItem(selectedArea.id, itemId);
+    } else {
+      console.error('[AreaChecklist] Cannot toggle item, selectedArea is null or missing id');
+    }
   };
   
   return (
