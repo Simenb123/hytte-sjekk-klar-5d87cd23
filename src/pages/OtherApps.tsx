@@ -1,10 +1,9 @@
-
 import React from 'react';
 import AppHeader from '../components/AppHeader';
 import DashboardCard from '../components/DashboardCard';
 import { 
   Home, 
-  Tool, 
+  Wrench, 
   PhoneCall, 
   ShoppingCart, 
   FileCheck, 
@@ -40,7 +39,7 @@ const OtherApps: React.FC = () => {
           <div onClick={() => handleAppClick('Vedlikeholdslogg')} className="cursor-pointer">
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full">
               <div className="bg-amber-600 p-4 text-white flex items-center justify-center">
-                <Tool size={32} />
+                <Wrench size={32} />
               </div>
               <div className="p-3">
                 <h3 className="text-base font-semibold mb-1">Vedlikeholdslogg</h3>
