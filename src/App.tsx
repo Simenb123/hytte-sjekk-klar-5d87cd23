@@ -12,6 +12,7 @@ import WeatherApp from "./pages/WeatherApp";
 import CalendarApp from "./pages/CalendarApp";
 import OtherApps from "./pages/OtherApps";
 import { ChecklistProvider } from "./context/ChecklistContext";
+import { StrictMode } from "react";
 
 // Create a stable QueryClient that won't change between renders
 const queryClient = new QueryClient({
@@ -31,6 +32,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner position="top-center" closeButton />
+        {/* Wrap BrowserRouter inside ChecklistProvider */}
         <ChecklistProvider>
           <BrowserRouter>
             <Routes>

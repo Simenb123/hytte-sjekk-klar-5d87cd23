@@ -17,11 +17,13 @@ const AreaChecklist: React.FC = () => {
     };
   }, [selectedArea?.id]);
   
-  console.log('[AreaChecklist] rendering with', { 
+  // Log every render to track re-rendering
+  console.log('[AreaChecklist] Rendering with', { 
     selectedAreaId: selectedArea?.id,
     hasItems: selectedArea?.items?.length > 0
   });
   
+  // Safety check - if no area is selected, show a message
   if (!selectedArea) {
     console.log('[AreaChecklist] No area selected, rendering null');
     return (
@@ -33,9 +35,7 @@ const AreaChecklist: React.FC = () => {
   
   const handleToggleItem = (itemId: string) => {
     console.log('[AreaChecklist] Toggling item:', itemId);
-    if (selectedArea) {
-      toggleDepartureItem(selectedArea.id, itemId);
-    }
+    toggleDepartureItem(selectedArea.id, itemId);
   };
   
   return (

@@ -7,10 +7,49 @@ import DepartureAreas from '../components/DepartureAreas';
 import AreaChecklist from '../components/AreaChecklist';
 import Header from '../components/Header';
 
+// Simple error boundary to help debug rendering issues
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("[ErrorBoundary] Caught error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 bg-red-100 text-red-800 rounded-lg">
+          <h2 className="font-bold">Noe gikk galt</h2>
+          <p>{this.state.error?.message || 'Ukjent feil'}</p>
+          <button 
+            className="mt-2 bg-red-600 text-white px-4 py-2 rounded"
+            onClick={() => this.setState({ hasError: false, error: null })}
+          >
+            Prøv igjen
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const ChecklistApp = () => {
-  const { currentView, selectedArea, setCurrentView, selectArea } = useChecklist();
+  const { 
+    currentView, 
+    selectedArea, 
+    setCurrentView, 
+    selectArea 
+  } = useChecklist();
   
-  // Log only on initial mount to reduce console noise
   useEffect(() => {
     console.log('[ChecklistApp] Component mounted with', { 
       currentView, 
@@ -22,13 +61,11 @@ const ChecklistApp = () => {
     };
   }, []);
   
-  // Separate effect for logging state changes
-  useEffect(() => {
-    console.log('[ChecklistApp] State changed:', { 
-      currentView, 
-      selectedAreaId: selectedArea?.id 
-    });
-  }, [currentView, selectedArea]);
+  // Log explicit re-renders to debug when the component updates
+  console.log('[ChecklistApp] Rendering with state:', { 
+    currentView, 
+    selectedAreaId: selectedArea?.id 
+  });
 
   // Handle back button functionality
   const handleBack = () => {
@@ -52,16 +89,16 @@ const ChecklistApp = () => {
     });
     
     if (selectedArea) {
-      return <AreaChecklist />;
+      return <ErrorBoundary><AreaChecklist /></ErrorBoundary>;
     }
 
     switch (currentView) {
       case 'arrival':
-        return <ArrivalChecklist />;
+        return <ErrorBoundary><ArrivalChecklist /></ErrorBoundary>;
       case 'departure':
-        return <DepartureAreas />;
+        return <ErrorBoundary><DepartureAreas /></ErrorBoundary>;
       default:
-        return <MainMenu />;
+        return <ErrorBoundary><MainMenu /></ErrorBoundary>;
     }
   };
 
