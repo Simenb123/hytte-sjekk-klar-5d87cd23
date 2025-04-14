@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckSquare, Square } from 'lucide-react';
+import { Checkbox } from "./ui/checkbox";
 
 interface ChecklistItemProps {
   id: string;
@@ -15,9 +16,13 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
   isCompleted, 
   onToggle 
 }) => {
-  // Fjernet logg for å redusere mengden output i konsollen
+  // Log when checkbox state changes to debug rendering
+  useEffect(() => {
+    console.log(`[ChecklistItem ${id}] isCompleted: ${isCompleted}`);
+  }, [id, isCompleted]);
   
   const handleToggle = () => {
+    console.log(`[ChecklistItem ${id}] Clicked, current state: ${isCompleted}, will toggle to: ${!isCompleted}`);
     onToggle();
   };
   
@@ -25,6 +30,7 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
     <div 
       className="flex items-center py-3 px-4 border-b border-gray-100 last:border-0 cursor-pointer"
       onClick={handleToggle}
+      data-state={isCompleted ? 'checked' : 'unchecked'}
     >
       <div className="mr-3">
         {isCompleted ? (
@@ -40,4 +46,4 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
   );
 };
 
-export default ChecklistItem;
+export default React.memo(ChecklistItem);

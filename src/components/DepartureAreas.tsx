@@ -6,7 +6,7 @@ import AreaButton from './AreaButton';
 const DepartureAreas: React.FC = () => {
   const { departureAreas, selectArea } = useChecklist();
   
-  // Logg montering og avmontering for debugging
+  // Logging for debugging
   useEffect(() => {
     console.log('[DepartureAreas] Component mounted with', { areaCount: departureAreas.length });
     return () => {
@@ -29,7 +29,7 @@ const DepartureAreas: React.FC = () => {
         {departureAreas && departureAreas.length > 0 ? (
           departureAreas.map((area) => (
             <AreaButton 
-              key={area.id} 
+              key={`${area.id}-${area.isCompleted}`}
               area={area} 
               onClick={() => handleAreaClick(area)}
             />

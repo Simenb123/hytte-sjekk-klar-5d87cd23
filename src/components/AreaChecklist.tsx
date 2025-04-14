@@ -1,25 +1,34 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
 
 const AreaChecklist: React.FC = () => {
   const { selectedArea, toggleDepartureItem } = useChecklist();
   
-  // Log mounting for debugging, but remove unmounting logs
+  // Lokal state for å sikre at UI oppdateres umiddelbart
+  const [items, setItems] = useState(selectedArea?.items || []);
+  
+  // Oppdater lokal state når selectedArea endres
+  useEffect(() => {
+    if (selectedArea?.items) {
+      setItems(selectedArea.items);
+      console.log('[AreaChecklist] Items updated from context:', selectedArea.items);
+    }
+  }, [selectedArea]);
+  
+  // Logging for debugging
   useEffect(() => {
     console.log('[AreaChecklist] Component mounted', { 
       selectedAreaId: selectedArea?.id,
       itemCount: selectedArea?.items?.length || 0
     });
-    // No return function to prevent unmounting side effects
   }, [selectedArea?.id, selectedArea?.items?.length]);
   
-  // Add more detailed logging
   console.log('[AreaChecklist] Rendering with', { 
     selectedAreaId: selectedArea?.id,
     hasItems: selectedArea?.items?.length > 0,
-    selectedAreaObject: JSON.stringify(selectedArea)
+    itemsCount: items.length
   });
   
   // Safety check - if no area is selected, show a message
@@ -35,6 +44,14 @@ const AreaChecklist: React.FC = () => {
   const handleToggleItem = (itemId: string) => {
     console.log('[AreaChecklist] Toggling item:', itemId);
     if (selectedArea && selectedArea.id) {
+      // Oppdater lokal state umiddelbart for responsiv UX
+      setItems(prevItems => 
+        prevItems.map(item => 
+          item.id === itemId ? { ...item, isCompleted: !item.isCompleted } : item
+        )
+      );
+      
+      // Deretter oppdater global state
       toggleDepartureItem(selectedArea.id, itemId);
     } else {
       console.error('[AreaChecklist] Cannot toggle item, selectedArea is null or missing id');
@@ -44,10 +61,10 @@ const AreaChecklist: React.FC = () => {
   return (
     <div className="relative z-20">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-        {selectedArea.items && selectedArea.items.length > 0 ? (
-          selectedArea.items.map((item) => (
+        {items && items.length > 0 ? (
+          items.map((item) => (
             <ChecklistItem
-              key={item.id}
+              key={`${item.id}-${item.isCompleted}`}
               id={item.id}
               text={item.text}
               isCompleted={item.isCompleted}
