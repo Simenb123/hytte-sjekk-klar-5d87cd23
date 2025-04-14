@@ -5,7 +5,7 @@ import MainMenu from '../components/MainMenu';
 import ArrivalChecklist from '../components/ArrivalChecklist';
 import DepartureAreas from '../components/DepartureAreas';
 import AreaChecklist from '../components/AreaChecklist';
-import AppHeader from '../components/AppHeader';
+import Header from '../components/Header';
 
 const ChecklistApp: React.FC = () => {
   const { currentView, selectedArea, setCurrentView, selectArea } = useChecklist();
@@ -53,7 +53,7 @@ const ChecklistApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader 
+      <Header 
         title={getHeaderTitle()} 
         showBackButton={!!(currentView || selectedArea)} 
         showHomeButton={true}

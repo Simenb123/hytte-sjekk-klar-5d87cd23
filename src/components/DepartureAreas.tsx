@@ -11,13 +11,19 @@ const DepartureAreas: React.FC = () => {
       <div className="mb-4">
         <h3 className="text-lg font-medium mb-3">Velg område</h3>
         
-        {departureAreas && departureAreas.map((area) => (
-          <AreaButton 
-            key={area.id} 
-            area={area} 
-            onClick={() => selectArea(area)}
-          />
-        ))}
+        {departureAreas && departureAreas.length > 0 ? (
+          departureAreas.map((area) => (
+            <AreaButton 
+              key={area.id} 
+              area={area} 
+              onClick={() => selectArea(area)}
+            />
+          ))
+        ) : (
+          <div className="text-center text-gray-500 p-4">
+            Ingen områder funnet
+          </div>
+        )}
       </div>
       
       <div className="text-center text-gray-500 text-sm mt-4">
