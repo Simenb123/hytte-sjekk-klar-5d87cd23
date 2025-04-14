@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { ChecklistProvider, useChecklist } from '../context/ChecklistContext';
+import { useChecklist } from '../context/ChecklistContext';
 import MainMenu from '../components/MainMenu';
 import ArrivalChecklist from '../components/ArrivalChecklist';
 import DepartureAreas from '../components/DepartureAreas';
 import AreaChecklist from '../components/AreaChecklist';
 import AppHeader from '../components/AppHeader';
 
-const HytteApp: React.FC = () => {
+const ChecklistApp: React.FC = () => {
   const { currentView, selectedArea } = useChecklist();
 
   // Determine which view to show
@@ -33,14 +33,6 @@ const HytteApp: React.FC = () => {
         {renderContent()}
       </div>
     </div>
-  );
-};
-
-const ChecklistApp: React.FC = () => {
-  return (
-    <ChecklistProvider>
-      <HytteApp />
-    </ChecklistProvider>
   );
 };
 
