@@ -24,7 +24,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     if (onBackClick) {
       onBackClick();
     } else {
-      navigate(-1);
+      navigate('/');
     }
   };
 

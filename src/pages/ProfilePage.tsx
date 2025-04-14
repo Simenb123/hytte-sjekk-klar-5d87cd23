@@ -123,12 +123,18 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  // Navigate to home when back button is clicked
+  const handleBackClick = () => {
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
         title="Min profil" 
         showBackButton={true}
-        showHomeButton={true}
+        showHomeButton={false}
+        onBackClick={handleBackClick}
         rightContent={
           <Button 
             variant="ghost" 

@@ -57,6 +57,8 @@ export const logItemCompletion = async (
   isCompleted: boolean
 ): Promise<void> => {
   try {
+    console.log('[logItemCompletion] Logging completion:', { userId, itemId, isCompleted });
+    
     const { error } = await supabase
       .from('completion_logs')
       .insert({
@@ -93,7 +95,7 @@ export const getArrivalItemsWithStatus = async (userId: string): Promise<Checkli
     // Create a map of item IDs to their completed status
     const completionMap = new Map<string, boolean>();
     logs.forEach(log => {
-      completionMap.set(log.item_id, log.is_completed);
+      completionMap.set(log.item_id, log.is_completed === true);
     });
     
     // Map items to include their completion status
@@ -126,7 +128,7 @@ export const getDepartureAreasWithItems = async (userId: string): Promise<AreaWi
     // Create a map of item IDs to their completed status
     const completionMap = new Map<string, boolean>();
     logs.forEach(log => {
-      completionMap.set(log.item_id, log.is_completed);
+      completionMap.set(log.item_id, log.is_completed === true);
     });
     
     // Group items by area
@@ -150,7 +152,7 @@ export const getDepartureAreasWithItems = async (userId: string): Promise<AreaWi
       return {
         ...area,
         items: areaItems,
-        isCompleted: areaItems.length > 0 && areaItems.every(item => item.isCompleted)
+        isCompleted: areaItems.length > 0 && areaItems.every(item => item.isCompleted === true)
       };
     });
   } catch (error) {

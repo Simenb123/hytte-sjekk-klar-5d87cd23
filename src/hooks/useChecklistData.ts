@@ -18,41 +18,64 @@ export const useChecklistData = () => {
 
   useEffect(() => {
     const loadChecklists = async () => {
-      if (!user) return;
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
         setIsLoading(true);
+        setError(null);
         console.log('[useChecklistData] Loading checklists for user:', user.id);
         
-        const [arrivalItems, departureAreasWithItems] = await Promise.all([
+        // Use Promise.allSettled to handle partial failures
+        const results = await Promise.allSettled([
           getArrivalItemsWithStatus(user.id),
           getDepartureAreasWithItems(user.id)
         ]);
         
-        const convertedArrivals = arrivalItems.map((item: ChecklistItemWithStatus): ChecklistItem => ({
-          id: item.id,
-          text: item.text,
-          isCompleted: !!item.isCompleted
-        }));
-        
-        const convertedDepartureAreas = departureAreasWithItems.map((area: AreaWithItems): ChecklistArea => ({
-          id: area.id,
-          name: area.name,
-          isCompleted: !!area.isCompleted,
-          items: area.items.map(item => ({
+        // Handle arrival items
+        if (results[0].status === 'fulfilled') {
+          const arrivalItems = results[0].value;
+          const convertedArrivals = arrivalItems.map((item: ChecklistItemWithStatus): ChecklistItem => ({
             id: item.id,
             text: item.text,
-            isCompleted: !!item.isCompleted
-          }))
-        }));
+            isCompleted: item.isCompleted === true
+          }));
+          
+          console.log('[useChecklistData] Loaded arrivals:', convertedArrivals.length);
+          setArrivals(convertedArrivals);
+        } else {
+          console.error('[useChecklistData] Failed to load arrival items:', results[0].reason);
+          setError('Kunne ikke laste ankomstsjekkliste');
+        }
         
-        console.log('[useChecklistData] Loaded arrivals:', convertedArrivals.length);
-        console.log('[useChecklistData] Loaded departure areas:', convertedDepartureAreas.length);
+        // Handle departure areas
+        if (results[1].status === 'fulfilled') {
+          const departureAreasWithItems = results[1].value;
+          const convertedDepartureAreas = departureAreasWithItems.map((area: AreaWithItems): ChecklistArea => ({
+            id: area.id,
+            name: area.name,
+            isCompleted: area.isCompleted === true,
+            items: area.items.map(item => ({
+              id: item.id,
+              text: item.text,
+              isCompleted: item.isCompleted === true
+            }))
+          }));
+          
+          console.log('[useChecklistData] Loaded departure areas:', convertedDepartureAreas.length);
+          setDepartureAreas(convertedDepartureAreas);
+        } else {
+          console.error('[useChecklistData] Failed to load departure areas:', results[1].reason);
+          setError(prev => prev ? `${prev}. Kunne ikke laste avreisesjekkliste` : 'Kunne ikke laste avreisesjekkliste');
+        }
         
-        setArrivals(convertedArrivals);
-        setDepartureAreas(convertedDepartureAreas);
-        setError(null);
-        
+        // If both failed, set a more general error
+        if (results[0].status === 'rejected' && results[1].status === 'rejected') {
+          setError('Kunne ikke laste sjekklister. Prøv igjen senere.');
+          toast.error('Kunne ikke laste sjekklister. Prøv igjen senere.');
+        }
       } catch (error) {
         console.error('[useChecklistData] Error loading from Supabase:', error);
         setError('Kunne ikke laste sjekklister. Prøv igjen senere.');

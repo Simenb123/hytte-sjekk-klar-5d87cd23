@@ -21,12 +21,16 @@ const Header: React.FC<HeaderProps> = ({
   const navigate = useNavigate();
 
   const handleBackClick = () => {
+    console.log('[Header] Back button clicked, onBackClick handler exists:', !!onBackClick);
     if (onBackClick) {
       onBackClick();
+    } else {
+      navigate(-1);
     }
   };
 
   const handleHomeClick = () => {
+    console.log('[Header] Home button clicked');
     navigate('/');
   };
 
@@ -39,6 +43,7 @@ const Header: React.FC<HeaderProps> = ({
               onClick={handleBackClick}
               className="mr-4 p-2 rounded-full hover:bg-gray-100"
               aria-label="Tilbake"
+              type="button"
             >
               <ArrowLeft size={20} className="text-gray-600" />
             </button>
@@ -49,6 +54,7 @@ const Header: React.FC<HeaderProps> = ({
               onClick={handleHomeClick}
               className="mr-4 p-2 rounded-full hover:bg-gray-100"
               aria-label="Hjem"
+              type="button"
             >
               <Home size={20} className="text-gray-600" />
             </button>
