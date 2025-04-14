@@ -9,15 +9,21 @@ const ArrivalChecklist: React.FC = () => {
   return (
     <div className="animate-fade-in">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-        {arrivals && arrivals.map((item) => (
-          <ChecklistItem
-            key={item.id}
-            id={item.id}
-            text={item.text}
-            isCompleted={item.isCompleted}
-            onToggle={() => toggleArrivalItem(item.id)}
-          />
-        ))}
+        {arrivals && arrivals.length > 0 ? (
+          arrivals.map((item) => (
+            <ChecklistItem
+              key={item.id}
+              id={item.id}
+              text={item.text}
+              isCompleted={item.isCompleted}
+              onToggle={() => toggleArrivalItem(item.id)}
+            />
+          ))
+        ) : (
+          <div className="p-4 text-center text-gray-500">
+            Ingen ankomstpunkter funnet
+          </div>
+        )}
       </div>
       
       <div className="text-center text-gray-500 text-sm">

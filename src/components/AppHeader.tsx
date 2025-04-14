@@ -1,28 +1,29 @@
 
 import React from 'react';
 import { ArrowLeft, Home } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface AppHeaderProps {
   title: string;
   showBackButton?: boolean;
   showHomeButton?: boolean;
+  onBackClick?: () => void;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({ 
   title, 
   showBackButton = false, 
-  showHomeButton = false 
+  showHomeButton = false,
+  onBackClick
 }) => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const isChecklistPage = location.pathname.includes('/checklist');
 
-  // We're not using the ChecklistContext directly here anymore
-  // Instead, we'll rely on the useNavigate hook for all navigation
-  
   const handleBack = () => {
-    navigate(-1);
+    if (onBackClick) {
+      onBackClick();
+    } else {
+      navigate(-1);
+    }
   };
 
   const handleHome = () => {

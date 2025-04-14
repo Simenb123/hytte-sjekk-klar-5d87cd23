@@ -8,7 +8,16 @@ import AreaChecklist from '../components/AreaChecklist';
 import AppHeader from '../components/AppHeader';
 
 const ChecklistApp: React.FC = () => {
-  const { currentView, selectedArea } = useChecklist();
+  const { currentView, selectedArea, setCurrentView, selectArea } = useChecklist();
+
+  // Handle back button functionality within the checklist app
+  const handleBack = () => {
+    if (selectedArea) {
+      selectArea(null);
+    } else if (currentView) {
+      setCurrentView(null);
+    }
+  };
 
   // Determine which view to show
   const renderContent = () => {
@@ -47,7 +56,8 @@ const ChecklistApp: React.FC = () => {
       <AppHeader 
         title={getHeaderTitle()} 
         showBackButton={!!(currentView || selectedArea)} 
-        showHomeButton={true} 
+        showHomeButton={true}
+        onBackClick={handleBack}
       />
       <div className="max-w-lg mx-auto p-4">
         {renderContent()}

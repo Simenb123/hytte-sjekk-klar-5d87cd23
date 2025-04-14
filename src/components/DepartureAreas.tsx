@@ -20,7 +20,7 @@ const DepartureAreas: React.FC = () => {
         ))}
       </div>
       
-      <div className="text-center text-gray-500 text-sm">
+      <div className="text-center text-gray-500 text-sm mt-4">
         Alle områder må sjekkes før avreise
       </div>
     </div>
