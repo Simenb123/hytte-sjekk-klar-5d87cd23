@@ -3,6 +3,7 @@ import React, { createContext, useContext, ReactNode, useEffect } from 'react';
 import { ChecklistContextType } from '../types/checklist.types';
 import { useChecklistState } from '../hooks/useChecklistState';
 
+// Create the context with a more explicit undefined initial value
 const ChecklistContext = createContext<ChecklistContextType | undefined>(undefined);
 
 export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
@@ -25,9 +26,10 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useChecklist = () => {
+export const useChecklist = (): ChecklistContextType => {
   const context = useContext(ChecklistContext);
   if (context === undefined) {
+    console.error('[ChecklistContext] useChecklist must be used within a ChecklistProvider');
     throw new Error('useChecklist must be used within a ChecklistProvider');
   }
   return context;
