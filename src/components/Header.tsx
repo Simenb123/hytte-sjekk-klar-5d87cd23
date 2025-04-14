@@ -1,6 +1,5 @@
 
 import React, { memo } from 'react';
-import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from './AppHeader';
 
@@ -20,6 +19,7 @@ const Header: React.FC<HeaderProps> = memo(({
   const navigate = useNavigate();
 
   const handleBack = () => {
+    console.log('[Header] Back button clicked');
     if (onBackClick) {
       onBackClick();
     } else {
@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = memo(({
   console.log('[Header] Rendering with title:', title, 'showBackButton:', showBackButton);
   
   return (
-    <div className="w-full py-4 mb-4">
+    <div className="w-full">
       <AppHeader 
         title={title || ''}
         showBackButton={showBackButton}

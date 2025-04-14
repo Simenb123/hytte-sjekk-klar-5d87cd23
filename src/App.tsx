@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
@@ -32,7 +32,6 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner position="top-center" closeButton />
-        {/* Wrap BrowserRouter inside ChecklistProvider */}
         <ChecklistProvider>
           <BrowserRouter>
             <Routes>
@@ -41,8 +40,8 @@ const App = () => {
               <Route path="/weather" element={<WeatherApp />} />
               <Route path="/calendar" element={<CalendarApp />} />
               <Route path="/other-apps" element={<OtherApps />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
+              {/* Redirect to dashboard if no route matches */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
         </ChecklistProvider>

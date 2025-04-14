@@ -18,7 +18,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const handleBack = () => {
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log('[AppHeader] Back button clicked');
     if (onBackClick) {
       onBackClick();
     } else {
@@ -33,7 +35,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   console.log('[AppHeader] Rendering with', { title, showBackButton, showHomeButton });
 
   return (
-    <div className="bg-white shadow-sm fixed top-0 left-0 right-0 z-10">
+    <div className="bg-white shadow-md fixed top-0 left-0 right-0 z-50 w-full">
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between py-4 px-4">
           <div className="flex items-center gap-2">

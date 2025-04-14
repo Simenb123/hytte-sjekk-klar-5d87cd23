@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import MainMenu from '../components/MainMenu';
 import ArrivalChecklist from '../components/ArrivalChecklist';
@@ -49,18 +50,28 @@ const ChecklistApp = () => {
     selectArea 
   } = useChecklist();
   
+  const [isLoaded, setIsLoaded] = useState(false);
+  
   // Log mounting and state
   useEffect(() => {
     console.log('[ChecklistApp] Component mounted with', { 
       currentView, 
       selectedAreaId: selectedArea?.id 
     });
+    
+    // Mark as loaded after a small delay to ensure UI is ready
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [currentView, selectedArea]);
   
   // Log explicit re-renders to debug when the component updates
   console.log('[ChecklistApp] Rendering with state:', { 
     currentView, 
-    selectedAreaId: selectedArea?.id 
+    selectedAreaId: selectedArea?.id,
+    isLoaded
   });
 
   // Safely handle back navigation
@@ -124,8 +135,13 @@ const ChecklistApp = () => {
         showHomeButton={true}
         onBackClick={handleBack}
       />
+      
       <div className="max-w-lg mx-auto p-4 pt-20">
-        {renderContent()}
+        {isLoaded ? renderContent() : (
+          <div className="flex justify-center items-center h-64">
+            <p className="text-gray-500">Laster innhold...</p>
+          </div>
+        )}
       </div>
     </div>
   );
