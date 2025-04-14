@@ -53,10 +53,24 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     loadFromStorage('hytteDepartures', initialDepartureAreas)
   );
   
-  // Initialize view state
-  const [currentView, setCurrentView] = useState<ChecklistType | null>(null);
-  const [selectedArea, setSelectedArea] = useState<ChecklistArea | null>(null);
-
+  // Initialize view state - lagre også disse i localStorage for å bevare navigeringstilstand
+  const [currentView, setCurrentViewState] = useState<ChecklistType | null>(() => 
+    loadFromStorage('hytteCurrentView', null)
+  );
+  
+  const [selectedArea, setSelectedAreaState] = useState<ChecklistArea | null>(() => {
+    try {
+      const savedAreaId = localStorage.getItem('hytteSelectedAreaId');
+      if (!savedAreaId) return null;
+      
+      const areas = loadFromStorage('hytteDepartures', initialDepartureAreas);
+      return areas.find(area => area.id === savedAreaId) || null;
+    } catch (error) {
+      console.error('Error loading selected area from localStorage', error);
+      return null;
+    }
+  });
+  
   // Log state changes
   useEffect(() => {
     console.log('[ChecklistContext] State updated:', { 
@@ -68,14 +82,16 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
   }, [currentView, selectedArea, arrivals, departureAreas]);
 
   // Navigation functions with useCallback to avoid unnecessary re-renders
-  const handleSetCurrentView = useCallback((view: ChecklistType | null) => {
+  const setCurrentView = useCallback((view: ChecklistType | null) => {
     console.log('[ChecklistContext] Setting current view to:', view);
-    setCurrentView(view);
+    setCurrentViewState(view);
+    saveToStorage('hytteCurrentView', view);
   }, []);
 
   const selectArea = useCallback((area: ChecklistArea | null) => {
     console.log('[ChecklistContext] Selecting area:', area?.id);
-    setSelectedArea(area);
+    setSelectedAreaState(area);
+    saveToStorage('hytteSelectedAreaId', area?.id || null);
   }, []);
 
   // Toggle arrival checklist item
@@ -141,12 +157,14 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     console.log('[ChecklistContext] Resetting all checklists');
     setArrivals(initialArrivals);
     setDepartureAreas(initialDepartureAreas);
-    setCurrentView(null);
-    setSelectedArea(null);
+    setCurrentViewState(null);
+    setSelectedAreaState(null);
     
     try {
       localStorage.removeItem('hytteArrivals');
       localStorage.removeItem('hytteDepartures');
+      localStorage.removeItem('hytteCurrentView');
+      localStorage.removeItem('hytteSelectedAreaId');
     } catch (error) {
       console.error('Error removing items from localStorage', error);
     }
@@ -167,7 +185,7 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     departureAreas,
     currentView,
     selectedArea,
-    setCurrentView: handleSetCurrentView,
+    setCurrentView,
     selectArea,
     toggleArrivalItem,
     toggleDepartureItem,
@@ -179,7 +197,7 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     departureAreas, 
     currentView, 
     selectedArea, 
-    handleSetCurrentView, 
+    setCurrentView, 
     selectArea, 
     toggleArrivalItem, 
     toggleDepartureItem, 

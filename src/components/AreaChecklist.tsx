@@ -1,10 +1,18 @@
 
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
 
-const AreaChecklist: React.FC = () => {
+const AreaChecklist: React.FC = memo(() => {
   const { selectedArea, toggleDepartureItem } = useChecklist();
+  
+  // Logg montering og avmontering for debugging
+  useEffect(() => {
+    console.log('[AreaChecklist] Component mounted', { selectedAreaId: selectedArea?.id });
+    return () => {
+      console.log('[AreaChecklist] Component unmounted');
+    };
+  }, [selectedArea]);
   
   console.log('[AreaChecklist] rendering', { selectedArea: selectedArea?.id });
   
@@ -45,6 +53,8 @@ const AreaChecklist: React.FC = () => {
       </div>
     </div>
   );
-};
+});
 
-export default memo(AreaChecklist);
+AreaChecklist.displayName = 'AreaChecklist';
+
+export default AreaChecklist;

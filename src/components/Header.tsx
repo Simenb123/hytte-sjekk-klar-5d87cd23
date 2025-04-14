@@ -9,7 +9,7 @@ interface HeaderProps {
   onBackClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = React.memo(({ 
+const Header: React.FC<HeaderProps> = memo(({ 
   title, 
   showBackButton = false, 
   showHomeButton = false,

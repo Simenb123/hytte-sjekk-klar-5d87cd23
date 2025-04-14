@@ -1,10 +1,18 @@
 
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import AreaButton from './AreaButton';
 
-const DepartureAreas: React.FC = () => {
+const DepartureAreas: React.FC = memo(() => {
   const { departureAreas, selectArea } = useChecklist();
+  
+  // Logg montering og avmontering for debugging
+  useEffect(() => {
+    console.log('[DepartureAreas] Component mounted');
+    return () => {
+      console.log('[DepartureAreas] Component unmounted');
+    };
+  }, []);
   
   console.log('[DepartureAreas] rendering', { areaCount: departureAreas.length });
 
@@ -38,6 +46,8 @@ const DepartureAreas: React.FC = () => {
       </div>
     </div>
   );
-};
+});
 
-export default memo(DepartureAreas);
+DepartureAreas.displayName = 'DepartureAreas';
+
+export default DepartureAreas;

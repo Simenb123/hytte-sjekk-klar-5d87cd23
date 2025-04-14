@@ -1,11 +1,19 @@
 
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import Logo from './Logo';
 import { LogIn, LogOut } from 'lucide-react';
 
-const MainMenu: React.FC = () => {
+const MainMenu: React.FC = memo(() => {
   const { setCurrentView, isAllArrivalsCompleted, isAllDeparturesCompleted } = useChecklist();
+  
+  // Logg montering og avmontering for debugging
+  useEffect(() => {
+    console.log('[MainMenu] Component mounted');
+    return () => {
+      console.log('[MainMenu] Component unmounted');
+    };
+  }, []);
   
   const handleArrivalClick = useCallback(() => {
     console.log('[MainMenu] Setting view to arrival');
@@ -50,6 +58,8 @@ const MainMenu: React.FC = () => {
       </div>
     </div>
   );
-};
+});
 
-export default memo(MainMenu);
+MainMenu.displayName = 'MainMenu';
+
+export default MainMenu;
