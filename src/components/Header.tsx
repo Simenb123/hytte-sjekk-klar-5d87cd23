@@ -27,10 +27,10 @@ const Header: React.FC<HeaderProps> = memo(({
     }
   };
 
-  console.log('[Header] Rendering with title:', title);
+  console.log('[Header] Rendering with title:', title, 'showBackButton:', showBackButton);
   
   return (
-    <div className="py-4 mb-4">
+    <div className="w-full py-4 mb-4">
       <AppHeader 
         title={title || ''}
         showBackButton={showBackButton}
@@ -44,4 +44,3 @@ const Header: React.FC<HeaderProps> = memo(({
 Header.displayName = 'Header';
 
 export default Header;
-

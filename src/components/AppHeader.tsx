@@ -30,8 +30,10 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     navigate('/');
   };
 
+  console.log('[AppHeader] Rendering with', { title, showBackButton, showHomeButton });
+
   return (
-    <div className="bg-white shadow-sm">
+    <div className="bg-white shadow-sm fixed top-0 left-0 right-0 z-10">
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between py-4 px-4">
           <div className="flex items-center gap-2">
@@ -63,4 +65,3 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 };
 
 export default AppHeader;
-

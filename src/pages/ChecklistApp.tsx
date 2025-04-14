@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import MainMenu from '../components/MainMenu';
@@ -49,15 +50,13 @@ const ChecklistApp = () => {
     selectArea 
   } = useChecklist();
   
-  // Remove unmount logging since it could be part of the problem
+  // Log mounting and state
   useEffect(() => {
     console.log('[ChecklistApp] Component mounted with', { 
       currentView, 
       selectedAreaId: selectedArea?.id 
     });
-    
-    // Don't include any return function here that might trigger state changes
-  }, []);
+  }, [currentView, selectedArea]);
   
   // Log explicit re-renders to debug when the component updates
   console.log('[ChecklistApp] Rendering with state:', { 
@@ -122,11 +121,11 @@ const ChecklistApp = () => {
     <div className="min-h-screen bg-gray-50">
       <Header 
         title={getHeaderTitle()} 
-        showBackButton={!!(currentView || selectedArea)} 
+        showBackButton={Boolean(currentView || selectedArea)}
         showHomeButton={true}
         onBackClick={handleBack}
       />
-      <div className="max-w-lg mx-auto p-4">
+      <div className="max-w-lg mx-auto p-4 pt-20">
         {renderContent()}
       </div>
     </div>
