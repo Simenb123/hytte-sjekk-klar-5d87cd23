@@ -27,6 +27,7 @@ const ProfilePage: React.FC = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -37,23 +38,51 @@ const ProfilePage: React.FC = () => {
     const fetchProfile = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
+        // First, check if a profile exists
+        const { data, error: fetchError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) {
-          console.error('[ProfilePage] Error fetching profile:', error);
+        if (fetchError) {
+          console.error('[ProfilePage] Error fetching profile:', fetchError);
+          setError('Kunne ikke laste brukerprofil');
           toast.error('Kunne ikke laste brukerprofil');
-        } else if (data) {
+        } 
+        
+        if (data) {
           setProfile(data);
           setFirstName(data.first_name || '');
           setLastName(data.last_name || '');
           setPhone(data.phone || '');
+        } else {
+          // Create a profile if it doesn't exist
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              first_name: '',
+              last_name: '',
+              phone: ''
+            });
+
+          if (insertError) {
+            console.error('[ProfilePage] Error creating profile:', insertError);
+            setError('Kunne ikke opprette brukerprofil');
+            toast.error('Kunne ikke opprette brukerprofil');
+          } else {
+            setProfile({
+              id: user.id,
+              first_name: '',
+              last_name: '',
+              phone: ''
+            });
+          }
         }
       } catch (error) {
         console.error('[ProfilePage] Error:', error);
+        setError('En feil oppstod ved lasting av profil');
         toast.error('En feil oppstod ved lasting av profil');
       } finally {
         setIsLoading(false);
@@ -84,6 +113,7 @@ const ProfilePage: React.FC = () => {
         toast.error('Kunne ikke oppdatere profil');
       } else {
         toast.success('Profil oppdatert');
+        setError(null);
       }
     } catch (error) {
       console.error('[ProfilePage] Error:', error);
@@ -113,6 +143,12 @@ const ProfilePage: React.FC = () => {
       />
       
       <div className="max-w-md mx-auto p-4 pt-28">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4 text-red-800">
+            {error}
+          </div>
+        )}
+
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <p className="text-gray-500">Laster profil...</p>

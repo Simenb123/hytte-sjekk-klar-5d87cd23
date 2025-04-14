@@ -8,7 +8,8 @@ import DepartureAreas from '../components/DepartureAreas';
 import AreaChecklist from '../components/AreaChecklist';
 import Header from '../components/Header';
 import { Button } from '../components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, AlertCircle } from 'lucide-react';
+import { useChecklistData } from '../hooks/useChecklistData';
 
 // Simple error boundary to help debug rendering issues
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
@@ -55,6 +56,7 @@ const ChecklistApp = () => {
   } = useChecklist();
   
   const { user, signOut } = useAuth();
+  const { error } = useChecklistData();
   
   const [isContentLoaded, setIsContentLoaded] = useState(false);
   
@@ -80,7 +82,8 @@ const ChecklistApp = () => {
     selectedAreaId: selectedArea?.id,
     isContentLoaded,
     isLoading,
-    userId: user?.id
+    userId: user?.id,
+    hasError: !!error
   });
 
   // Memoize the back handler to prevent recreation on every render
@@ -107,6 +110,24 @@ const ChecklistApp = () => {
       );
     }
     
+    if (error) {
+      return (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4 text-red-800 flex items-start">
+          <AlertCircle className="mr-2 h-5 w-5 flex-shrink-0" />
+          <div>
+            <h3 className="font-medium">Feil ved lasting av sjekklister</h3>
+            <p className="text-sm mt-1">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-2 text-sm bg-red-800 text-white px-3 py-1 rounded"
+            >
+              Last på nytt
+            </button>
+          </div>
+        </div>
+      );
+    }
+    
     console.log('[ChecklistApp] Rendering content for:', { 
       currentView, 
       selectedAreaId: selectedArea?.id 
@@ -126,7 +147,7 @@ const ChecklistApp = () => {
       default:
         return <ErrorBoundary><MainMenu /></ErrorBoundary>;
     }
-  }, [currentView, selectedArea, isLoading]);
+  }, [currentView, selectedArea, isLoading, error]);
 
   // Determine the header title based on current view and selected area
   const getHeaderTitle = useCallback(() => {

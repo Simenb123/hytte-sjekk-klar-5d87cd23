@@ -14,6 +14,7 @@ export const useChecklistData = () => {
   const [arrivals, setArrivals] = useState<ChecklistItem[]>([]);
   const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadChecklists = async () => {
@@ -21,6 +22,7 @@ export const useChecklistData = () => {
       
       try {
         setIsLoading(true);
+        console.log('[useChecklistData] Loading checklists for user:', user.id);
         
         const [arrivalItems, departureAreasWithItems] = await Promise.all([
           getArrivalItemsWithStatus(user.id),
@@ -30,25 +32,30 @@ export const useChecklistData = () => {
         const convertedArrivals = arrivalItems.map((item: ChecklistItemWithStatus): ChecklistItem => ({
           id: item.id,
           text: item.text,
-          isCompleted: item.isCompleted
+          isCompleted: !!item.isCompleted
         }));
         
         const convertedDepartureAreas = departureAreasWithItems.map((area: AreaWithItems): ChecklistArea => ({
           id: area.id,
           name: area.name,
-          isCompleted: area.isCompleted,
+          isCompleted: !!area.isCompleted,
           items: area.items.map(item => ({
             id: item.id,
             text: item.text,
-            isCompleted: item.isCompleted
+            isCompleted: !!item.isCompleted
           }))
         }));
         
+        console.log('[useChecklistData] Loaded arrivals:', convertedArrivals.length);
+        console.log('[useChecklistData] Loaded departure areas:', convertedDepartureAreas.length);
+        
         setArrivals(convertedArrivals);
         setDepartureAreas(convertedDepartureAreas);
+        setError(null);
         
       } catch (error) {
         console.error('[useChecklistData] Error loading from Supabase:', error);
+        setError('Kunne ikke laste sjekklister. Prøv igjen senere.');
         toast.error('Kunne ikke laste sjekklister. Prøv igjen senere.');
       } finally {
         setIsLoading(false);
@@ -58,5 +65,5 @@ export const useChecklistData = () => {
     loadChecklists();
   }, [user]);
 
-  return { arrivals, setArrivals, departureAreas, setDepartureAreas, isLoading };
+  return { arrivals, setArrivals, departureAreas, setDepartureAreas, isLoading, error };
 };

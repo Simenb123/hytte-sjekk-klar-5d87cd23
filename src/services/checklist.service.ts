@@ -56,16 +56,22 @@ export const logItemCompletion = async (
   itemId: string, 
   isCompleted: boolean
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('completion_logs')
-    .insert({
-      user_id: userId,
-      item_id: itemId,
-      is_completed: isCompleted
-    });
+  try {
+    const { error } = await supabase
+      .from('completion_logs')
+      .insert({
+        user_id: userId,
+        item_id: itemId,
+        is_completed: isCompleted
+      });
 
-  if (error) {
-    console.error('[logItemCompletion] Error logging item completion:', error);
+    if (error) {
+      console.error('[logItemCompletion] Error logging item completion:', error);
+      toast.error('Kunne ikke registrere fullføringen. Prøv igjen.');
+      throw error;
+    }
+  } catch (error) {
+    console.error('[logItemCompletion] Exception:', error);
     toast.error('Kunne ikke registrere fullføringen. Prøv igjen.');
     throw error;
   }
@@ -74,11 +80,15 @@ export const logItemCompletion = async (
 // Get arrival items with completion status
 export const getArrivalItemsWithStatus = async (userId: string): Promise<ChecklistItemWithStatus[]> => {
   try {
+    console.log('[getArrivalItemsWithStatus] Fetching for user:', userId);
+    
     // Fetch all arrival checklist items
     const items = await fetchChecklistItems('arrival');
     
     // Fetch all completion logs for the user
     const logs = await fetchCompletionLogs(userId);
+    
+    console.log('[getArrivalItemsWithStatus] Items:', items.length, 'Logs:', logs.length);
     
     // Create a map of item IDs to their completed status
     const completionMap = new Map<string, boolean>();
@@ -100,6 +110,8 @@ export const getArrivalItemsWithStatus = async (userId: string): Promise<Checkli
 // Get departure areas with items and completion status
 export const getDepartureAreasWithItems = async (userId: string): Promise<AreaWithItems[]> => {
   try {
+    console.log('[getDepartureAreasWithItems] Fetching for user:', userId);
+    
     // Fetch all areas
     const areas = await fetchAreas();
     
@@ -108,6 +120,8 @@ export const getDepartureAreasWithItems = async (userId: string): Promise<AreaWi
     
     // Fetch all completion logs for the user
     const logs = await fetchCompletionLogs(userId);
+    
+    console.log('[getDepartureAreasWithItems] Areas:', areas.length, 'Items:', items.length, 'Logs:', logs.length);
     
     // Create a map of item IDs to their completed status
     const completionMap = new Map<string, boolean>();
