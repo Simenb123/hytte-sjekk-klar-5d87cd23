@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import MainMenu from '../components/MainMenu';
 import ArrivalChecklist from '../components/ArrivalChecklist';
@@ -10,8 +10,17 @@ import Header from '../components/Header';
 const ChecklistApp: React.FC = () => {
   const { currentView, selectedArea, setCurrentView, selectArea } = useChecklist();
 
+  // Log initial mount and every render
+  console.log('[ChecklistApp] Rendering:', { currentView, selectedAreaId: selectedArea?.id });
+  
+  // Log whenever state changes
+  useEffect(() => {
+    console.log('[ChecklistApp] State changed:', { currentView, selectedAreaId: selectedArea?.id });
+  }, [currentView, selectedArea]);
+
   // Handle back button functionality within the checklist app
   const handleBack = () => {
+    console.log('[ChecklistApp] handleBack called:', { currentView, selectedAreaId: selectedArea?.id });
     if (selectedArea) {
       selectArea(null);
     } else if (currentView) {
@@ -21,6 +30,8 @@ const ChecklistApp: React.FC = () => {
 
   // Determine which view to show
   const renderContent = () => {
+    console.log('[ChecklistApp] Rendering content for:', { currentView, selectedAreaId: selectedArea?.id });
+    
     if (selectedArea) {
       return <AreaChecklist key="area-checklist" />;
     }
@@ -51,8 +62,6 @@ const ChecklistApp: React.FC = () => {
     }
   };
 
-  console.log('ChecklistApp rendering:', { currentView, selectedArea: selectedArea?.id });
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
@@ -68,4 +77,4 @@ const ChecklistApp: React.FC = () => {
   );
 };
 
-export default memo(ChecklistApp);
+export default ChecklistApp;

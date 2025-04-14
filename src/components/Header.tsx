@@ -9,12 +9,14 @@ interface HeaderProps {
   onBackClick?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
+const Header: React.FC<HeaderProps> = React.memo(({ 
   title, 
   showBackButton = false, 
   showHomeButton = false,
   onBackClick
 }) => {
+  console.log('[Header] Rendering with title:', title);
+  
   return (
     <div className="py-4 mb-4">
       <AppHeader 
@@ -25,6 +27,8 @@ const Header: React.FC<HeaderProps> = ({
       />
     </div>
   );
-};
+});
 
-export default memo(Header);
+Header.displayName = 'Header';
+
+export default Header;

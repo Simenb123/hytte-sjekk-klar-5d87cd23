@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo, useEffect } from 'react';
 import { ChecklistItem, ChecklistArea, initialArrivals, initialDepartureAreas, ChecklistType } from '../models/checklist';
 import { toast } from 'sonner';
 
@@ -23,54 +23,71 @@ interface ChecklistContextType {
 
 const ChecklistContext = createContext<ChecklistContextType | undefined>(undefined);
 
+// Load data from localStorage
+const loadFromStorage = (key: string, fallback: any) => {
+  try {
+    const savedData = localStorage.getItem(key);
+    return savedData ? JSON.parse(savedData) : fallback;
+  } catch (error) {
+    console.error(`Error loading ${key} from localStorage`, error);
+    return fallback;
+  }
+};
+
+// Save data to localStorage
+const saveToStorage = (key: string, data: any) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error(`Error saving ${key} to localStorage`, error);
+  }
+};
+
 export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
-  // Load data from localStorage with initial values as fallback
-  const [arrivals, setArrivals] = useState<ChecklistItem[]>(() => {
-    try {
-      const savedArrivals = localStorage.getItem('hytteArrivals');
-      return savedArrivals ? JSON.parse(savedArrivals) : initialArrivals;
-    } catch (error) {
-      console.error('Error loading arrivals from localStorage', error);
-      return initialArrivals;
-    }
-  });
+  // Initialize with data from localStorage or fallback to initial values
+  const [arrivals, setArrivals] = useState<ChecklistItem[]>(() => 
+    loadFromStorage('hytteArrivals', initialArrivals)
+  );
   
-  const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>(() => {
-    try {
-      const savedDepartures = localStorage.getItem('hytteDepartures');
-      return savedDepartures ? JSON.parse(savedDepartures) : initialDepartureAreas;
-    } catch (error) {
-      console.error('Error loading departures from localStorage', error);
-      return initialDepartureAreas;
-    }
-  });
+  const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>(() => 
+    loadFromStorage('hytteDepartures', initialDepartureAreas)
+  );
   
+  // Initialize view state
   const [currentView, setCurrentView] = useState<ChecklistType | null>(null);
   const [selectedArea, setSelectedArea] = useState<ChecklistArea | null>(null);
 
-  // Navigation function with useCallback to avoid unnecessary re-renders
+  // Log state changes
+  useEffect(() => {
+    console.log('[ChecklistContext] State updated:', { 
+      currentView, 
+      selectedAreaId: selectedArea?.id,
+      arrivals: arrivals.length,
+      departureAreas: departureAreas.length
+    });
+  }, [currentView, selectedArea, arrivals, departureAreas]);
+
+  // Navigation functions with useCallback to avoid unnecessary re-renders
   const handleSetCurrentView = useCallback((view: ChecklistType | null) => {
-    console.log('Setting current view to:', view);
+    console.log('[ChecklistContext] Setting current view to:', view);
     setCurrentView(view);
   }, []);
 
   const selectArea = useCallback((area: ChecklistArea | null) => {
-    console.log('Selecting area:', area?.id);
+    console.log('[ChecklistContext] Selecting area:', area?.id);
     setSelectedArea(area);
   }, []);
 
+  // Toggle arrival checklist item
   const toggleArrivalItem = useCallback((id: string) => {
+    console.log('[ChecklistContext] Toggling arrival item:', id);
     setArrivals((prevItems) => {
       const newItems = prevItems.map((item) =>
         item.id === id ? { ...item, isCompleted: !item.isCompleted } : item
       );
       
       // Save to localStorage
-      try {
-        localStorage.setItem('hytteArrivals', JSON.stringify(newItems));
-      } catch (error) {
-        console.error('Error saving arrivals to localStorage', error);
-      }
+      saveToStorage('hytteArrivals', newItems);
       
       // Check if all items are completed
       const allCompleted = newItems.every(item => item.isCompleted);
@@ -84,7 +101,9 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  // Toggle departure checklist item
   const toggleDepartureItem = useCallback((areaId: string, itemId: string) => {
+    console.log('[ChecklistContext] Toggling departure item:', { areaId, itemId });
     setDepartureAreas((prevAreas) => {
       const newAreas = prevAreas.map((area) => {
         if (area.id !== areaId) return area;
@@ -103,11 +122,7 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
       });
       
       // Save to localStorage
-      try {
-        localStorage.setItem('hytteDepartures', JSON.stringify(newAreas));
-      } catch (error) {
-        console.error('Error saving departures to localStorage', error);
-      }
+      saveToStorage('hytteDepartures', newAreas);
       
       // Check if all areas are completed
       const allAreasCompleted = newAreas.every(area => area.isCompleted);
@@ -121,7 +136,9 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  // Reset all checklists
   const resetChecklists = useCallback(() => {
+    console.log('[ChecklistContext] Resetting all checklists');
     setArrivals(initialArrivals);
     setDepartureAreas(initialDepartureAreas);
     setCurrentView(null);
@@ -135,6 +152,7 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  // Check if all items are completed
   const isAllArrivalsCompleted = useCallback(() => {
     return arrivals.every((item) => item.isCompleted);
   }, [arrivals]);
@@ -169,8 +187,6 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     isAllArrivalsCompleted, 
     isAllDeparturesCompleted
   ]);
-
-  console.log('ChecklistProvider rendering', { currentView, selectedAreaId: selectedArea?.id });
 
   return (
     <ChecklistContext.Provider value={contextValue}>

@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import Logo from './Logo';
 import { LogIn, LogOut } from 'lucide-react';
@@ -7,20 +7,20 @@ import { LogIn, LogOut } from 'lucide-react';
 const MainMenu: React.FC = () => {
   const { setCurrentView, isAllArrivalsCompleted, isAllDeparturesCompleted } = useChecklist();
   
-  const handleArrivalClick = () => {
-    console.log('Setting view to arrival');
+  const handleArrivalClick = useCallback(() => {
+    console.log('[MainMenu] Setting view to arrival');
     setCurrentView('arrival');
-  };
+  }, [setCurrentView]);
   
-  const handleDepartureClick = () => {
-    console.log('Setting view to departure');
+  const handleDepartureClick = useCallback(() => {
+    console.log('[MainMenu] Setting view to departure');
     setCurrentView('departure');
-  };
+  }, [setCurrentView]);
   
-  console.log('MainMenu rendering');
+  console.log('[MainMenu] rendering');
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh]">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] animate-fade-in">
       <Logo />
       
       <div className="w-full max-w-xs space-y-4 mt-4">

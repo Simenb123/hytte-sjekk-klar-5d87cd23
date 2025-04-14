@@ -6,7 +6,7 @@ import ChecklistItem from './ChecklistItem';
 const ArrivalChecklist: React.FC = () => {
   const { arrivals, toggleArrivalItem } = useChecklist();
   
-  console.log('ArrivalChecklist rendering', { itemCount: arrivals.length });
+  console.log('[ArrivalChecklist] rendering', { itemCount: arrivals.length });
   
   return (
     <div className="animate-fade-in">

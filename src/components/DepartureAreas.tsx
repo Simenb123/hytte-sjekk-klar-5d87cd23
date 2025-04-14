@@ -1,12 +1,17 @@
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import AreaButton from './AreaButton';
 
 const DepartureAreas: React.FC = () => {
   const { departureAreas, selectArea } = useChecklist();
   
-  console.log('DepartureAreas rendering', { areaCount: departureAreas.length });
+  console.log('[DepartureAreas] rendering', { areaCount: departureAreas.length });
+
+  const handleAreaClick = useCallback((area) => {
+    console.log('[DepartureAreas] Area clicked:', area.id);
+    selectArea(area);
+  }, [selectArea]);
   
   return (
     <div className="animate-fade-in">
@@ -18,7 +23,7 @@ const DepartureAreas: React.FC = () => {
             <AreaButton 
               key={area.id} 
               area={area} 
-              onClick={() => selectArea(area)}
+              onClick={() => handleAreaClick(area)}
             />
           ))
         ) : (

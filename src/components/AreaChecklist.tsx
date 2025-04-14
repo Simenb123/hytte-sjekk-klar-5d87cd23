@@ -1,14 +1,24 @@
 
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
 
 const AreaChecklist: React.FC = () => {
   const { selectedArea, toggleDepartureItem } = useChecklist();
   
-  console.log('AreaChecklist rendering', { selectedArea: selectedArea?.id });
+  console.log('[AreaChecklist] rendering', { selectedArea: selectedArea?.id });
   
-  if (!selectedArea) return null;
+  if (!selectedArea) {
+    console.log('[AreaChecklist] No area selected, rendering null');
+    return null;
+  }
+  
+  const handleToggleItem = useCallback((itemId: string) => {
+    console.log('[AreaChecklist] Toggling item:', itemId);
+    if (selectedArea) {
+      toggleDepartureItem(selectedArea.id, itemId);
+    }
+  }, [selectedArea, toggleDepartureItem]);
   
   return (
     <div className="animate-fade-in">
@@ -20,7 +30,7 @@ const AreaChecklist: React.FC = () => {
               id={item.id}
               text={item.text}
               isCompleted={item.isCompleted}
-              onToggle={() => toggleDepartureItem(selectedArea.id, item.id)}
+              onToggle={() => handleToggleItem(item.id)}
             />
           ))
         ) : (
