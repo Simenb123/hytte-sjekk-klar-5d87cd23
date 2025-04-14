@@ -1,43 +1,61 @@
-
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { ChecklistItem, ChecklistArea, ChecklistType, initialArrivals, initialDepartureAreas } from '../models/checklist';
 import { loadFromStorage, saveToStorage } from '../utils/storage.utils';
 
 export const useChecklistState = () => {
-  const [arrivals, setArrivals] = useState<ChecklistItem[]>(() => 
-    loadFromStorage('hytteArrivals', initialArrivals)
-  );
+  const [arrivals, setArrivals] = useState<ChecklistItem[]>(() => {
+    const loaded = loadFromStorage('hytteArrivals', initialArrivals);
+    console.log('[useChecklistState] Loaded arrivals:', loaded.length);
+    return loaded;
+  });
   
-  const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>(() => 
-    loadFromStorage('hytteDepartures', initialDepartureAreas)
-  );
+  const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>(() => {
+    const loaded = loadFromStorage('hytteDepartures', initialDepartureAreas);
+    console.log('[useChecklistState] Loaded departure areas:', loaded.length);
+    return loaded;
+  });
   
-  const [currentView, setCurrentViewState] = useState<ChecklistType | null>(() => 
-    loadFromStorage('hytteCurrentView', null)
-  );
+  const [currentView, setCurrentViewState] = useState<ChecklistType | null>(() => {
+    const view = loadFromStorage('hytteCurrentView', null);
+    console.log('[useChecklistState] Loaded current view:', view);
+    return view;
+  });
   
   const [selectedArea, setSelectedAreaState] = useState<ChecklistArea | null>(() => {
     try {
       const savedAreaId = localStorage.getItem('hytteSelectedAreaId');
+      console.log('[useChecklistState] Loaded selected area ID:', savedAreaId);
+      
       if (!savedAreaId) return null;
       
       const areas = loadFromStorage('hytteDepartures', initialDepartureAreas);
-      return areas.find(area => area.id === savedAreaId) || null;
+      const area = areas.find(area => area.id === savedAreaId) || null;
+      console.log('[useChecklistState] Found area object:', area?.id);
+      return area;
     } catch (error) {
-      console.error('Error loading selected area from localStorage', error);
+      console.error('[useChecklistState] Error loading selected area from localStorage', error);
       return null;
     }
   });
 
+  useEffect(() => {
+    console.log('[useChecklistState] Initial state set up:', {
+      arrivals: arrivals.length,
+      departureAreas: departureAreas.length,
+      currentView,
+      selectedAreaId: selectedArea?.id
+    });
+  }, []);
+
   const setCurrentView = useCallback((view: ChecklistType | null) => {
-    console.log('[ChecklistContext] Setting current view to:', view);
+    console.log('[ChecklistState] Setting current view to:', view);
     setCurrentViewState(view);
     saveToStorage('hytteCurrentView', view);
   }, []);
 
   const selectArea = useCallback((area: ChecklistArea | null) => {
-    console.log('[ChecklistContext] Selecting area:', area?.id);
+    console.log('[ChecklistState] Selecting area:', area?.id);
     setSelectedAreaState(area);
     saveToStorage('hytteSelectedAreaId', area?.id || null);
   }, []);
@@ -112,11 +130,15 @@ export const useChecklistState = () => {
   }, []);
 
   const isAllArrivalsCompleted = useCallback(() => {
-    return arrivals.every((item) => item.isCompleted);
+    const result = arrivals.every((item) => item.isCompleted);
+    console.log('[ChecklistState] isAllArrivalsCompleted:', result);
+    return result;
   }, [arrivals]);
 
   const isAllDeparturesCompleted = useCallback(() => {
-    return departureAreas.every((area) => area.isCompleted);
+    const result = departureAreas.every((area) => area.isCompleted);
+    console.log('[ChecklistState] isAllDeparturesCompleted:', result);
+    return result;
   }, [departureAreas]);
 
   return {

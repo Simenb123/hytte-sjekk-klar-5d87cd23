@@ -1,5 +1,5 @@
 
-import React, { memo, useCallback } from 'react';
+import React from 'react';
 import { CheckSquare, Square } from 'lucide-react';
 
 interface ChecklistItemProps {
@@ -9,18 +9,17 @@ interface ChecklistItemProps {
   onToggle: () => void;
 }
 
-const ChecklistItem: React.FC<ChecklistItemProps> = memo(({ 
+const ChecklistItem: React.FC<ChecklistItemProps> = ({ 
   id, 
   text, 
   isCompleted, 
   onToggle 
 }) => {
-  console.log(`[ChecklistItem] Rendering item: ${id}, completed: ${isCompleted}`);
+  // Fjernet logg for å redusere mengden output i konsollen
   
-  const handleToggle = useCallback(() => {
-    console.log(`[ChecklistItem] Toggling item: ${id}`);
+  const handleToggle = () => {
     onToggle();
-  }, [id, onToggle]);
+  };
   
   return (
     <div 
@@ -39,8 +38,6 @@ const ChecklistItem: React.FC<ChecklistItemProps> = memo(({
       </span>
     </div>
   );
-});
-
-ChecklistItem.displayName = 'ChecklistItem';
+};
 
 export default ChecklistItem;

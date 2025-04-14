@@ -11,13 +11,13 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
   
   // Log state changes
   useEffect(() => {
-    console.log('[ChecklistContext] State updated:', { 
+    console.log('[ChecklistContext] Provider rendered with state:', { 
       currentView: state.currentView, 
       selectedAreaId: state.selectedArea?.id,
       arrivals: state.arrivals.length,
       departureAreas: state.departureAreas.length
     });
-  }, [state.currentView, state.selectedArea, state.arrivals, state.departureAreas]);
+  }, [state]);
 
   return (
     <ChecklistContext.Provider value={state}>
@@ -32,5 +32,7 @@ export const useChecklist = (): ChecklistContextType => {
     console.error('[ChecklistContext] useChecklist must be used within a ChecklistProvider');
     throw new Error('useChecklist must be used within a ChecklistProvider');
   }
+  
+  console.log('[ChecklistContext] useChecklist called successfully');
   return context;
 };

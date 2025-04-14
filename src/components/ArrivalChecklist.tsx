@@ -1,18 +1,18 @@
 
-import React, { memo, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
 
-const ArrivalChecklist: React.FC = memo(() => {
+const ArrivalChecklist: React.FC = () => {
   const { arrivals, toggleArrivalItem } = useChecklist();
   
   // Logg montering og avmontering for debugging
   useEffect(() => {
-    console.log('[ArrivalChecklist] Component mounted');
+    console.log('[ArrivalChecklist] Component mounted with', { itemCount: arrivals.length });
     return () => {
       console.log('[ArrivalChecklist] Component unmounted');
     };
-  }, []);
+  }, [arrivals.length]);
   
   console.log('[ArrivalChecklist] rendering', { itemCount: arrivals.length });
   
@@ -41,8 +41,6 @@ const ArrivalChecklist: React.FC = memo(() => {
       </div>
     </div>
   );
-});
-
-ArrivalChecklist.displayName = 'ArrivalChecklist';
+};
 
 export default ArrivalChecklist;

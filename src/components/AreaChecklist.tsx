@@ -1,9 +1,9 @@
 
-import React, { memo, useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
 
-const AreaChecklist: React.FC = memo(() => {
+const AreaChecklist: React.FC = () => {
   const { selectedArea, toggleDepartureItem } = useChecklist();
   
   // Logg montering og avmontering for debugging
@@ -12,7 +12,7 @@ const AreaChecklist: React.FC = memo(() => {
     return () => {
       console.log('[AreaChecklist] Component unmounted');
     };
-  }, [selectedArea]);
+  }, [selectedArea?.id]);
   
   console.log('[AreaChecklist] rendering', { selectedArea: selectedArea?.id });
   
@@ -21,12 +21,12 @@ const AreaChecklist: React.FC = memo(() => {
     return null;
   }
   
-  const handleToggleItem = useCallback((itemId: string) => {
+  const handleToggleItem = (itemId: string) => {
     console.log('[AreaChecklist] Toggling item:', itemId);
     if (selectedArea) {
       toggleDepartureItem(selectedArea.id, itemId);
     }
-  }, [selectedArea, toggleDepartureItem]);
+  };
   
   return (
     <div className="animate-fade-in">
@@ -53,8 +53,6 @@ const AreaChecklist: React.FC = memo(() => {
       </div>
     </div>
   );
-});
-
-AreaChecklist.displayName = 'AreaChecklist';
+};
 
 export default AreaChecklist;

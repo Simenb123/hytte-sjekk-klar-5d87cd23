@@ -13,28 +13,40 @@ import CalendarApp from "./pages/CalendarApp";
 import OtherApps from "./pages/OtherApps";
 import { ChecklistProvider } from "./context/ChecklistContext";
 
-const queryClient = new QueryClient();
+// Oppretter en QueryClient med stabil konfigurasjon
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutter
+      retry: 1,
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner position="top-center" closeButton />
-      <ChecklistProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/checklist" element={<ChecklistApp />} />
-            <Route path="/weather" element={<WeatherApp />} />
-            <Route path="/calendar" element={<CalendarApp />} />
-            <Route path="/other-apps" element={<OtherApps />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </ChecklistProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log('[App] Rendering App component');
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner position="top-center" closeButton />
+        <ChecklistProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/checklist" element={<ChecklistApp />} />
+              <Route path="/weather" element={<WeatherApp />} />
+              <Route path="/calendar" element={<CalendarApp />} />
+              <Route path="/other-apps" element={<OtherApps />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </ChecklistProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

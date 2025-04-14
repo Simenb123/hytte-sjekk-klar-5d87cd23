@@ -1,25 +1,25 @@
 
-import React, { memo, useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import AreaButton from './AreaButton';
 
-const DepartureAreas: React.FC = memo(() => {
+const DepartureAreas: React.FC = () => {
   const { departureAreas, selectArea } = useChecklist();
   
   // Logg montering og avmontering for debugging
   useEffect(() => {
-    console.log('[DepartureAreas] Component mounted');
+    console.log('[DepartureAreas] Component mounted with', { areaCount: departureAreas.length });
     return () => {
       console.log('[DepartureAreas] Component unmounted');
     };
-  }, []);
+  }, [departureAreas.length]);
   
   console.log('[DepartureAreas] rendering', { areaCount: departureAreas.length });
 
-  const handleAreaClick = useCallback((area) => {
+  const handleAreaClick = (area) => {
     console.log('[DepartureAreas] Area clicked:', area.id);
     selectArea(area);
-  }, [selectArea]);
+  };
   
   return (
     <div className="animate-fade-in">
@@ -46,8 +46,6 @@ const DepartureAreas: React.FC = memo(() => {
       </div>
     </div>
   );
-});
-
-DepartureAreas.displayName = 'DepartureAreas';
+};
 
 export default DepartureAreas;

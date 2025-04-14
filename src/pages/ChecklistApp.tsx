@@ -1,5 +1,5 @@
 
-import React, { memo, useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import MainMenu from '../components/MainMenu';
 import ArrivalChecklist from '../components/ArrivalChecklist';
@@ -7,50 +7,27 @@ import DepartureAreas from '../components/DepartureAreas';
 import AreaChecklist from '../components/AreaChecklist';
 import Header from '../components/Header';
 
-// Bruk stabile IDer for hver view-tilstand for å unngå unmounting
-const VIEW_KEYS = {
-  null: 'main-menu',
-  arrival: 'arrival-checklist',
-  departure: 'departure-areas'
-};
-
 const ChecklistApp = () => {
   const { currentView, selectedArea, setCurrentView, selectArea } = useChecklist();
-  const [mounted, setMounted] = useState(false);
   
-  // Sikre at komponenten er ferdig montert før vi prøver å rendere innholdet
   useEffect(() => {
-    console.log('[ChecklistApp] Component mounting');
-    
-    // Use a delay to ensure the component is fully mounted
-    const mountTimer = setTimeout(() => {
-      setMounted(true);
-      console.log('[ChecklistApp] Component fully mounted');
-    }, 50);
-    
+    console.log('[ChecklistApp] Component mounted with', { 
+      currentView, 
+      selectedAreaId: selectedArea?.id 
+    });
+
     return () => {
       console.log('[ChecklistApp] Component unmounting');
-      clearTimeout(mountTimer);
-      setMounted(false);
     };
   }, []);
-
-  // Log hver rendering for debugging
-  console.log('[ChecklistApp] Rendering:', { 
-    currentView, 
-    selectedAreaId: selectedArea?.id, 
-    mounted 
-  });
   
   // Log når tilstanden endres
   useEffect(() => {
-    if (mounted) {
-      console.log('[ChecklistApp] State changed:', { 
-        currentView, 
-        selectedAreaId: selectedArea?.id 
-      });
-    }
-  }, [currentView, selectedArea, mounted]);
+    console.log('[ChecklistApp] State changed:', { 
+      currentView, 
+      selectedAreaId: selectedArea?.id 
+    });
+  }, [currentView, selectedArea]);
 
   // Håndterer tilbakeknapp-funksjonalitet i sjekklisteappen
   const handleBack = () => {
@@ -68,28 +45,22 @@ const ChecklistApp = () => {
 
   // Bestemmer hvilken visning som skal vises
   const renderContent = () => {
-    if (!mounted) {
-      console.log('[ChecklistApp] Not rendering content because not mounted yet');
-      return <div className="flex justify-center items-center min-h-[50vh]">Laster...</div>;
-    }
-    
     console.log('[ChecklistApp] Rendering content for:', { 
       currentView, 
       selectedAreaId: selectedArea?.id 
     });
     
-    // Bruk stabile komponenter med unike nøkler for å forhindre unmounting
     if (selectedArea) {
-      return <AreaChecklist key={`area-${selectedArea.id}`} />;
+      return <AreaChecklist />;
     }
 
     switch (currentView) {
       case 'arrival':
-        return <ArrivalChecklist key={VIEW_KEYS.arrival} />;
+        return <ArrivalChecklist />;
       case 'departure':
-        return <DepartureAreas key={VIEW_KEYS.departure} />;
+        return <DepartureAreas />;
       default:
-        return <MainMenu key={VIEW_KEYS.null} />;
+        return <MainMenu />;
     }
   };
 
@@ -124,4 +95,5 @@ const ChecklistApp = () => {
   );
 };
 
-export default memo(ChecklistApp);
+// Fjernet memo for å sikre at komponenten renderes på nytt når konteksten endres
+export default ChecklistApp;
