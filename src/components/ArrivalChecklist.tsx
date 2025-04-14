@@ -1,11 +1,20 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import Header from './Header';
 import ChecklistItem from './ChecklistItem';
+import { useNavigate } from 'react-router-dom';
 
 const ArrivalChecklist: React.FC = () => {
-  const { arrivals, toggleArrivalItem } = useChecklist();
+  const { arrivals, toggleArrivalItem, currentView } = useChecklist();
+  const navigate = useNavigate();
+  
+  // Safety check - if not in arrival view, navigate back to the main menu
+  useEffect(() => {
+    if (currentView !== 'arrival') {
+      navigate('/checklist');
+    }
+  }, [currentView, navigate]);
   
   return (
     <div className="animate-fade-in">

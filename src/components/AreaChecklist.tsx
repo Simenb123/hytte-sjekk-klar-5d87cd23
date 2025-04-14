@@ -1,11 +1,20 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import Header from './Header';
 import ChecklistItem from './ChecklistItem';
+import { useNavigate } from 'react-router-dom';
 
 const AreaChecklist: React.FC = () => {
-  const { selectedArea, toggleDepartureItem } = useChecklist();
+  const { selectedArea, toggleDepartureItem, currentView } = useChecklist();
+  const navigate = useNavigate();
+  
+  // Safety check - if no area is selected, navigate back to the departure areas screen
+  useEffect(() => {
+    if (!selectedArea) {
+      navigate('/checklist');
+    }
+  }, [selectedArea, navigate]);
   
   if (!selectedArea) return null;
   

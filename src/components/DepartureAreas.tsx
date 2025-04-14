@@ -1,11 +1,20 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import Header from './Header';
 import AreaButton from './AreaButton';
+import { useNavigate } from 'react-router-dom';
 
 const DepartureAreas: React.FC = () => {
-  const { departureAreas, selectArea } = useChecklist();
+  const { departureAreas, selectArea, currentView } = useChecklist();
+  const navigate = useNavigate();
+  
+  // Safety check - if not in departure view, navigate back to the main menu
+  useEffect(() => {
+    if (currentView !== 'departure') {
+      navigate('/checklist');
+    }
+  }, [currentView, navigate]);
   
   return (
     <div className="animate-fade-in">
