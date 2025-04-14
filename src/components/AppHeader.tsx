@@ -44,7 +44,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             {showBackButton && (
               <button 
                 onClick={handleBack}
-                className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center"
+                className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center bg-white text-black"
                 aria-label="Tilbake"
                 type="button" // Explicitly set type to prevent form submission
               >
@@ -57,7 +57,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           {showHomeButton && (
             <button 
               onClick={handleHome}
-              className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center"
+              className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center bg-white text-black"
               aria-label="Hjem"
               type="button" // Explicitly set type to prevent form submission
             >

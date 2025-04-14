@@ -131,12 +131,12 @@ const ChecklistApp = () => {
     <div className="min-h-screen bg-gray-50">
       <Header 
         title={getHeaderTitle()} 
-        showBackButton={Boolean(currentView || selectedArea)}
+        showBackButton={true} // Always show back button
         showHomeButton={true}
         onBackClick={handleBack}
       />
       
-      <div className="max-w-lg mx-auto p-4 pt-24">
+      <div className="max-w-lg mx-auto p-4 pt-28"> {/* Increase padding top to avoid content being under header */}
         {isLoaded ? renderContent() : (
           <div className="flex justify-center items-center h-64">
             <p className="text-gray-500">Laster innhold...</p>

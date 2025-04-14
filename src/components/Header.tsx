@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = memo(({
   console.log('[Header] Rendering with title:', title, 'showBackButton:', showBackButton);
   
   return (
-    <div className="w-full">
+    <div className="w-full sticky top-0 z-50"> {/* Make sticky instead of relying on fixed positioning in child */}
       <AppHeader 
         title={title || ''}
         showBackButton={showBackButton}
