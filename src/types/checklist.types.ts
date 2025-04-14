@@ -6,7 +6,7 @@ export interface ChecklistContextType {
   departureAreas: ChecklistArea[];
   currentView: ChecklistType | null;
   selectedArea: ChecklistArea | null;
-  isLoading: boolean; // Added this property
+  isLoading: boolean;
   setCurrentView: (view: ChecklistType | null) => void;
   selectArea: (area: ChecklistArea | null) => void;
   toggleArrivalItem: (id: string) => void;
@@ -14,6 +14,7 @@ export interface ChecklistContextType {
   resetChecklists: () => void;
   isAllArrivalsCompleted: () => boolean;
   isAllDeparturesCompleted: () => boolean;
+  setLoading: (isLoading: boolean) => void;
 }
 
 export interface ChecklistState {
@@ -21,10 +22,9 @@ export interface ChecklistState {
   departureAreas: ChecklistArea[];
   currentView: ChecklistType | null;
   selectedArea: ChecklistArea | null;
-  isLoading: boolean; // Added here as well
+  isLoading: boolean;
 }
 
-// Update the ChecklistAction type to include isLoading
 export type ChecklistAction =
   | { type: 'SET_ARRIVALS'; payload: ChecklistItem[] }
   | { type: 'SET_DEPARTURE_AREAS'; payload: ChecklistArea[] }
@@ -33,4 +33,4 @@ export type ChecklistAction =
   | { type: 'TOGGLE_ARRIVAL_ITEM'; payload: string }
   | { type: 'TOGGLE_DEPARTURE_ITEM'; payload: { areaId: string; itemId: string } }
   | { type: 'RESET_CHECKLISTS' }
-  | { type: 'SET_LOADING'; payload: boolean }; // Add this line to support loading state
+  | { type: 'SET_LOADING'; payload: boolean };

@@ -7,6 +7,7 @@ export interface ChecklistState {
   departureAreas: ChecklistArea[];
   currentView: ChecklistType | null;
   selectedArea: ChecklistArea | null;
+  isLoading: boolean;
 }
 
 // Define action types
@@ -17,7 +18,8 @@ export type ChecklistAction =
   | { type: 'SET_SELECTED_AREA'; payload: ChecklistArea | null }
   | { type: 'TOGGLE_ARRIVAL_ITEM'; payload: string }
   | { type: 'TOGGLE_DEPARTURE_ITEM'; payload: { areaId: string; itemId: string } }
-  | { type: 'RESET_CHECKLISTS' };
+  | { type: 'RESET_CHECKLISTS' }
+  | { type: 'SET_LOADING'; payload: boolean };
 
 export interface ChecklistContextType extends ChecklistState {
   dispatch: React.Dispatch<ChecklistAction>;
@@ -28,4 +30,5 @@ export interface ChecklistContextType extends ChecklistState {
   resetChecklists: () => void;
   isAllArrivalsCompleted: () => boolean;
   isAllDeparturesCompleted: () => boolean;
+  setLoading: (isLoading: boolean) => void;
 }

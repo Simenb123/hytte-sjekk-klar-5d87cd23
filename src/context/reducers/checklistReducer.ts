@@ -1,3 +1,4 @@
+
 import { ChecklistState, ChecklistAction } from '../types/checklist.types';
 import { saveToStorage } from '../../utils/storage.utils';
 import { toast } from 'sonner';
@@ -77,6 +78,7 @@ export const checklistReducer = (state: ChecklistState, action: ChecklistAction)
         departureAreas: [],
         currentView: null,
         selectedArea: null,
+        isLoading: false
       };
       
     default:

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode, useReducer, useEffect } from 'react';
 import { ChecklistContextType, ChecklistState, ChecklistAction } from './types/checklist.types';
 import { ChecklistType, ChecklistArea } from '../models/checklist';
@@ -72,6 +73,7 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const setLoading = (isLoading: boolean) => {
+    console.log('[ChecklistContext] Setting loading state:', isLoading);
     dispatch({ type: 'SET_LOADING', payload: isLoading });
   };
   
@@ -85,6 +87,7 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     resetChecklists,
     isAllArrivalsCompleted,
     isAllDeparturesCompleted,
+    setLoading
   };
   
   return (
