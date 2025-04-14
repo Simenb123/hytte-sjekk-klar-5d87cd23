@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { ChecklistItem, ChecklistArea, initialArrivals, initialDepartureAreas, ChecklistType } from '../models/checklist';
 import { toast } from 'sonner';
 
@@ -24,20 +24,32 @@ interface ChecklistContextType {
 const ChecklistContext = createContext<ChecklistContextType | undefined>(undefined);
 
 export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
-  const [arrivals, setArrivals] = useState<ChecklistItem[]>(initialArrivals);
-  const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>(initialDepartureAreas);
+  const [arrivals, setArrivals] = useState<ChecklistItem[]>(() => {
+    const savedArrivals = localStorage.getItem('hytteArrivals');
+    return savedArrivals ? JSON.parse(savedArrivals) : initialArrivals;
+  });
+  
+  const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>(() => {
+    const savedDepartures = localStorage.getItem('hytteDepartures');
+    return savedDepartures ? JSON.parse(savedDepartures) : initialDepartureAreas;
+  });
+  
   const [currentView, setCurrentView] = useState<ChecklistType | null>(null);
   const [selectedArea, setSelectedArea] = useState<ChecklistArea | null>(null);
 
-  const selectArea = (area: ChecklistArea | null) => {
+  // Use useCallback to prevent unnecessary re-renders
+  const selectArea = useCallback((area: ChecklistArea | null) => {
     setSelectedArea(area);
-  };
+  }, []);
 
-  const toggleArrivalItem = (id: string) => {
+  const toggleArrivalItem = useCallback((id: string) => {
     setArrivals((prevItems) => {
       const newItems = prevItems.map((item) =>
         item.id === id ? { ...item, isCompleted: !item.isCompleted } : item
       );
+      
+      // Save to localStorage
+      localStorage.setItem('hytteArrivals', JSON.stringify(newItems));
       
       // Check if all items are completed
       const allCompleted = newItems.every(item => item.isCompleted);
@@ -49,9 +61,9 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
       
       return newItems;
     });
-  };
+  }, []);
 
-  const toggleDepartureItem = (areaId: string, itemId: string) => {
+  const toggleDepartureItem = useCallback((areaId: string, itemId: string) => {
     setDepartureAreas((prevAreas) => {
       const newAreas = prevAreas.map((area) => {
         if (area.id !== areaId) return area;
@@ -69,6 +81,9 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
         };
       });
       
+      // Save to localStorage
+      localStorage.setItem('hytteDepartures', JSON.stringify(newAreas));
+      
       // Check if all areas are completed
       const allAreasCompleted = newAreas.every(area => area.isCompleted);
       if (allAreasCompleted) {
@@ -79,22 +94,24 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
       
       return newAreas;
     });
-  };
+  }, []);
 
-  const resetChecklists = () => {
+  const resetChecklists = useCallback(() => {
     setArrivals(initialArrivals);
     setDepartureAreas(initialDepartureAreas);
     setCurrentView(null);
     setSelectedArea(null);
-  };
+    localStorage.removeItem('hytteArrivals');
+    localStorage.removeItem('hytteDepartures');
+  }, []);
 
-  const isAllArrivalsCompleted = () => {
+  const isAllArrivalsCompleted = useCallback(() => {
     return arrivals.every((item) => item.isCompleted);
-  };
+  }, [arrivals]);
 
-  const isAllDeparturesCompleted = () => {
+  const isAllDeparturesCompleted = useCallback(() => {
     return departureAreas.every((area) => area.isCompleted);
-  };
+  }, [departureAreas]);
 
   return (
     <ChecklistContext.Provider
