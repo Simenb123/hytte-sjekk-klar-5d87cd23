@@ -16,7 +16,7 @@ const ArrivalChecklist: React.FC = () => {
       />
       
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-        {arrivals.map((item) => (
+        {arrivals && arrivals.map((item) => (
           <ChecklistItem
             key={item.id}
             id={item.id}

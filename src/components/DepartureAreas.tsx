@@ -18,7 +18,7 @@ const DepartureAreas: React.FC = () => {
       <div className="mb-4">
         <h3 className="text-lg font-medium mb-3">Velg område</h3>
         
-        {departureAreas.map((area) => (
+        {departureAreas && departureAreas.map((area) => (
           <AreaButton 
             key={area.id} 
             area={area} 

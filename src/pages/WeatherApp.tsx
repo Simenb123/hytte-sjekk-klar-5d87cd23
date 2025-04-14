@@ -2,6 +2,7 @@
 import React from 'react';
 import AppHeader from '../components/AppHeader';
 import { Cloud, CloudRain, Sun, Wind } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const WeatherApp: React.FC = () => {
   // This would normally fetch data from YR API
@@ -12,6 +13,10 @@ const WeatherApp: React.FC = () => {
     { day: 'Onsdag', temp: '14°', condition: 'Vind', icon: Wind },
     { day: 'Torsdag', temp: '17°', condition: 'Sol', icon: Sun },
   ];
+
+  const openYrWebsite = () => {
+    window.open('https://www.yr.no', '_blank');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -55,6 +60,13 @@ const WeatherApp: React.FC = () => {
             );
           })}
         </div>
+        
+        <Button 
+          onClick={openYrWebsite}
+          className="w-full mb-4 bg-blue-600 hover:bg-blue-700"
+        >
+          Se komplett værmelding på YR.no
+        </Button>
         
         <div className="text-center text-sm text-gray-500">
           <p>Værdata fra YR.no</p>

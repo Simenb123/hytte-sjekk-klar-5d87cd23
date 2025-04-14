@@ -42,6 +42,12 @@ const CalendarApp: React.FC = () => {
     });
   };
 
+  const connectGoogleCalendar = () => {
+    toast.info('Google Calendar-integrasjon', {
+      description: 'Kobling til Google Calendar kommer snart!',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader title="Kalender og booking" showBackButton showHomeButton />
@@ -86,11 +92,20 @@ const CalendarApp: React.FC = () => {
             >
               Ny booking
             </Button>
+            
+            <Button 
+              onClick={connectGoogleCalendar} 
+              className="w-full mt-3 bg-green-600 hover:bg-green-700"
+              variant="outline"
+            >
+              Koble til Google Calendar
+            </Button>
           </CardContent>
         </Card>
         
         <div className="text-center text-sm text-gray-500">
           <p>Datoer markert med rødt er allerede booket</p>
+          <p>Google Calendar-integrasjon kommer snart!</p>
         </div>
       </div>
     </div>

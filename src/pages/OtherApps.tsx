@@ -1,11 +1,12 @@
+
 import React from 'react';
 import AppHeader from '../components/AppHeader';
 import DashboardCard from '../components/DashboardCard';
 import { 
-  Home, 
+  Snowflake, 
   Wrench, 
   PhoneCall, 
-  ShoppingCart, 
+  Map, 
   FileCheck, 
   Camera 
 } from 'lucide-react';
@@ -18,39 +19,58 @@ const OtherApps: React.FC = () => {
     });
   };
 
+  const openExternalLink = (url: string, appName: string) => {
+    window.open(url, '_blank');
+    toast.success(`Åpner ${appName} i App Store`, {
+      description: 'Installer appen for full funksjonalitet',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader title="Andre apper" showBackButton showHomeButton />
       
       <div className="max-w-lg mx-auto p-4">
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div onClick={() => handleAppClick('Hjemmeapp')} className="cursor-pointer">
+          <div onClick={() => openExternalLink('https://apps.apple.com/no/app/gausta/id1447369775?l=nb', 'Gausta')} className="cursor-pointer">
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full">
-              <div className="bg-indigo-600 p-4 text-white flex items-center justify-center">
-                <Home size={32} />
+              <div className="bg-blue-600 p-4 text-white flex items-center justify-center">
+                <Snowflake size={32} />
               </div>
               <div className="p-3">
-                <h3 className="text-base font-semibold mb-1">Hjemmeapp</h3>
-                <p className="text-gray-600 text-xs">Sjekklister for hjemme</p>
+                <h3 className="text-base font-semibold mb-1">Gausta</h3>
+                <p className="text-gray-600 text-xs">Åpne Gausta-appen</p>
               </div>
             </div>
           </div>
           
-          <div onClick={() => handleAppClick('Vedlikeholdslogg')} className="cursor-pointer">
+          <div onClick={() => openExternalLink('https://apps.apple.com/no/app/hyttetjenester-appen/id1481330344?l=nb', 'Hyttetjenester')} className="cursor-pointer">
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full">
               <div className="bg-amber-600 p-4 text-white flex items-center justify-center">
                 <Wrench size={32} />
               </div>
               <div className="p-3">
-                <h3 className="text-base font-semibold mb-1">Vedlikeholdslogg</h3>
-                <p className="text-gray-600 text-xs">Oversikt over utført vedlikehold</p>
+                <h3 className="text-base font-semibold mb-1">Hyttetjenester</h3>
+                <p className="text-gray-600 text-xs">Åpne Hyttetjenester-appen</p>
+              </div>
+            </div>
+          </div>
+          
+          <div onClick={() => openExternalLink('https://apps.apple.com/no/app/skisporet/id404514360?l=nb', 'Skisporet')} className="cursor-pointer">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full">
+              <div className="bg-green-600 p-4 text-white flex items-center justify-center">
+                <Map size={32} />
+              </div>
+              <div className="p-3">
+                <h3 className="text-base font-semibold mb-1">Skisporet</h3>
+                <p className="text-gray-600 text-xs">Åpne Skisporet-appen</p>
               </div>
             </div>
           </div>
           
           <div onClick={() => handleAppClick('Kontaktliste')} className="cursor-pointer">
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full">
-              <div className="bg-green-600 p-4 text-white flex items-center justify-center">
+              <div className="bg-purple-600 p-4 text-white flex items-center justify-center">
                 <PhoneCall size={32} />
               </div>
               <div className="p-3">
@@ -60,21 +80,9 @@ const OtherApps: React.FC = () => {
             </div>
           </div>
           
-          <div onClick={() => handleAppClick('Handleliste')} className="cursor-pointer">
-            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full">
-              <div className="bg-blue-600 p-4 text-white flex items-center justify-center">
-                <ShoppingCart size={32} />
-              </div>
-              <div className="p-3">
-                <h3 className="text-base font-semibold mb-1">Handleliste</h3>
-                <p className="text-gray-600 text-xs">Hva trenger vi til hytta?</p>
-              </div>
-            </div>
-          </div>
-          
           <div onClick={() => handleAppClick('Inventarliste')} className="cursor-pointer">
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full">
-              <div className="bg-purple-600 p-4 text-white flex items-center justify-center">
+              <div className="bg-indigo-600 p-4 text-white flex items-center justify-center">
                 <FileCheck size={32} />
               </div>
               <div className="p-3">
@@ -98,7 +106,7 @@ const OtherApps: React.FC = () => {
         </div>
         
         <div className="text-center text-sm text-gray-500">
-          <p>Flere apper er under utvikling</p>
+          <p>Klikk på app-ikonene for å åpne offisielle apper</p>
         </div>
       </div>
     </div>

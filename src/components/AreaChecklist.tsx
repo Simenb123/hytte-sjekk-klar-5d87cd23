@@ -18,7 +18,7 @@ const AreaChecklist: React.FC = () => {
       />
       
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-        {selectedArea.items.map((item) => (
+        {selectedArea.items && selectedArea.items.map((item) => (
           <ChecklistItem
             key={item.id}
             id={item.id}
