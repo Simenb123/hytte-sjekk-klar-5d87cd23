@@ -1,0 +1,37 @@
+
+import React from 'react';
+import { useChecklist } from '../context/ChecklistContext';
+import Header from './Header';
+import AreaButton from './AreaButton';
+
+const DepartureAreas: React.FC = () => {
+  const { departureAreas, selectArea } = useChecklist();
+  
+  return (
+    <div className="animate-fade-in">
+      <Header 
+        title="Avreisesjekk" 
+        showBackButton 
+        showHomeButton 
+      />
+      
+      <div className="mb-4">
+        <h3 className="text-lg font-medium mb-3">Velg område</h3>
+        
+        {departureAreas.map((area) => (
+          <AreaButton 
+            key={area.id} 
+            area={area} 
+            onClick={() => selectArea(area)}
+          />
+        ))}
+      </div>
+      
+      <div className="text-center text-gray-500 text-sm">
+        Alle områder må sjekkes før avreise
+      </div>
+    </div>
+  );
+};
+
+export default DepartureAreas;

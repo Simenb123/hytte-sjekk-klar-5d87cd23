@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,10 +14,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 210 93% 35%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 142 71% 45%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
@@ -97,5 +98,35 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .hytte-logo {
+    @apply w-36 h-36 mb-6;
+  }
+  
+  .hytte-button {
+    @apply p-4 text-lg font-semibold rounded-lg transition-all duration-300 flex items-center justify-center;
+  }
+  
+  .hytte-button-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+  
+  .hytte-button-success {
+    @apply bg-green-600 text-white hover:bg-green-700;
+  }
+  
+  .hytte-container {
+    @apply max-w-md mx-auto px-4 py-8;
+  }
+  
+  .hytte-card {
+    @apply bg-white rounded-xl shadow-lg p-6 mb-4 border border-gray-100;
+  }
+  
+  .hytte-checkbox {
+    @apply rounded border-2 border-gray-300 w-5 h-5 mr-2 checked:bg-green-500 checked:border-transparent focus:outline-none transition-colors;
   }
 }
