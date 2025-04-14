@@ -1,25 +1,42 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { ChecklistItem, ChecklistArea, ChecklistType, initialArrivals, initialDepartureAreas } from '../models/checklist';
 import { loadFromStorage, saveToStorage } from '../utils/storage.utils';
 
 export const useChecklistState = () => {
+  const isInitialMount = useRef(true);
+  
   const [arrivals, setArrivals] = useState<ChecklistItem[]>(() => {
-    const loaded = loadFromStorage('hytteArrivals', initialArrivals);
-    console.log('[useChecklistState] Loaded arrivals:', loaded.length);
-    return loaded;
+    try {
+      const loaded = loadFromStorage('hytteArrivals', initialArrivals);
+      console.log('[useChecklistState] Loaded arrivals:', loaded.length);
+      return loaded;
+    } catch (error) {
+      console.error('[useChecklistState] Failed to load arrivals, using initial data:', error);
+      return initialArrivals;
+    }
   });
   
   const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>(() => {
-    const loaded = loadFromStorage('hytteDepartures', initialDepartureAreas);
-    console.log('[useChecklistState] Loaded departure areas:', loaded.length);
-    return loaded;
+    try {
+      const loaded = loadFromStorage('hytteDepartures', initialDepartureAreas);
+      console.log('[useChecklistState] Loaded departure areas:', loaded.length);
+      return loaded;
+    } catch (error) {
+      console.error('[useChecklistState] Failed to load departure areas, using initial data:', error);
+      return initialDepartureAreas;
+    }
   });
   
   const [currentView, setCurrentViewState] = useState<ChecklistType | null>(() => {
-    const view = loadFromStorage('hytteCurrentView', null);
-    console.log('[useChecklistState] Loaded current view:', view);
-    return view;
+    try {
+      const view = loadFromStorage('hytteCurrentView', null);
+      console.log('[useChecklistState] Loaded current view:', view);
+      return view;
+    } catch (error) {
+      console.error('[useChecklistState] Failed to load current view, using null:', error);
+      return null;
+    }
   });
   
   const [selectedArea, setSelectedAreaState] = useState<ChecklistArea | null>(() => {
@@ -40,24 +57,35 @@ export const useChecklistState = () => {
   });
 
   useEffect(() => {
-    console.log('[useChecklistState] Initial state set up:', {
-      arrivals: arrivals.length,
-      departureAreas: departureAreas.length,
-      currentView,
-      selectedAreaId: selectedArea?.id
-    });
-  }, []);
+    if (isInitialMount.current) {
+      console.log('[useChecklistState] Initial state set up:', {
+        arrivals: arrivals.length,
+        departureAreas: departureAreas.length,
+        currentView,
+        selectedAreaId: selectedArea?.id
+      });
+      isInitialMount.current = false;
+    }
+  }, [arrivals.length, departureAreas.length, currentView, selectedArea]);
 
   const setCurrentView = useCallback((view: ChecklistType | null) => {
     console.log('[ChecklistState] Setting current view to:', view);
     setCurrentViewState(view);
-    saveToStorage('hytteCurrentView', view);
+    try {
+      saveToStorage('hytteCurrentView', view);
+    } catch (error) {
+      console.error('[ChecklistState] Failed to save current view to storage:', error);
+    }
   }, []);
 
   const selectArea = useCallback((area: ChecklistArea | null) => {
     console.log('[ChecklistState] Selecting area:', area?.id);
     setSelectedAreaState(area);
-    saveToStorage('hytteSelectedAreaId', area?.id || null);
+    try {
+      saveToStorage('hytteSelectedAreaId', area?.id || null);
+    } catch (error) {
+      console.error('[ChecklistState] Failed to save selected area ID to storage:', error);
+    }
   }, []);
 
   const toggleArrivalItem = useCallback((id: string) => {
@@ -130,15 +158,11 @@ export const useChecklistState = () => {
   }, []);
 
   const isAllArrivalsCompleted = useCallback(() => {
-    const result = arrivals.every((item) => item.isCompleted);
-    console.log('[ChecklistState] isAllArrivalsCompleted:', result);
-    return result;
+    return arrivals.every((item) => item.isCompleted);
   }, [arrivals]);
 
   const isAllDeparturesCompleted = useCallback(() => {
-    const result = departureAreas.every((area) => area.isCompleted);
-    console.log('[ChecklistState] isAllDeparturesCompleted:', result);
-    return result;
+    return departureAreas.every((area) => area.isCompleted);
   }, [departureAreas]);
 
   return {

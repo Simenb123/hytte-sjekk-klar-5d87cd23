@@ -10,6 +10,7 @@ import Header from '../components/Header';
 const ChecklistApp = () => {
   const { currentView, selectedArea, setCurrentView, selectArea } = useChecklist();
   
+  // Log only on initial mount to reduce console noise
   useEffect(() => {
     console.log('[ChecklistApp] Component mounted with', { 
       currentView, 
@@ -21,7 +22,7 @@ const ChecklistApp = () => {
     };
   }, []);
   
-  // Log når tilstanden endres
+  // Separate effect for logging state changes
   useEffect(() => {
     console.log('[ChecklistApp] State changed:', { 
       currentView, 
@@ -29,7 +30,7 @@ const ChecklistApp = () => {
     });
   }, [currentView, selectedArea]);
 
-  // Håndterer tilbakeknapp-funksjonalitet i sjekklisteappen
+  // Handle back button functionality
   const handleBack = () => {
     console.log('[ChecklistApp] handleBack called:', { 
       currentView, 
@@ -43,7 +44,7 @@ const ChecklistApp = () => {
     }
   };
 
-  // Bestemmer hvilken visning som skal vises
+  // Determine which view to show based on current state
   const renderContent = () => {
     console.log('[ChecklistApp] Rendering content for:', { 
       currentView, 
@@ -64,7 +65,7 @@ const ChecklistApp = () => {
     }
   };
 
-  // Bestemmer overskriften basert på gjeldende visning og valgt område
+  // Determine the header title based on current view and selected area
   const getHeaderTitle = () => {
     if (selectedArea) {
       return selectedArea.name;
@@ -95,5 +96,5 @@ const ChecklistApp = () => {
   );
 };
 
-// Fjernet memo for å sikre at komponenten renderes på nytt når konteksten endres
+// Export directly without memo to ensure proper re-rendering
 export default ChecklistApp;

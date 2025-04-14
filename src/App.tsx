@@ -13,11 +13,11 @@ import CalendarApp from "./pages/CalendarApp";
 import OtherApps from "./pages/OtherApps";
 import { ChecklistProvider } from "./context/ChecklistContext";
 
-// Oppretter en QueryClient med stabil konfigurasjon
+// Create a stable QueryClient that won't change between renders
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutter
+      staleTime: 5 * 60 * 1000, // 5 minutes
       retry: 1,
     },
   },

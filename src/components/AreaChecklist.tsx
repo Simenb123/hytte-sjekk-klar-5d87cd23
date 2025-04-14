@@ -6,19 +6,29 @@ import ChecklistItem from './ChecklistItem';
 const AreaChecklist: React.FC = () => {
   const { selectedArea, toggleDepartureItem } = useChecklist();
   
-  // Logg montering og avmontering for debugging
+  // Log mounting and unmounting for debugging
   useEffect(() => {
-    console.log('[AreaChecklist] Component mounted', { selectedAreaId: selectedArea?.id });
+    console.log('[AreaChecklist] Component mounted', { 
+      selectedAreaId: selectedArea?.id,
+      itemCount: selectedArea?.items?.length || 0
+    });
     return () => {
       console.log('[AreaChecklist] Component unmounted');
     };
   }, [selectedArea?.id]);
   
-  console.log('[AreaChecklist] rendering', { selectedArea: selectedArea?.id });
+  console.log('[AreaChecklist] rendering with', { 
+    selectedAreaId: selectedArea?.id,
+    hasItems: selectedArea?.items?.length > 0
+  });
   
   if (!selectedArea) {
     console.log('[AreaChecklist] No area selected, rendering null');
-    return null;
+    return (
+      <div className="text-center p-8 text-gray-500">
+        Ingen område valgt. Vennligst velg et område.
+      </div>
+    );
   }
   
   const handleToggleItem = (itemId: string) => {
