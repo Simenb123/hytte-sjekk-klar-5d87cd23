@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CheckSquare, CloudSun, Calendar, Layers, LogIn, User } from 'lucide-react';
 import AppHeader from '@/components/Header';
@@ -20,6 +21,7 @@ const Dashboard = () => {
             description="Ankomst- og avreisesjekk"
             icon={<CheckSquare className="h-6 w-6" />}
             linkTo="/checklist"
+            color="bg-emerald-500"
           />
           
           <DashboardCard
@@ -27,6 +29,7 @@ const Dashboard = () => {
             description="Lokalt vær og varsler"
             icon={<CloudSun className="h-6 w-6" />}
             linkTo="/weather"
+            color="bg-sky-500"
           />
           
           <DashboardCard
@@ -34,6 +37,7 @@ const Dashboard = () => {
             description="Booking og planlegging"
             icon={<Calendar className="h-6 w-6" />}
             linkTo="/calendar"
+            color="bg-indigo-500"
           />
           
           <DashboardCard
@@ -41,6 +45,7 @@ const Dashboard = () => {
             description="Se og endre profilen din"
             icon={<User className="h-6 w-6" />}
             linkTo="/profile"
+            color="bg-amber-500"
           />
           
           <DashboardCard
@@ -48,6 +53,7 @@ const Dashboard = () => {
             description="Nyttige ressurser"
             icon={<Layers className="h-6 w-6" />}
             linkTo="/other-apps"
+            color="bg-purple-500"
           />
           
           {!user && (
@@ -56,6 +62,7 @@ const Dashboard = () => {
               description="Få tilgang til alle funksjoner"
               icon={<LogIn className="h-6 w-6" />}
               linkTo="/auth"
+              color="bg-blue-500"
             />
           )}
         </div>

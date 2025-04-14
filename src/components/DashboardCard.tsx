@@ -3,22 +3,22 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 interface DashboardCardProps {
-  to: string;
+  linkTo: string;
   icon: React.ReactNode;
   title: string;
   description: string;
-  color: string;
+  color?: string;
 }
 
 const DashboardCard: React.FC<DashboardCardProps> = ({ 
-  to, 
+  linkTo, 
   icon, 
   title, 
   description, 
-  color 
+  color = "bg-blue-500" // Default color if none provided
 }) => {
   return (
-    <Link to={to} className="block">
+    <Link to={linkTo} className="block">
       <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
         <div className={`${color} p-4 text-white flex items-center justify-center`}>
           {icon}
