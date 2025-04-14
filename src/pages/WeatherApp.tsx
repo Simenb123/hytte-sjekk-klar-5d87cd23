@@ -15,7 +15,7 @@ const WeatherApp: React.FC = () => {
   ];
 
   const openYrWebsite = () => {
-    window.open('https://www.yr.no', '_blank');
+    window.open('https://www.yr.no/nb/værvarsel/daglig-tabell/1-68536/Norge/Telemark/Tinn/Gaustablikk%20Fjellresort', '_blank');
   };
 
   return (
@@ -28,7 +28,7 @@ const WeatherApp: React.FC = () => {
             <div>
               <h3 className="text-3xl font-semibold mb-1">18°</h3>
               <p className="text-lg">Solrik</p>
-              <p className="text-sm opacity-80">Hytta, Trysil</p>
+              <p className="text-sm opacity-80">Gaustablikk, Tinn</p>
             </div>
             <Sun size={64} />
           </div>
@@ -65,7 +65,7 @@ const WeatherApp: React.FC = () => {
           onClick={openYrWebsite}
           className="w-full mb-4 bg-blue-600 hover:bg-blue-700"
         >
-          Se komplett værmelding på YR.no
+          Se værmelding for Gaustablikk på YR.no
         </Button>
         
         <div className="text-center text-sm text-gray-500">

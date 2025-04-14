@@ -26,9 +26,29 @@ const ChecklistApp: React.FC = () => {
     }
   };
 
+  // Determine the header title based on current view and selected area
+  const getHeaderTitle = () => {
+    if (selectedArea) {
+      return selectedArea.name;
+    }
+    
+    switch (currentView) {
+      case 'arrival':
+        return 'Ankomstsjekk';
+      case 'departure':
+        return 'Avreisesjekk';
+      default:
+        return 'Hytte-sjekk-klar';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Hytte-sjekk-klar" showHomeButton={true} />
+      <AppHeader 
+        title={getHeaderTitle()} 
+        showBackButton={!!(currentView || selectedArea)} 
+        showHomeButton={true} 
+      />
       <div className="max-w-lg mx-auto p-4">
         {renderContent()}
       </div>
