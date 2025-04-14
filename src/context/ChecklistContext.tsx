@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, ReactNode, useReducer, useEffect, Dispatch } from 'react';
 import { ChecklistItem, ChecklistArea, ChecklistType, initialArrivals, initialDepartureAreas } from '../models/checklist';
 import { loadFromStorage, saveToStorage } from '../utils/storage.utils';
@@ -24,7 +23,7 @@ type ChecklistAction =
 
 // Create a reducer function
 const checklistReducer = (state: ChecklistState, action: ChecklistAction): ChecklistState => {
-  console.log('[ChecklistReducer]', action.type, action.payload);
+  console.log('[ChecklistReducer]', action.type, action.type !== 'RESET_CHECKLISTS' ? action.payload : 'No payload');
   
   switch (action.type) {
     case 'SET_ARRIVALS':
