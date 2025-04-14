@@ -1,5 +1,7 @@
 
 import React, { memo } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import AppHeader from './AppHeader';
 
 interface HeaderProps {
@@ -15,6 +17,16 @@ const Header: React.FC<HeaderProps> = memo(({
   showHomeButton = false,
   onBackClick
 }) => {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (onBackClick) {
+      onBackClick();
+    } else {
+      navigate(-1);
+    }
+  };
+
   console.log('[Header] Rendering with title:', title);
   
   return (
@@ -23,7 +35,7 @@ const Header: React.FC<HeaderProps> = memo(({
         title={title || ''}
         showBackButton={showBackButton}
         showHomeButton={showHomeButton}
-        onBackClick={onBackClick}
+        onBackClick={handleBack}
       />
     </div>
   );
@@ -32,3 +44,4 @@ const Header: React.FC<HeaderProps> = memo(({
 Header.displayName = 'Header';
 
 export default Header;
+

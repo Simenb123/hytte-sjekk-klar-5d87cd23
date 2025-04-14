@@ -38,7 +38,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             {showBackButton && (
               <button 
                 onClick={handleBack}
-                className="p-2 rounded-full hover:bg-gray-100"
+                className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center"
+                aria-label="Tilbake"
               >
                 <ArrowLeft size={24} />
               </button>
@@ -49,7 +50,8 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           {showHomeButton && (
             <button 
               onClick={handleHome}
-              className="p-2 rounded-full hover:bg-gray-100"
+              className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center"
+              aria-label="Hjem"
             >
               <Home size={24} />
             </button>
@@ -61,3 +63,4 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 };
 
 export default AppHeader;
+

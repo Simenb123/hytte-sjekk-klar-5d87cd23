@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import MainMenu from '../components/MainMenu';
@@ -66,14 +65,13 @@ const ChecklistApp = () => {
     selectedAreaId: selectedArea?.id 
   });
 
-  // Handle back button functionality - be extra careful not to cause unexpected state changes
+  // Safely handle back navigation
   const handleBack = () => {
     console.log('[ChecklistApp] handleBack called:', { 
       currentView, 
       selectedAreaId: selectedArea?.id 
     });
     
-    // Safely handle back navigation
     if (selectedArea) {
       selectArea(null);
     } else if (currentView) {
@@ -135,5 +133,4 @@ const ChecklistApp = () => {
   );
 };
 
-// Export directly without memo to ensure proper re-rendering
 export default ChecklistApp;
