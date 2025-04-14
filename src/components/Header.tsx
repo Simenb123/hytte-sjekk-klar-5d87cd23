@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import AppHeader from './AppHeader';
 
 interface HeaderProps {
@@ -27,4 +27,4 @@ const Header: React.FC<HeaderProps> = ({
   );
 };
 
-export default Header;
+export default memo(Header);

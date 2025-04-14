@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { memo } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import MainMenu from '../components/MainMenu';
 import ArrivalChecklist from '../components/ArrivalChecklist';
@@ -22,16 +22,16 @@ const ChecklistApp: React.FC = () => {
   // Determine which view to show
   const renderContent = () => {
     if (selectedArea) {
-      return <AreaChecklist />;
+      return <AreaChecklist key="area-checklist" />;
     }
 
     switch (currentView) {
       case 'arrival':
-        return <ArrivalChecklist />;
+        return <ArrivalChecklist key="arrival-checklist" />;
       case 'departure':
-        return <DepartureAreas />;
+        return <DepartureAreas key="departure-areas" />;
       default:
-        return <MainMenu />;
+        return <MainMenu key="main-menu" />;
     }
   };
 
@@ -51,6 +51,8 @@ const ChecklistApp: React.FC = () => {
     }
   };
 
+  console.log('ChecklistApp rendering:', { currentView, selectedArea: selectedArea?.id });
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
@@ -66,4 +68,4 @@ const ChecklistApp: React.FC = () => {
   );
 };
 
-export default ChecklistApp;
+export default memo(ChecklistApp);

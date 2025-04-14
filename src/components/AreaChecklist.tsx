@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
 
 const AreaChecklist: React.FC = () => {
   const { selectedArea, toggleDepartureItem } = useChecklist();
+  
+  console.log('AreaChecklist rendering', { selectedArea: selectedArea?.id });
   
   if (!selectedArea) return null;
   
@@ -35,4 +37,4 @@ const AreaChecklist: React.FC = () => {
   );
 };
 
-export default AreaChecklist;
+export default memo(AreaChecklist);

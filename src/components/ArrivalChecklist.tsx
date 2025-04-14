@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
 
 const ArrivalChecklist: React.FC = () => {
   const { arrivals, toggleArrivalItem } = useChecklist();
+  
+  console.log('ArrivalChecklist rendering', { itemCount: arrivals.length });
   
   return (
     <div className="animate-fade-in">
@@ -33,4 +35,4 @@ const ArrivalChecklist: React.FC = () => {
   );
 };
 
-export default ArrivalChecklist;
+export default memo(ArrivalChecklist);

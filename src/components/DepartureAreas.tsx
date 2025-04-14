@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import AreaButton from './AreaButton';
 
 const DepartureAreas: React.FC = () => {
   const { departureAreas, selectArea } = useChecklist();
+  
+  console.log('DepartureAreas rendering', { areaCount: departureAreas.length });
   
   return (
     <div className="animate-fade-in">
@@ -33,4 +35,4 @@ const DepartureAreas: React.FC = () => {
   );
 };
 
-export default DepartureAreas;
+export default memo(DepartureAreas);

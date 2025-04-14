@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
 import { ChecklistItem, ChecklistArea, initialArrivals, initialDepartureAreas, ChecklistType } from '../models/checklist';
 import { toast } from 'sonner';
 
@@ -24,21 +24,38 @@ interface ChecklistContextType {
 const ChecklistContext = createContext<ChecklistContextType | undefined>(undefined);
 
 export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
+  // Load data from localStorage with initial values as fallback
   const [arrivals, setArrivals] = useState<ChecklistItem[]>(() => {
-    const savedArrivals = localStorage.getItem('hytteArrivals');
-    return savedArrivals ? JSON.parse(savedArrivals) : initialArrivals;
+    try {
+      const savedArrivals = localStorage.getItem('hytteArrivals');
+      return savedArrivals ? JSON.parse(savedArrivals) : initialArrivals;
+    } catch (error) {
+      console.error('Error loading arrivals from localStorage', error);
+      return initialArrivals;
+    }
   });
   
   const [departureAreas, setDepartureAreas] = useState<ChecklistArea[]>(() => {
-    const savedDepartures = localStorage.getItem('hytteDepartures');
-    return savedDepartures ? JSON.parse(savedDepartures) : initialDepartureAreas;
+    try {
+      const savedDepartures = localStorage.getItem('hytteDepartures');
+      return savedDepartures ? JSON.parse(savedDepartures) : initialDepartureAreas;
+    } catch (error) {
+      console.error('Error loading departures from localStorage', error);
+      return initialDepartureAreas;
+    }
   });
   
   const [currentView, setCurrentView] = useState<ChecklistType | null>(null);
   const [selectedArea, setSelectedArea] = useState<ChecklistArea | null>(null);
 
-  // Use useCallback to prevent unnecessary re-renders
+  // Navigation function with useCallback to avoid unnecessary re-renders
+  const handleSetCurrentView = useCallback((view: ChecklistType | null) => {
+    console.log('Setting current view to:', view);
+    setCurrentView(view);
+  }, []);
+
   const selectArea = useCallback((area: ChecklistArea | null) => {
+    console.log('Selecting area:', area?.id);
     setSelectedArea(area);
   }, []);
 
@@ -49,7 +66,11 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
       );
       
       // Save to localStorage
-      localStorage.setItem('hytteArrivals', JSON.stringify(newItems));
+      try {
+        localStorage.setItem('hytteArrivals', JSON.stringify(newItems));
+      } catch (error) {
+        console.error('Error saving arrivals to localStorage', error);
+      }
       
       // Check if all items are completed
       const allCompleted = newItems.every(item => item.isCompleted);
@@ -82,7 +103,11 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
       });
       
       // Save to localStorage
-      localStorage.setItem('hytteDepartures', JSON.stringify(newAreas));
+      try {
+        localStorage.setItem('hytteDepartures', JSON.stringify(newAreas));
+      } catch (error) {
+        console.error('Error saving departures to localStorage', error);
+      }
       
       // Check if all areas are completed
       const allAreasCompleted = newAreas.every(area => area.isCompleted);
@@ -101,8 +126,13 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     setDepartureAreas(initialDepartureAreas);
     setCurrentView(null);
     setSelectedArea(null);
-    localStorage.removeItem('hytteArrivals');
-    localStorage.removeItem('hytteDepartures');
+    
+    try {
+      localStorage.removeItem('hytteArrivals');
+      localStorage.removeItem('hytteDepartures');
+    } catch (error) {
+      console.error('Error removing items from localStorage', error);
+    }
   }, []);
 
   const isAllArrivalsCompleted = useCallback(() => {
@@ -113,22 +143,37 @@ export const ChecklistProvider = ({ children }: { children: ReactNode }) => {
     return departureAreas.every((area) => area.isCompleted);
   }, [departureAreas]);
 
+  // Use useMemo to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    arrivals,
+    departureAreas,
+    currentView,
+    selectedArea,
+    setCurrentView: handleSetCurrentView,
+    selectArea,
+    toggleArrivalItem,
+    toggleDepartureItem,
+    resetChecklists,
+    isAllArrivalsCompleted,
+    isAllDeparturesCompleted,
+  }), [
+    arrivals, 
+    departureAreas, 
+    currentView, 
+    selectedArea, 
+    handleSetCurrentView, 
+    selectArea, 
+    toggleArrivalItem, 
+    toggleDepartureItem, 
+    resetChecklists, 
+    isAllArrivalsCompleted, 
+    isAllDeparturesCompleted
+  ]);
+
+  console.log('ChecklistProvider rendering', { currentView, selectedAreaId: selectedArea?.id });
+
   return (
-    <ChecklistContext.Provider
-      value={{
-        arrivals,
-        departureAreas,
-        currentView,
-        selectedArea,
-        setCurrentView,
-        selectArea,
-        toggleArrivalItem,
-        toggleDepartureItem,
-        resetChecklists,
-        isAllArrivalsCompleted,
-        isAllDeparturesCompleted,
-      }}
-    >
+    <ChecklistContext.Provider value={contextValue}>
       {children}
     </ChecklistContext.Provider>
   );

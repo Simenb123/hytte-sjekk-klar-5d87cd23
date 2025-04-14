@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import Logo from './Logo';
 import { LogIn, LogOut } from 'lucide-react';
@@ -8,12 +8,16 @@ const MainMenu: React.FC = () => {
   const { setCurrentView, isAllArrivalsCompleted, isAllDeparturesCompleted } = useChecklist();
   
   const handleArrivalClick = () => {
+    console.log('Setting view to arrival');
     setCurrentView('arrival');
   };
   
   const handleDepartureClick = () => {
+    console.log('Setting view to departure');
     setCurrentView('departure');
   };
+  
+  console.log('MainMenu rendering');
   
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh]">
@@ -48,4 +52,4 @@ const MainMenu: React.FC = () => {
   );
 };
 
-export default MainMenu;
+export default memo(MainMenu);

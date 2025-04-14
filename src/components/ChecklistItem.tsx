@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { CheckSquare, Square } from 'lucide-react';
 
 interface ChecklistItemProps {
@@ -34,4 +34,4 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
   );
 };
 
-export default ChecklistItem;
+export default memo(ChecklistItem);
