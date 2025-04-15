@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AppHeader from '../components/AppHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,10 +30,8 @@ const CalendarApp: React.FC = () => {
     fetchError
   } = useGoogleCalendar();
 
-  // Handle OAuth callback
   useEffect(() => {
     const handleOAuthResponse = async () => {
-      // Check if we're on the callback path
       const isCallbackPath = window.location.pathname.includes('/auth/calendar');
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
@@ -46,7 +43,6 @@ const CalendarApp: React.FC = () => {
         if (error) {
           console.error('OAuth error returned in callback:', error);
           toast.error(`Google Calendar-autentisering feilet: ${error}`);
-          // Redirect back to calendar page
           window.location.href = '/calendar';
           return;
         }
@@ -60,7 +56,6 @@ const CalendarApp: React.FC = () => {
             if (success) {
               console.log('Successfully authenticated with Google Calendar');
               toast.success('Koblet til Google Calendar!');
-              // After successful auth, redirect to calendar page
               window.location.href = '/calendar';
             } else {
               console.error('Failed to complete Google Calendar authentication');
@@ -83,7 +78,6 @@ const CalendarApp: React.FC = () => {
     handleOAuthResponse();
   }, [handleOAuthCallback]);
 
-  // Days that have bookings
   const bookedDays = bookings.flatMap(booking => {
     const days: Date[] = [];
     let currentDate = new Date(booking.from);
