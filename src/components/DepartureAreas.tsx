@@ -1,25 +1,33 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import AreaButton from './AreaButton';
 import { Button } from './ui/button';
 import { LogIn } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from 'sonner';
 
 const DepartureAreas: React.FC = () => {
-  const { departureAreas, selectArea } = useChecklist();
+  const { departureAreas, selectArea, isAllDeparturesCompleted } = useChecklist();
   
-  useEffect(() => {
-    console.log('[DepartureAreas] Component mounted with', { areaCount: departureAreas.length });
-    return () => {
-      console.log('[DepartureAreas] Component unmounted');
-    };
-  }, [departureAreas.length]);
-  
-  console.log('[DepartureAreas] rendering', { areaCount: departureAreas.length });
-
   const handleAreaClick = (area) => {
     console.log('[DepartureAreas] Area clicked:', area.id);
     selectArea(area);
+  };
+
+  const handleLogChecklist = () => {
+    // Here you would implement the actual logging logic
+    toast.success("Avreisesjekk er loggført");
   };
   
   return (
@@ -47,10 +55,42 @@ const DepartureAreas: React.FC = () => {
         Alle områder må sjekkes før avreise
       </div>
 
-      <Button className="w-full" variant="default">
-        <LogIn className="mr-2 h-4 w-4" />
-        Loggfør Avreisesjekk
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button className="w-full" variant="default">
+            <LogIn className="mr-2 h-4 w-4" />
+            Loggfør Avreisesjekk
+          </Button>
+        </AlertDialogTrigger>
+        {isAllDeparturesCompleted() ? (
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Bekreft loggføring</AlertDialogTitle>
+              <AlertDialogDescription>
+                Er du sikker på at du vil loggføre Avreisesjekken?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Avbryt</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogChecklist}>
+                Loggfør
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        ) : (
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Kan ikke loggføre enda</AlertDialogTitle>
+              <AlertDialogDescription>
+                Du må huke av for alle sjekkpunktene for å kunne loggføre.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>OK</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        )}
+      </AlertDialog>
     </div>
   );
 };

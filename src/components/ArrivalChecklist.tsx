@@ -1,37 +1,30 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
 import { Button } from './ui/button';
 import { LogIn } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from 'sonner';
 
 const ArrivalChecklist: React.FC = () => {
-  const { arrivals, toggleArrivalItem } = useChecklist();
+  const { arrivals, toggleArrivalItem, isAllArrivalsCompleted } = useChecklist();
   
-  // Log mounting but remove unmounting to prevent side effects
-  useEffect(() => {
-    console.log('[ArrivalChecklist] Component mounted with', { 
-      itemCount: arrivals?.length || 0,
-      arrivals: JSON.stringify(arrivals)
-    });
-    // No return function to prevent unmounting side effects
-  }, [arrivals]);
-  
-  console.log('[ArrivalChecklist] rendering', { 
-    itemCount: arrivals?.length || 0,
-    hasItems: Array.isArray(arrivals) && arrivals.length > 0
-  });
-  
-  // Additional safety check to handle potential undefined arrivals
-  if (!arrivals) {
-    console.error('[ArrivalChecklist] arrivals is undefined');
-    return (
-      <div className="p-4 text-center text-gray-500">
-        Laster sjekkliste...
-      </div>
-    );
-  }
-  
+  const handleLogChecklist = () => {
+    // Here you would implement the actual logging logic
+    toast.success("Ankomstsjekk er loggført");
+  };
+
   return (
     <div className="relative z-20">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
@@ -56,10 +49,42 @@ const ArrivalChecklist: React.FC = () => {
         Kryss av alle punkter etter hvert som du fullfører dem
       </div>
 
-      <Button className="w-full" variant="default">
-        <LogIn className="mr-2 h-4 w-4" />
-        Loggfør Ankomstsjekk
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button className="w-full" variant="default">
+            <LogIn className="mr-2 h-4 w-4" />
+            Loggfør Ankomstsjekk
+          </Button>
+        </AlertDialogTrigger>
+        {isAllArrivalsCompleted() ? (
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Bekreft loggføring</AlertDialogTitle>
+              <AlertDialogDescription>
+                Er du sikker på at du vil loggføre Ankomstsjekken?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Avbryt</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogChecklist}>
+                Loggfør
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        ) : (
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Kan ikke loggføre enda</AlertDialogTitle>
+              <AlertDialogDescription>
+                Du må huke av for alle sjekkpunktene for å kunne loggføre.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>OK</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        )}
+      </AlertDialog>
     </div>
   );
 };
