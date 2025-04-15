@@ -21,9 +21,53 @@ export const formatGoogleEventDate = (dateString: string): string => {
   }
 };
 
+/**
+ * Comprehensive error detection for connection issues
+ * @param error Error message string
+ * @returns Boolean indicating if this is a connection error
+ */
 export const isEdgeFunctionError = (error?: string | null): boolean => {
   if (!error) return false;
-  return error.includes('Edge Function') || 
-         error.includes('Failed to fetch') ||
-         error.includes('Kunne ikke koble til');
+  
+  const connectionErrors = [
+    'Edge Function',
+    'Failed to fetch',
+    'Kunne ikke koble til',
+    'FunctionsFetchError',
+    'Nettverksfeil',
+    'tilkobling til serveren',
+    'midlertidig utilgjengelig'
+  ];
+  
+  return connectionErrors.some(errorText => error.includes(errorText));
+};
+
+/**
+ * Formats error messages to be more user-friendly
+ * @param error Original error message
+ * @returns User-friendly error message
+ */
+export const formatErrorMessage = (error: string): string => {
+  if (isEdgeFunctionError(error)) {
+    return 'Det er problemer med tilkobling til serveren. Google Calendar-integrasjonen er midlertidig utilgjengelig. Prøv igjen senere.';
+  }
+  
+  if (error.includes('invalid_grant') || error.includes('expired') || error.includes('utløpt')) {
+    return 'Din tilkobling til Google Calendar har utløpt. Du må koble til på nytt.';
+  }
+  
+  return error;
+};
+
+/**
+ * Creates consistent technical error details for developers
+ * @param error Original error
+ * @returns Formatted technical details
+ */
+export const getTechnicalErrorDetails = (error: string): string => {
+  if (isEdgeFunctionError(error)) {
+    return 'Teknisk feil: Kunne ikke koble til Edge Function. Sjekk at Supabase-tjenesten er tilgjengelig og at alle miljøvariabler er riktig satt opp.';
+  }
+  
+  return `Teknisk feil: ${error}`;
 };

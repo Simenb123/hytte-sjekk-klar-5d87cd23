@@ -5,6 +5,7 @@ import { BookingsTab } from './BookingsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { isEdgeFunctionError } from './google/utils';
 
 interface GoogleCalendarSectionProps {
   isGoogleConnected: boolean;
@@ -39,14 +40,19 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
   activeTab,
   setActiveTab
 }) => {
-  const edgeFunctionIssue = connectionError?.includes('Edge Function') || 
-                            fetchError?.includes('Edge Function') ||
-                            connectionError?.includes('Failed to fetch') ||
-                            fetchError?.includes('Failed to fetch');
+  // Improved connection issue detection
+  const hasConnectionIssue = isEdgeFunctionError(connectionError) || isEdgeFunctionError(fetchError);
+  
+  // If there's a connection issue and user is on Google tab, switch to bookings
+  React.useEffect(() => {
+    if (hasConnectionIssue && activeTab === 'google') {
+      setActiveTab('bookings');
+    }
+  }, [hasConnectionIssue, activeTab, setActiveTab]);
 
   return (
     <>
-      {edgeFunctionIssue && (
+      {hasConnectionIssue && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
@@ -60,7 +66,12 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
       <Tabs defaultValue="bookings" value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="grid grid-cols-2">
           <TabsTrigger value="bookings">Bookinger</TabsTrigger>
-          {isGoogleConnected && <TabsTrigger value="google">Google Calendar</TabsTrigger>}
+          {isGoogleConnected && !hasConnectionIssue && <TabsTrigger value="google">Google Calendar</TabsTrigger>}
+          {isGoogleConnected && hasConnectionIssue && (
+            <TabsTrigger value="google" disabled className="opacity-50 cursor-not-allowed">
+              Google Calendar
+            </TabsTrigger>
+          )}
         </TabsList>
         
         <TabsContent value="bookings">
