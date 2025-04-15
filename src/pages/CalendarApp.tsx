@@ -3,7 +3,7 @@ import AppHeader from '../components/AppHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NewBookingDialog from '../components/NewBookingDialog';
 import { useBookings } from '@/hooks/useBookings';
-import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
+import { useGoogleCalendar } from '@/hooks/google-calendar';
 import { toast } from 'sonner';
 import { CalendarSection } from '@/components/calendar/CalendarSection';
 import { BookingsTab } from '@/components/calendar/BookingsTab';
