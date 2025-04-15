@@ -5,7 +5,7 @@ import { BookingsTab } from './BookingsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { isEdgeFunctionError } from './google/utils';
+import { isEdgeFunctionError, isAuthError, formatErrorMessage } from './google/utils';
 
 interface GoogleCalendarSectionProps {
   isGoogleConnected: boolean;
@@ -40,25 +40,52 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
   activeTab,
   setActiveTab
 }) => {
-  // Improved connection issue detection
+  // Improved error detection and handling
   const hasConnectionIssue = isEdgeFunctionError(connectionError) || isEdgeFunctionError(fetchError);
+  const hasAuthIssue = isAuthError(connectionError) || isAuthError(fetchError);
+  
+  // Format error message for better user experience
+  const getErrorMessage = () => {
+    if (hasConnectionIssue) {
+      return "Det er problemer med tilkobling til serveren. Du kan fortsatt bruke booking-funksjonen, men Google Calendar-integrasjonen er midlertidig utilgjengelig.";
+    }
+    if (hasAuthIssue) {
+      return "Din tilkobling til Google Calendar har utløpt. Koble til på nytt for å fortsette å bruke integrasjonen.";
+    }
+    if (connectionError) {
+      return formatErrorMessage(connectionError);
+    }
+    if (fetchError) {
+      return formatErrorMessage(fetchError);
+    }
+    return null;
+  };
+  
+  // Get appropriate alert variant based on error type
+  const getAlertVariant = () => {
+    if (hasConnectionIssue) return "destructive";
+    if (hasAuthIssue) return "warning";
+    return "destructive";
+  };
   
   // If there's a connection issue and user is on Google tab, switch to bookings
   React.useEffect(() => {
-    if (hasConnectionIssue && activeTab === 'google') {
+    if ((hasConnectionIssue || hasAuthIssue) && activeTab === 'google') {
       setActiveTab('bookings');
     }
-  }, [hasConnectionIssue, activeTab, setActiveTab]);
+  }, [hasConnectionIssue, hasAuthIssue, activeTab, setActiveTab]);
+
+  const errorMessage = getErrorMessage();
 
   return (
     <>
-      {hasConnectionIssue && (
-        <Alert variant="destructive" className="mb-4">
+      {errorMessage && (
+        <Alert variant={getAlertVariant()} className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Det er problemer med tilkobling til serveren. Du kan fortsatt bruke booking-funksjonen, 
-            men Google Calendar-integrasjonen er midlertidig utilgjengelig. 
-            Prøv igjen senere eller kontakt support hvis problemet vedvarer.
+            {errorMessage}
+            {hasConnectionIssue && " Prøv igjen senere eller kontakt support hvis problemet vedvarer."}
+            {hasAuthIssue && " Dette skjer vanligvis når tilgangen har utløpt."}
           </AlertDescription>
         </Alert>
       )}
@@ -68,6 +95,11 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
           <TabsTrigger value="bookings">Bookinger</TabsTrigger>
           {isGoogleConnected && !hasConnectionIssue && <TabsTrigger value="google">Google Calendar</TabsTrigger>}
           {isGoogleConnected && hasConnectionIssue && (
+            <TabsTrigger value="google" disabled className="opacity-50 cursor-not-allowed">
+              Google Calendar
+            </TabsTrigger>
+          )}
+          {!isGoogleConnected && (
             <TabsTrigger value="google" disabled className="opacity-50 cursor-not-allowed">
               Google Calendar
             </TabsTrigger>

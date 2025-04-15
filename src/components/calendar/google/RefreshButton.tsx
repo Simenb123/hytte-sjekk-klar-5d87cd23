@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, RefreshCw, Share2, AlertTriangle } from 'lucide-react';
-import { isEdgeFunctionError } from './utils';
+import { isEdgeFunctionError, isAuthError } from './utils';
 
 interface RefreshButtonProps {
   isLoading: boolean;
@@ -16,33 +16,44 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({
   error
 }) => {
   const isConnectionError = isEdgeFunctionError(error);
+  const isTokenError = isAuthError(error);
   
+  // Select button variant based on error type
+  const getButtonVariant = () => {
+    if (isConnectionError) return "destructive";
+    if (isTokenError) return "outline";
+    return "outline";
+  };
+  
+  // Get appropriate button text based on error type
+  const getButtonText = () => {
+    if (isLoading) return "Oppdaterer...";
+    if (isConnectionError) return "Prøv tilkobling på nytt";
+    if (isTokenError) return "Tilkobling utløpt";
+    return "Oppdater Google Calendar";
+  };
+  
+  // Get appropriate button icon based on error type
+  const ButtonIcon = () => {
+    if (isLoading) return <Loader2 className="h-4 w-4 mr-2 animate-spin" />;
+    if (isConnectionError) return <AlertTriangle className="h-4 w-4 mr-2" />;
+    if (isTokenError) return <AlertTriangle className="h-4 w-4 mr-2" />;
+    return <RefreshCw className="h-4 w-4 mr-2" />;
+  };
+
   return (
     <>
       <Button 
         onClick={onRefresh} 
         disabled={isLoading}
         className="w-full mt-5"
-        variant={isConnectionError ? "destructive" : "outline"}
+        variant={getButtonVariant()}
       >
-        {isLoading ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Oppdaterer...
-          </>
-        ) : (
-          <>
-            {isConnectionError ? (
-              <AlertTriangle className="h-4 w-4 mr-2" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-2" />
-            )}
-            {isConnectionError ? 'Prøv tilkobling på nytt' : 'Oppdater Google Calendar'}
-          </>
-        )}
+        <ButtonIcon />
+        {getButtonText()}
       </Button>
       
-      {!isConnectionError && (
+      {!isConnectionError && !isTokenError && (
         <div className="flex justify-center mt-4">
           <a 
             href="https://calendar.google.com/calendar/u/0/r" 

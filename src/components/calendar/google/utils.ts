@@ -22,9 +22,7 @@ export const formatGoogleEventDate = (dateString: string): string => {
 };
 
 /**
- * Enhanced error detection for connection issues with more specific patterns
- * @param error Error message string
- * @returns Boolean indicating if this is a connection error
+ * Improved error detection for connection issues with specific patterns
  */
 export const isEdgeFunctionError = (error?: string | null): boolean => {
   if (!error) return false;
@@ -37,41 +35,60 @@ export const isEdgeFunctionError = (error?: string | null): boolean => {
     'Nettverksfeil',
     'tilkobling til serveren',
     'midlertidig utilgjengelig',
-    'TypeError: Failed to fetch'
+    'TypeError: Failed to fetch',
+    'Serverfeil'
   ];
   
   return connectionErrors.some(errorText => error.includes(errorText));
 };
 
 /**
- * Formats error messages to be more user-friendly with Norwegian translations
- * @param error Original error message
- * @returns User-friendly error message in Norwegian
+ * Check if the error is specifically an authentication error
+ */
+export const isAuthError = (error?: string | null): boolean => {
+  if (!error) return false;
+  
+  const authErrors = [
+    'invalid_grant',
+    'invalid_token',
+    'expired',
+    'utløpt',
+    'AUTH_ERROR',
+    'tilgangen har utløpt',
+    'koble til på nytt'
+  ];
+  
+  return authErrors.some(errorText => error.includes(errorText));
+};
+
+/**
+ * Get a user-friendly error message in Norwegian
  */
 export const formatErrorMessage = (error: string): string => {
   if (isEdgeFunctionError(error)) {
     return 'Det er problemer med tilkobling til serveren. Google Calendar-integrasjonen er midlertidig utilgjengelig. Prøv igjen senere.';
   }
   
-  if (error.includes('invalid_grant') || 
-      error.includes('expired') || 
-      error.includes('utløpt') ||
-      error.includes('AUTH_ERROR')) {
+  if (isAuthError(error)) {
     return 'Din tilkobling til Google Calendar har utløpt. Du må koble til på nytt.';
   }
 
-  if (error.includes('GOOGLE_CLIENT_ID mangler') || 
-      error.includes('GOOGLE_CLIENT_SECRET mangler')) {
+  if (error.includes('GOOGLE_CLIENT_ID') || 
+      error.includes('GOOGLE_CLIENT_SECRET') ||
+      error.includes('Konfigurasjonsfeil')) {
     return 'Google Calendar er ikke riktig konfigurert. Kontakt administrator.';
+  }
+  
+  if (error.includes('ingen autentiseringskode') ||
+      error.includes('redirect mismatch')) {
+    return 'Autentiseringsfeil. Sjekk at redirect URI er riktig konfigurert i Google Console.';
   }
   
   return error;
 };
 
 /**
- * Creates consistent technical error details for developers with better Norwegian translations
- * @param error Original error
- * @returns Formatted technical details in Norwegian
+ * Get technical error details for developers
  */
 export const getTechnicalErrorDetails = (error: string): string => {
   if (isEdgeFunctionError(error)) {
@@ -87,4 +104,17 @@ export const getTechnicalErrorDetails = (error: string): string => {
   }
   
   return `Teknisk feil: ${error}`;
+};
+
+/**
+ * Helper to check if a refreshed token is available and needs to be saved
+ */
+export const handleRefreshedTokens = (data: any): boolean => {
+  if (data && data.refreshedTokens) {
+    // Store the refreshed tokens
+    localStorage.setItem('googleCalendarTokens', JSON.stringify(data.refreshedTokens));
+    console.log('Saved refreshed tokens to localStorage');
+    return true;
+  }
+  return false;
 };
