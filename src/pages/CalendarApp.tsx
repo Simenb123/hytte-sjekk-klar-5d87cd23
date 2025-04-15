@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AppHeader from '../components/AppHeader';
 import { Calendar } from '@/components/ui/calendar';
@@ -54,11 +53,60 @@ const CalendarApp: React.FC = () => {
     setShowNewBookingDialog(true);
   };
 
-  const connectGoogleCalendar = () => {
-    toast.info('Google Calendar-integrasjon', {
-      description: 'Kobling til Google Calendar kommer snart!',
-    });
+  const connectGoogleCalendar = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('google-calendar', {
+        method: 'GET',
+      });
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        // Store the current URL in sessionStorage to return after OAuth
+        sessionStorage.setItem('calendarReturnUrl', window.location.href);
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Error connecting to Google Calendar:', error);
+      toast.error('Kunne ikke koble til Google Calendar');
+    }
   };
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      
+      if (code) {
+        try {
+          const { data, error } = await supabase.functions.invoke('google-calendar', {
+            method: 'POST',
+            body: { code }
+          });
+
+          if (error) throw error;
+
+          if (data?.tokens) {
+            toast.success('Koblet til Google Calendar!');
+            // Remove code from URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // Return to previous page if available
+            const returnUrl = sessionStorage.getItem('calendarReturnUrl');
+            if (returnUrl) {
+              sessionStorage.removeItem('calendarReturnUrl');
+              window.location.href = returnUrl;
+            }
+          }
+        } catch (error) {
+          console.error('Error exchanging code for tokens:', error);
+          toast.error('Kunne ikke fullføre Google Calendar-integrasjonen');
+        }
+      }
+    };
+
+    handleOAuthCallback();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">

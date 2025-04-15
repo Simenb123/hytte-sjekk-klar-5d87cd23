@@ -1,1 +1,5 @@
+
 project_id = "oztvpaviseudhobxmzgi"
+
+[functions.google-calendar]
+verify_jwt = true
