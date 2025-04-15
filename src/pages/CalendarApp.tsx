@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import AppHeader from '../components/AppHeader';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NewBookingDialog from '../components/NewBookingDialog';
 import { useBookings } from '@/hooks/useBookings';
 import { useGoogleCalendar } from '@/hooks/google-calendar';
 import { toast } from 'sonner';
 import { CalendarSection } from '@/components/calendar/CalendarSection';
-import { BookingsTab } from '@/components/calendar/BookingsTab';
-import { GoogleCalendarTab } from '@/components/calendar/GoogleCalendarTab';
+import { GoogleCalendarSection } from '@/components/calendar/GoogleCalendarSection';
+import { CalendarInfo } from '@/components/calendar/CalendarInfo';
 import { supabase } from '@/integrations/supabase/client';
 
 const CalendarApp: React.FC = () => {
@@ -33,15 +32,12 @@ const CalendarApp: React.FC = () => {
 
   useEffect(() => {
     const handleOAuthResponse = async () => {
-      // Get current URL path and parameters
       const isCallbackPath = window.location.pathname.includes('/auth/calendar');
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const error = urlParams.get('error');
       
       if (isCallbackPath) {
-        console.log('We are on the callback path (/auth/calendar)');
-        
         if (error) {
           console.error('OAuth error returned in callback:', error);
           toast.error(`Google Calendar-autentisering feilet: ${error}`);
@@ -50,7 +46,6 @@ const CalendarApp: React.FC = () => {
         }
         
         if (code) {
-          console.log('Found authorization code in callback URL');
           toast.info('Behandler Google Calendar-autentisering...');
           
           try {
@@ -92,13 +87,6 @@ const CalendarApp: React.FC = () => {
     return days;
   });
 
-  // Add more debug information for connection errors
-  useEffect(() => {
-    if (connectionError) {
-      console.error('Connection error detected:', connectionError);
-    }
-  }, [connectionError]);
-
   const handleBookingSuccess = async (booking) => {
     fetchBookings();
     
@@ -120,20 +108,13 @@ const CalendarApp: React.FC = () => {
           }
         });
 
-        if (error) {
-          console.error('Supabase function error:', error);
-          throw error;
-        }
-        
-        if (data?.error) {
-          console.error('Google Calendar API error:', data.error, data.details);
-          throw new Error(data.error);
+        if (error || data?.error) {
+          throw error || new Error(data?.error);
         }
 
         if (data?.event) {
           console.log('Successfully created Google Calendar event:', data.event.id);
           toast.success('Booking opprettet i Google Calendar!');
-          // Make sure to pass tokens when calling fetchGoogleEvents
           if (googleTokens) {
             fetchGoogleEvents(googleTokens);
           }
@@ -156,41 +137,24 @@ const CalendarApp: React.FC = () => {
           bookedDays={bookedDays} 
         />
         
-        <Tabs defaultValue="bookings" value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="bookings">Bookinger</TabsTrigger>
-            {isGoogleConnected && <TabsTrigger value="google">Google Calendar</TabsTrigger>}
-          </TabsList>
-          
-          <TabsContent value="bookings">
-            <BookingsTab
-              bookings={bookings}
-              isGoogleConnected={isGoogleConnected}
-              onNewBooking={() => setShowNewBookingDialog(true)}
-              onConnectGoogle={connectGoogleCalendar}
-              onDisconnectGoogle={disconnectGoogleCalendar}
-              isConnecting={isConnecting}
-              connectionError={connectionError}
-            />
-          </TabsContent>
-          
-          {isGoogleConnected && (
-            <TabsContent value="google">
-              <GoogleCalendarTab
-                isLoadingEvents={isLoadingEvents}
-                googleEvents={googleEvents}
-                // Make sure we're passing tokens when fetchGoogleEvents is called
-                fetchGoogleEvents={() => googleTokens && fetchGoogleEvents(googleTokens)}
-                fetchError={fetchError}
-              />
-            </TabsContent>
-          )}
-        </Tabs>
+        <GoogleCalendarSection
+          isGoogleConnected={isGoogleConnected}
+          isLoadingEvents={isLoadingEvents}
+          googleEvents={googleEvents}
+          fetchGoogleEvents={fetchGoogleEvents}
+          googleTokens={googleTokens}
+          bookings={bookings}
+          onNewBooking={() => setShowNewBookingDialog(true)}
+          connectGoogleCalendar={connectGoogleCalendar}
+          disconnectGoogleCalendar={disconnectGoogleCalendar}
+          isConnecting={isConnecting}
+          connectionError={connectionError}
+          fetchError={fetchError}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
         
-        <div className="text-center text-sm text-gray-500">
-          <p>Datoer markert med rødt er allerede booket</p>
-          {isGoogleConnected && <p>Google Calendar er tilkoblet og klar til bruk!</p>}
-        </div>
+        <CalendarInfo isGoogleConnected={isGoogleConnected} />
       </div>
 
       <NewBookingDialog 
