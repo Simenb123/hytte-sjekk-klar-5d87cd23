@@ -1,7 +1,6 @@
 
 import React, { useEffect } from 'react';
 import { CheckSquare, Square } from 'lucide-react';
-import { Checkbox } from "./ui/checkbox";
 
 interface ChecklistItemProps {
   id: string;
