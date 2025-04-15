@@ -27,6 +27,74 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_notifications: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          notification_type: string
+          scheduled_for: string
+          sent_at: string | null
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          notification_type: string
+          scheduled_for: string
+          sent_at?: string | null
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          notification_type?: string
+          scheduled_for?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_notifications_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_date: string
+          id: string
+          start_date: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_date: string
+          id?: string
+          start_date: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          start_date?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       checklist_items: {
         Row: {
           area_id: string | null

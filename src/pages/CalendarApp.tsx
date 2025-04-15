@@ -1,27 +1,41 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppHeader from '../components/AppHeader';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import NewBookingDialog from '../components/NewBookingDialog';
 
 const CalendarApp: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [bookings, setBookings] = useState([
-    {
-      id: '1',
-      from: new Date(2025, 3, 20), // April 20, 2025
-      to: new Date(2025, 3, 24),   // April 24, 2025
-      user: 'Familien Berg'
-    },
-    {
-      id: '2',
-      from: new Date(2025, 4, 15), // May 15, 2025
-      to: new Date(2025, 4, 20),   // May 20, 2025
-      user: 'Vennegruppen'
+  const [bookings, setBookings] = useState([]);
+  const [showNewBookingDialog, setShowNewBookingDialog] = useState(false);
+
+  const fetchBookings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .order('start_date', { ascending: true });
+
+      if (error) throw error;
+      setBookings(data.map(booking => ({
+        ...booking,
+        from: new Date(booking.start_date),
+        to: new Date(booking.end_date),
+        user: booking.title
+      })));
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast.error('Kunne ikke hente bookinger');
     }
-  ]);
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
 
   // Days that have bookings
   const bookedDays = bookings.flatMap(booking => {
@@ -37,9 +51,7 @@ const CalendarApp: React.FC = () => {
   });
 
   const handleNewBooking = () => {
-    toast.success('Booking-funksjon kommer snart!', {
-      description: 'Du vil kunne legge til nye bookinger her.',
-    });
+    setShowNewBookingDialog(true);
   };
 
   const connectGoogleCalendar = () => {
@@ -60,7 +72,6 @@ const CalendarApp: React.FC = () => {
             onSelect={setDate}
             className="mx-auto"
             disabled={(date) => {
-              // Disable dates in the past
               return date < new Date(new Date().setHours(0, 0, 0, 0));
             }}
             modifiers={{
@@ -83,6 +94,11 @@ const CalendarApp: React.FC = () => {
                 <div className="text-sm text-gray-500">
                   {booking.from.toLocaleDateString('no')} - {booking.to.toLocaleDateString('no')}
                 </div>
+                {booking.description && (
+                  <div className="text-sm text-gray-600 mt-1">
+                    {booking.description}
+                  </div>
+                )}
               </div>
             ))}
             
@@ -108,6 +124,12 @@ const CalendarApp: React.FC = () => {
           <p>Google Calendar-integrasjon kommer snart!</p>
         </div>
       </div>
+
+      <NewBookingDialog 
+        open={showNewBookingDialog}
+        onOpenChange={setShowNewBookingDialog}
+        onSuccess={fetchBookings}
+      />
     </div>
   );
 };
