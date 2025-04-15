@@ -138,7 +138,7 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
       ) : (
         <div className="text-center text-gray-500 my-8 py-6 border border-dashed rounded-lg">
           <div className="mb-2">Ingen hendelser funnet i Google Calendar</div>
-          <div className="text-sm">Sync med Google Calendar for å se hendelser her</div>
+          <div className="text-sm">Google Calendar er tilkoblet, men ingen hendelser ble funnet</div>
         </div>
       )}
       

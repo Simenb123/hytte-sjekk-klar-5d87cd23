@@ -29,10 +29,9 @@ Deno.serve(async (req) => {
     
     // Get the actual hostname from the request headers for proper redirect URI
     const origin = req.headers.get('origin') || 'https://hytte-sjekk-klar.lovable.app'
-    const protocol = 'https'
     
-    // For local development, uncomment this:
-    // const protocol = origin.includes('localhost') ? 'http' : 'https'
+    // For production always use https
+    const protocol = 'https'
     
     // Handle both domain.com and domain.com/ formats
     let domain = origin.includes('://') ? new URL(origin).host : origin
@@ -153,8 +152,8 @@ Deno.serve(async (req) => {
           
           // Check if it's an authorization error that needs refresh
           const authError = error.message?.includes('invalid_grant') || 
-                            error.message?.includes('invalid_token') ||
-                            error.message?.includes('expired');
+                           error.message?.includes('invalid_token') ||
+                           error.message?.includes('expired')
           
           return new Response(JSON.stringify({ 
             error: 'Failed to list events',
@@ -206,8 +205,7 @@ Deno.serve(async (req) => {
           console.error('Error creating event:', error)
           return new Response(JSON.stringify({ 
             error: 'Failed to create event',
-            details: error.message,
-            errorObject: JSON.stringify(error)
+            details: error.message
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -237,8 +235,7 @@ Deno.serve(async (req) => {
           console.error('Error getting calendar list:', error)
           return new Response(JSON.stringify({ 
             error: 'Failed to get calendar list',
-            details: error.message,
-            errorObject: JSON.stringify(error)
+            details: error.message
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -254,8 +251,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     return new Response(JSON.stringify({ 
-      error: error.message,
-      errorObject: JSON.stringify(error)
+      error: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

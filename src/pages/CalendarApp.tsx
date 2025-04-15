@@ -34,68 +34,54 @@ const CalendarApp: React.FC = () => {
   // Handle OAuth callback
   useEffect(() => {
     const handleOAuthResponse = async () => {
+      // Check if we're on the callback path
+      const isCallbackPath = window.location.pathname.includes('/auth/calendar');
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const error = urlParams.get('error');
       
-      if (code) {
-        console.log('Found code in URL params, processing OAuth callback...');
-        toast.info('Behandler Google Calendar-tilkobling...');
+      if (isCallbackPath) {
+        console.log('We are on the callback path (/auth/calendar)');
         
-        try {
-          const success = await handleOAuthCallback(code);
-          if (success) {
-            console.log('Successfully processed OAuth callback');
-            toast.success('Koblet til Google Calendar!');
-            window.history.replaceState({}, document.title, window.location.pathname);
-            setActiveTab('google');
-            fetchGoogleEvents();
-          } else {
-            console.error('Failed to process OAuth callback');
-            toast.error('Kunne ikke koble til Google Calendar');
-          }
-        } catch (err) {
-          console.error('Error handling OAuth callback:', err);
-          toast.error('Feil ved behandling av Google Calendar-tilkobling');
+        if (error) {
+          console.error('OAuth error returned in callback:', error);
+          toast.error(`Google Calendar-autentisering feilet: ${error}`);
+          // Redirect back to calendar page
+          window.location.href = '/calendar';
+          return;
         }
-      } else if (error) {
-        console.error('OAuth error in URL params:', error);
-        toast.error('Kunne ikke koble til Google Calendar: ' + error);
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-      
-      if (window.location.pathname.includes('/auth/calendar')) {
-        console.log('We are on the /auth/calendar path, this is our redirect_uri');
-        const authCode = urlParams.get('code');
-        const authError = urlParams.get('error');
         
-        if (authError) {
-          console.error('OAuth error on redirect path:', authError);
-          toast.error('Kunne ikke koble til Google Calendar: ' + authError);
-        } else if (authCode) {
-          console.log('Processing OAuth code from redirect_uri...');
-          toast.info('Behandler Google Calendar-tilkobling...');
+        if (code) {
+          console.log('Found authorization code in callback URL');
+          toast.info('Behandler Google Calendar-autentisering...');
           
           try {
-            const success = await handleOAuthCallback(authCode);
+            const success = await handleOAuthCallback(code);
             if (success) {
-              console.log('Successfully processed OAuth callback from redirect_uri');
+              console.log('Successfully authenticated with Google Calendar');
               toast.success('Koblet til Google Calendar!');
+              // After successful auth, redirect to calendar page
+              window.location.href = '/calendar';
             } else {
-              console.error('Failed to process OAuth callback from redirect_uri');
-              toast.error('Kunne ikke koble til Google Calendar');
+              console.error('Failed to complete Google Calendar authentication');
+              toast.error('Kunne ikke fullføre Google Calendar-autentisering');
+              window.location.href = '/calendar';
             }
           } catch (err) {
-            console.error('Error handling OAuth callback from redirect_uri:', err);
-            toast.error('Feil ved behandling av Google Calendar-tilkobling');
+            console.error('Error in OAuth callback processing:', err);
+            toast.error('Feil ved behandling av Google Calendar-autentisering');
+            window.location.href = '/calendar';
           }
+        } else {
+          console.error('No code found in OAuth callback');
+          toast.error('Ingen autentiseringskode mottatt fra Google');
+          window.location.href = '/calendar';
         }
-        window.location.href = '/calendar';
       }
     };
     
     handleOAuthResponse();
-  }, [handleOAuthCallback, fetchGoogleEvents]);
+  }, [handleOAuthCallback]);
 
   // Days that have bookings
   const bookedDays = bookings.flatMap(booking => {
