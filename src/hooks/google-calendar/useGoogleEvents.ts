@@ -5,8 +5,11 @@ import { fetchCalendarEvents, fetchCalendarList } from '@/services/googleCalenda
 
 export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => void) {
   // Make sure the function signature clearly requires a tokens parameter
-  const fetchGoogleEvents = useCallback(async (tokensToUse: any) => {
-    if (!tokensToUse || !tokensToUse.access_token) {
+  const fetchGoogleEvents = useCallback(async (tokensToUse?: any) => {
+    // Allow calling without tokens, but check internally if tokens are available
+    const tokens = tokensToUse || setState(prev => prev.googleTokens);
+    
+    if (!tokens || !tokens.access_token) {
       console.warn('No valid tokens available for fetching events');
       toast.error('Ingen gyldige tokens tilgjengelig for å hente hendelser');
       return;
@@ -16,12 +19,12 @@ export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => v
 
     try {
       console.log('Fetching Google Calendar events with tokens:', {
-        access_token_exists: !!tokensToUse.access_token,
-        refresh_token_exists: !!tokensToUse.refresh_token,
-        expiry_date: tokensToUse.expiry_date
+        access_token_exists: !!tokens.access_token,
+        refresh_token_exists: !!tokens.refresh_token,
+        expiry_date: tokens.expiry_date
       });
       
-      const events = await fetchCalendarEvents(tokensToUse);
+      const events = await fetchCalendarEvents(tokens);
       setState(prev => ({ ...prev, googleEvents: events }));
     } catch (error: any) {
       console.error('Error fetching Google Calendar events:', error);
@@ -43,15 +46,17 @@ export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => v
     }
   }, [setState, disconnectGoogleCalendar]);
 
-  const fetchGoogleCalendars = useCallback(async (tokensToUse: any) => {
-    if (!tokensToUse || !tokensToUse.access_token) {
+  const fetchGoogleCalendars = useCallback(async (tokensToUse?: any) => {
+    const tokens = tokensToUse || setState(prev => prev.googleTokens);
+    
+    if (!tokens || !tokens.access_token) {
       console.warn('No valid tokens available for fetching calendars');
       return;
     }
     
     try {
       console.log('Fetching Google Calendar list with tokens');
-      const calendars = await fetchCalendarList(tokensToUse);
+      const calendars = await fetchCalendarList(tokens);
       setState(prev => ({ ...prev, googleCalendars: calendars }));
     } catch (error) {
       console.error('Error fetching Google calendars:', error);

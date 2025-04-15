@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,14 +12,14 @@ export function useGoogleAuth(setState: any) {
       console.log('Initiating Google Calendar connection...');
       toast.info('Kobler til Google Calendar...');
       
-      // Use AbortController for better timeout handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+      // Set a timeout for the request
+      const timeoutId = setTimeout(() => {
+        throw new Error('Forespørselen tok for lang tid og ble avbrutt. Sjekk at Edge Function er aktiv.');
+      }, 15000); // 15 seconds timeout
       
       try {
         const { data, error } = await supabase.functions.invoke('google-calendar', {
-          method: 'GET',
-          signal: controller.signal
+          method: 'GET'
         });
         
         clearTimeout(timeoutId);
@@ -43,8 +44,8 @@ export function useGoogleAuth(setState: any) {
       } catch (fetchError: any) {
         clearTimeout(timeoutId);
         
-        // More specific error handling for AbortController
-        if (fetchError.name === 'AbortError') {
+        // More specific error handling
+        if (fetchError.message?.includes('avbrutt') || fetchError.message?.includes('timeout')) {
           throw new Error('Forespørselen tok for lang tid og ble avbrutt. Sjekk at Edge Function er aktiv.');
         }
         

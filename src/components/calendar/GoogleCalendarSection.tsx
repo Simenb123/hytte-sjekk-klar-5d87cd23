@@ -61,7 +61,7 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
           <GoogleCalendarTab
             isLoadingEvents={isLoadingEvents}
             googleEvents={googleEvents}
-            fetchGoogleEvents={() => googleTokens && fetchGoogleEvents(googleTokens)}
+            fetchGoogleEvents={fetchGoogleEvents}
             fetchError={fetchError}
           />
         </TabsContent>

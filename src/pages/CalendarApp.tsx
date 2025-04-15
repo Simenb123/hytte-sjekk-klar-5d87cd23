@@ -116,7 +116,7 @@ const CalendarApp: React.FC = () => {
           console.log('Successfully created Google Calendar event:', data.event.id);
           toast.success('Booking opprettet i Google Calendar!');
           if (googleTokens) {
-            fetchGoogleEvents(googleTokens);
+            fetchGoogleEvents();
           }
         }
       } catch (error) {
