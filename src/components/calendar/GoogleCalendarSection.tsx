@@ -61,10 +61,10 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
     return null;
   };
   
-  // Get appropriate alert variant based on error type - Fix TypeScript error here
-  const getAlertVariant = () => {
+  // Get appropriate alert variant based on error type
+  const getAlertVariant = (): "default" | "destructive" => {
     if (hasConnectionIssue) return "destructive";
-    if (hasAuthIssue) return "destructive"; // Changed from "warning" to "destructive"
+    if (hasAuthIssue) return "destructive";
     return "destructive";
   };
   
