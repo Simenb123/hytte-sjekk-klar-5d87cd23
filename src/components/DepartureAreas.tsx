@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import AreaButton from './AreaButton';
@@ -46,7 +47,7 @@ const DepartureAreas: React.FC = () => {
                   onClick={() => handleNextArea(index)}
                 >
                   <ArrowRight className="mr-2 h-4 w-4" />
-                  Neste Område
+                  Neste område: {departureAreas[index + 1].name}
                 </Button>
               )}
             </div>
