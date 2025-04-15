@@ -41,6 +41,7 @@ const getRequiredEnv = (name: string): string => {
 
 /**
  * Helper to determine appropriate redirect URI based on request origin
+ * This is crucial for OAuth flows to work correctly
  */
 const getRedirectURI = (origin: string, requestData?: any): string => {
   // If explicit redirect URI is provided in request data, use it
