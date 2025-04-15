@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
 import { Button } from './ui/button';
@@ -15,8 +15,13 @@ import {
 } from "@/components/ui/dialog";
 
 const ArrivalChecklist: React.FC = () => {
+  const navigate = useNavigate();
   const { arrivals, toggleArrivalItem, isAllArrivalsCompleted } = useChecklist();
   
+  const handleCompletionConfirm = () => {
+    navigate('/');
+  };
+
   return (
     <div className="relative z-20">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
@@ -65,6 +70,7 @@ const ArrivalChecklist: React.FC = () => {
             </div>
             <DialogFooter className="sm:justify-center">
               <Button 
+                onClick={handleCompletionConfirm}
                 className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
               >
                 Kos deg på turen! 😊

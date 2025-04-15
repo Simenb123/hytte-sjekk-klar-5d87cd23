@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useChecklist } from '../context/ChecklistContext';
 import AreaButton from './AreaButton';
 import { Button } from './ui/button';
@@ -15,11 +16,16 @@ import {
 } from "@/components/ui/dialog";
 
 const DepartureAreas: React.FC = () => {
+  const navigate = useNavigate();
   const { departureAreas, selectArea, isAllDeparturesCompleted } = useChecklist();
   
   const handleAreaClick = (area) => {
     console.log('[DepartureAreas] Area clicked:', area.id);
     selectArea(area);
+  };
+
+  const handleCompletionConfirm = () => {
+    navigate('/');
   };
   
   return (
@@ -71,6 +77,7 @@ const DepartureAreas: React.FC = () => {
             </div>
             <DialogFooter className="sm:justify-center">
               <Button 
+                onClick={handleCompletionConfirm}
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
               >
                 Hytta er nå sikret 🏠
