@@ -1,139 +1,24 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogOut, User, Loader2 } from 'lucide-react';
-
-interface Profile {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  phone: string | null;
-}
+import { ProfileForm } from '@/components/profile/ProfileForm';
+import { useProfile } from '@/hooks/useProfile';
 
 const ProfilePage: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const { profile, isLoading, isSaving, error, updateProfile } = useProfile(user);
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
 
-    const fetchProfile = async () => {
-      setIsLoading(true);
-      try {
-        console.log('[ProfilePage] Fetching profile for user:', user.id);
-        
-        const { data, error: fetchError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (fetchError) {
-          console.error('[ProfilePage] Error fetching profile:', fetchError);
-          setError('Kunne ikke laste brukerprofil');
-          toast.error('Kunne ikke laste brukerprofil');
-          return;
-        } 
-        
-        if (data) {
-          console.log('[ProfilePage] Profile fetched successfully:', data);
-          setProfile(data);
-          setFirstName(data.first_name || '');
-          setLastName(data.last_name || '');
-          setPhone(data.phone || '');
-        } else {
-          console.log('[ProfilePage] No profile found, creating one');
-          // Create a profile if it doesn't exist
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              first_name: '',
-              last_name: '',
-              phone: ''
-            });
-
-          if (insertError) {
-            console.error('[ProfilePage] Error creating profile:', insertError);
-            setError('Kunne ikke opprette brukerprofil');
-            toast.error('Kunne ikke opprette brukerprofil');
-          } else {
-            setProfile({
-              id: user.id,
-              first_name: '',
-              last_name: '',
-              phone: ''
-            });
-          }
-        }
-      } catch (error) {
-        console.error('[ProfilePage] Error:', error);
-        setError('En feil oppstod ved lasting av profil');
-        toast.error('En feil oppstod ved lasting av profil');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [user, navigate]);
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    setIsSaving(true);
-    try {
-      console.log('[ProfilePage] Updating profile for user:', user.id);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          first_name: firstName,
-          last_name: lastName,
-          phone: phone,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id)
-        .select();
-
-      if (error) {
-        console.error('[ProfilePage] Error updating profile:', error);
-        toast.error('Kunne ikke oppdatere profil');
-        setError('Kunne ikke oppdatere profil: ' + error.message);
-      } else {
-        console.log('[ProfilePage] Profile updated successfully:', data);
-        toast.success('Profil oppdatert');
-        setError(null);
-      }
-    } catch (error: any) {
-      console.error('[ProfilePage] Error:', error);
-      toast.error('En feil oppstod ved oppdatering av profil');
-      setError('En feil oppstod ved oppdatering av profil: ' + error.message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Navigate to home when back button is clicked
   const handleBackClick = () => {
     navigate('/');
   };
@@ -182,57 +67,12 @@ const ProfilePage: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleUpdateProfile} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-post</Label>
-                  <Input 
-                    id="email" 
-                    value={user?.email || ''} 
-                    disabled 
-                    className="bg-gray-100"
-                  />
-                  <p className="text-xs text-gray-500">E-post kan ikke endres</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">Fornavn</Label>
-                  <Input 
-                    id="firstName" 
-                    value={firstName} 
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="Ditt fornavn"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Etternavn</Label>
-                  <Input 
-                    id="lastName" 
-                    value={lastName} 
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Ditt etternavn"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefon</Label>
-                  <Input 
-                    id="phone" 
-                    value={phone} 
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Ditt telefonnummer"
-                  />
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={isSaving}>
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Lagrer...
-                    </>
-                  ) : 'Lagre endringer'}
-                </Button>
-              </form>
+              <ProfileForm 
+                user={user}
+                profile={profile}
+                isSaving={isSaving}
+                onSubmit={updateProfile}
+              />
             </CardContent>
           </Card>
         )}
