@@ -3,7 +3,7 @@ import React from 'react';
 import { useAreaChecklist } from '../hooks/useAreaChecklist';
 import AreaChecklistContainer from './checklist/AreaChecklistContainer';
 import { Button } from './ui/button';
-import { ArrowRight, Check } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useChecklist } from '../context/ChecklistContext';
 
 const AreaChecklist: React.FC = () => {
@@ -40,11 +40,10 @@ const AreaChecklist: React.FC = () => {
 
       {nextArea && (
         <Button 
-          variant="outline" 
-          className="w-full mt-4"
+          className="w-full mt-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium shadow-md transition-all duration-300 hover:shadow-lg"
           onClick={handleNextArea}
         >
-          <ArrowRight className="mr-2 h-4 w-4" />
+          <ArrowRight className="mr-2 h-5 w-5" />
           Neste område: {nextArea.name}
         </Button>
       )}

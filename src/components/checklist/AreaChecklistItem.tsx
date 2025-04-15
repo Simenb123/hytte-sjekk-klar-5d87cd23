@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import ChecklistItem from '../ChecklistItem';
 
 interface AreaChecklistItemProps {
@@ -12,6 +12,11 @@ interface AreaChecklistItemProps {
 }
 
 const AreaChecklistItem: React.FC<AreaChecklistItemProps> = ({ item, onToggle }) => {
+  // Log when the component renders or when isCompleted changes
+  useEffect(() => {
+    console.log(`[AreaChecklistItem ${item.id}] Rendering with isCompleted: ${item.isCompleted}`);
+  }, [item.id, item.isCompleted]);
+  
   const handleToggle = () => {
     console.log(`[AreaChecklistItem ${item.id}] Toggling item, current state: ${item.isCompleted}`);
     onToggle(item.id);
@@ -27,4 +32,9 @@ const AreaChecklistItem: React.FC<AreaChecklistItemProps> = ({ item, onToggle })
   );
 };
 
-export default React.memo(AreaChecklistItem);
+// Use a more explicit comparison function for memoization
+export default React.memo(AreaChecklistItem, (prevProps, nextProps) => {
+  return prevProps.item.isCompleted === nextProps.item.isCompleted &&
+         prevProps.item.id === nextProps.item.id &&
+         prevProps.item.text === nextProps.item.text;
+});

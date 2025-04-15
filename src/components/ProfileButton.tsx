@@ -32,22 +32,22 @@ const ProfileButton = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-          <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
-            <AvatarFallback>{getInitials()}</AvatarFallback>
+        <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <Avatar className="h-9 w-9 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-2 border-white shadow-md hover:shadow-lg transition-all duration-300">
+            <AvatarFallback className="font-semibold">{getInitials()}</AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>Min konto</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-56 bg-white border border-gray-200 shadow-xl rounded-md">
+        <DropdownMenuLabel className="font-bold text-gray-800">Min konto</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link to="/profile" className="w-full cursor-pointer">
+          <Link to="/profile" className="w-full cursor-pointer hover:bg-blue-50 text-blue-600">
             Min profil
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={signOut} className="text-red-500 cursor-pointer">
+        <DropdownMenuItem onClick={signOut} className="text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer font-medium">
           Logg ut
         </DropdownMenuItem>
       </DropdownMenuContent>
