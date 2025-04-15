@@ -16,7 +16,11 @@ Deno.serve(async (req) => {
   try {
     const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')
     const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')
-    const REDIRECT_URI = 'http://localhost:5173/calendar'  // Update this for production
+    
+    // Get the actual hostname from the request headers for proper redirect URI
+    const host = req.headers.get('host') || 'localhost:5173'
+    const protocol = host.includes('localhost') ? 'http' : 'https'
+    const REDIRECT_URI = `${protocol}://${host}/calendar`
 
     const oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
@@ -36,6 +40,7 @@ Deno.serve(async (req) => {
         scope: scopes,
       })
 
+      console.log('Generated auth URL:', url)
       return new Response(JSON.stringify({ url }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -47,6 +52,7 @@ Deno.serve(async (req) => {
       
       // Handle token exchange
       if (requestData.code) {
+        console.log('Exchanging code for tokens')
         const { tokens } = await oauth2Client.getToken(requestData.code)
         oauth2Client.setCredentials(tokens)
         
@@ -57,6 +63,7 @@ Deno.serve(async (req) => {
       
       // Handle calendar listing
       if (requestData.action === 'list_events' && requestData.tokens) {
+        console.log('Listing calendar events')
         oauth2Client.setCredentials(requestData.tokens)
         
         const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
@@ -79,6 +86,7 @@ Deno.serve(async (req) => {
       
       // Handle creating events
       if (requestData.action === 'create_event' && requestData.tokens && requestData.event) {
+        console.log('Creating calendar event:', requestData.event.title)
         oauth2Client.setCredentials(requestData.tokens)
         
         const calendar = google.calendar({ version: 'v3', auth: oauth2Client })

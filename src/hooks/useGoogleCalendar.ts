@@ -22,6 +22,7 @@ export function useGoogleCalendar() {
   const [googleTokens, setGoogleTokens] = useState<any>(null);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [googleEvents, setGoogleEvents] = useState<GoogleEvent[]>([]);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
     const storedTokens = localStorage.getItem('googleCalendarTokens');
@@ -53,16 +54,26 @@ export function useGoogleCalendar() {
       
       if (data?.events) {
         setGoogleEvents(data.events);
+        toast.success('Hentet Google Calendar-hendelser');
       }
     } catch (error) {
       console.error('Error fetching Google Calendar events:', error);
       toast.error('Kunne ikke hente Google Calendar-hendelser');
+      
+      // Token might be expired, try to disconnect
+      if (error.message?.includes('invalid_grant')) {
+        disconnectGoogleCalendar();
+        toast.error('Google Calendar-tilgangen er utløpt. Vennligst koble til på nytt.');
+      }
     } finally {
       setIsLoadingEvents(false);
     }
   };
 
   const connectGoogleCalendar = async () => {
+    if (isConnecting) return;
+    
+    setIsConnecting(true);
     try {
       const { data, error } = await supabase.functions.invoke('google-calendar', {
         method: 'GET',
@@ -76,7 +87,9 @@ export function useGoogleCalendar() {
       }
     } catch (error) {
       console.error('Error connecting to Google Calendar:', error);
-      toast.error('Kunne ikke koble til Google Calendar');
+      toast.error('Kunne ikke koble til Google Calendar. Prøv igjen senere.');
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -119,6 +132,7 @@ export function useGoogleCalendar() {
     fetchGoogleEvents,
     connectGoogleCalendar,
     disconnectGoogleCalendar,
-    handleOAuthCallback
+    handleOAuthCallback,
+    isConnecting
   };
 }

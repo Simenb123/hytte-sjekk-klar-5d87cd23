@@ -27,7 +27,8 @@ const CalendarApp: React.FC = () => {
     fetchGoogleEvents,
     connectGoogleCalendar,
     disconnectGoogleCalendar,
-    handleOAuthCallback
+    handleOAuthCallback,
+    isConnecting
   } = useGoogleCalendar();
 
   // Handle OAuth callback
@@ -40,10 +41,19 @@ const CalendarApp: React.FC = () => {
         if (success) {
           // Remove code from URL
           window.history.replaceState({}, document.title, window.location.pathname);
+          // Fetch events after successful connection
+          fetchGoogleEvents();
         }
       });
     }
   }, []);
+
+  // Fetch Google events when connected
+  useEffect(() => {
+    if (isGoogleConnected) {
+      fetchGoogleEvents();
+    }
+  }, [isGoogleConnected]);
 
   // Days that have bookings
   const bookedDays = bookings.flatMap(booking => {
@@ -131,6 +141,7 @@ const CalendarApp: React.FC = () => {
                   onNewBooking={() => setShowNewBookingDialog(true)}
                   onConnectGoogle={connectGoogleCalendar}
                   onDisconnectGoogle={disconnectGoogleCalendar}
+                  isConnecting={isConnecting}
                 />
               </CardContent>
             </Card>

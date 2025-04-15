@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import type { Booking } from '@/hooks/useBookings';
 
 interface BookingsListProps {
@@ -11,6 +11,7 @@ interface BookingsListProps {
   onNewBooking: () => void;
   onConnectGoogle: () => void;
   onDisconnectGoogle: () => void;
+  isConnecting?: boolean;
 }
 
 export const BookingsList: React.FC<BookingsListProps> = ({
@@ -18,7 +19,8 @@ export const BookingsList: React.FC<BookingsListProps> = ({
   isGoogleConnected,
   onNewBooking,
   onConnectGoogle,
-  onDisconnectGoogle
+  onDisconnectGoogle,
+  isConnecting = false
 }) => {
   return (
     <div>
@@ -52,10 +54,20 @@ export const BookingsList: React.FC<BookingsListProps> = ({
       {!isGoogleConnected ? (
         <Button 
           onClick={onConnectGoogle} 
+          disabled={isConnecting}
           className="w-full mt-3 bg-white text-black border border-gray-300 hover:bg-gray-100"
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          Koble til Google Calendar
+          {isConnecting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Kobler til...
+            </>
+          ) : (
+            <>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              Koble til Google Calendar
+            </>
+          )}
         </Button>
       ) : (
         <Button 
