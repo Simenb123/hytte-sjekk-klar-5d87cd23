@@ -46,7 +46,7 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
       // Check if date is valid
       if (isNaN(date.getTime())) {
         console.error('Invalid date:', dateString);
-        return dateString;
+        return 'Ugyldig dato';
       }
       
       // Format date to Norwegian locale
@@ -59,9 +59,41 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
       });
     } catch (e) {
       console.error('Error formatting date:', e, dateString);
-      return dateString;
+      return 'Ugyldig dato format';
     }
   };
+
+  // Handle connection errors with more detailed feedback
+  if (error && error.includes('Google Calendar-tilgangen har utløpt')) {
+    return (
+      <div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            Din tilkobling til Google Calendar har utløpt eller er ugyldig. 
+            Du må koble til på nytt.
+            <Button 
+              variant="link" 
+              className="p-0 ml-2 text-xs underline" 
+              onClick={onRefresh}
+            >
+              Koble til på nytt
+            </Button>
+          </AlertDescription>
+        </Alert>
+        
+        <div className="text-center mt-8">
+          <p className="text-gray-500 mb-4">
+            For å koble til Google Calendar igjen, klikk på knappen nedenfor.
+          </p>
+          <Button onClick={onRefresh} className="mb-4">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Koble til Google Calendar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

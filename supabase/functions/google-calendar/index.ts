@@ -1,4 +1,5 @@
 
+// Import only what's needed and nothing from google-logging-utils
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { google } from 'https://esm.sh/googleapis@129.0.0'
 
@@ -17,6 +18,7 @@ Deno.serve(async (req) => {
     const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')
     const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')
     
+    // Proper validation of environment variables
     if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
       console.error('Missing Google credentials in environment')
       return new Response(JSON.stringify({ 
@@ -27,7 +29,7 @@ Deno.serve(async (req) => {
       })
     }
     
-    // Get the actual hostname from the request headers for proper redirect URI
+    // Get the actual hostname from request headers
     const origin = req.headers.get('origin') || 'https://hytte-sjekk-klar.lovable.app'
     
     // For production always use https
@@ -42,13 +44,13 @@ Deno.serve(async (req) => {
     // Remove port if present
     domain = domain.split(':')[0]
     
-    // Make sure to use the correct redirect path that matches what's configured in Google Cloud
+    // Make sure to use the correct redirect path
     const REDIRECT_URI = `${protocol}://${domain}/auth/calendar`
 
     console.log(`Using redirect URI: ${REDIRECT_URI}`)
     console.log(`Authorization request from: ${origin}`)
 
-    // Create oauth2Client
+    // Create oauth2Client with proper error handling
     const oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
@@ -88,24 +90,24 @@ Deno.serve(async (req) => {
           const { tokens } = await oauth2Client.getToken(requestData.code)
           oauth2Client.setCredentials(tokens)
           
-          // Check that we have refresh token
+          // Check that we have refresh token - safe logging
+          console.log('Received tokens:', {
+            access_token_exists: !!tokens.access_token,
+            refresh_token_exists: !!tokens.refresh_token,
+            expiry_date: tokens.expiry_date,
+          })
+          
           if (!tokens.refresh_token) {
             console.log('No refresh token received. User may have already authorized the app before or not using prompt=consent')
           } else {
             console.log('Successfully received refresh token')
           }
           
-          console.log('Token exchange successful', JSON.stringify({
-            access_token_exists: !!tokens.access_token,
-            refresh_token_exists: !!tokens.refresh_token,
-            expiry_date: tokens.expiry_date,
-          }))
-          
           return new Response(JSON.stringify({ tokens }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
         } catch (error) {
-          console.error('Token exchange error:', error)
+          console.error('Token exchange error:', error.message)
           return new Response(JSON.stringify({ 
             error: 'Failed to exchange code for tokens',
             details: error.message,
@@ -121,6 +123,11 @@ Deno.serve(async (req) => {
       if (requestData.action === 'list_events' && requestData.tokens) {
         console.log('Listing calendar events')
         try {
+          // Safe handling of tokens to avoid logging issues
+          if (typeof requestData.tokens !== 'object' || !requestData.tokens.access_token) {
+            throw new Error('Invalid tokens format provided')
+          }
+          
           oauth2Client.setCredentials(requestData.tokens)
           
           const calendar = google.calendar({ 
@@ -148,7 +155,7 @@ Deno.serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
         } catch (error) {
-          console.error('Error listing events:', error)
+          console.error('Error listing events:', error.message || 'Unknown error')
           
           // Check if it's an authorization error that needs refresh
           const authError = error.message?.includes('invalid_grant') || 
@@ -157,7 +164,7 @@ Deno.serve(async (req) => {
           
           return new Response(JSON.stringify({ 
             error: 'Failed to list events',
-            details: error.message,
+            details: error.message || 'Unknown error',
             requiresReauth: authError,
             errorCode: error.code || 'UNKNOWN_ERROR'
           }), {
@@ -171,6 +178,11 @@ Deno.serve(async (req) => {
       if (requestData.action === 'create_event' && requestData.tokens && requestData.event) {
         console.log('Creating calendar event:', requestData.event.title)
         try {
+          // Validate tokens to avoid logging issues
+          if (typeof requestData.tokens !== 'object' || !requestData.tokens.access_token) {
+            throw new Error('Invalid tokens format provided')
+          }
+          
           oauth2Client.setCredentials(requestData.tokens)
           
           const calendar = google.calendar({ 
@@ -202,10 +214,10 @@ Deno.serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
         } catch (error) {
-          console.error('Error creating event:', error)
+          console.error('Error creating event:', error.message || 'Unknown error')
           return new Response(JSON.stringify({ 
             error: 'Failed to create event',
-            details: error.message
+            details: error.message || 'Unknown error'
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -217,6 +229,11 @@ Deno.serve(async (req) => {
       if (requestData.action === 'get_calendars' && requestData.tokens) {
         console.log('Getting calendar list')
         try {
+          // Validate tokens to avoid logging issues
+          if (typeof requestData.tokens !== 'object' || !requestData.tokens.access_token) {
+            throw new Error('Invalid tokens format provided')
+          }
+          
           oauth2Client.setCredentials(requestData.tokens)
           
           const calendar = google.calendar({ 
@@ -232,10 +249,10 @@ Deno.serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
         } catch (error) {
-          console.error('Error getting calendar list:', error)
+          console.error('Error getting calendar list:', error.message || 'Unknown error')
           return new Response(JSON.stringify({ 
             error: 'Failed to get calendar list',
-            details: error.message
+            details: error.message || 'Unknown error'
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -249,9 +266,10 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    console.error('Error:', error)
+    // Safe error logging without attempting to convert the entire error object to a string
+    console.error('Error:', error.message || 'Unknown error')
     return new Response(JSON.stringify({ 
-      error: error.message
+      error: error.message || 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
