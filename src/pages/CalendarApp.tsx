@@ -88,19 +88,25 @@ const CalendarApp: React.FC = () => {
             <CardTitle>Bookinger</CardTitle>
           </CardHeader>
           <CardContent>
-            {bookings.map(booking => (
-              <div key={booking.id} className="mb-4 p-3 border rounded-lg">
-                <div className="font-medium">{booking.user}</div>
-                <div className="text-sm text-gray-500">
-                  {booking.from.toLocaleDateString('no')} - {booking.to.toLocaleDateString('no')}
-                </div>
-                {booking.description && (
-                  <div className="text-sm text-gray-600 mt-1">
-                    {booking.description}
+            {bookings.length > 0 ? (
+              bookings.map(booking => (
+                <div key={booking.id} className="mb-4 p-3 border rounded-lg">
+                  <div className="font-medium">{booking.user}</div>
+                  <div className="text-sm text-gray-500">
+                    {booking.from.toLocaleDateString('no')} - {booking.to.toLocaleDateString('no')}
                   </div>
-                )}
+                  {booking.description && (
+                    <div className="text-sm text-gray-600 mt-1">
+                      {booking.description}
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-500 my-4">
+                Ingen bookinger enda
               </div>
-            ))}
+            )}
             
             <Button 
               onClick={handleNewBooking} 

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CheckSquare, CloudSun, Calendar, Layers, LogIn } from 'lucide-react';
-import AppHeader from '@/components/Header';
+import AppHeader from '@/components/AppHeader'; // Bruk AppHeader i stedet for Header
 import DashboardCard from '@/components/DashboardCard';
 import { useAuth } from '@/context/AuthContext';
 
