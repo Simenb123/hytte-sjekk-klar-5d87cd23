@@ -72,7 +72,11 @@ export function useGoogleCalendar() {
     setLastRefresh(new Date());
 
     try {
-      console.log('Calling Google Calendar Edge Function to fetch events...');
+      console.log('Calling Google Calendar Edge Function to fetch events...', {
+        tokensExist: !!tokensToUse,
+        accessTokenExists: !!tokensToUse?.access_token,
+        refreshTokenExists: !!tokensToUse?.refresh_token
+      });
       
       const { data, error } = await supabase.functions.invoke('google-calendar', {
         method: 'POST',
@@ -188,7 +192,7 @@ export function useGoogleCalendar() {
       }
       
       if (data?.url) {
-        console.log('Received Google authorization URL, redirecting...');
+        console.log('Received Google authorization URL, redirecting...', data.url);
         // Store the current URL to return to after authentication
         sessionStorage.setItem('calendarReturnUrl', window.location.href);
         // Redirect to Google OAuth consent screen

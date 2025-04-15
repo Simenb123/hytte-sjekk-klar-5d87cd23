@@ -50,7 +50,7 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
       }
       
       // Format date to Norwegian locale
-      return date.toLocaleString('no', {
+      return date.toLocaleString('nb-NO', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',

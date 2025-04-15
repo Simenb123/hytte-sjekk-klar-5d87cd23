@@ -28,11 +28,18 @@ Deno.serve(async (req) => {
     }
     
     // Get the actual hostname from the request headers for proper redirect URI
-    const origin = req.headers.get('origin') || req.headers.get('host') || 'localhost:5173'
-    const protocol = origin.includes('localhost') ? 'http' : 'https'
+    const origin = req.headers.get('origin') || 'https://hytte-sjekk-klar.lovable.app'
+    const protocol = 'https'
+    
+    // For local development, uncomment this:
+    // const protocol = origin.includes('localhost') ? 'http' : 'https'
     
     // Handle both domain.com and domain.com/ formats
     let domain = origin.includes('://') ? new URL(origin).host : origin
+    
+    // Remove protocol if present in domain
+    domain = domain.replace(/^https?:\/\//, '')
+    
     // Remove port if present
     domain = domain.split(':')[0]
     
@@ -84,7 +91,7 @@ Deno.serve(async (req) => {
           
           // Check that we have refresh token
           if (!tokens.refresh_token) {
-            console.log('No refresh token received. User may have already authorized the app before.')
+            console.log('No refresh token received. User may have already authorized the app before or not using prompt=consent')
           } else {
             console.log('Successfully received refresh token')
           }
@@ -103,7 +110,7 @@ Deno.serve(async (req) => {
           return new Response(JSON.stringify({ 
             error: 'Failed to exchange code for tokens',
             details: error.message,
-            code: requestData.code
+            code: requestData.code.substring(0, 10) + '...' // Only log part of the code for security
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
