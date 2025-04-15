@@ -17,10 +17,23 @@ Deno.serve(async (req) => {
     const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')
     const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')
     
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+      console.error('Missing Google credentials in environment')
+      return new Response(JSON.stringify({ 
+        error: 'Server configuration error - missing Google credentials' 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    
     // Get the actual hostname from the request headers for proper redirect URI
-    const host = req.headers.get('host') || 'localhost:5173'
-    const protocol = host.includes('localhost') ? 'http' : 'https'
-    const REDIRECT_URI = `${protocol}://${host}/calendar`
+    const origin = req.headers.get('origin') || req.headers.get('host') || 'localhost:5173'
+    const protocol = origin.includes('localhost') ? 'http' : 'https'
+    const domain = origin.includes('://') ? new URL(origin).host : origin
+    const REDIRECT_URI = `${protocol}://${domain}/calendar`
+
+    console.log(`Using redirect URI: ${REDIRECT_URI}`)
 
     const oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
@@ -32,12 +45,14 @@ Deno.serve(async (req) => {
     if (req.method === 'GET') {
       const scopes = [
         'https://www.googleapis.com/auth/calendar.readonly',
-        'https://www.googleapis.com/auth/calendar.events'
+        'https://www.googleapis.com/auth/calendar.events',
+        'https://www.googleapis.com/auth/calendar.settings.readonly'
       ]
 
       const url = oauth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: scopes,
+        prompt: 'consent', // Always show consent screen to get refresh token
       })
 
       console.log('Generated auth URL:', url)
@@ -53,64 +68,128 @@ Deno.serve(async (req) => {
       // Handle token exchange
       if (requestData.code) {
         console.log('Exchanging code for tokens')
-        const { tokens } = await oauth2Client.getToken(requestData.code)
-        oauth2Client.setCredentials(tokens)
-        
-        return new Response(JSON.stringify({ tokens }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        try {
+          const { tokens } = await oauth2Client.getToken(requestData.code)
+          oauth2Client.setCredentials(tokens)
+          
+          // Check that we have refresh token
+          if (!tokens.refresh_token) {
+            console.log('No refresh token received. Consider adding prompt: consent to force refresh token')
+          }
+          
+          return new Response(JSON.stringify({ tokens }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        } catch (error) {
+          console.error('Token exchange error:', error)
+          return new Response(JSON.stringify({ 
+            error: 'Failed to exchange code for tokens',
+            details: error.message
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
       }
       
       // Handle calendar listing
       if (requestData.action === 'list_events' && requestData.tokens) {
         console.log('Listing calendar events')
-        oauth2Client.setCredentials(requestData.tokens)
-        
-        const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
-        const now = new Date()
-        const threeMonthsLater = new Date(now)
-        threeMonthsLater.setMonth(now.getMonth() + 3)
-        
-        const response = await calendar.events.list({
-          calendarId: 'primary',
-          timeMin: now.toISOString(),
-          timeMax: threeMonthsLater.toISOString(),
-          singleEvents: true,
-          orderBy: 'startTime',
-        })
-        
-        return new Response(JSON.stringify({ events: response.data.items }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+        try {
+          oauth2Client.setCredentials(requestData.tokens)
+          
+          const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+          const now = new Date()
+          const threeMonthsLater = new Date(now)
+          threeMonthsLater.setMonth(now.getMonth() + 3)
+          
+          const response = await calendar.events.list({
+            calendarId: 'primary',
+            timeMin: now.toISOString(),
+            timeMax: threeMonthsLater.toISOString(),
+            singleEvents: true,
+            orderBy: 'startTime',
+            maxResults: 100
+          })
+          
+          return new Response(JSON.stringify({ events: response.data.items }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        } catch (error) {
+          console.error('Error listing events:', error)
+          return new Response(JSON.stringify({ 
+            error: 'Failed to list events',
+            details: error.message,
+            errorCode: error.code || 'UNKNOWN_ERROR'
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
       }
       
       // Handle creating events
       if (requestData.action === 'create_event' && requestData.tokens && requestData.event) {
         console.log('Creating calendar event:', requestData.event.title)
-        oauth2Client.setCredentials(requestData.tokens)
-        
-        const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
-        const event = requestData.event
-        
-        const response = await calendar.events.insert({
-          calendarId: 'primary',
-          requestBody: {
-            summary: event.title,
-            description: event.description || '',
-            start: {
-              dateTime: new Date(event.startDate).toISOString(),
-              timeZone: 'Europe/Oslo',
+        try {
+          oauth2Client.setCredentials(requestData.tokens)
+          
+          const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+          const event = requestData.event
+          
+          const response = await calendar.events.insert({
+            calendarId: 'primary',
+            requestBody: {
+              summary: event.title,
+              description: event.description || '',
+              start: {
+                dateTime: new Date(event.startDate).toISOString(),
+                timeZone: 'Europe/Oslo',
+              },
+              end: {
+                dateTime: new Date(event.endDate).toISOString(),
+                timeZone: 'Europe/Oslo',
+              },
             },
-            end: {
-              dateTime: new Date(event.endDate).toISOString(),
-              timeZone: 'Europe/Oslo',
-            },
-          },
-        })
-        
-        return new Response(JSON.stringify({ event: response.data }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+          })
+          
+          return new Response(JSON.stringify({ event: response.data }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        } catch (error) {
+          console.error('Error creating event:', error)
+          return new Response(JSON.stringify({ 
+            error: 'Failed to create event',
+            details: error.message 
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
+      }
+      
+      // Handle getting calendar list
+      if (requestData.action === 'get_calendars' && requestData.tokens) {
+        console.log('Getting calendar list')
+        try {
+          oauth2Client.setCredentials(requestData.tokens)
+          
+          const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+          const response = await calendar.calendarList.list()
+          
+          return new Response(JSON.stringify({ calendars: response.data.items }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        } catch (error) {
+          console.error('Error getting calendar list:', error)
+          return new Response(JSON.stringify({ 
+            error: 'Failed to get calendar list',
+            details: error.message 
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        }
       }
     }
 

@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Share2, ExternalLink } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface GoogleEvent {
   id: string;
@@ -15,6 +16,7 @@ interface GoogleEvent {
     dateTime: string;
     timeZone: string;
   };
+  htmlLink?: string;
 }
 
 interface GoogleEventsListProps {
@@ -35,19 +37,36 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
           <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
         </div>
       ) : events.length > 0 ? (
-        events.map(event => (
-          <div key={event.id} className="mb-4 p-3 border rounded-lg">
-            <div className="font-medium">{event.summary}</div>
-            <div className="text-sm text-gray-500">
-              {new Date(event.start.dateTime).toLocaleString('no')} - {new Date(event.end.dateTime).toLocaleString('no')}
-            </div>
-            {event.description && (
-              <div className="text-sm text-gray-600 mt-1">
-                {event.description}
-              </div>
-            )}
+        <>
+          <div className="mb-4">
+            <Alert className="bg-blue-50 border-blue-200">
+              <AlertDescription className="text-blue-700">
+                Dette er hendelser fra din Google Calendar. Alle nye bookinger vil bli synkronisert hit.
+              </AlertDescription>
+            </Alert>
           </div>
-        ))
+          
+          {events.map(event => (
+            <div key={event.id} className="mb-4 p-3 border rounded-lg">
+              <div className="font-medium flex justify-between">
+                <span>{event.summary}</span>
+                {event.htmlLink && (
+                  <a href={event.htmlLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
+              <div className="text-sm text-gray-500">
+                {new Date(event.start.dateTime).toLocaleString('no')} - {new Date(event.end.dateTime).toLocaleString('no')}
+              </div>
+              {event.description && (
+                <div className="text-sm text-gray-600 mt-1">
+                  {event.description}
+                </div>
+              )}
+            </div>
+          ))}
+        </>
       ) : (
         <div className="text-center text-gray-500 my-4">
           Ingen hendelser funnet i Google Calendar
@@ -60,6 +79,17 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
       >
         Oppdater Google Calendar
       </Button>
+      
+      <div className="flex justify-center mt-4">
+        <a 
+          href="https://calendar.google.com/calendar/u/0/r" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-sm text-blue-600 flex items-center hover:underline"
+        >
+          <Share2 className="h-3 w-3 mr-1" /> Åpne i Google Calendar
+        </a>
+      </div>
     </div>
   );
 };

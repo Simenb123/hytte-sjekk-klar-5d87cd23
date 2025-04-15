@@ -2,8 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2, AlertCircle } from 'lucide-react';
 import type { Booking } from '@/hooks/useBookings';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface BookingsListProps {
   bookings: Booking[];
@@ -12,6 +13,7 @@ interface BookingsListProps {
   onConnectGoogle: () => void;
   onDisconnectGoogle: () => void;
   isConnecting?: boolean;
+  connectionError?: string | null;
 }
 
 export const BookingsList: React.FC<BookingsListProps> = ({
@@ -20,10 +22,20 @@ export const BookingsList: React.FC<BookingsListProps> = ({
   onNewBooking,
   onConnectGoogle,
   onDisconnectGoogle,
-  isConnecting = false
+  isConnecting = false,
+  connectionError = null
 }) => {
   return (
     <div>
+      {connectionError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {connectionError}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {bookings.length > 0 ? (
         bookings.map(booking => (
           <div key={booking.id} className="mb-4 p-3 border rounded-lg">
@@ -77,6 +89,12 @@ export const BookingsList: React.FC<BookingsListProps> = ({
         >
           Koble fra Google Calendar
         </Button>
+      )}
+      
+      {isGoogleConnected && (
+        <div className="mt-4 text-xs text-gray-500 text-center">
+          Google Calendar er tilkoblet. Alle bookinger vil automatisk synkroniseres.
+        </div>
       )}
     </div>
   );

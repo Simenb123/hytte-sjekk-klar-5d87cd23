@@ -12,6 +12,8 @@ import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const CalendarApp: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -28,32 +30,34 @@ const CalendarApp: React.FC = () => {
     connectGoogleCalendar,
     disconnectGoogleCalendar,
     handleOAuthCallback,
-    isConnecting
+    isConnecting,
+    connectionError
   } = useGoogleCalendar();
 
   // Handle OAuth callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const error = urlParams.get('error');
     
-    if (code) {
+    if (error) {
+      console.error('OAuth error:', error);
+      toast.error('Kunne ikke koble til Google Calendar: ' + error);
+      // Remove error from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (code) {
+      toast.info('Behandler Google Calendar-tilkobling...');
       handleOAuthCallback(code).then(success => {
         if (success) {
           // Remove code from URL
           window.history.replaceState({}, document.title, window.location.pathname);
           // Fetch events after successful connection
           fetchGoogleEvents();
+          setActiveTab('google');
         }
       });
     }
   }, []);
-
-  // Fetch Google events when connected
-  useEffect(() => {
-    if (isGoogleConnected) {
-      fetchGoogleEvents();
-    }
-  }, [isGoogleConnected]);
 
   // Days that have bookings
   const bookedDays = bookings.flatMap(booking => {
@@ -73,26 +77,36 @@ const CalendarApp: React.FC = () => {
     
     // If connected to Google, also create a Google Calendar event
     if (isGoogleConnected && googleTokens) {
-      const { data, error } = await supabase.functions.invoke('google-calendar', {
-        method: 'POST',
-        body: { 
-          action: 'create_event', 
-          tokens: googleTokens,
-          event: {
-            title: booking.title,
-            description: booking.description,
-            startDate: booking.startDate,
-            endDate: booking.endDate
+      try {
+        const { data, error } = await supabase.functions.invoke('google-calendar', {
+          method: 'POST',
+          body: { 
+            action: 'create_event', 
+            tokens: googleTokens,
+            event: {
+              title: booking.title,
+              description: booking.description,
+              startDate: booking.startDate,
+              endDate: booking.endDate
+            }
           }
-        }
-      });
+        });
 
-      if (error) {
+        if (error) {
+          throw error;
+        }
+        
+        if (data?.error) {
+          throw new Error(data.error);
+        }
+
+        if (data?.event) {
+          toast.success('Booking opprettet i Google Calendar!');
+          fetchGoogleEvents();
+        }
+      } catch (error) {
         console.error('Error creating Google Calendar event:', error);
         toast.error('Kunne ikke opprette hendelse i Google Calendar');
-      } else if (data?.event) {
-        toast.success('Booking opprettet i Google Calendar!');
-        fetchGoogleEvents();
       }
     }
   };
@@ -142,6 +156,7 @@ const CalendarApp: React.FC = () => {
                   onConnectGoogle={connectGoogleCalendar}
                   onDisconnectGoogle={disconnectGoogleCalendar}
                   isConnecting={isConnecting}
+                  connectionError={connectionError}
                 />
               </CardContent>
             </Card>
