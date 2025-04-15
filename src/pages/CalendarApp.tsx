@@ -38,6 +38,14 @@ const CalendarApp: React.FC = () => {
       const error = urlParams.get('error');
       
       if (isCallbackPath) {
+        // Log OAuth callback status
+        console.log('Detected OAuth callback path', {
+          code: code ? `${code.substring(0, 10)}...` : 'none', 
+          error: error || 'none',
+          path: window.location.pathname,
+          origin: window.location.origin
+        });
+        
         if (error) {
           console.error('OAuth error returned in callback:', error);
           toast.error(`Google Calendar-autentisering feilet: ${error}`);
@@ -49,6 +57,7 @@ const CalendarApp: React.FC = () => {
           toast.info('Behandler Google Calendar-autentisering...');
           
           try {
+            console.log('Handling OAuth callback with code', code.substring(0, 10) + '...');
             const success = await handleOAuthCallback(code);
             if (success) {
               console.log('Successfully authenticated with Google Calendar');
@@ -59,9 +68,9 @@ const CalendarApp: React.FC = () => {
               toast.error('Kunne ikke fullføre Google Calendar-autentisering');
               window.location.href = '/calendar';
             }
-          } catch (err) {
+          } catch (err: any) {
             console.error('Error in OAuth callback processing:', err);
-            toast.error('Feil ved behandling av Google Calendar-autentisering');
+            toast.error(`Feil ved behandling av Google Calendar-autentisering: ${err.message || 'Unknown error'}`);
             window.location.href = '/calendar';
           }
         } else {

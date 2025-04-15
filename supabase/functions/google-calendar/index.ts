@@ -44,6 +44,9 @@ const getRequiredEnv = (name: string): string => {
  * This is crucial for OAuth flows to work correctly
  */
 const getRedirectURI = (origin: string, requestData?: any): string => {
+  console.log('getRedirectURI - Origin:', origin);
+  console.log('getRedirectURI - Request data:', requestData?.redirectUri || 'none provided');
+  
   // If explicit redirect URI is provided in request data, use it
   if (requestData?.redirectUri) {
     console.log('Using explicit redirect URI from request:', requestData.redirectUri);
@@ -60,15 +63,15 @@ const getRedirectURI = (origin: string, requestData?: any): string => {
   if (origin.includes('lovableproject.com')) {
     // Extract the project ID from the origin
     const projectId = origin.split('//')[1].split('.')[0];
-    console.log(`Using preview redirect URI for project: ${projectId}`);
-    
-    // Add this preview domain to Google Console's authorized redirect URIs!
-    return `https://${projectId}.lovableproject.com/auth/calendar`;
+    const previewUri = `https://${projectId}.lovableproject.com/auth/calendar`;
+    console.log(`Using preview redirect URI: ${previewUri}`);
+    return previewUri;
   }
   
   // Default to production domain
-  console.log('Using production redirect URI');
-  return 'https://hytte-sjekk-klar.lovable.app/auth/calendar';
+  const productionUri = 'https://hytte-sjekk-klar.lovable.app/auth/calendar';
+  console.log(`Using production redirect URI: ${productionUri}`);
+  return productionUri;
 };
 
 Deno.serve(async (req) => {
@@ -123,6 +126,11 @@ Deno.serve(async (req) => {
     // Handle POST requests for OAuth code exchange and API operations
     if (req.method === 'POST') {
       const requestData = await req.json();
+      console.log('POST request data types:', {
+        hasCode: !!requestData.code,
+        hasAction: !!requestData.action,
+        hasTokens: !!requestData.tokens
+      });
 
       // Handle code exchange
       if (requestData.code) {
@@ -132,10 +140,10 @@ Deno.serve(async (req) => {
           
           console.log('Exchanging code for tokens');
           
-          // Get appropriate redirect URI
+          // Get appropriate redirect URI based on origin and/or request data
           const REDIRECT_URI = getRedirectURI(origin, requestData);
           
-          console.log('Redirect URI:', REDIRECT_URI);
+          console.log('Using redirect URI for token exchange:', REDIRECT_URI);
           console.log('Client ID exists:', !!GOOGLE_CLIENT_ID);
           console.log('Client Secret exists:', !!GOOGLE_CLIENT_SECRET);
           console.log('Code fragment:', requestData.code.substring(0, 10) + '...');
@@ -156,13 +164,12 @@ Deno.serve(async (req) => {
           if (!tokenResponse.ok) {
             const errorText = await tokenResponse.text();
             console.error('Token exchange error:', errorText);
-            
-            // Enhanced error logging
             console.error('Response status:', tokenResponse.status);
             console.error('Response status text:', tokenResponse.statusText);
             console.error('Request details:', {
               code_length: requestData.code.length,
-              redirect_uri: REDIRECT_URI
+              redirect_uri: REDIRECT_URI,
+              origin: origin
             });
             
             return errorResponse(`Google token exchange failed: ${errorText}`, tokenResponse.status);

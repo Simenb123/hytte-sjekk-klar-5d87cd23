@@ -110,9 +110,20 @@ export const handleOAuthCallback = async (code: string) => {
   toast.info('Behandler Google Calendar-tilkobling...');
 
   try {
+    // Get the current URL to determine what environment we're in
+    const currentUrl = window.location.origin;
+    console.log('Current URL for OAuth callback:', currentUrl);
+    
+    // Pass the redirectUri explicitly to ensure it matches what we used for auth
+    const redirectUri = `${currentUrl}/auth/calendar`;
+    console.log('Using redirect URI:', redirectUri);
+    
     const { data, error } = await supabase.functions.invoke('google-calendar', {
       method: 'POST',
-      body: { code }
+      body: { 
+        code,
+        redirectUri // Pass the correct redirect URI explicitly
+      }
     });
 
     if (error) {
