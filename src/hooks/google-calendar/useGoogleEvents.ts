@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { fetchCalendarEvents, fetchCalendarList } from '@/services/googleCalendar.service';
 
 export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => void) {
+  // Make sure the function signature clearly requires a tokens parameter
   const fetchGoogleEvents = useCallback(async (tokensToUse: any) => {
     if (!tokensToUse) {
       console.warn('No tokens available for fetching events');
