@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Loader2 } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -38,7 +38,8 @@ const ProfilePage: React.FC = () => {
     const fetchProfile = async () => {
       setIsLoading(true);
       try {
-        // First, check if a profile exists
+        console.log('[ProfilePage] Fetching profile for user:', user.id);
+        
         const { data, error: fetchError } = await supabase
           .from('profiles')
           .select('*')
@@ -49,14 +50,17 @@ const ProfilePage: React.FC = () => {
           console.error('[ProfilePage] Error fetching profile:', fetchError);
           setError('Kunne ikke laste brukerprofil');
           toast.error('Kunne ikke laste brukerprofil');
+          return;
         } 
         
         if (data) {
+          console.log('[ProfilePage] Profile fetched successfully:', data);
           setProfile(data);
           setFirstName(data.first_name || '');
           setLastName(data.last_name || '');
           setPhone(data.phone || '');
         } else {
+          console.log('[ProfilePage] No profile found, creating one');
           // Create a profile if it doesn't exist
           const { error: insertError } = await supabase
             .from('profiles')
@@ -98,7 +102,9 @@ const ProfilePage: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      console.log('[ProfilePage] Updating profile for user:', user.id);
+      
+      const { data, error } = await supabase
         .from('profiles')
         .update({
           first_name: firstName,
@@ -106,18 +112,22 @@ const ProfilePage: React.FC = () => {
           phone: phone,
           updated_at: new Date().toISOString()
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select();
 
       if (error) {
         console.error('[ProfilePage] Error updating profile:', error);
         toast.error('Kunne ikke oppdatere profil');
+        setError('Kunne ikke oppdatere profil: ' + error.message);
       } else {
+        console.log('[ProfilePage] Profile updated successfully:', data);
         toast.success('Profil oppdatert');
         setError(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[ProfilePage] Error:', error);
       toast.error('En feil oppstod ved oppdatering av profil');
+      setError('En feil oppstod ved oppdatering av profil: ' + error.message);
     } finally {
       setIsSaving(false);
     }
@@ -157,7 +167,8 @@ const ProfilePage: React.FC = () => {
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <p className="text-gray-500">Laster profil...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+            <p className="ml-2 text-gray-500">Laster profil...</p>
           </div>
         ) : (
           <Card>
@@ -214,7 +225,12 @@ const ProfilePage: React.FC = () => {
                 </div>
                 
                 <Button type="submit" className="w-full" disabled={isSaving}>
-                  {isSaving ? 'Lagrer...' : 'Lagre endringer'}
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Lagrer...
+                    </>
+                  ) : 'Lagre endringer'}
                 </Button>
               </form>
             </CardContent>
