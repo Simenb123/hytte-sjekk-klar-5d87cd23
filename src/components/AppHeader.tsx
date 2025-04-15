@@ -2,6 +2,8 @@
 import React from 'react';
 import { ArrowLeft, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ProfileButton from './ProfileButton';
+import { useAuth } from '@/context/AuthContext';
 
 interface AppHeaderProps {
   title: string;
@@ -17,6 +19,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   onBackClick
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleBack = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event bubbling
@@ -54,16 +57,19 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             {title && <h2 className="text-xl font-semibold">{title}</h2>}
           </div>
           
-          {showHomeButton && (
-            <button 
-              onClick={handleHome}
-              className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center bg-white text-black"
-              aria-label="Hjem"
-              type="button" // Explicitly set type to prevent form submission
-            >
-              <Home size={24} />
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {showHomeButton && (
+              <button 
+                onClick={handleHome}
+                className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center bg-white text-black"
+                aria-label="Hjem"
+                type="button" // Explicitly set type to prevent form submission
+              >
+                <Home size={24} />
+              </button>
+            )}
+            {user && <ProfileButton />}
+          </div>
         </div>
       </div>
     </header>

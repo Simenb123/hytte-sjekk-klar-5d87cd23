@@ -12,16 +12,19 @@ interface AreaChecklistItemProps {
 }
 
 const AreaChecklistItem: React.FC<AreaChecklistItemProps> = ({ item, onToggle }) => {
+  const handleToggle = () => {
+    console.log(`[AreaChecklistItem ${item.id}] Toggling item, current state: ${item.isCompleted}`);
+    onToggle(item.id);
+  };
+  
   return (
     <ChecklistItem
-      key={`${item.id}-${item.isCompleted}`}
       id={item.id}
       text={item.text}
       isCompleted={item.isCompleted}
-      onToggle={() => onToggle(item.id)}
+      onToggle={handleToggle}
     />
   );
 };
 
 export default React.memo(AreaChecklistItem);
-

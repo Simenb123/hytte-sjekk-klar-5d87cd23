@@ -2,6 +2,8 @@
 import React from 'react';
 import { ArrowLeft, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ProfileButton from './ProfileButton';
+import { useAuth } from '@/context/AuthContext';
 
 interface HeaderProps {
   title: string;
@@ -19,6 +21,7 @@ const Header: React.FC<HeaderProps> = ({
   rightContent
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleBackClick = () => {
     console.log('[Header] Back button clicked, onBackClick handler exists:', !!onBackClick);
@@ -63,11 +66,10 @@ const Header: React.FC<HeaderProps> = ({
           <h1 className="text-xl font-semibold text-gray-800">{title}</h1>
         </div>
         
-        {rightContent && (
-          <div className="flex items-center">
-            {rightContent}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {rightContent}
+          {user && <ProfileButton />}
+        </div>
       </div>
     </header>
   );

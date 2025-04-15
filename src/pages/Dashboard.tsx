@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CheckSquare, CloudSun, Calendar, Layers, LogIn, User } from 'lucide-react';
+import { CheckSquare, CloudSun, Calendar, Layers, LogIn } from 'lucide-react';
 import AppHeader from '@/components/Header';
 import DashboardCard from '@/components/DashboardCard';
 import { useAuth } from '@/context/AuthContext';
@@ -38,14 +38,6 @@ const Dashboard = () => {
             icon={<Calendar className="h-6 w-6" />}
             linkTo="/calendar"
             color="bg-indigo-500"
-          />
-          
-          <DashboardCard
-            title="Min Profil"
-            description="Se og endre profilen din"
-            icon={<User className="h-6 w-6" />}
-            linkTo="/profile"
-            color="bg-amber-500"
           />
           
           <DashboardCard
