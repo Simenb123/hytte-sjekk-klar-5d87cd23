@@ -9,6 +9,9 @@ import { GoogleEventsList } from '@/components/calendar/GoogleEventsList';
 import NewBookingDialog from '../components/NewBookingDialog';
 import { useBookings } from '@/hooks/useBookings';
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const CalendarApp: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
