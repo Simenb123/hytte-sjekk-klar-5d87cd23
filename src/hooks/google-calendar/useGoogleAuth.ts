@@ -12,12 +12,26 @@ export function useGoogleAuth(setState: any) {
       console.log('Initiating Google Calendar connection...');
       toast.info('Kobler til Google Calendar...');
       
-      const { data, error } = await supabase.functions.invoke('google-calendar', {
+      // Add explicit timeout for debugging purposes
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out after 10s')), 10000);
+      });
+      
+      const fetchPromise = supabase.functions.invoke('google-calendar', {
         method: 'GET',
       });
+      
+      // Race between fetch and timeout
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      if (data?.error) {
+        console.error('Google API error:', data.error);
+        throw new Error(data.error);
+      }
       
       if (data?.url) {
         console.log('Received Google authorization URL, redirecting...', data.url);
@@ -28,10 +42,25 @@ export function useGoogleAuth(setState: any) {
       }
     } catch (error: any) {
       console.error('Error connecting to Google Calendar:', error);
-      toast.error('Kunne ikke koble til Google Calendar. Prøv igjen senere.');
+      
+      // More detailed error reporting
+      let errorMessage = 'Kunne ikke koble til Google Calendar.';
+      
+      if (error.message?.includes('timeout')) {
+        errorMessage = 'Forespørselen tok for lang tid. Sjekk nettverkstilkoblingen din.';
+      } else if (error.name === 'FunctionsFetchError') {
+        errorMessage = 'Kunne ikke nå Edge Function. Sjekk at Supabase-funksjonen er aktiv.';
+        
+        // Check if it's a deeper error with context
+        if (error.context?.name === 'TypeError' && error.context?.message === 'Failed to fetch') {
+          errorMessage = 'Nettverksfeil ved tilkobling til Edge Function. Sjekk at alle miljøvariabler er riktig satt opp.';
+        }
+      }
+      
+      toast.error(errorMessage);
       setState(prev => ({
         ...prev,
-        connectionError: 'Kunne ikke koble til Google Calendar. Prøv igjen senere.'
+        connectionError: errorMessage + ' Prøv igjen senere.' 
       }));
     } finally {
       setState(prev => ({ ...prev, isConnecting: false }));
@@ -56,7 +85,13 @@ export function useGoogleAuth(setState: any) {
     setState(prev => ({ ...prev, connectionError: null }));
     
     try {
+      console.log('Processing OAuth callback with code:', code.substring(0, 10) + '...');
       const tokens = await processOAuthCallback(code);
+      
+      if (!tokens) {
+        throw new Error('Ingen tokens mottatt fra serveren');
+      }
+      
       localStorage.setItem('googleCalendarTokens', JSON.stringify(tokens));
       setState(prev => ({
         ...prev,
@@ -67,10 +102,11 @@ export function useGoogleAuth(setState: any) {
       return true;
     } catch (error: any) {
       console.error('Error exchanging code for tokens:', error);
-      toast.error('Kunne ikke fullføre Google Calendar-integrasjonen');
+      const errorMessage = error.message || 'Kunne ikke fullføre Google Calendar-integrasjonen';
+      toast.error(errorMessage);
       setState(prev => ({
         ...prev,
-        connectionError: 'Kunne ikke fullføre Google Calendar-integrasjonen. Prøv igjen senere.'
+        connectionError: errorMessage + '. Prøv igjen senere.'
       }));
     }
     return false;

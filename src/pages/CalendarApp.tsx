@@ -33,6 +33,7 @@ const CalendarApp: React.FC = () => {
 
   useEffect(() => {
     const handleOAuthResponse = async () => {
+      // Get current URL path and parameters
       const isCallbackPath = window.location.pathname.includes('/auth/calendar');
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
@@ -91,6 +92,13 @@ const CalendarApp: React.FC = () => {
     return days;
   });
 
+  // Add more debug information for connection errors
+  useEffect(() => {
+    if (connectionError) {
+      console.error('Connection error detected:', connectionError);
+    }
+  }, [connectionError]);
+
   const handleBookingSuccess = async (booking) => {
     fetchBookings();
     
@@ -125,8 +133,10 @@ const CalendarApp: React.FC = () => {
         if (data?.event) {
           console.log('Successfully created Google Calendar event:', data.event.id);
           toast.success('Booking opprettet i Google Calendar!');
-          // Pass the tokens to fetchGoogleEvents since it requires them
-          fetchGoogleEvents(googleTokens);
+          // Make sure to pass tokens when calling fetchGoogleEvents
+          if (googleTokens) {
+            fetchGoogleEvents(googleTokens);
+          }
         }
       } catch (error) {
         console.error('Error creating Google Calendar event:', error);
@@ -169,7 +179,7 @@ const CalendarApp: React.FC = () => {
               <GoogleCalendarTab
                 isLoadingEvents={isLoadingEvents}
                 googleEvents={googleEvents}
-                // Create a wrapper function that calls fetchGoogleEvents with googleTokens
+                // Make sure we're passing tokens when fetchGoogleEvents is called
                 fetchGoogleEvents={() => googleTokens && fetchGoogleEvents(googleTokens)}
                 fetchError={fetchError}
               />
