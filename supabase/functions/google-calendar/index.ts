@@ -40,6 +40,9 @@ const getRequiredEnv = (name: string): string => {
 };
 
 Deno.serve(async (req) => {
+  // Enhanced logging
+  console.log(`[${new Date().toISOString()}] ${req.method} request received`);
+  
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -50,12 +53,6 @@ Deno.serve(async (req) => {
     const origin = req.headers.get('origin') || 'https://hytte-sjekk-klar.lovable.app';
     console.log('Request origin:', origin);
 
-    // Dynamically construct redirect URI based on request origin
-    const protocol = origin.startsWith('http://localhost') ? 'http' : 'https';
-    const domain = origin.includes('://') ? new URL(origin).host : origin;
-    const REDIRECT_URI = `${protocol}://${domain}/auth/calendar`;
-    console.log('Using redirect URI:', REDIRECT_URI);
-
     // Handle GET requests - Generate auth URL
     if (req.method === 'GET') {
       try {
@@ -63,6 +60,18 @@ Deno.serve(async (req) => {
         const GOOGLE_CLIENT_ID = getRequiredEnv('GOOGLE_CLIENT_ID');
         
         console.log('Generating OAuth URL');
+        
+        // Dynamically construct redirect URI based on request origin
+        let REDIRECT_URI;
+        if (origin.includes('localhost')) {
+          REDIRECT_URI = 'http://localhost:5173/auth/calendar';
+          console.log('Using localhost redirect URI');
+        } else {
+          REDIRECT_URI = 'https://hytte-sjekk-klar.lovable.app/auth/calendar';
+          console.log('Using production redirect URI');
+        }
+        
+        console.log('Using redirect URI:', REDIRECT_URI);
         
         // Define OAuth scopes - using array for better readability and maintainability
         const scopes = [
@@ -97,8 +106,22 @@ Deno.serve(async (req) => {
           const GOOGLE_CLIENT_SECRET = getRequiredEnv('GOOGLE_CLIENT_SECRET');
           
           console.log('Exchanging code for tokens');
-          console.log('Redirect URI:', REDIRECT_URI);
           
+          // Determine proper redirect URI based on requestData or fallback to origin
+          let REDIRECT_URI;
+          if (requestData.redirectUri) {
+            REDIRECT_URI = requestData.redirectUri;
+          } else if (origin.includes('localhost')) {
+            REDIRECT_URI = 'http://localhost:5173/auth/calendar';
+          } else {
+            REDIRECT_URI = 'https://hytte-sjekk-klar.lovable.app/auth/calendar';
+          }
+          
+          console.log('Redirect URI:', REDIRECT_URI);
+          console.log('Client ID exists:', !!GOOGLE_CLIENT_ID);
+          console.log('Client Secret exists:', !!GOOGLE_CLIENT_SECRET);
+          console.log('Code fragment:', requestData.code.substring(0, 10) + '...');
+
           // Exchange code for tokens using fetch API
           const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
             method: 'POST',
@@ -115,11 +138,26 @@ Deno.serve(async (req) => {
           if (!tokenResponse.ok) {
             const errorText = await tokenResponse.text();
             console.error('Token exchange error:', errorText);
-            return errorResponse(`Google token exchange failed: ${errorText}`, 400);
+            
+            // Enhanced error logging
+            console.error('Response status:', tokenResponse.status);
+            console.error('Response status text:', tokenResponse.statusText);
+            console.error('Request details:', {
+              code_length: requestData.code.length,
+              redirect_uri: REDIRECT_URI
+            });
+            
+            return errorResponse(`Google token exchange failed: ${errorText}`, tokenResponse.status);
           }
 
           const tokens = await tokenResponse.json();
           console.log('Successfully exchanged code for tokens');
+          console.log('Tokens received:', {
+            access_token_exists: !!tokens.access_token,
+            refresh_token_exists: !!tokens.refresh_token,
+            expires_in: tokens.expires_in
+          });
+          
           return successResponse({ tokens });
         } catch (error) {
           console.error('Error exchanging code for tokens:', error);
