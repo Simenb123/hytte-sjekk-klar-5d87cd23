@@ -39,6 +39,37 @@ const getRequiredEnv = (name: string): string => {
   return value;
 };
 
+/**
+ * Helper to determine appropriate redirect URI based on request origin
+ */
+const getRedirectURI = (origin: string, requestData?: any): string => {
+  // If explicit redirect URI is provided in request data, use it
+  if (requestData?.redirectUri) {
+    console.log('Using explicit redirect URI from request:', requestData.redirectUri);
+    return requestData.redirectUri;
+  }
+  
+  // For localhost development
+  if (origin.includes('localhost')) {
+    console.log('Using localhost redirect URI');
+    return 'http://localhost:5173/auth/calendar';
+  }
+  
+  // Check if it's a lovableproject.com domain (preview)
+  if (origin.includes('lovableproject.com')) {
+    // Extract the project ID from the origin
+    const projectId = origin.split('//')[1].split('.')[0];
+    console.log(`Using preview redirect URI for project: ${projectId}`);
+    
+    // Add this preview domain to Google Console's authorized redirect URIs!
+    return `https://${projectId}.lovableproject.com/auth/calendar`;
+  }
+  
+  // Default to production domain
+  console.log('Using production redirect URI');
+  return 'https://hytte-sjekk-klar.lovable.app/auth/calendar';
+};
+
 Deno.serve(async (req) => {
   // Enhanced logging
   console.log(`[${new Date().toISOString()}] ${req.method} request received`);
@@ -61,15 +92,8 @@ Deno.serve(async (req) => {
         
         console.log('Generating OAuth URL');
         
-        // Dynamically construct redirect URI based on request origin
-        let REDIRECT_URI;
-        if (origin.includes('localhost')) {
-          REDIRECT_URI = 'http://localhost:5173/auth/calendar';
-          console.log('Using localhost redirect URI');
-        } else {
-          REDIRECT_URI = 'https://hytte-sjekk-klar.lovable.app/auth/calendar';
-          console.log('Using production redirect URI');
-        }
+        // Get appropriate redirect URI
+        const REDIRECT_URI = getRedirectURI(origin);
         
         console.log('Using redirect URI:', REDIRECT_URI);
         
@@ -107,15 +131,8 @@ Deno.serve(async (req) => {
           
           console.log('Exchanging code for tokens');
           
-          // Determine proper redirect URI based on requestData or fallback to origin
-          let REDIRECT_URI;
-          if (requestData.redirectUri) {
-            REDIRECT_URI = requestData.redirectUri;
-          } else if (origin.includes('localhost')) {
-            REDIRECT_URI = 'http://localhost:5173/auth/calendar';
-          } else {
-            REDIRECT_URI = 'https://hytte-sjekk-klar.lovable.app/auth/calendar';
-          }
+          // Get appropriate redirect URI
+          const REDIRECT_URI = getRedirectURI(origin, requestData);
           
           console.log('Redirect URI:', REDIRECT_URI);
           console.log('Client ID exists:', !!GOOGLE_CLIENT_ID);
