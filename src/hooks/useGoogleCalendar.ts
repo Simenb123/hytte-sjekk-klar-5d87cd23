@@ -1,12 +1,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { GoogleEvent, GoogleCalendar, GoogleCalendarState } from '@/types/googleCalendar.types';
+import { GoogleCalendarState } from '@/types/googleCalendar.types';
 import { 
   fetchCalendarEvents, 
   fetchCalendarList, 
   handleOAuthCallback as processOAuthCallback 
 } from '@/services/googleCalendar.service';
+import { supabase } from '@/integrations/supabase/client';
 
 const initialState: GoogleCalendarState = {
   isGoogleConnected: false,
@@ -177,4 +178,3 @@ export function useGoogleCalendar() {
     handleOAuthCallback,
   };
 }
-
