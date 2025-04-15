@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 type NewBookingDialogProps = {
   open: boolean;
@@ -42,6 +43,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
   onOpenChange,
   onSuccess 
 }) => {
+  const { user } = useAuth();
   const form = useForm({
     defaultValues: {
       title: '',
@@ -53,6 +55,11 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
 
   const onSubmit = async (data) => {
     try {
+      if (!user) {
+        toast.error('Du må være logget inn for å lage en booking');
+        return;
+      }
+
       const { error } = await supabase
         .from('bookings')
         .insert({
@@ -60,6 +67,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
           description: data.description,
           start_date: data.startDate.toISOString(),
           end_date: data.endDate.toISOString(),
+          user_id: user.id
         });
 
       if (error) throw error;
