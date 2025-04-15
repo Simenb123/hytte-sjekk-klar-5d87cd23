@@ -1,19 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import AppHeader from '../components/AppHeader';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookingsList } from '@/components/calendar/BookingsList';
-import { GoogleEventsList } from '@/components/calendar/GoogleEventsList';
 import NewBookingDialog from '../components/NewBookingDialog';
 import { useBookings } from '@/hooks/useBookings';
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
-import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { CalendarSection } from '@/components/calendar/CalendarSection';
+import { BookingsTab } from '@/components/calendar/BookingsTab';
+import { GoogleCalendarTab } from '@/components/calendar/GoogleCalendarTab';
 
 const CalendarApp: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -38,7 +33,6 @@ const CalendarApp: React.FC = () => {
   // Handle OAuth callback
   useEffect(() => {
     const handleOAuthResponse = async () => {
-      // Check if the current URL contains the auth code parameter
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const error = urlParams.get('error');
@@ -52,14 +46,8 @@ const CalendarApp: React.FC = () => {
           if (success) {
             console.log('Successfully processed OAuth callback');
             toast.success('Koblet til Google Calendar!');
-            
-            // Remove code from URL to prevent re-processing
             window.history.replaceState({}, document.title, window.location.pathname);
-            
-            // Switch to Google Calendar tab
             setActiveTab('google');
-            
-            // Fetch events after successful connection
             fetchGoogleEvents();
           } else {
             console.error('Failed to process OAuth callback');
@@ -72,12 +60,9 @@ const CalendarApp: React.FC = () => {
       } else if (error) {
         console.error('OAuth error in URL params:', error);
         toast.error('Kunne ikke koble til Google Calendar: ' + error);
-        
-        // Remove error from URL
         window.history.replaceState({}, document.title, window.location.pathname);
       }
       
-      // Also check if we're on the /auth/calendar path which is our redirect_uri
       if (window.location.pathname.includes('/auth/calendar')) {
         console.log('We are on the /auth/calendar path, this is our redirect_uri');
         const authCode = urlParams.get('code');
@@ -104,15 +89,12 @@ const CalendarApp: React.FC = () => {
             toast.error('Feil ved behandling av Google Calendar-tilkobling');
           }
         }
-        
-        // Redirect back to the calendar page whether successful or not
         window.location.href = '/calendar';
       }
     };
     
-    // Run this immediately to handle any potential OAuth response
     handleOAuthResponse();
-  }, []);
+  }, [handleOAuthCallback, fetchGoogleEvents]);
 
   // Days that have bookings
   const bookedDays = bookings.flatMap(booking => {
@@ -130,7 +112,6 @@ const CalendarApp: React.FC = () => {
   const handleBookingSuccess = async (booking) => {
     fetchBookings();
     
-    // If connected to Google, also create a Google Calendar event
     if (isGoogleConnected && googleTokens) {
       try {
         console.log('Creating Google Calendar event for new booking:', booking.title);
@@ -176,19 +157,11 @@ const CalendarApp: React.FC = () => {
       <AppHeader title="Kalender og booking" showBackButton showHomeButton />
       
       <div className="max-w-lg mx-auto p-4">
-        <div className="bg-white rounded-xl shadow-md p-4 mb-6">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            className="mx-auto"
-            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-            modifiers={{ booked: bookedDays }}
-            modifiersClassNames={{
-              booked: 'bg-red-100 text-red-600 font-bold',
-            }}
-          />
-        </div>
+        <CalendarSection 
+          date={date} 
+          onDateSelect={setDate} 
+          bookedDays={bookedDays} 
+        />
         
         <Tabs defaultValue="bookings" value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList className="grid grid-cols-2">
@@ -197,46 +170,25 @@ const CalendarApp: React.FC = () => {
           </TabsList>
           
           <TabsContent value="bookings">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex justify-between items-center">
-                  <span>Bookinger</span>
-                  {isGoogleConnected && (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      Google tilkoblet
-                    </Badge>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <BookingsList
-                  bookings={bookings}
-                  isGoogleConnected={isGoogleConnected}
-                  onNewBooking={() => setShowNewBookingDialog(true)}
-                  onConnectGoogle={connectGoogleCalendar}
-                  onDisconnectGoogle={disconnectGoogleCalendar}
-                  isConnecting={isConnecting}
-                  connectionError={connectionError}
-                />
-              </CardContent>
-            </Card>
+            <BookingsTab
+              bookings={bookings}
+              isGoogleConnected={isGoogleConnected}
+              onNewBooking={() => setShowNewBookingDialog(true)}
+              onConnectGoogle={connectGoogleCalendar}
+              onDisconnectGoogle={disconnectGoogleCalendar}
+              isConnecting={isConnecting}
+              connectionError={connectionError}
+            />
           </TabsContent>
           
           {isGoogleConnected && (
             <TabsContent value="google">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Google Calendar Hendelser</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <GoogleEventsList
-                    events={googleEvents}
-                    isLoading={isLoadingEvents}
-                    onRefresh={fetchGoogleEvents}
-                    error={fetchError}
-                  />
-                </CardContent>
-              </Card>
+              <GoogleCalendarTab
+                isLoadingEvents={isLoadingEvents}
+                googleEvents={googleEvents}
+                fetchGoogleEvents={fetchGoogleEvents}
+                fetchError={fetchError}
+              />
             </TabsContent>
           )}
         </Tabs>
