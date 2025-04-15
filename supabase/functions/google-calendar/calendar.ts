@@ -1,17 +1,4 @@
-
-// Calendar operations (fetching events, creating events)
-interface GoogleEvent {
-  summary: string;
-  description?: string;
-  start: {
-    dateTime: string;
-    timeZone: string;
-  };
-  end: {
-    dateTime: string;
-    timeZone: string;
-  };
-}
+import { GoogleCalendarEvent } from './types.ts';
 
 export const fetchEvents = async (accessToken: string) => {
   const now = new Date();
@@ -57,7 +44,7 @@ export const fetchCalendars = async (accessToken: string) => {
   return calendarResponse.json();
 };
 
-export const createEvent = async (accessToken: string, event: GoogleEvent) => {
+export const createEvent = async (accessToken: string, event: GoogleCalendarEvent) => {
   const calendarResponse = await fetch(
     'https://www.googleapis.com/calendar/v3/calendars/primary/events',
     {
@@ -78,4 +65,3 @@ export const createEvent = async (accessToken: string, event: GoogleEvent) => {
 
   return calendarResponse.json();
 };
-

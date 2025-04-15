@@ -1,6 +1,7 @@
 
 import { corsHeaders, getRequiredEnv, getRedirectURI, generateAuthUrl, exchangeCodeForTokens } from './auth.ts';
 import { fetchEvents, fetchCalendars, createEvent } from './calendar.ts';
+import { GoogleAuthResponse, RequestData, GoogleCalendarEvent } from './types.ts';
 
 Deno.serve(async (req) => {
   console.log(`[${new Date().toISOString()}] ${req.method} request received`);
@@ -20,21 +21,25 @@ Deno.serve(async (req) => {
         const authUrl = generateAuthUrl(GOOGLE_CLIENT_ID, REDIRECT_URI);
         console.log('Generated auth URL:', authUrl);
         
+        const response: GoogleAuthResponse = { url: authUrl };
         return new Response(
-          JSON.stringify({ url: authUrl }),
+          JSON.stringify(response),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       } catch (error) {
         console.error('Error generating auth URL:', error);
+        const response: GoogleAuthResponse = { 
+          error: `Error generating auth URL: ${error.message}` 
+        };
         return new Response(
-          JSON.stringify({ error: `Error generating auth URL: ${error.message}` }),
+          JSON.stringify(response),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
     }
 
     if (req.method === 'POST') {
-      const requestData = await req.json();
+      const requestData: RequestData = await req.json();
       
       // Handle OAuth code exchange
       if (requestData.code) {
@@ -50,14 +55,16 @@ Deno.serve(async (req) => {
             REDIRECT_URI
           );
           
+          const response: GoogleAuthResponse = { tokens };
           return new Response(
-            JSON.stringify({ tokens }),
+            JSON.stringify(response),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         } catch (error) {
           console.error('Error exchanging code for tokens:', error);
+          const response: GoogleAuthResponse = { error: error.message };
           return new Response(
-            JSON.stringify({ error: error.message }),
+            JSON.stringify(response),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
@@ -68,8 +75,9 @@ Deno.serve(async (req) => {
         const { action, tokens } = requestData;
         
         if (!tokens.access_token) {
+          const response: GoogleAuthResponse = { error: 'No access token provided' };
           return new Response(
-            JSON.stringify({ error: 'No access token provided' }),
+            JSON.stringify(response),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
@@ -95,7 +103,7 @@ Deno.serve(async (req) => {
               if (!requestData.event) {
                 throw new Error('No event data provided');
               }
-              response = await createEvent(tokens.access_token, {
+              const calendarEvent: GoogleCalendarEvent = {
                 summary: requestData.event.title,
                 description: requestData.event.description || '',
                 start: {
@@ -106,7 +114,8 @@ Deno.serve(async (req) => {
                   dateTime: new Date(requestData.event.endDate).toISOString(),
                   timeZone: 'Europe/Oslo'
                 }
-              });
+              };
+              response = await createEvent(tokens.access_token, calendarEvent);
               return new Response(
                 JSON.stringify({ event: response }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -142,4 +151,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-

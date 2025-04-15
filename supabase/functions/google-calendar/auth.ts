@@ -1,9 +1,10 @@
-
 // Authentication and OAuth related functions
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+import { GoogleTokens, GoogleAuthResponse, RequestData } from './types.ts';
 
 export const getRequiredEnv = (name: string): string => {
   const value = Deno.env.get(name);
@@ -13,7 +14,7 @@ export const getRequiredEnv = (name: string): string => {
   return value;
 };
 
-export const getRedirectURI = (origin: string, requestData?: any): string => {
+export const getRedirectURI = (origin: string, requestData?: RequestData): string => {
   console.log('getRedirectURI - Origin:', origin);
   console.log('getRedirectURI - Request data:', requestData?.redirectUri || 'none provided');
   
@@ -61,7 +62,7 @@ export const exchangeCodeForTokens = async (
   clientId: string, 
   clientSecret: string, 
   redirectUri: string
-) => {
+): Promise<GoogleTokens> => {
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -82,4 +83,3 @@ export const exchangeCodeForTokens = async (
 
   return tokenResponse.json();
 };
-
