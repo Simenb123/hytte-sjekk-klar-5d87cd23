@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import AppHeader from '../components/AppHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -124,7 +125,8 @@ const CalendarApp: React.FC = () => {
         if (data?.event) {
           console.log('Successfully created Google Calendar event:', data.event.id);
           toast.success('Booking opprettet i Google Calendar!');
-          fetchGoogleEvents();
+          // Pass the tokens to fetchGoogleEvents since it requires them
+          fetchGoogleEvents(googleTokens);
         }
       } catch (error) {
         console.error('Error creating Google Calendar event:', error);
@@ -167,7 +169,8 @@ const CalendarApp: React.FC = () => {
               <GoogleCalendarTab
                 isLoadingEvents={isLoadingEvents}
                 googleEvents={googleEvents}
-                fetchGoogleEvents={fetchGoogleEvents}
+                // Create a wrapper function that calls fetchGoogleEvents with googleTokens
+                fetchGoogleEvents={() => fetchGoogleEvents(googleTokens)}
                 fetchError={fetchError}
               />
             </TabsContent>
