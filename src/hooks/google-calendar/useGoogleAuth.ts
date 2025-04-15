@@ -1,10 +1,12 @@
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { handleOAuthCallback as processOAuthCallback } from '@/services/googleCalendar.service';
 
 export function useGoogleAuth(setState: any) {
+  const [isAutoRetrying, setIsAutoRetrying] = useState(false);
+  
   const connectGoogleCalendar = useCallback(async () => {
     setState(prev => ({ ...prev, isConnecting: true, connectionError: null }));
     
@@ -26,6 +28,9 @@ export function useGoogleAuth(setState: any) {
         
         if (data?.error) {
           console.error('Google API error:', data.error);
+          if (data.details) {
+            console.error('Error details:', data.details);
+          }
           throw new Error(data.error);
         }
         
@@ -59,6 +64,8 @@ export function useGoogleAuth(setState: any) {
         errorMessage = error.message;
       } else if (error.name === 'FunctionsFetchError') {
         errorMessage = 'Kunne ikke nå Edge Function. Sjekk at Supabase-funksjonen er aktiv.';
+      } else if (error.message?.includes('403') || error.status === 403) {
+        errorMessage = 'Fikk 403 Forbidden fra Google. Sjekk at OAuth-konfigurasjonen er riktig oppsatt i Google Cloud Console.';
       }
       
       toast.error(errorMessage);
@@ -66,9 +73,16 @@ export function useGoogleAuth(setState: any) {
         ...prev,
         connectionError: errorMessage + ' Prøv igjen senere.' 
       }));
+      
+      // Ikke gjør automatisk retry når brukeren eksplisitt prøvde å koble til
+      setIsAutoRetrying(false);
+      
+      return false;
     } finally {
       setState(prev => ({ ...prev, isConnecting: false }));
     }
+    
+    return true;
   }, [setState]);
 
   const disconnectGoogleCalendar = useCallback(() => {
@@ -108,9 +122,15 @@ export function useGoogleAuth(setState: any) {
       console.error('Error exchanging code for tokens:', error);
       
       let errorMessage = error.message || 'Kunne ikke fullføre Google Calendar-integrasjonen';
+      
       if (error.message?.includes('Edge Function') || 
           error.message?.includes('Nettverksfeil')) {
         errorMessage = 'Kunne ikke koble til serveren. Google Calendar-integrasjonen er midlertidig utilgjengelig.';
+      } else if (error.message?.includes('403') || error.status === 403) {
+        errorMessage = 'Fikk 403 Forbidden fra Google. Sjekk at OAuth-konfigurasjonen er riktig oppsatt i Google Cloud Console.';
+        if (error.details) {
+          console.error('Error details:', error.details);
+        }
       }
       
       toast.error(errorMessage);
@@ -125,6 +145,8 @@ export function useGoogleAuth(setState: any) {
   return {
     connectGoogleCalendar,
     disconnectGoogleCalendar,
-    handleOAuthCallback
+    handleOAuthCallback,
+    isAutoRetrying,
+    setIsAutoRetrying
   };
 }

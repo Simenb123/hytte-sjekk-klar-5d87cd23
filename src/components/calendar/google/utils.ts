@@ -55,7 +55,11 @@ export const isAuthError = (error?: string | null): boolean => {
     'utløpt',
     'AUTH_ERROR',
     'tilgangen har utløpt',
-    'koble til på nytt'
+    'koble til på nytt',
+    '403',
+    'Forbidden',
+    '401',
+    'Unauthorized'
   ];
   
   return authErrors.some(errorText => error.includes(errorText));
@@ -70,6 +74,9 @@ export const formatErrorMessage = (error: string): string => {
   }
   
   if (isAuthError(error)) {
+    if (error.includes('403') || error.includes('Forbidden')) {
+      return 'Google Calendar ga en 403 Forbidden-feil. Sjekk at OAuth-konfigurasjonen er riktig satt opp i Google Cloud Console.';
+    }
     return 'Din tilkobling til Google Calendar har utløpt. Du må koble til på nytt.';
   }
 

@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GoogleCalendarTab } from './GoogleCalendarTab';
 import { BookingsTab } from './BookingsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { isEdgeFunctionError, isAuthError, formatErrorMessage } from './google/utils';
+import { Button } from '@/components/ui/button';
+import { useConnectionRetry } from '@/hooks/google-calendar/useConnectionRetry';
 
 interface GoogleCalendarSectionProps {
   isGoogleConnected: boolean;
@@ -44,6 +46,42 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
   const hasConnectionIssue = isEdgeFunctionError(connectionError) || isEdgeFunctionError(fetchError);
   const hasAuthIssue = isAuthError(connectionError) || isAuthError(fetchError);
   
+  const { isRetrying, handleRetry } = useConnectionRetry(
+    async () => {
+      try {
+        // If it's a connection issue, just try to connect again.
+        // If it's an auth issue, we need to reconnect.
+        if (hasAuthIssue) {
+          connectGoogleCalendar();
+        } else if (isGoogleConnected) {
+          await fetchGoogleEvents();
+        } else {
+          connectGoogleCalendar();
+        }
+        return !hasConnectionIssue && !hasAuthIssue;
+      } catch (error) {
+        console.error('Retry failed:', error);
+        return false;
+      }
+    },
+    3,  // max retries
+    5   // initial backoff in seconds
+  );
+  
+  // Get appropriate alert variant based on error type
+  const getAlertVariant = (): "default" | "destructive" => {
+    if (hasConnectionIssue) return "destructive";
+    if (hasAuthIssue) return "destructive";
+    return "destructive";
+  };
+  
+  // If there's a connection issue and user is on Google tab, switch to bookings
+  useEffect(() => {
+    if ((hasConnectionIssue || hasAuthIssue) && activeTab === 'google') {
+      setActiveTab('bookings');
+    }
+  }, [hasConnectionIssue, hasAuthIssue, activeTab, setActiveTab]);
+
   // Format error message for better user experience
   const getErrorMessage = () => {
     if (hasConnectionIssue) {
@@ -60,20 +98,6 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
     }
     return null;
   };
-  
-  // Get appropriate alert variant based on error type
-  const getAlertVariant = (): "default" | "destructive" => {
-    if (hasConnectionIssue) return "destructive";
-    if (hasAuthIssue) return "destructive";
-    return "destructive";
-  };
-  
-  // If there's a connection issue and user is on Google tab, switch to bookings
-  React.useEffect(() => {
-    if ((hasConnectionIssue || hasAuthIssue) && activeTab === 'google') {
-      setActiveTab('bookings');
-    }
-  }, [hasConnectionIssue, hasAuthIssue, activeTab, setActiveTab]);
 
   const errorMessage = getErrorMessage();
 
@@ -82,10 +106,23 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
       {errorMessage && (
         <Alert variant={getAlertVariant()} className="mb-4">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {errorMessage}
-            {hasConnectionIssue && " Prøv igjen senere eller kontakt support hvis problemet vedvarer."}
-            {hasAuthIssue && " Dette skjer vanligvis når tilgangen har utløpt."}
+          <AlertDescription className="flex justify-between items-center">
+            <span>
+              {errorMessage}
+              {hasConnectionIssue && " Prøv igjen senere eller kontakt support hvis problemet vedvarer."}
+              {hasAuthIssue && " Dette skjer vanligvis når tilgangen har utløpt."}
+            </span>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRetry}
+              disabled={isRetrying}
+              className="ml-4 whitespace-nowrap"
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${isRetrying ? 'animate-spin' : ''}`} />
+              {isRetrying ? 'Prøver...' : 'Prøv igjen'}
+            </Button>
           </AlertDescription>
         </Alert>
       )}
@@ -113,7 +150,7 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
             onNewBooking={onNewBooking}
             onConnectGoogle={connectGoogleCalendar}
             onDisconnectGoogle={disconnectGoogleCalendar}
-            isConnecting={isConnecting}
+            isConnecting={isConnecting || isRetrying}
             connectionError={connectionError}
           />
         </TabsContent>
@@ -124,6 +161,7 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
               isLoadingEvents={isLoadingEvents}
               googleEvents={googleEvents}
               fetchGoogleEvents={fetchGoogleEvents}
+              connectGoogleCalendar={connectGoogleCalendar}
               fetchError={fetchError}
             />
           </TabsContent>

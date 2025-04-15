@@ -40,10 +40,20 @@ export const fetchCalendarEvents = async (tokens: any): Promise<GoogleEvent[]> =
     }
 
     if (data?.error) {
-      console.error('Google Calendar API error:', data.error, data.details);
+      console.error('Google Calendar API error:', data.error);
+      if (data.details) {
+        console.error('Error details:', data.details);
+      }
+      
       if (data.requiresReauth) {
         throw new Error('Google Calendar-tilgangen har utløpt. Vennligst koble til på nytt.');
       }
+      
+      // Spesifikk feilhåndtering for 403-feil
+      if (data.error.includes('403') || data.status === 403) {
+        throw new Error('Google Calendar API returnerte en 403 Forbidden feil. Sjekk at OAuth-konfigurasjonen er riktig satt opp.');
+      }
+      
       throw new Error(data.error);
     }
 
@@ -140,7 +150,16 @@ export const handleOAuthCallback = async (code: string) => {
     }
 
     if (data?.error) {
-      console.error('Token exchange error:', data.error, data.details);
+      console.error('Token exchange error:', data.error);
+      if (data.details) {
+        console.error('Error details:', data.details);
+      }
+      
+      // Mer detaljert feilmelding for 403-feil
+      if (data.error.includes('403') || data.status === 403) {
+        throw new Error('403 Forbidden: Google godkjente ikke autentiseringen. Sjekk at redirect URI er riktig konfigurert i Google Cloud Console.');
+      }
+      
       throw new Error(data.error);
     }
 
