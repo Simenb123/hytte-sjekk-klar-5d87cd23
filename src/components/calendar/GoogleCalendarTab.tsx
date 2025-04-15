@@ -2,6 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleEventsList } from './GoogleEventsList';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface GoogleCalendarTabProps {
   isLoadingEvents: boolean;
@@ -17,7 +19,8 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
   fetchError
 }) => {
   const connectionFailed = fetchError?.includes('Edge Function') || 
-                          fetchError?.includes('Failed to fetch');
+                          fetchError?.includes('Failed to fetch') ||
+                          fetchError?.includes('Kunne ikke koble til');
 
   return (
     <Card>
@@ -32,6 +35,15 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {connectionFailed && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Det er problemer med tilkobling til serveren. Google Calendar-integrasjonen er 
+              midlertidig utilgjengelig. Prøv igjen senere eller kontakt support hvis problemet vedvarer.
+            </AlertDescription>
+          </Alert>
+        )}
         <GoogleEventsList
           events={googleEvents}
           isLoading={isLoadingEvents}

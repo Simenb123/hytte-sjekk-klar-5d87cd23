@@ -41,7 +41,9 @@ export function useGoogleAuth(setState: any) {
         console.error('Error detail:', fetchError);
         
         // Check for network-related errors
-        if (fetchError.name === 'FunctionsFetchError' || fetchError.message?.includes('Failed to fetch')) {
+        if (fetchError.name === 'FunctionsFetchError' || 
+            fetchError.message?.includes('Failed to fetch') ||
+            fetchError.context?.value?.message?.includes('Failed to fetch')) {
           throw new Error('Nettverksfeil ved tilkobling til Edge Function. Sjekk at Edge Function er aktiv og at alle miljøvariabler er riktig satt opp.');
         }
         
@@ -52,7 +54,8 @@ export function useGoogleAuth(setState: any) {
       
       let errorMessage = 'Kunne ikke koble til Google Calendar.';
       
-      if (error.message?.includes('Edge Function')) {
+      if (error.message?.includes('Edge Function') || 
+          error.message?.includes('Nettverksfeil')) {
         errorMessage = error.message;
       } else if (error.name === 'FunctionsFetchError') {
         errorMessage = 'Kunne ikke nå Edge Function. Sjekk at Supabase-funksjonen er aktiv.';
@@ -105,7 +108,8 @@ export function useGoogleAuth(setState: any) {
       console.error('Error exchanging code for tokens:', error);
       
       let errorMessage = error.message || 'Kunne ikke fullføre Google Calendar-integrasjonen';
-      if (error.message?.includes('Edge Function')) {
+      if (error.message?.includes('Edge Function') || 
+          error.message?.includes('Nettverksfeil')) {
         errorMessage = 'Kunne ikke koble til serveren. Google Calendar-integrasjonen er midlertidig utilgjengelig.';
       }
       

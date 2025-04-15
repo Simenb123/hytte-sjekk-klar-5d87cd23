@@ -11,7 +11,7 @@ export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => v
     
     if (!tokens || !tokens.access_token) {
       console.warn('No valid tokens available for fetching events');
-      toast.error('Ingen gyldige tokens tilgjengelig for å hente hendelser');
+      setState(prev => ({ ...prev, fetchError: 'Ingen gyldige tokens tilgjengelig' }));
       return;
     }
     
@@ -28,10 +28,16 @@ export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => v
       setState(prev => ({ ...prev, googleEvents: events }));
     } catch (error: any) {
       console.error('Error fetching Google Calendar events:', error);
-      toast.error('Kunne ikke hente Google Calendar-hendelser');
+      
+      // Don't show toast for network errors since we handle them in the UI
+      if (!error.message?.includes('Edge Function') && 
+          !error.message?.includes('Failed to fetch') &&
+          !error.message?.includes('Kunne ikke koble til')) {
+        toast.error('Kunne ikke hente Google Calendar-hendelser');
+      }
       
       const errorMessage = error.message || 'Ukjent feil ved henting av hendelser';
-      setState(prev => ({ ...prev, fetchError: `Kunne ikke hente hendelser: ${errorMessage}` }));
+      setState(prev => ({ ...prev, fetchError: errorMessage }));
       
       if (error.message?.includes('invalid_grant') || 
           error.message?.includes('invalid_token') ||
@@ -60,6 +66,7 @@ export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => v
       setState(prev => ({ ...prev, googleCalendars: calendars }));
     } catch (error) {
       console.error('Error fetching Google calendars:', error);
+      // Don't show toast for network errors since we handle them in the UI
     }
   }, [setState]);
 

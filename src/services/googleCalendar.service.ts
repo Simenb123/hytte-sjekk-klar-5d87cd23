@@ -28,7 +28,8 @@ export const fetchCalendarEvents = async (tokens: any): Promise<GoogleEvent[]> =
       
       // Provide a more detailed error message to help debugging
       let errorMessage = 'Edge function error';
-      if (error.message && error.message.includes('Failed to fetch')) {
+      if (error.message && (error.message.includes('Failed to fetch') || 
+                            error.name === 'FunctionsFetchError')) {
         errorMessage = 'Kunne ikke koble til Edge Function. Sjekk at Supabase-tjenesten er tilgjengelig.';
         console.log('Network error connecting to Edge Function:', error);
       } else {
@@ -77,7 +78,8 @@ export const fetchCalendarList = async (tokens: any): Promise<GoogleCalendar[]> 
       console.error('Supabase function error:', error);
       // Provide more context for the error
       let errorMessage = 'Edge function error';
-      if (error.message && error.message.includes('Failed to fetch')) {
+      if (error.message && (error.message.includes('Failed to fetch') || 
+                           error.name === 'FunctionsFetchError')) {
         errorMessage = 'Kunne ikke koble til Edge Function. Sjekk at Supabase-tjenesten er tilgjengelig.';
       } else {
         errorMessage = `Edge function error: ${error.message || 'Unknown error'}`;
@@ -117,7 +119,8 @@ export const handleOAuthCallback = async (code: string) => {
       console.error('Supabase function error:', error);
       // Provide more context for the error
       let errorMessage = 'Edge function error';
-      if (error.message && error.message.includes('Failed to fetch')) {
+      if (error.message && (error.message.includes('Failed to fetch') || 
+                           error.name === 'FunctionsFetchError')) {
         errorMessage = 'Kunne ikke koble til Edge Function. Sjekk at Supabase-tjenesten er tilgjengelig.';
       } else {
         errorMessage = `Edge function error: ${error.message || 'Unknown error'}`;
