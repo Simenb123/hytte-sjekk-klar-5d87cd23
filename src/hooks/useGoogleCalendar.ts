@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -35,7 +35,9 @@ export function useGoogleCalendar() {
   const [googleCalendars, setGoogleCalendars] = useState<GoogleCalendar[]>([]);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
+  // Load tokens from localStorage on component mount
   useEffect(() => {
     const storedTokens = localStorage.getItem('googleCalendarTokens');
     if (storedTokens) {
@@ -55,11 +57,15 @@ export function useGoogleCalendar() {
     }
   }, []);
 
-  const fetchGoogleEvents = async (tokensToUse = googleTokens) => {
-    if (!tokensToUse) return;
+  const fetchGoogleEvents = useCallback(async (tokensToUse = googleTokens) => {
+    if (!tokensToUse) {
+      console.warn('No tokens available for fetching events');
+      return;
+    }
     
     setIsLoadingEvents(true);
     setFetchError(null);
+    setLastRefresh(new Date());
 
     try {
       console.log('Calling Google Calendar Edge Function to fetch events...');
@@ -113,9 +119,9 @@ export function useGoogleCalendar() {
     } finally {
       setIsLoadingEvents(false);
     }
-  };
+  }, [googleTokens]);
 
-  const fetchGoogleCalendars = async (tokensToUse = googleTokens) => {
+  const fetchGoogleCalendars = useCallback(async (tokensToUse = googleTokens) => {
     if (!tokensToUse) return;
     
     try {
@@ -150,9 +156,9 @@ export function useGoogleCalendar() {
       console.error('Error fetching Google calendars:', error);
       // Not showing a toast here since it's not critical
     }
-  };
+  }, [googleTokens]);
 
-  const connectGoogleCalendar = async () => {
+  const connectGoogleCalendar = useCallback(async () => {
     if (isConnecting) return;
     
     setIsConnecting(true);
@@ -160,6 +166,7 @@ export function useGoogleCalendar() {
     
     try {
       console.log('Initiating Google Calendar connection...');
+      toast.info('Kobler til Google Calendar...');
       
       const { data, error } = await supabase.functions.invoke('google-calendar', {
         method: 'GET',
@@ -177,7 +184,9 @@ export function useGoogleCalendar() {
       
       if (data?.url) {
         console.log('Received Google authorization URL, redirecting...');
+        // Store the current URL to return to after authentication
         sessionStorage.setItem('calendarReturnUrl', window.location.href);
+        // Redirect to Google OAuth consent screen
         window.location.href = data.url;
       } else {
         throw new Error('Ingen autoriseringslenke mottatt fra serveren');
@@ -189,9 +198,9 @@ export function useGoogleCalendar() {
     } finally {
       setIsConnecting(false);
     }
-  };
+  }, [isConnecting]);
 
-  const disconnectGoogleCalendar = () => {
+  const disconnectGoogleCalendar = useCallback(() => {
     console.log('Disconnecting from Google Calendar...');
     localStorage.removeItem('googleCalendarTokens');
     setGoogleTokens(null);
@@ -200,11 +209,12 @@ export function useGoogleCalendar() {
     setConnectionError(null);
     setFetchError(null);
     toast.success('Koblet fra Google Calendar');
-  };
+  }, []);
 
-  const handleOAuthCallback = async (code: string) => {
+  const handleOAuthCallback = useCallback(async (code: string) => {
     setConnectionError(null);
     console.log('Processing OAuth callback...');
+    toast.info('Behandler Google Calendar-tilkobling...');
     
     try {
       const { data, error } = await supabase.functions.invoke('google-calendar', {
@@ -245,7 +255,7 @@ export function useGoogleCalendar() {
       setConnectionError('Kunne ikke fullføre Google Calendar-integrasjonen. Prøv igjen senere.');
     }
     return false;
-  };
+  }, [fetchGoogleEvents, fetchGoogleCalendars]);
 
   return {
     isGoogleConnected,
@@ -259,6 +269,7 @@ export function useGoogleCalendar() {
     handleOAuthCallback,
     isConnecting,
     connectionError,
-    fetchError
+    fetchError,
+    lastRefresh
   };
 }

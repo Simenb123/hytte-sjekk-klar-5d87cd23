@@ -36,6 +36,7 @@ Deno.serve(async (req) => {
     console.log(`Using redirect URI: ${REDIRECT_URI}`)
     console.log(`Authorization request from: ${origin}`)
 
+    // Create oauth2Client without using the logging-enabled option
     const oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
@@ -44,6 +45,7 @@ Deno.serve(async (req) => {
 
     // Generate auth URL
     if (req.method === 'GET') {
+      console.log('Generating auth URL')
       const scopes = [
         'https://www.googleapis.com/auth/calendar.readonly',
         'https://www.googleapis.com/auth/calendar.events',
@@ -76,7 +78,7 @@ Deno.serve(async (req) => {
           
           // Check that we have refresh token
           if (!tokens.refresh_token) {
-            console.log('No refresh token received. Adding prompt=consent to force refresh token')
+            console.log('No refresh token received. User may have already authorized the app before.')
           } else {
             console.log('Successfully received refresh token')
           }
@@ -109,11 +111,16 @@ Deno.serve(async (req) => {
         try {
           oauth2Client.setCredentials(requestData.tokens)
           
-          const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+          const calendar = google.calendar({ 
+            version: 'v3', 
+            auth: oauth2Client
+          })
+          
           const now = new Date()
           const threeMonthsLater = new Date(now)
           threeMonthsLater.setMonth(now.getMonth() + 3)
           
+          console.log('Fetching events from primary calendar')
           const response = await calendar.events.list({
             calendarId: 'primary',
             timeMin: now.toISOString(),
@@ -154,7 +161,11 @@ Deno.serve(async (req) => {
         try {
           oauth2Client.setCredentials(requestData.tokens)
           
-          const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+          const calendar = google.calendar({ 
+            version: 'v3', 
+            auth: oauth2Client 
+          })
+          
           const event = requestData.event
           
           const response = await calendar.events.insert({
@@ -197,7 +208,11 @@ Deno.serve(async (req) => {
         try {
           oauth2Client.setCredentials(requestData.tokens)
           
-          const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+          const calendar = google.calendar({ 
+            version: 'v3', 
+            auth: oauth2Client 
+          })
+          
           const response = await calendar.calendarList.list()
           
           console.log(`Successfully fetched ${response.data.items?.length || 0} calendars`)

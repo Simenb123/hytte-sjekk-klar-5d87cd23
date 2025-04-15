@@ -38,6 +38,14 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
     onRefresh();
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleString('no');
+    } catch (e) {
+      return dateString;
+    }
+  };
+
   return (
     <div>
       {error && (
@@ -71,17 +79,19 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
           </div>
           
           {events.map(event => (
-            <div key={event.id} className="mb-4 p-3 border rounded-lg">
+            <div key={event.id} className="mb-4 p-3 border rounded-lg hover:shadow-md transition-shadow">
               <div className="font-medium flex justify-between">
                 <span>{event.summary}</span>
                 {event.htmlLink && (
-                  <a href={event.htmlLink} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+                  <a href={event.htmlLink} target="_blank" rel="noopener noreferrer" 
+                    className="text-blue-500 hover:text-blue-700 flex items-center">
+                    <span className="text-xs mr-1 hidden sm:inline">Åpne</span>
                     <ExternalLink className="h-4 w-4" />
                   </a>
                 )}
               </div>
               <div className="text-sm text-gray-500">
-                {new Date(event.start.dateTime).toLocaleString('no')} - {new Date(event.end.dateTime).toLocaleString('no')}
+                {formatDate(event.start.dateTime)} - {formatDate(event.end.dateTime)}
               </div>
               {event.description && (
                 <div className="text-sm text-gray-600 mt-1">
@@ -92,8 +102,9 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
           ))}
         </>
       ) : (
-        <div className="text-center text-gray-500 my-4">
-          Ingen hendelser funnet i Google Calendar
+        <div className="text-center text-gray-500 my-8 py-6">
+          <div className="mb-2">Ingen hendelser funnet i Google Calendar</div>
+          <div className="text-sm">Sync med Google Calendar for å se hendelser her</div>
         </div>
       )}
       
