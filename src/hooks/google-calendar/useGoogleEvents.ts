@@ -1,6 +1,7 @@
 
 import { useCallback } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { fetchCalendarEvents, fetchCalendarList } from '@/services/googleCalendar.service';
 
 export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => void) {

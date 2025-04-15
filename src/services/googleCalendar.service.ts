@@ -94,4 +94,3 @@ export const handleOAuthCallback = async (code: string) => {
 
   return data.tokens;
 };
-
