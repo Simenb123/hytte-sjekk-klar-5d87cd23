@@ -170,7 +170,7 @@ const CalendarApp: React.FC = () => {
                 isLoadingEvents={isLoadingEvents}
                 googleEvents={googleEvents}
                 // Create a wrapper function that calls fetchGoogleEvents with googleTokens
-                fetchGoogleEvents={() => fetchGoogleEvents(googleTokens)}
+                fetchGoogleEvents={() => googleTokens && fetchGoogleEvents(googleTokens)}
                 fetchError={fetchError}
               />
             </TabsContent>
