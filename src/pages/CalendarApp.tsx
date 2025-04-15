@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { CalendarSection } from '@/components/calendar/CalendarSection';
 import { BookingsTab } from '@/components/calendar/BookingsTab';
 import { GoogleCalendarTab } from '@/components/calendar/GoogleCalendarTab';
+import { supabase } from '@/integrations/supabase/client';
 
 const CalendarApp: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
