@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Calendar, Lock } from 'lucide-react';
+import { RefreshCw, Calendar, Lock, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface GoogleAuthErrorViewProps {
@@ -43,6 +43,17 @@ export const GoogleAuthErrorView: React.FC<GoogleAuthErrorViewProps> = ({
             <li>Problemer med OAuth-konfigurasjonen</li>
           </ul>
           
+          <p className="text-gray-500 mb-4">
+            Sjekk følgende i Google Cloud Console:
+          </p>
+          
+          <ul className="text-left text-gray-500 mb-4 list-disc pl-8">
+            <li>At redirect URI er riktig angitt i OAuth-konfigurasjonen (<code>{window.location.origin}/auth/calendar</code>)</li>
+            <li>At du har aktivert riktige API-tilganger (Google Calendar API)</li>
+            <li>At OAuth-consent screen er konfigurert riktig</li>
+            <li>Om appen er publisert eller fortsatt i test-modus</li>
+          </ul>
+          
           <Button 
             onClick={onRetry} 
             disabled={isRetrying} 
@@ -51,6 +62,18 @@ export const GoogleAuthErrorView: React.FC<GoogleAuthErrorViewProps> = ({
             <RefreshCw className={`h-4 w-4 mr-2 ${isRetrying ? 'animate-spin' : ''}`} />
             {isRetrying ? 'Kobler til...' : 'Prøv å koble til på nytt'}
           </Button>
+          
+          <div className="mt-4">
+            <a 
+              href="https://console.cloud.google.com/apis/credentials" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 flex items-center justify-center hover:underline"
+            >
+              <ExternalLink className="h-3 w-3 mr-1" /> 
+              Åpne Google Cloud Console
+            </a>
+          </div>
         </div>
       </CardContent>
     </Card>
