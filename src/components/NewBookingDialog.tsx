@@ -31,17 +31,20 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { Switch } from '@/components/ui/switch';
 
 type NewBookingDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (booking: any) => void;
+  googleIntegration?: boolean;
 };
 
 const NewBookingDialog: React.FC<NewBookingDialogProps> = ({ 
   open, 
   onOpenChange,
-  onSuccess 
+  onSuccess,
+  googleIntegration = false
 }) => {
   const { user } = useAuth();
   const form = useForm({
@@ -50,6 +53,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
       description: '',
       startDate: new Date(),
       endDate: new Date(),
+      addToGoogle: googleIntegration
     }
   });
 
@@ -73,7 +77,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
       if (error) throw error;
 
       toast.success('Booking opprettet!');
-      onSuccess();
+      onSuccess(data);
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating booking:', error);
@@ -204,6 +208,29 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
                 </FormItem>
               )}
             />
+
+            {googleIntegration && (
+              <FormField
+                control={form.control}
+                name="addToGoogle"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel>Legg til i Google Calendar</FormLabel>
+                      <FormDescription className="text-xs">
+                        Bookingen vil også bli lagt til i din Google Calendar
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            )}
 
             <DialogFooter>
               <Button type="submit" className="w-full">Opprett booking</Button>

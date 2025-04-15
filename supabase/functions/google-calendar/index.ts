@@ -43,12 +43,67 @@ Deno.serve(async (req) => {
 
     // Handle OAuth callback
     if (req.method === 'POST') {
-      const { code } = await req.json()
-      const { tokens } = await oauth2Client.getToken(code)
+      const requestData = await req.json()
       
-      return new Response(JSON.stringify({ tokens }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      // Handle token exchange
+      if (requestData.code) {
+        const { tokens } = await oauth2Client.getToken(requestData.code)
+        oauth2Client.setCredentials(tokens)
+        
+        return new Response(JSON.stringify({ tokens }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      
+      // Handle calendar listing
+      if (requestData.action === 'list_events' && requestData.tokens) {
+        oauth2Client.setCredentials(requestData.tokens)
+        
+        const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+        const now = new Date()
+        const threeMonthsLater = new Date(now)
+        threeMonthsLater.setMonth(now.getMonth() + 3)
+        
+        const response = await calendar.events.list({
+          calendarId: 'primary',
+          timeMin: now.toISOString(),
+          timeMax: threeMonthsLater.toISOString(),
+          singleEvents: true,
+          orderBy: 'startTime',
+        })
+        
+        return new Response(JSON.stringify({ events: response.data.items }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      
+      // Handle creating events
+      if (requestData.action === 'create_event' && requestData.tokens && requestData.event) {
+        oauth2Client.setCredentials(requestData.tokens)
+        
+        const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
+        const event = requestData.event
+        
+        const response = await calendar.events.insert({
+          calendarId: 'primary',
+          requestBody: {
+            summary: event.title,
+            description: event.description || '',
+            start: {
+              dateTime: new Date(event.startDate).toISOString(),
+              timeZone: 'Europe/Oslo',
+            },
+            end: {
+              dateTime: new Date(event.endDate).toISOString(),
+              timeZone: 'Europe/Oslo',
+            },
+          },
+        })
+        
+        return new Response(JSON.stringify({ event: response.data }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
     }
 
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
