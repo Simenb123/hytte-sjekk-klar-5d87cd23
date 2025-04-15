@@ -1,5 +1,5 @@
 
-// Import only what's needed and nothing from google-logging-utils
+// Follow HTTP and CORS best practices
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7'
 import { google } from 'https://esm.sh/googleapis@129.0.0'
 
