@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { UserEmailField } from './UserEmailField';
+import { ProfileFormFields } from './ProfileFormFields';
+import { SubmitButton } from './SubmitButton';
 
 interface Profile {
   id: string;
@@ -40,55 +39,18 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ user, profile, isSavin
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">E-post</Label>
-        <Input 
-          id="email" 
-          value={user?.email || ''} 
-          disabled 
-          className="bg-gray-100"
-        />
-        <p className="text-xs text-gray-500">E-post kan ikke endres</p>
-      </div>
+      <UserEmailField user={user} />
       
-      <div className="space-y-2">
-        <Label htmlFor="firstName">Fornavn</Label>
-        <Input 
-          id="firstName" 
-          value={firstName} 
-          onChange={(e) => setFirstName(e.target.value)}
-          placeholder="Ditt fornavn"
-        />
-      </div>
+      <ProfileFormFields 
+        firstName={firstName}
+        lastName={lastName}
+        phone={phone}
+        onFirstNameChange={setFirstName}
+        onLastNameChange={setLastName}
+        onPhoneChange={setPhone}
+      />
       
-      <div className="space-y-2">
-        <Label htmlFor="lastName">Etternavn</Label>
-        <Input 
-          id="lastName" 
-          value={lastName} 
-          onChange={(e) => setLastName(e.target.value)}
-          placeholder="Ditt etternavn"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="phone">Telefon</Label>
-        <Input 
-          id="phone" 
-          value={phone} 
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="Ditt telefonnummer"
-        />
-      </div>
-      
-      <Button type="submit" className="w-full" disabled={isSaving}>
-        {isSaving ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Lagrer...
-          </>
-        ) : 'Lagre endringer'}
-      </Button>
+      <SubmitButton isSaving={isSaving} />
     </form>
   );
 };
