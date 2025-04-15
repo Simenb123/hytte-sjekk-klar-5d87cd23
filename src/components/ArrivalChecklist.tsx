@@ -2,6 +2,8 @@
 import React, { useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
+import { Button } from './ui/button';
+import { LogIn } from 'lucide-react';
 
 const ArrivalChecklist: React.FC = () => {
   const { arrivals, toggleArrivalItem } = useChecklist();
@@ -50,9 +52,14 @@ const ArrivalChecklist: React.FC = () => {
         )}
       </div>
       
-      <div className="text-center text-gray-500 text-sm">
+      <div className="text-center text-gray-500 text-sm mb-4">
         Kryss av alle punkter etter hvert som du fullfører dem
       </div>
+
+      <Button className="w-full" variant="default">
+        <LogIn className="mr-2 h-4 w-4" />
+        Loggfør Ankomstsjekk
+      </Button>
     </div>
   );
 };
