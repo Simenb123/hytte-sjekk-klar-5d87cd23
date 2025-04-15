@@ -3,11 +3,11 @@ import React from 'react';
 import { useAreaChecklist } from '../hooks/useAreaChecklist';
 import AreaChecklistContainer from './checklist/AreaChecklistContainer';
 import { Button } from './ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import { useChecklist } from '../context/ChecklistContext';
 
 const AreaChecklist: React.FC = () => {
-  const { items, selectedArea } = useAreaChecklist();
+  const { items, selectedArea, handleToggleItem } = useAreaChecklist();
   const { departureAreas, selectArea } = useChecklist();
 
   if (!selectedArea) {
@@ -31,7 +31,7 @@ const AreaChecklist: React.FC = () => {
     <div className="relative z-20">
       <AreaChecklistContainer 
         items={items} 
-        onToggleItem={(id) => console.log('Toggle item:', id)} 
+        onToggleItem={handleToggleItem} 
       />
       
       <div className="text-center text-gray-500 text-sm mb-4">

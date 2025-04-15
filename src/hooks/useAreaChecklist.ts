@@ -17,12 +17,6 @@ export const useAreaChecklist = () => {
   const handleToggleItem = useCallback((itemId: string) => {
     console.log('[useAreaChecklist] Toggling item:', itemId);
     if (selectedArea && selectedArea.id) {
-      setItems(prevItems => 
-        prevItems.map(item => 
-          item.id === itemId ? { ...item, isCompleted: !item.isCompleted } : item
-        )
-      );
-      
       toggleDepartureItem(selectedArea.id, itemId);
     } else {
       console.error('[useAreaChecklist] Cannot toggle item, selectedArea is null or missing id');
@@ -35,4 +29,3 @@ export const useAreaChecklist = () => {
     handleToggleItem
   };
 };
-

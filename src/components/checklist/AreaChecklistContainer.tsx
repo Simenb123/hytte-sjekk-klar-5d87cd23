@@ -24,7 +24,7 @@ const AreaChecklistContainer: React.FC<AreaChecklistContainerProps> = ({ items, 
     <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
       {items.map((item) => (
         <AreaChecklistItem
-          key={item.id}
+          key={`${item.id}-${item.isCompleted ? 'checked' : 'unchecked'}`}
           item={item}
           onToggle={onToggleItem}
         />
@@ -34,4 +34,3 @@ const AreaChecklistContainer: React.FC<AreaChecklistContainerProps> = ({ items, 
 };
 
 export default AreaChecklistContainer;
-
