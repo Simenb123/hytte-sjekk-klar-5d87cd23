@@ -39,10 +39,12 @@ export function useGoogleCalendar() {
 
   // Load tokens from localStorage on component mount
   useEffect(() => {
+    console.log('Loading Google Calendar tokens from localStorage');
     const storedTokens = localStorage.getItem('googleCalendarTokens');
     if (storedTokens) {
       try {
         const tokens = JSON.parse(storedTokens);
+        console.log('Found stored tokens, access_token exists:', !!tokens.access_token);
         setGoogleTokens(tokens);
         setIsGoogleConnected(true);
         
@@ -54,6 +56,8 @@ export function useGoogleCalendar() {
         localStorage.removeItem('googleCalendarTokens');
         setConnectionError('Kunne ikke koble til Google Calendar. Vennligst prøv igjen.');
       }
+    } else {
+      console.log('No Google Calendar tokens found in localStorage');
     }
   }, []);
 
@@ -98,10 +102,11 @@ export function useGoogleCalendar() {
       if (data?.events) {
         console.log(`Successfully fetched ${data.events.length} events from Google Calendar`);
         setGoogleEvents(data.events);
-        toast.success('Hentet Google Calendar-hendelser');
+        toast.success(`Hentet ${data.events.length} hendelser fra Google Calendar`);
       } else {
         console.warn('No events returned from Google Calendar API');
         setGoogleEvents([]);
+        toast.info('Ingen hendelser funnet i Google Calendar');
       }
     } catch (error: any) {
       console.error('Error fetching Google Calendar events:', error);
@@ -213,7 +218,7 @@ export function useGoogleCalendar() {
 
   const handleOAuthCallback = useCallback(async (code: string) => {
     setConnectionError(null);
-    console.log('Processing OAuth callback...');
+    console.log('Processing OAuth callback with code:', code.substring(0, 10) + '...');
     toast.info('Behandler Google Calendar-tilkobling...');
     
     try {

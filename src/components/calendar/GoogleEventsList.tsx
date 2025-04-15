@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Share2, ExternalLink, AlertCircle, RefreshCw } from 'lucide-react';
+import { Loader2, Share2, ExternalLink, AlertCircle, RefreshCw, Calendar } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 
 interface GoogleEvent {
   id: string;
@@ -40,8 +41,24 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleString('no');
+      const date = new Date(dateString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date:', dateString);
+        return dateString;
+      }
+      
+      // Format date to Norwegian locale
+      return date.toLocaleString('no', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     } catch (e) {
+      console.error('Error formatting date:', e, dateString);
       return dateString;
     }
   };
@@ -78,31 +95,48 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
             </Alert>
           </div>
           
-          {events.map(event => (
-            <div key={event.id} className="mb-4 p-3 border rounded-lg hover:shadow-md transition-shadow">
-              <div className="font-medium flex justify-between">
-                <span>{event.summary}</span>
-                {event.htmlLink && (
-                  <a href={event.htmlLink} target="_blank" rel="noopener noreferrer" 
-                    className="text-blue-500 hover:text-blue-700 flex items-center">
-                    <span className="text-xs mr-1 hidden sm:inline">Åpne</span>
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
+          <div className="space-y-4">
+            {events.map(event => (
+              <div key={event.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow bg-white">
+                <div className="font-medium flex justify-between items-start">
+                  <div className="flex items-start gap-2">
+                    <Calendar className="h-4 w-4 mt-1 text-blue-600 flex-shrink-0" />
+                    <span className="text-blue-800">{event.summary}</span>
+                  </div>
+                  {event.htmlLink && (
+                    <a 
+                      href={event.htmlLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-blue-500 hover:text-blue-700 flex items-center ml-2"
+                    >
+                      <span className="text-xs mr-1 hidden sm:inline">Åpne</span>
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
+                </div>
+                
+                <div className="text-sm text-gray-500 mt-2 ml-6">
+                  <Badge variant="outline" className="mr-2 bg-gray-50">
+                    {formatDate(event.start.dateTime)}
+                  </Badge>
+                  <span className="mx-1">→</span>
+                  <Badge variant="outline" className="bg-gray-50">
+                    {formatDate(event.end.dateTime)}
+                  </Badge>
+                </div>
+                
+                {event.description && (
+                  <div className="text-sm text-gray-600 mt-2 ml-6 border-t pt-2 border-gray-100">
+                    {event.description}
+                  </div>
                 )}
               </div>
-              <div className="text-sm text-gray-500">
-                {formatDate(event.start.dateTime)} - {formatDate(event.end.dateTime)}
-              </div>
-              {event.description && (
-                <div className="text-sm text-gray-600 mt-1">
-                  {event.description}
-                </div>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </>
       ) : (
-        <div className="text-center text-gray-500 my-8 py-6">
+        <div className="text-center text-gray-500 my-8 py-6 border border-dashed rounded-lg">
           <div className="mb-2">Ingen hendelser funnet i Google Calendar</div>
           <div className="text-sm">Sync med Google Calendar for å se hendelser her</div>
         </div>
@@ -111,7 +145,8 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
       <Button 
         onClick={handleRefresh} 
         disabled={isLoading}
-        className="w-full mt-3"
+        className="w-full mt-5"
+        variant="outline"
       >
         {isLoading ? (
           <>

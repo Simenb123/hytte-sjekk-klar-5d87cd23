@@ -30,13 +30,19 @@ Deno.serve(async (req) => {
     // Get the actual hostname from the request headers for proper redirect URI
     const origin = req.headers.get('origin') || req.headers.get('host') || 'localhost:5173'
     const protocol = origin.includes('localhost') ? 'http' : 'https'
-    const domain = origin.includes('://') ? new URL(origin).host : origin
-    const REDIRECT_URI = `${protocol}://${domain}/calendar`
+    
+    // Handle both domain.com and domain.com/ formats
+    let domain = origin.includes('://') ? new URL(origin).host : origin
+    // Remove port if present
+    domain = domain.split(':')[0]
+    
+    // Make sure to use the correct redirect path that matches what's configured in Google Cloud
+    const REDIRECT_URI = `${protocol}://${domain}/auth/calendar`
 
     console.log(`Using redirect URI: ${REDIRECT_URI}`)
     console.log(`Authorization request from: ${origin}`)
 
-    // Create oauth2Client without using the logging-enabled option
+    // Create oauth2Client
     const oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
@@ -97,7 +103,7 @@ Deno.serve(async (req) => {
           return new Response(JSON.stringify({ 
             error: 'Failed to exchange code for tokens',
             details: error.message,
-            errorObject: JSON.stringify(error)
+            code: requestData.code
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
