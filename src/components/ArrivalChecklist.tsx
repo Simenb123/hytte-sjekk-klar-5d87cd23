@@ -3,28 +3,20 @@ import React from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import ChecklistItem from './ChecklistItem';
 import { Button } from './ui/button';
-import { LogIn } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { toast } from 'sonner';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const ArrivalChecklist: React.FC = () => {
   const { arrivals, toggleArrivalItem, isAllArrivalsCompleted } = useChecklist();
   
-  const handleLogChecklist = () => {
-    // Here you would implement the actual logging logic
-    toast.success("Ankomstsjekk er loggført");
-  };
-
   return (
     <div className="relative z-20">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
@@ -49,42 +41,50 @@ const ArrivalChecklist: React.FC = () => {
         Kryss av alle punkter etter hvert som du fullfører dem
       </div>
 
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button className="w-full" variant="default">
-            <LogIn className="mr-2 h-4 w-4" />
-            Loggfør Ankomstsjekk
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button 
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md"
+          >
+            <CheckCircle className="mr-2 h-5 w-5" />
+            Fullfør Ankomstsjekk
           </Button>
-        </AlertDialogTrigger>
+        </DialogTrigger>
         {isAllArrivalsCompleted() ? (
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Bekreft loggføring</AlertDialogTitle>
-              <AlertDialogDescription>
-                Er du sikker på at du vil loggføre Ankomstsjekken?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Avbryt</AlertDialogCancel>
-              <AlertDialogAction onClick={handleLogChecklist}>
-                Loggfør
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center text-xl">Velkommen til hytta! 🎉</DialogTitle>
+              <DialogDescription className="text-center">
+                Du har fullført alle punktene på ankomstsjekklisten.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-center py-4">
+              <div className="bg-green-100 p-4 rounded-full">
+                <CheckCircle className="h-16 w-16 text-green-600" />
+              </div>
+            </div>
+            <DialogFooter className="sm:justify-center">
+              <Button 
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+              >
+                Kos deg på turen! 😊
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         ) : (
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Kan ikke loggføre enda</AlertDialogTitle>
-              <AlertDialogDescription>
-                Du må huke av for alle sjekkpunktene for å kunne loggføre.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>OK</AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Kan ikke fullføre enda</DialogTitle>
+              <DialogDescription>
+                Du må huke av for alle sjekkpunktene for å kunne fullføre.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" className="w-full">OK</Button>
+            </DialogFooter>
+          </DialogContent>
         )}
-      </AlertDialog>
+      </Dialog>
     </div>
   );
 };

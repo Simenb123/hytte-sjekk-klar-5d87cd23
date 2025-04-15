@@ -1,7 +1,6 @@
 
 import { ChecklistState, ChecklistAction } from '../types/checklist.types';
 import { saveToStorage } from '../../utils/storage.utils';
-import { toast } from 'sonner';
 
 export const checklistReducer = (state: ChecklistState, action: ChecklistAction): ChecklistState => {
   console.log('[ChecklistReducer]', action.type, action.type !== 'RESET_CHECKLISTS' ? action.payload : 'No payload');
@@ -24,13 +23,6 @@ export const checklistReducer = (state: ChecklistState, action: ChecklistAction)
         item.id === action.payload ? { ...item, isCompleted: !item.isCompleted } : item
       );
       
-      const allArrivalsCompleted = newArrivals.every(item => item.isCompleted);
-      if (allArrivalsCompleted) {
-        toast("Velkommen til hytta! Kos deg på turen 😊", {
-          position: "top-center",
-        });
-      }
-      
       saveToStorage('hytteArrivals', newArrivals);
       return { ...state, arrivals: newArrivals };
       
@@ -49,13 +41,6 @@ export const checklistReducer = (state: ChecklistState, action: ChecklistAction)
           isCompleted: newItems.every((item) => item.isCompleted),
         };
       });
-      
-      const allAreasCompleted = newDepartureAreas.every(area => area.isCompleted);
-      if (allAreasCompleted) {
-        toast("God tur hjem! Hytta er nå sikret 🏠", {
-          position: "top-center",
-        });
-      }
       
       saveToStorage('hytteDepartures', newDepartureAreas);
       return { ...state, departureAreas: newDepartureAreas };

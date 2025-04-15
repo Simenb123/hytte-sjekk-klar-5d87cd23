@@ -3,19 +3,16 @@ import React from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import AreaButton from './AreaButton';
 import { Button } from './ui/button';
-import { LogIn } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { toast } from 'sonner';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const DepartureAreas: React.FC = () => {
   const { departureAreas, selectArea, isAllDeparturesCompleted } = useChecklist();
@@ -23,11 +20,6 @@ const DepartureAreas: React.FC = () => {
   const handleAreaClick = (area) => {
     console.log('[DepartureAreas] Area clicked:', area.id);
     selectArea(area);
-  };
-
-  const handleLogChecklist = () => {
-    // Here you would implement the actual logging logic
-    toast.success("Avreisesjekk er loggført");
   };
   
   return (
@@ -37,7 +29,7 @@ const DepartureAreas: React.FC = () => {
         
         {departureAreas && departureAreas.length > 0 ? (
           departureAreas.map((area) => (
-            <div key={`${area.id}-${area.isCompleted}`} className="mb-3">
+            <div key={area.id} className="mb-3">
               <AreaButton 
                 area={area} 
                 onClick={() => handleAreaClick(area)}
@@ -55,42 +47,50 @@ const DepartureAreas: React.FC = () => {
         Alle områder må sjekkes før avreise
       </div>
 
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button className="w-full" variant="default">
-            <LogIn className="mr-2 h-4 w-4" />
-            Loggfør Avreisesjekk
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button 
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-md"
+          >
+            <CheckCircle className="mr-2 h-5 w-5" />
+            Fullfør Avreisesjekk
           </Button>
-        </AlertDialogTrigger>
+        </DialogTrigger>
         {isAllDeparturesCompleted() ? (
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Bekreft loggføring</AlertDialogTitle>
-              <AlertDialogDescription>
-                Er du sikker på at du vil loggføre Avreisesjekken?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Avbryt</AlertDialogCancel>
-              <AlertDialogAction onClick={handleLogChecklist}>
-                Loggfør
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-center text-xl">God tur hjem! 👋</DialogTitle>
+              <DialogDescription className="text-center">
+                Du har fullført alle punktene på avreisesjekklisten.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-center py-4">
+              <div className="bg-blue-100 p-4 rounded-full">
+                <CheckCircle className="h-16 w-16 text-blue-600" />
+              </div>
+            </div>
+            <DialogFooter className="sm:justify-center">
+              <Button 
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+              >
+                Hytta er nå sikret 🏠
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         ) : (
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Kan ikke loggføre enda</AlertDialogTitle>
-              <AlertDialogDescription>
-                Du må huke av for alle sjekkpunktene for å kunne loggføre.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>OK</AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Kan ikke fullføre enda</DialogTitle>
+              <DialogDescription>
+                Du må huke av for alle sjekkpunktene for å kunne fullføre.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" className="w-full">OK</Button>
+            </DialogFooter>
+          </DialogContent>
         )}
-      </AlertDialog>
+      </Dialog>
     </div>
   );
 };

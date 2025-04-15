@@ -32,9 +32,4 @@ const AreaChecklistItem: React.FC<AreaChecklistItemProps> = ({ item, onToggle })
   );
 };
 
-// Use a more explicit comparison function for memoization
-export default React.memo(AreaChecklistItem, (prevProps, nextProps) => {
-  return prevProps.item.isCompleted === nextProps.item.isCompleted &&
-         prevProps.item.id === nextProps.item.id &&
-         prevProps.item.text === nextProps.item.text;
-});
+export default AreaChecklistItem;

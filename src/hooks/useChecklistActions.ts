@@ -1,9 +1,9 @@
 
 import { useCallback } from 'react';
-import { toast } from 'sonner';
 import { ChecklistItem, ChecklistArea } from '../models/checklist';
 import { useAuth } from '../context/AuthContext';
 import { logItemCompletion } from '../services/checklist.service';
+import { toast } from 'sonner';
 
 export const useChecklistActions = (
   arrivals: ChecklistItem[],
@@ -36,14 +36,6 @@ export const useChecklistActions = (
         .catch(error => {
           console.error('[toggleArrivalItem] Failed to log completion:', error);
         });
-      
-      // Check if all items are completed
-      const allCompleted = updatedItems.every(item => item.isCompleted);
-      if (allCompleted) {
-        toast("Velkommen til hytta! Kos deg på turen 😊", {
-          position: "top-center",
-        });
-      }
     }
     
     // Update the state with the new array
@@ -87,14 +79,6 @@ export const useChecklistActions = (
           .catch(error => {
             console.error('[toggleDepartureItem] Failed to log completion:', error);
           });
-      }
-      
-      // Check if all areas are completed
-      const allAreasCompleted = updatedAreas.every(area => area.isCompleted);
-      if (allAreasCompleted) {
-        toast("God tur hjem! Hytta er nå sikret 🏠", {
-          position: "top-center",
-        });
       }
     }
     

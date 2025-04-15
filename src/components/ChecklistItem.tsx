@@ -27,15 +27,15 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
   
   return (
     <div 
-      className="flex items-center py-3 px-4 border-b border-gray-100 last:border-0 cursor-pointer"
+      className="flex items-center py-3 px-4 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50"
       onClick={handleToggle}
       data-state={isCompleted ? 'checked' : 'unchecked'}
     >
-      <div className="mr-3">
+      <div className="mr-3 flex-shrink-0">
         {isCompleted ? (
-          <CheckSquare size={24} className="text-green-600" />
+          <CheckSquare size={24} className="text-green-600" strokeWidth={2.5} />
         ) : (
-          <Square size={24} className="text-gray-400" />
+          <Square size={24} className="text-gray-400" strokeWidth={2.5} />
         )}
       </div>
       <span className={`${isCompleted ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
