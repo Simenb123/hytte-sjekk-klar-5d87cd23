@@ -1,175 +1,26 @@
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React from 'react';
 import { useChecklist } from '../context/ChecklistContext';
 import { useAuth } from '../context/AuthContext';
-import MainMenu from '../components/MainMenu';
-import ArrivalChecklist from '../components/ArrivalChecklist';
-import DepartureAreas from '../components/DepartureAreas';
-import AreaChecklist from '../components/AreaChecklist';
 import Header from '../components/Header';
 import { Button } from '../components/ui/button';
-import { LogOut, AlertCircle } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import ChecklistContent from '../components/checklist/ChecklistContent';
+import ChecklistLoading from '../components/checklist/ChecklistLoading';
+import ChecklistError from '../components/checklist/ChecklistError';
+import { useChecklistNavigation } from '../hooks/useChecklistNavigation';
 import { useChecklistData } from '../hooks/useChecklistData';
 
-// Simple error boundary to help debug rendering issues
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
-  constructor(props: {children: React.ReactNode}) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("[ErrorBoundary] Caught error:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="p-4 bg-red-100 text-red-800 rounded-lg">
-          <h2 className="font-bold">Noe gikk galt</h2>
-          <p>{this.state.error?.message || 'Ukjent feil'}</p>
-          <button 
-            className="mt-2 bg-red-600 text-white px-4 py-2 rounded"
-            onClick={() => this.setState({ hasError: false, error: null })}
-          >
-            Prøv igjen
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
 const ChecklistApp = () => {
-  const { 
-    currentView, 
-    selectedArea, 
-    setCurrentView, 
-    selectArea,
-    isLoading
-  } = useChecklist();
-  
-  const { user, signOut } = useAuth();
-  const { error } = useChecklistData();
-  
-  const [isContentLoaded, setIsContentLoaded] = useState(false);
-  
-  // Log mounting and state
-  useEffect(() => {
-    console.log('[ChecklistApp] Component mounted with', { 
-      currentView, 
-      selectedAreaId: selectedArea?.id,
-      userId: user?.id
-    });
-    
-    // Mark as loaded after a small delay to ensure UI is ready
-    const timer = setTimeout(() => {
-      setIsContentLoaded(true);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Log explicit re-renders to debug when the component updates
-  console.log('[ChecklistApp] Rendering with state:', { 
-    currentView, 
-    selectedAreaId: selectedArea?.id,
-    isContentLoaded,
-    isLoading,
-    userId: user?.id,
-    hasError: !!error
-  });
-
-  // Memoize the back handler to prevent recreation on every render
-  const handleBack = useCallback(() => {
-    console.log('[ChecklistApp] handleBack called:', { 
-      currentView, 
-      selectedAreaId: selectedArea?.id 
-    });
-    
-    if (selectedArea) {
-      selectArea(null);
-    } else if (currentView) {
-      setCurrentView(null);
-    }
-  }, [currentView, selectedArea, selectArea, setCurrentView]);
-
-  // Determine which view to show based on current state
-  const renderContent = useCallback(() => {
-    if (isLoading) {
-      return (
-        <div className="flex justify-center items-center h-64">
-          <p className="text-gray-500">Laster sjekklister...</p>
-        </div>
-      );
-    }
-    
-    if (error) {
-      return (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4 text-red-800 flex items-start">
-          <AlertCircle className="mr-2 h-5 w-5 flex-shrink-0" />
-          <div>
-            <h3 className="font-medium">Feil ved lasting av sjekklister</h3>
-            <p className="text-sm mt-1">{error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-2 text-sm bg-red-800 text-white px-3 py-1 rounded"
-            >
-              Last på nytt
-            </button>
-          </div>
-        </div>
-      );
-    }
-    
-    console.log('[ChecklistApp] Rendering content for:', { 
-      currentView, 
-      selectedAreaId: selectedArea?.id 
-    });
-    
-    // First check if selectedArea exists
-    if (selectedArea) {
-      return <ErrorBoundary><AreaChecklist /></ErrorBoundary>;
-    }
-
-    // Then check the current view
-    switch (currentView) {
-      case 'arrival':
-        return <ErrorBoundary><ArrivalChecklist /></ErrorBoundary>;
-      case 'departure':
-        return <ErrorBoundary><DepartureAreas /></ErrorBoundary>;
-      default:
-        return <ErrorBoundary><MainMenu /></ErrorBoundary>;
-    }
-  }, [currentView, selectedArea, isLoading, error]);
-
-  // Determine the header title based on current view and selected area
-  const getHeaderTitle = useCallback(() => {
-    if (selectedArea) {
-      return selectedArea.name;
-    }
-    
-    switch (currentView) {
-      case 'arrival':
-        return 'Ankomstsjekk';
-      case 'departure':
-        return 'Avreisesjekk';
-      default:
-        return 'Hytte-sjekk-klar';
-    }
-  }, [currentView, selectedArea]);
+  const { error, isLoading } = useChecklistData();
+  const { signOut } = useAuth();
+  const { handleBack, getHeaderTitle, showBackButton } = useChecklistNavigation();
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
         title={getHeaderTitle()} 
-        showBackButton={!!currentView || !!selectedArea}
+        showBackButton={showBackButton}
         showHomeButton={true}
         onBackClick={handleBack}
         rightContent={
@@ -187,10 +38,12 @@ const ChecklistApp = () => {
       
       <div className="max-w-lg mx-auto p-4 pt-28 relative z-20">
         <div className="bg-gray-50 relative z-20">
-          {isContentLoaded ? renderContent() : (
-            <div className="flex justify-center items-center h-64">
-              <p className="text-gray-500">Laster innhold...</p>
-            </div>
+          {error ? (
+            <ChecklistError error={error} />
+          ) : isLoading ? (
+            <ChecklistLoading />
+          ) : (
+            <ChecklistContent />
           )}
         </div>
       </div>
