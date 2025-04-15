@@ -20,6 +20,25 @@ const errorResponse = (message: string, status = 400) => {
   );
 };
 
+// Helper for successful responses
+const successResponse = (data: any) => {
+  return new Response(
+    JSON.stringify(data),
+    { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    }
+  );
+};
+
+// Helper function to get and validate required environment variables
+const getRequiredEnv = (name: string): string => {
+  const value = Deno.env.get(name);
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+};
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -27,18 +46,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify required environment variables
-    const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID');
-    const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET');
-
-    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-      return errorResponse('Missing required Google credentials');
-    }
-
     // Get request origin for better redirect handling
     const origin = req.headers.get('origin') || 'https://hytte-sjekk-klar.lovable.app';
     console.log('Request origin:', origin);
-    
+
+    // Dynamically construct redirect URI based on request origin
     const protocol = origin.startsWith('http://localhost') ? 'http' : 'https';
     const domain = origin.includes('://') ? new URL(origin).host : origin;
     const REDIRECT_URI = `${protocol}://${domain}/auth/calendar`;
@@ -46,57 +58,73 @@ Deno.serve(async (req) => {
 
     // Handle GET requests - Generate auth URL
     if (req.method === 'GET') {
-      const scopes = [
-        'https://www.googleapis.com/auth/calendar.readonly',
-        'https://www.googleapis.com/auth/calendar.events'
-      ];
+      try {
+        // Verify required environment variables
+        const GOOGLE_CLIENT_ID = getRequiredEnv('GOOGLE_CLIENT_ID');
+        
+        console.log('Generating OAuth URL');
+        
+        // Define OAuth scopes - using array for better readability and maintainability
+        const scopes = [
+          'https://www.googleapis.com/auth/calendar.readonly',
+          'https://www.googleapis.com/auth/calendar.events'
+        ];
 
-      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-      authUrl.searchParams.append('client_id', GOOGLE_CLIENT_ID);
-      authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
-      authUrl.searchParams.append('response_type', 'code');
-      authUrl.searchParams.append('scope', scopes.join(' '));
-      authUrl.searchParams.append('access_type', 'offline');
-      authUrl.searchParams.append('prompt', 'consent');
+        const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+        authUrl.searchParams.append('client_id', GOOGLE_CLIENT_ID);
+        authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
+        authUrl.searchParams.append('response_type', 'code');
+        authUrl.searchParams.append('scope', scopes.join(' '));
+        authUrl.searchParams.append('access_type', 'offline');
+        authUrl.searchParams.append('prompt', 'consent');
 
-      console.log('Generated auth URL:', authUrl.toString());
-      return new Response(
-        JSON.stringify({ url: authUrl.toString() }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        console.log('Generated auth URL:', authUrl.toString());
+        return successResponse({ url: authUrl.toString() });
+      } catch (error) {
+        console.error('Error generating auth URL:', error);
+        return errorResponse(`Error generating auth URL: ${error.message}`, 500);
+      }
     }
 
-    // Handle POST requests
+    // Handle POST requests for OAuth code exchange and API operations
     if (req.method === 'POST') {
       const requestData = await req.json();
 
       // Handle code exchange
       if (requestData.code) {
-        console.log('Exchanging code for tokens');
-        
-        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            code: requestData.code,
-            client_id: GOOGLE_CLIENT_ID,
-            client_secret: GOOGLE_CLIENT_SECRET,
-            redirect_uri: REDIRECT_URI,
-            grant_type: 'authorization_code'
-          })
-        });
+        try {
+          const GOOGLE_CLIENT_ID = getRequiredEnv('GOOGLE_CLIENT_ID');
+          const GOOGLE_CLIENT_SECRET = getRequiredEnv('GOOGLE_CLIENT_SECRET');
+          
+          console.log('Exchanging code for tokens');
+          console.log('Redirect URI:', REDIRECT_URI);
+          
+          // Exchange code for tokens using fetch API
+          const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              code: requestData.code,
+              client_id: GOOGLE_CLIENT_ID,
+              client_secret: GOOGLE_CLIENT_SECRET,
+              redirect_uri: REDIRECT_URI,
+              grant_type: 'authorization_code'
+            })
+          });
 
-        if (!tokenResponse.ok) {
-          const error = await tokenResponse.text();
-          console.error('Token exchange error:', error);
-          return errorResponse('Failed to exchange code for tokens');
+          if (!tokenResponse.ok) {
+            const errorText = await tokenResponse.text();
+            console.error('Token exchange error:', errorText);
+            return errorResponse(`Google token exchange failed: ${errorText}`, 400);
+          }
+
+          const tokens = await tokenResponse.json();
+          console.log('Successfully exchanged code for tokens');
+          return successResponse({ tokens });
+        } catch (error) {
+          console.error('Error exchanging code for tokens:', error);
+          return errorResponse(`Error exchanging code: ${error.message}`, 500);
         }
-
-        const tokens = await tokenResponse.json();
-        return new Response(
-          JSON.stringify({ tokens }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
       }
 
       // Handle calendar operations with existing tokens
@@ -108,6 +136,7 @@ Deno.serve(async (req) => {
           return errorResponse('No access token provided');
         }
 
+        // Common headers for Google API requests
         const headers = {
           'Authorization': `Bearer ${tokens.access_token}`,
           'Content-Type': 'application/json'
@@ -115,74 +144,111 @@ Deno.serve(async (req) => {
 
         // List events
         if (action === 'list_events') {
-          console.log('Fetching calendar events');
-          
-          const now = new Date();
-          const threeMonthsLater = new Date(now);
-          threeMonthsLater.setMonth(now.getMonth() + 3);
-
-          const calendarResponse = await fetch(
-            `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now.toISOString()}&timeMax=${threeMonthsLater.toISOString()}&singleEvents=true&orderBy=startTime`,
-            { headers }
-          );
-
-          if (!calendarResponse.ok) {
-            const error = await calendarResponse.text();
-            console.error('Calendar API error:', error);
+          try {
+            console.log('Fetching calendar events');
             
-            if (calendarResponse.status === 401) {
-              return errorResponse('Google Calendar access has expired', 401);
+            const now = new Date();
+            const threeMonthsLater = new Date(now);
+            threeMonthsLater.setMonth(now.getMonth() + 3);
+
+            const calendarResponse = await fetch(
+              `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now.toISOString()}&timeMax=${threeMonthsLater.toISOString()}&singleEvents=true&orderBy=startTime`,
+              { headers }
+            );
+
+            if (!calendarResponse.ok) {
+              const errorText = await calendarResponse.text();
+              console.error('Calendar API error:', errorText);
+              
+              if (calendarResponse.status === 401) {
+                return errorResponse('Google Calendar access has expired', 401);
+              }
+              
+              return errorResponse(`Failed to fetch calendar events: ${errorText}`, calendarResponse.status);
             }
-            
-            return errorResponse('Failed to fetch calendar events');
-          }
 
-          const data = await calendarResponse.json();
-          return new Response(
-            JSON.stringify({ events: data.items }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+            const data = await calendarResponse.json();
+            console.log(`Successfully fetched ${data.items?.length || 0} events`);
+            return successResponse({ events: data.items || [] });
+          } catch (error) {
+            console.error('Error fetching calendar events:', error);
+            return errorResponse(`Error fetching events: ${error.message}`, 500);
+          }
         }
 
         // Create event
         if (action === 'create_event' && requestData.event) {
-          console.log('Creating calendar event:', requestData.event);
-          
-          const calendarResponse = await fetch(
-            'https://www.googleapis.com/calendar/v3/calendars/primary/events',
-            {
-              method: 'POST',
-              headers,
-              body: JSON.stringify({
-                summary: requestData.event.title,
-                description: requestData.event.description || '',
-                start: {
-                  dateTime: new Date(requestData.event.startDate).toISOString(),
-                  timeZone: 'Europe/Oslo'
-                },
-                end: {
-                  dateTime: new Date(requestData.event.endDate).toISOString(),
-                  timeZone: 'Europe/Oslo'
-                }
-              })
+          try {
+            console.log('Creating calendar event:', requestData.event);
+            
+            const { title, description, startDate, endDate } = requestData.event;
+            
+            if (!title || !startDate || !endDate) {
+              return errorResponse('Missing required event fields (title, startDate, endDate)');
             }
-          );
+            
+            const calendarResponse = await fetch(
+              'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+              {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                  summary: title,
+                  description: description || '',
+                  start: {
+                    dateTime: new Date(startDate).toISOString(),
+                    timeZone: 'Europe/Oslo'
+                  },
+                  end: {
+                    dateTime: new Date(endDate).toISOString(),
+                    timeZone: 'Europe/Oslo'
+                  }
+                })
+              }
+            );
 
-          if (!calendarResponse.ok) {
-            const error = await calendarResponse.text();
-            console.error('Calendar API error:', error);
-            return errorResponse('Failed to create calendar event');
+            if (!calendarResponse.ok) {
+              const errorText = await calendarResponse.text();
+              console.error('Calendar API error when creating event:', errorText);
+              return errorResponse(`Failed to create calendar event: ${errorText}`, calendarResponse.status);
+            }
+
+            const data = await calendarResponse.json();
+            console.log('Successfully created calendar event');
+            return successResponse({ event: data });
+          } catch (error) {
+            console.error('Error creating calendar event:', error);
+            return errorResponse(`Error creating event: ${error.message}`, 500);
           }
+        }
+        
+        // Get list of calendars
+        if (action === 'get_calendars') {
+          try {
+            console.log('Fetching user calendars');
+            
+            const calendarResponse = await fetch(
+              'https://www.googleapis.com/calendar/v3/users/me/calendarList',
+              { headers }
+            );
 
-          const data = await calendarResponse.json();
-          return new Response(
-            JSON.stringify({ event: data }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
+            if (!calendarResponse.ok) {
+              const errorText = await calendarResponse.text();
+              console.error('Calendar API error when fetching calendars:', errorText);
+              return errorResponse(`Failed to fetch calendars: ${errorText}`, calendarResponse.status);
+            }
+
+            const data = await calendarResponse.json();
+            console.log(`Successfully fetched ${data.items?.length || 0} calendars`);
+            return successResponse({ calendars: data.items || [] });
+          } catch (error) {
+            console.error('Error fetching calendars:', error);
+            return errorResponse(`Error fetching calendars: ${error.message}`, 500);
+          }
         }
       }
 
-      return errorResponse('Invalid request');
+      return errorResponse('Invalid request: missing action, code, or tokens');
     }
 
     return errorResponse('Method not allowed', 405);
