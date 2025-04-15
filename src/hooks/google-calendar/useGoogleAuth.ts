@@ -12,33 +12,44 @@ export function useGoogleAuth(setState: any) {
       console.log('Initiating Google Calendar connection...');
       toast.info('Kobler til Google Calendar...');
       
-      // Add explicit timeout for debugging purposes
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out after 10s')), 10000);
-      });
+      // Use AbortController for better timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
       
-      const fetchPromise = supabase.functions.invoke('google-calendar', {
-        method: 'GET',
-      });
-      
-      // Race between fetch and timeout
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
-      }
-      if (data?.error) {
-        console.error('Google API error:', data.error);
-        throw new Error(data.error);
-      }
-      
-      if (data?.url) {
-        console.log('Received Google authorization URL, redirecting...', data.url);
-        sessionStorage.setItem('calendarReturnUrl', window.location.href);
-        window.location.href = data.url;
-      } else {
-        throw new Error('Ingen autoriseringslenke mottatt fra serveren');
+      try {
+        const { data, error } = await supabase.functions.invoke('google-calendar', {
+          method: 'GET',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (error) {
+          console.error('Supabase function error:', error);
+          throw error;
+        }
+        
+        if (data?.error) {
+          console.error('Google API error:', data.error);
+          throw new Error(data.error);
+        }
+        
+        if (data?.url) {
+          console.log('Received Google authorization URL, redirecting...', data.url);
+          sessionStorage.setItem('calendarReturnUrl', window.location.href);
+          window.location.href = data.url;
+        } else {
+          throw new Error('Ingen autoriseringslenke mottatt fra serveren');
+        }
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        
+        // More specific error handling for AbortController
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Forespørselen tok for lang tid og ble avbrutt. Sjekk at Edge Function er aktiv.');
+        }
+        
+        throw fetchError;
       }
     } catch (error: any) {
       console.error('Error connecting to Google Calendar:', error);
@@ -46,14 +57,14 @@ export function useGoogleAuth(setState: any) {
       // More detailed error reporting
       let errorMessage = 'Kunne ikke koble til Google Calendar.';
       
-      if (error.message?.includes('timeout')) {
-        errorMessage = 'Forespørselen tok for lang tid. Sjekk nettverkstilkoblingen din.';
+      if (error.message?.includes('avbrutt') || error.message?.includes('timeout')) {
+        errorMessage = 'Forespørselen tok for lang tid. Sjekk at Edge Function er aktiv.';
       } else if (error.name === 'FunctionsFetchError') {
         errorMessage = 'Kunne ikke nå Edge Function. Sjekk at Supabase-funksjonen er aktiv.';
         
         // Check if it's a deeper error with context
         if (error.context?.name === 'TypeError' && error.context?.message === 'Failed to fetch') {
-          errorMessage = 'Nettverksfeil ved tilkobling til Edge Function. Sjekk at alle miljøvariabler er riktig satt opp.';
+          errorMessage = 'Nettverksfeil ved tilkobling til Edge Function. Sjekk at Edge Function er aktiv og at alle miljøvariabler er riktig satt opp.';
         }
       }
       

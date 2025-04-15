@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     console.log(`Using redirect URI: ${REDIRECT_URI}`)
     console.log(`Authorization request from: ${origin}`)
 
-    // Create oauth2Client with proper error handling
+    // Create oauth2Client - no external logging utilities
     const oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
@@ -66,17 +66,28 @@ Deno.serve(async (req) => {
         'https://www.googleapis.com/auth/calendar.settings.readonly'
       ]
 
-      const url = oauth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: scopes,
-        prompt: 'consent', // Always show consent screen to get refresh token
-        include_granted_scopes: true
-      })
+      try {
+        const url = oauth2Client.generateAuthUrl({
+          access_type: 'offline',
+          scope: scopes,
+          prompt: 'consent', // Always show consent screen to get refresh token
+          include_granted_scopes: true
+        })
 
-      console.log('Generated auth URL:', url)
-      return new Response(JSON.stringify({ url }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+        console.log('Generated auth URL:', url)
+        return new Response(JSON.stringify({ url }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      } catch (error) {
+        console.error('Error generating auth URL:', error.message || 'Unknown error')
+        return new Response(JSON.stringify({ 
+          error: 'Failed to generate authentication URL',
+          details: error.message || 'Unknown error'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
     }
 
     // Handle OAuth callback
@@ -107,10 +118,10 @@ Deno.serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
         } catch (error) {
-          console.error('Token exchange error:', error.message)
+          console.error('Token exchange error:', error.message || 'Unknown error')
           return new Response(JSON.stringify({ 
             error: 'Failed to exchange code for tokens',
-            details: error.message,
+            details: error.message || 'Unknown error',
             code: requestData.code.substring(0, 10) + '...' // Only log part of the code for security
           }), {
             status: 400,

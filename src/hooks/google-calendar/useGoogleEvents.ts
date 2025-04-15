@@ -1,15 +1,14 @@
 
 import { useCallback } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { fetchCalendarEvents, fetchCalendarList } from '@/services/googleCalendar.service';
 
 export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => void) {
   // Make sure the function signature clearly requires a tokens parameter
   const fetchGoogleEvents = useCallback(async (tokensToUse: any) => {
-    if (!tokensToUse) {
-      console.warn('No tokens available for fetching events');
-      toast.error('Ingen tokens tilgjengelig for å hente hendelser');
+    if (!tokensToUse || !tokensToUse.access_token) {
+      console.warn('No valid tokens available for fetching events');
+      toast.error('Ingen gyldige tokens tilgjengelig for å hente hendelser');
       return;
     }
     
@@ -45,8 +44,8 @@ export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => v
   }, [setState, disconnectGoogleCalendar]);
 
   const fetchGoogleCalendars = useCallback(async (tokensToUse: any) => {
-    if (!tokensToUse) {
-      console.warn('No tokens available for fetching calendars');
+    if (!tokensToUse || !tokensToUse.access_token) {
+      console.warn('No valid tokens available for fetching calendars');
       return;
     }
     
