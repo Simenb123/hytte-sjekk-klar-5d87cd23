@@ -34,6 +34,7 @@ Deno.serve(async (req) => {
     const REDIRECT_URI = `${protocol}://${domain}/calendar`
 
     console.log(`Using redirect URI: ${REDIRECT_URI}`)
+    console.log(`Authorization request from: ${origin}`)
 
     const oauth2Client = new google.auth.OAuth2(
       GOOGLE_CLIENT_ID,
@@ -53,6 +54,7 @@ Deno.serve(async (req) => {
         access_type: 'offline',
         scope: scopes,
         prompt: 'consent', // Always show consent screen to get refresh token
+        include_granted_scopes: true
       })
 
       console.log('Generated auth URL:', url)
@@ -74,8 +76,16 @@ Deno.serve(async (req) => {
           
           // Check that we have refresh token
           if (!tokens.refresh_token) {
-            console.log('No refresh token received. Consider adding prompt: consent to force refresh token')
+            console.log('No refresh token received. Adding prompt=consent to force refresh token')
+          } else {
+            console.log('Successfully received refresh token')
           }
+          
+          console.log('Token exchange successful', JSON.stringify({
+            access_token_exists: !!tokens.access_token,
+            refresh_token_exists: !!tokens.refresh_token,
+            expiry_date: tokens.expiry_date,
+          }))
           
           return new Response(JSON.stringify({ tokens }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -84,7 +94,8 @@ Deno.serve(async (req) => {
           console.error('Token exchange error:', error)
           return new Response(JSON.stringify({ 
             error: 'Failed to exchange code for tokens',
-            details: error.message
+            details: error.message,
+            errorObject: JSON.stringify(error)
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -112,14 +123,23 @@ Deno.serve(async (req) => {
             maxResults: 100
           })
           
+          console.log(`Successfully fetched ${response.data.items?.length || 0} events`)
+          
           return new Response(JSON.stringify({ events: response.data.items }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
         } catch (error) {
           console.error('Error listing events:', error)
+          
+          // Check if it's an authorization error that needs refresh
+          const authError = error.message?.includes('invalid_grant') || 
+                            error.message?.includes('invalid_token') ||
+                            error.message?.includes('expired');
+          
           return new Response(JSON.stringify({ 
             error: 'Failed to list events',
             details: error.message,
+            requiresReauth: authError,
             errorCode: error.code || 'UNKNOWN_ERROR'
           }), {
             status: 400,
@@ -153,6 +173,8 @@ Deno.serve(async (req) => {
             },
           })
           
+          console.log('Event created successfully', response.data.id)
+          
           return new Response(JSON.stringify({ event: response.data }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
@@ -160,7 +182,8 @@ Deno.serve(async (req) => {
           console.error('Error creating event:', error)
           return new Response(JSON.stringify({ 
             error: 'Failed to create event',
-            details: error.message 
+            details: error.message,
+            errorObject: JSON.stringify(error)
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -177,6 +200,8 @@ Deno.serve(async (req) => {
           const calendar = google.calendar({ version: 'v3', auth: oauth2Client })
           const response = await calendar.calendarList.list()
           
+          console.log(`Successfully fetched ${response.data.items?.length || 0} calendars`)
+          
           return new Response(JSON.stringify({ calendars: response.data.items }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
@@ -184,7 +209,8 @@ Deno.serve(async (req) => {
           console.error('Error getting calendar list:', error)
           return new Response(JSON.stringify({ 
             error: 'Failed to get calendar list',
-            details: error.message 
+            details: error.message,
+            errorObject: JSON.stringify(error)
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -199,7 +225,10 @@ Deno.serve(async (req) => {
     })
   } catch (error) {
     console.error('Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      errorObject: JSON.stringify(error)
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

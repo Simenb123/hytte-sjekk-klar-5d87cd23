@@ -15,6 +15,7 @@ interface GoogleEvent {
     dateTime: string;
     timeZone: string;
   };
+  htmlLink?: string;
 }
 
 interface GoogleCalendar {
@@ -33,6 +34,7 @@ export function useGoogleCalendar() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [googleCalendars, setGoogleCalendars] = useState<GoogleCalendar[]>([]);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     const storedTokens = localStorage.getItem('googleCalendarTokens');
@@ -57,9 +59,11 @@ export function useGoogleCalendar() {
     if (!tokensToUse) return;
     
     setIsLoadingEvents(true);
-    setConnectionError(null);
+    setFetchError(null);
 
     try {
+      console.log('Calling Google Calendar Edge Function to fetch events...');
+      
       const { data, error } = await supabase.functions.invoke('google-calendar', {
         method: 'POST',
         body: { 
@@ -68,24 +72,40 @@ export function useGoogleCalendar() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(`Edge function error: ${error.message}`);
+      }
       
       if (data?.error) {
+        console.error('Google Calendar API error:', data.error, data.details);
+        
+        // Check if we need to reauthenticate
+        if (data.requiresReauth) {
+          disconnectGoogleCalendar();
+          throw new Error('Google Calendar-tilgangen har utløpt. Vennligst koble til på nytt.');
+        }
+        
         throw new Error(data.error);
       }
       
       if (data?.events) {
+        console.log(`Successfully fetched ${data.events.length} events from Google Calendar`);
         setGoogleEvents(data.events);
         toast.success('Hentet Google Calendar-hendelser');
+      } else {
+        console.warn('No events returned from Google Calendar API');
+        setGoogleEvents([]);
       }
     } catch (error: any) {
       console.error('Error fetching Google Calendar events:', error);
       toast.error('Kunne ikke hente Google Calendar-hendelser');
-      setConnectionError('Kunne ikke hente hendelser. Vennligst prøv igjen senere.');
+      setFetchError(`Kunne ikke hente hendelser: ${error.message}`);
       
       // Token might be expired, try to disconnect
       if (error.message?.includes('invalid_grant') || 
           error.message?.includes('invalid_token') ||
+          error.message?.includes('utløpt') ||
           error.message?.includes('expired')) {
         disconnectGoogleCalendar();
         toast.error('Google Calendar-tilgangen er utløpt. Vennligst koble til på nytt.');
@@ -99,6 +119,8 @@ export function useGoogleCalendar() {
     if (!tokensToUse) return;
     
     try {
+      console.log('Calling Google Calendar Edge Function to fetch calendars...');
+      
       const { data, error } = await supabase.functions.invoke('google-calendar', {
         method: 'POST',
         body: { 
@@ -107,13 +129,26 @@ export function useGoogleCalendar() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
+      if (data?.error) {
+        console.error('Google Calendar API error:', data.error, data.details);
+        throw new Error(data.error);
+      }
       
       if (data?.calendars) {
+        console.log(`Successfully fetched ${data.calendars.length} calendars from Google`);
         setGoogleCalendars(data.calendars);
+      } else {
+        console.warn('No calendars returned from Google Calendar API');
+        setGoogleCalendars([]);
       }
     } catch (error) {
       console.error('Error fetching Google calendars:', error);
+      // Not showing a toast here since it's not critical
     }
   };
 
@@ -124,19 +159,28 @@ export function useGoogleCalendar() {
     setConnectionError(null);
     
     try {
+      console.log('Initiating Google Calendar connection...');
+      
       const { data, error } = await supabase.functions.invoke('google-calendar', {
         method: 'GET',
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
       
       if (data?.error) {
+        console.error('Google Calendar API error:', data.error);
         throw new Error(data.error);
       }
       
       if (data?.url) {
+        console.log('Received Google authorization URL, redirecting...');
         sessionStorage.setItem('calendarReturnUrl', window.location.href);
         window.location.href = data.url;
+      } else {
+        throw new Error('Ingen autoriseringslenke mottatt fra serveren');
       }
     } catch (error: any) {
       console.error('Error connecting to Google Calendar:', error);
@@ -148,16 +192,19 @@ export function useGoogleCalendar() {
   };
 
   const disconnectGoogleCalendar = () => {
+    console.log('Disconnecting from Google Calendar...');
     localStorage.removeItem('googleCalendarTokens');
     setGoogleTokens(null);
     setIsGoogleConnected(false);
     setGoogleEvents([]);
     setConnectionError(null);
+    setFetchError(null);
     toast.success('Koblet fra Google Calendar');
   };
 
   const handleOAuthCallback = async (code: string) => {
     setConnectionError(null);
+    console.log('Processing OAuth callback...');
     
     try {
       const { data, error } = await supabase.functions.invoke('google-calendar', {
@@ -165,13 +212,21 @@ export function useGoogleCalendar() {
         body: { code }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
       
       if (data?.error) {
+        console.error('Token exchange error:', data.error, data.details);
         throw new Error(data.error);
       }
 
       if (data?.tokens) {
+        console.log('Successfully received tokens from Google:', 
+                   `access_token exists: ${!!data.tokens.access_token},`, 
+                   `refresh_token exists: ${!!data.tokens.refresh_token}`);
+        
         localStorage.setItem('googleCalendarTokens', JSON.stringify(data.tokens));
         setGoogleTokens(data.tokens);
         setIsGoogleConnected(true);
@@ -181,6 +236,8 @@ export function useGoogleCalendar() {
         await fetchGoogleEvents(data.tokens);
         await fetchGoogleCalendars(data.tokens);
         return true;
+      } else {
+        throw new Error('Ingen tokens mottatt fra serveren');
       }
     } catch (error: any) {
       console.error('Error exchanging code for tokens:', error);
@@ -201,6 +258,7 @@ export function useGoogleCalendar() {
     disconnectGoogleCalendar,
     handleOAuthCallback,
     isConnecting,
-    connectionError
+    connectionError,
+    fetchError
   };
 }

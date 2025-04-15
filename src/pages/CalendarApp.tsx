@@ -31,7 +31,8 @@ const CalendarApp: React.FC = () => {
     disconnectGoogleCalendar,
     handleOAuthCallback,
     isConnecting,
-    connectionError
+    connectionError,
+    fetchError
   } = useGoogleCalendar();
 
   // Handle OAuth callback
@@ -46,14 +47,18 @@ const CalendarApp: React.FC = () => {
       // Remove error from URL
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (code) {
+      console.log('Received OAuth code, processing...');
       toast.info('Behandler Google Calendar-tilkobling...');
       handleOAuthCallback(code).then(success => {
         if (success) {
+          console.log('Successfully processed OAuth callback');
           // Remove code from URL
           window.history.replaceState({}, document.title, window.location.pathname);
           // Fetch events after successful connection
           fetchGoogleEvents();
           setActiveTab('google');
+        } else {
+          console.error('Failed to process OAuth callback');
         }
       });
     }
@@ -78,6 +83,8 @@ const CalendarApp: React.FC = () => {
     // If connected to Google, also create a Google Calendar event
     if (isGoogleConnected && googleTokens) {
       try {
+        console.log('Creating Google Calendar event for new booking:', booking.title);
+        
         const { data, error } = await supabase.functions.invoke('google-calendar', {
           method: 'POST',
           body: { 
@@ -93,14 +100,17 @@ const CalendarApp: React.FC = () => {
         });
 
         if (error) {
+          console.error('Supabase function error:', error);
           throw error;
         }
         
         if (data?.error) {
+          console.error('Google Calendar API error:', data.error, data.details);
           throw new Error(data.error);
         }
 
         if (data?.event) {
+          console.log('Successfully created Google Calendar event:', data.event.id);
           toast.success('Booking opprettet i Google Calendar!');
           fetchGoogleEvents();
         }
@@ -173,6 +183,7 @@ const CalendarApp: React.FC = () => {
                     events={googleEvents}
                     isLoading={isLoadingEvents}
                     onRefresh={fetchGoogleEvents}
+                    error={fetchError}
                   />
                 </CardContent>
               </Card>

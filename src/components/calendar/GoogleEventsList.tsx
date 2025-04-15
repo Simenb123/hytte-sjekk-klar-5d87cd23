@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Share2, ExternalLink } from 'lucide-react';
+import { Loader2, Share2, ExternalLink, AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 
 interface GoogleEvent {
   id: string;
@@ -23,15 +24,38 @@ interface GoogleEventsListProps {
   events: GoogleEvent[];
   isLoading: boolean;
   onRefresh: () => void;
+  error?: string | null;
 }
 
 export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
   events,
   isLoading,
-  onRefresh
+  onRefresh,
+  error
 }) => {
+  const handleRefresh = () => {
+    toast.info('Oppdaterer Google Calendar...');
+    onRefresh();
+  };
+
   return (
     <div>
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            {error}
+            <Button 
+              variant="link" 
+              className="p-0 ml-2 text-xs underline" 
+              onClick={handleRefresh}
+            >
+              Prøv igjen
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {isLoading ? (
         <div className="flex justify-center items-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -74,10 +98,21 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
       )}
       
       <Button 
-        onClick={onRefresh} 
+        onClick={handleRefresh} 
+        disabled={isLoading}
         className="w-full mt-3"
       >
-        Oppdater Google Calendar
+        {isLoading ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Oppdaterer...
+          </>
+        ) : (
+          <>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Oppdater Google Calendar
+          </>
+        )}
       </Button>
       
       <div className="flex justify-center mt-4">
