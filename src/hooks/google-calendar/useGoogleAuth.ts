@@ -12,17 +12,12 @@ export function useGoogleAuth(setState: any) {
       console.log('Initiating Google Calendar connection...');
       toast.info('Kobler til Google Calendar...');
       
-      // Set a timeout for the request
-      const timeoutId = setTimeout(() => {
-        throw new Error('Forespørselen tok for lang tid og ble avbrutt. Sjekk at Edge Function er aktiv.');
-      }, 15000); // 15 seconds timeout
+      console.log('Invoking google-calendar edge function...');
       
       try {
         const { data, error } = await supabase.functions.invoke('google-calendar', {
           method: 'GET'
         });
-        
-        clearTimeout(timeoutId);
         
         if (error) {
           console.error('Supabase function error:', error);
@@ -42,11 +37,12 @@ export function useGoogleAuth(setState: any) {
           throw new Error('Ingen autoriseringslenke mottatt fra serveren');
         }
       } catch (fetchError: any) {
-        clearTimeout(timeoutId);
+        // Enhanced error handling with better user feedback
+        console.error('Error detail:', fetchError);
         
-        // More specific error handling
-        if (fetchError.message?.includes('avbrutt') || fetchError.message?.includes('timeout')) {
-          throw new Error('Forespørselen tok for lang tid og ble avbrutt. Sjekk at Edge Function er aktiv.');
+        // Check for network-related errors
+        if (fetchError.name === 'FunctionsFetchError' || fetchError.message?.includes('Failed to fetch')) {
+          throw new Error('Nettverksfeil ved tilkobling til Edge Function. Sjekk at Edge Function er aktiv og at alle miljøvariabler er riktig satt opp.');
         }
         
         throw fetchError;
@@ -54,18 +50,12 @@ export function useGoogleAuth(setState: any) {
     } catch (error: any) {
       console.error('Error connecting to Google Calendar:', error);
       
-      // More detailed error reporting
       let errorMessage = 'Kunne ikke koble til Google Calendar.';
       
-      if (error.message?.includes('avbrutt') || error.message?.includes('timeout')) {
-        errorMessage = 'Forespørselen tok for lang tid. Sjekk at Edge Function er aktiv.';
+      if (error.message?.includes('Edge Function')) {
+        errorMessage = error.message;
       } else if (error.name === 'FunctionsFetchError') {
         errorMessage = 'Kunne ikke nå Edge Function. Sjekk at Supabase-funksjonen er aktiv.';
-        
-        // Check if it's a deeper error with context
-        if (error.context?.name === 'TypeError' && error.context?.message === 'Failed to fetch') {
-          errorMessage = 'Nettverksfeil ved tilkobling til Edge Function. Sjekk at Edge Function er aktiv og at alle miljøvariabler er riktig satt opp.';
-        }
       }
       
       toast.error(errorMessage);
@@ -113,7 +103,12 @@ export function useGoogleAuth(setState: any) {
       return true;
     } catch (error: any) {
       console.error('Error exchanging code for tokens:', error);
-      const errorMessage = error.message || 'Kunne ikke fullføre Google Calendar-integrasjonen';
+      
+      let errorMessage = error.message || 'Kunne ikke fullføre Google Calendar-integrasjonen';
+      if (error.message?.includes('Edge Function')) {
+        errorMessage = 'Kunne ikke koble til serveren. Google Calendar-integrasjonen er midlertidig utilgjengelig.';
+      }
+      
       toast.error(errorMessage);
       setState(prev => ({
         ...prev,

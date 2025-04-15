@@ -16,10 +16,20 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
   fetchGoogleEvents,
   fetchError
 }) => {
+  const connectionFailed = fetchError?.includes('Edge Function') || 
+                          fetchError?.includes('Failed to fetch');
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Google Calendar Hendelser</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          <span>Google Calendar Hendelser</span>
+          {connectionFailed && (
+            <span className="text-sm text-red-500 font-normal">
+              Tilkobling midlertidig utilgjengelig
+            </span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <GoogleEventsList

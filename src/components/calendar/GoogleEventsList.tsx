@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Share2, ExternalLink, AlertCircle, RefreshCw, Calendar } from 'lucide-react';
@@ -63,7 +62,43 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
     }
   };
 
-  // Handle connection errors with more detailed feedback
+  const isEdgeFunctionIssue = error && (
+    error.includes('Edge Function') || 
+    error.includes('Failed to fetch') ||
+    error.includes('Kunne ikke koble til')
+  );
+
+  if (isEdgeFunctionIssue) {
+    return (
+      <div>
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-sm">
+            Kunne ikke koble til Google Calendar-tjenesten. Dette er et midlertidig problem med serveren.
+            <Button 
+              variant="link" 
+              className="p-0 ml-2 text-xs underline" 
+              onClick={onRefresh}
+            >
+              Prøv igjen
+            </Button>
+          </AlertDescription>
+        </Alert>
+        
+        <div className="text-center mt-8 p-6 border border-dashed rounded-lg">
+          <p className="text-gray-500 mb-4">
+            Google Calendar-integrasjonen er midlertidig utilgjengelig. 
+            Du kan fortsatt bruke booking-funksjonene, og prøve tilkoblingen igjen senere.
+          </p>
+          <Button onClick={onRefresh} className="mb-4">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Prøv tilkobling på nytt
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (error && error.includes('Google Calendar-tilgangen har utløpt')) {
     return (
       <div>
@@ -97,7 +132,7 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
 
   return (
     <div>
-      {error && (
+      {error && !isEdgeFunctionIssue && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="text-sm">

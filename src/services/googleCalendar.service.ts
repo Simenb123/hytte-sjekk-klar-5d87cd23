@@ -7,6 +7,14 @@ export const fetchCalendarEvents = async (tokens: any): Promise<GoogleEvent[]> =
   console.log('Calling edge function to fetch events');
   
   try {
+    // Add additional logging
+    console.log('Starting fetchCalendarEvents with tokens:', 
+      tokens ? {
+        access_token_exists: !!tokens.access_token,
+        refresh_token_exists: !!tokens.refresh_token
+      } : 'No tokens provided'
+    );
+    
     const { data, error } = await supabase.functions.invoke('google-calendar', {
       method: 'POST',
       body: { 
@@ -17,7 +25,17 @@ export const fetchCalendarEvents = async (tokens: any): Promise<GoogleEvent[]> =
 
     if (error) {
       console.error('Supabase function error:', error);
-      throw new Error(`Edge function error: ${error.message}`);
+      
+      // Provide a more detailed error message to help debugging
+      let errorMessage = 'Edge function error';
+      if (error.message && error.message.includes('Failed to fetch')) {
+        errorMessage = 'Kunne ikke koble til Edge Function. Sjekk at Supabase-tjenesten er tilgjengelig.';
+        console.log('Network error connecting to Edge Function:', error);
+      } else {
+        errorMessage = `Edge function error: ${error.message || 'Unknown error'}`;
+      }
+      
+      throw new Error(errorMessage);
     }
 
     if (data?.error) {
@@ -57,7 +75,14 @@ export const fetchCalendarList = async (tokens: any): Promise<GoogleCalendar[]> 
 
     if (error) {
       console.error('Supabase function error:', error);
-      throw error;
+      // Provide more context for the error
+      let errorMessage = 'Edge function error';
+      if (error.message && error.message.includes('Failed to fetch')) {
+        errorMessage = 'Kunne ikke koble til Edge Function. Sjekk at Supabase-tjenesten er tilgjengelig.';
+      } else {
+        errorMessage = `Edge function error: ${error.message || 'Unknown error'}`;
+      }
+      throw new Error(errorMessage);
     }
 
     if (data?.error) {
@@ -90,7 +115,14 @@ export const handleOAuthCallback = async (code: string) => {
 
     if (error) {
       console.error('Supabase function error:', error);
-      throw error;
+      // Provide more context for the error
+      let errorMessage = 'Edge function error';
+      if (error.message && error.message.includes('Failed to fetch')) {
+        errorMessage = 'Kunne ikke koble til Edge Function. Sjekk at Supabase-tjenesten er tilgjengelig.';
+      } else {
+        errorMessage = `Edge function error: ${error.message || 'Unknown error'}`;
+      }
+      throw new Error(errorMessage);
     }
 
     if (data?.error) {
