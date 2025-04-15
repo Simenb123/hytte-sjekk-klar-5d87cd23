@@ -23,7 +23,7 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({
         onClick={onRefresh} 
         disabled={isLoading}
         className="w-full mt-5"
-        variant={isConnectionError ? "outline" : "outline"}
+        variant={isConnectionError ? "destructive" : "outline"}
       >
         {isLoading ? (
           <>
@@ -33,7 +33,7 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({
         ) : (
           <>
             {isConnectionError ? (
-              <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
+              <AlertTriangle className="h-4 w-4 mr-2" />
             ) : (
               <RefreshCw className="h-4 w-4 mr-2" />
             )}
