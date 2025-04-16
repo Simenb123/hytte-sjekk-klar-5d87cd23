@@ -120,7 +120,7 @@ export const handleOAuthCallback = async (code: string) => {
   toast.info('Behandler Google Calendar-tilkobling...');
 
   try {
-    // Get the current URL to determine what environment we're in
+    // CRITICAL: Get the current URL to determine what environment we're in and construct the correct redirect URI
     const currentUrl = window.location.origin;
     console.log('Current URL for OAuth callback:', currentUrl);
     
