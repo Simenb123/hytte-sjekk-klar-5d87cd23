@@ -7,6 +7,7 @@ import ChecklistApp from './pages/ChecklistApp';
 import LogsPage from './pages/LogsPage';
 import AuthPage from './pages/AuthPage';
 import { AuthProvider } from './context/AuthContext';
+import { ChecklistProvider } from './context/ChecklistContext';
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -24,16 +25,18 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <Toaster position="top-right" />
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/bookings" element={<BookingPage />} />
-            <Route path="/checklist" element={<ChecklistApp />} />
-            <Route path="/logs" element={<LogsPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-          </Routes>
-        </Router>
+        <ChecklistProvider>
+          <Router>
+            <Toaster position="top-right" />
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/bookings" element={<BookingPage />} />
+              <Route path="/checklist" element={<ChecklistApp />} />
+              <Route path="/logs" element={<LogsPage />} />
+              <Route path="/auth" element={<AuthPage />} />
+            </Routes>
+          </Router>
+        </ChecklistProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
