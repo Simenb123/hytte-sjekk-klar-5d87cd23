@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { nb } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { addMonths, subMonths, format, isSameDay } from 'date-fns';
+import { cn } from "@/lib/utils";
 
 interface CalendarSectionProps {
   date: Date | undefined;
@@ -20,7 +20,6 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
   const [month, setMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(date);
 
-  // Synkroniser selectedDate med date prop
   useEffect(() => {
     setSelectedDate(date);
   }, [date]);
@@ -38,14 +37,12 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
     setMonth(subMonths(month, 1));
   };
 
-  // Funksjon for å sjekke om en dato er booket
   const isDateBooked = (date: Date) => {
     return bookedDays.some(bookedDate => 
       isSameDay(new Date(bookedDate), date)
     );
   };
 
-  // Funksjon for å vise booket-status for datoer
   const getDayClassNames = (date: Date, isSelected: boolean) => {
     if (isDateBooked(date)) {
       return "bg-red-100 text-red-600 font-bold hover:bg-red-200";

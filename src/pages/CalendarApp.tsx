@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import AppHeader from '../components/AppHeader';
 import NewBookingDialog from '../components/booking/NewBookingDialog';
@@ -34,22 +33,19 @@ const CalendarApp: React.FC = () => {
     connectionError,
     fetchError,
     googleCalendars,
-    sharedCalendarExists: googleSharedCalendarExists,
   } = useGoogleCalendar();
 
   const [sharedCalendarExists, setSharedCalendarExists] = useState(false);
 
-  // Sjekk om delt kalender eksisterer
   useEffect(() => {
     if (isGoogleConnected && googleCalendars?.length > 0) {
       const hyttaCalendar = googleCalendars.find(cal => 
         cal.summary === 'Hytte Booking' || cal.summary?.includes('Hytte')
       );
-      setSharedCalendarExists(!!hyttaCalendar || googleSharedCalendarExists);
+      setSharedCalendarExists(!!hyttaCalendar);
     }
-  }, [isGoogleConnected, googleCalendars, googleSharedCalendarExists]);
+  }, [isGoogleConnected, googleCalendars]);
 
-  // Håndter OAuth callback fra Google
   useEffect(() => {
     const handleOAuthResponse = async () => {
       const url = new URL(window.location.href);
@@ -80,7 +76,6 @@ const CalendarApp: React.FC = () => {
               toast.error('Kunne ikke fullføre Google Calendar-autentisering');
             }
             
-            // Redirect tilbake til kalender-siden uansett
             window.location.href = '/calendar';
           } catch (err: any) {
             console.error('Error processing OAuth callback:', err);

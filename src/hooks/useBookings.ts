@@ -43,7 +43,8 @@ export function useBookings() {
           from: new Date(booking.start_date),
           to: new Date(booking.end_date),
           user: booking.user_id || 'Ukjent',
-          googleEventId: booking.google_event_id
+          // Check if google_event_id exists, it might not be in some database rows
+          googleEventId: booking.google_event_id || undefined
         }));
         
         setBookings(formattedBookings);
