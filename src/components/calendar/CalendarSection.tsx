@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { nb } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { addMonths, subMonths, format, isSameDay } from 'date-fns';
+import { addMonths, subMonths, format, isSameDay, addDays, isWithinInterval } from 'date-fns';
 import { cn } from "@/lib/utils";
 
 interface CalendarSectionProps {
@@ -37,9 +38,37 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
     setMonth(subMonths(month, 1));
   };
 
+  // Check if a date is within a booking range
   const isDateBooked = (date: Date) => {
-    return bookedDays.some(bookedDate => 
-      isSameDay(new Date(bookedDate), date)
+    // Group bookings by start date to handle multi-day bookings
+    const bookingRanges = [];
+    
+    for (let i = 0; i < bookedDays.length; i++) {
+      const currentDate = new Date(bookedDays[i]);
+      
+      // Find if we have an existing booking range
+      let foundRange = false;
+      
+      for (const range of bookingRanges) {
+        // If this date is the day after the end date of a range, extend that range
+        if (isSameDay(addDays(range.end, 1), currentDate)) {
+          range.end = currentDate;
+          foundRange = true;
+          break;
+        }
+      }
+      
+      // If we didn't find a range to extend, create a new one
+      if (!foundRange) {
+        bookingRanges.push({ start: currentDate, end: currentDate });
+      }
+    }
+    
+    // Check if the date is within any of the booking ranges
+    return bookingRanges.some(range => 
+      isWithinInterval(date, { start: range.start, end: range.end }) ||
+      isSameDay(date, range.start) || 
+      isSameDay(date, range.end)
     );
   };
 

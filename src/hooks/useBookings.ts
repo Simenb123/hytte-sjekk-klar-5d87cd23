@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { endOfDay } from 'date-fns';
 
 export interface Booking {
   id: string;
@@ -41,6 +42,7 @@ export function useBookings() {
           title: booking.title || 'Ingen tittel',
           description: booking.description,
           from: new Date(booking.start_date),
+          // Ensure the end date is at the end of the day
           to: new Date(booking.end_date),
           user: booking.user_id || 'Ukjent',
           googleEventId: booking.google_event_id
@@ -90,7 +92,10 @@ export function useBookings() {
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.from !== undefined) dbUpdates.start_date = updates.from.toISOString();
-      if (updates.to !== undefined) dbUpdates.end_date = updates.to.toISOString();
+      if (updates.to !== undefined) {
+        // Make sure end date is at the end of the day to include the full day
+        dbUpdates.end_date = updates.to.toISOString();
+      }
       
       const { error } = await supabase
         .from('bookings')

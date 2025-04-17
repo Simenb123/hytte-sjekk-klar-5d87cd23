@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { format, addDays, parseISO } from 'date-fns';
 import { nb } from 'date-fns/locale';
@@ -55,6 +55,9 @@ const BookingForm: React.FC<BookingFormProps> = ({
   const today = new Date();
   const tomorrow = addDays(today, 1);
   
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+  
   // Ensure default values are proper Date objects
   const processedDefaultValues = defaultValues ? {
     ...defaultValues,
@@ -93,6 +96,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
     
     console.log("Setting start date to:", date);
     form.setValue('startDate', date);
+    setStartDateOpen(false);
     
     // If end date is before start date, update end date
     const currentEndDate = form.getValues('endDate');
@@ -107,6 +111,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
     
     console.log("Setting end date to:", date);
     form.setValue('endDate', date);
+    setEndDateOpen(false);
   };
 
   const handleSubmit = (data: BookingFormData) => {
@@ -156,7 +161,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Fra dato</FormLabel>
-              <Popover>
+              <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -200,7 +205,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Til dato</FormLabel>
-              <Popover>
+              <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button

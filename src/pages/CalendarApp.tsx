@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import AppHeader from '../components/AppHeader';
 import NewBookingDialog from '../components/booking/NewBookingDialog';
@@ -14,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from 'lucide-react';
 import BookingListItem from '../components/booking/BookingListItem';
+import { addDays, differenceInDays } from 'date-fns';
 
 const CalendarApp: React.FC = () => {
   const { user } = useAuth();
@@ -100,12 +100,14 @@ const CalendarApp: React.FC = () => {
 
   const bookedDays = bookings.flatMap(booking => {
     const days: Date[] = [];
-    let currentDate = new Date(booking.from);
+    const startDate = new Date(booking.from);
     const endDate = new Date(booking.to);
     
-    while (currentDate <= endDate) {
-      days.push(new Date(currentDate));
-      currentDate.setDate(currentDate.getDate() + 1);
+    const dayDifference = differenceInDays(endDate, startDate) + 1;
+    
+    for (let i = 0; i < dayDifference; i++) {
+      const currentDate = addDays(new Date(startDate), i);
+      days.push(currentDate);
     }
     
     return days;
