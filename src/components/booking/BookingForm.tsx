@@ -73,6 +73,8 @@ const BookingForm: React.FC<BookingFormProps> = ({
     useSharedCalendar: sharedCalendarExists
   };
   
+  console.log('BookingForm - Default values:', processedDefaultValues);
+  
   const form = useForm<BookingFormData>({
     defaultValues: processedDefaultValues
   });

@@ -34,11 +34,20 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
   useEffect(() => {
     if (booking) {
       // Convert booking to form data format when booking changes
+      const startDate = new Date(booking.from);
+      const endDate = new Date(booking.to);
+      
+      console.log('EditBookingDialog - Setting default values with dates:', { 
+        startDate, 
+        endDate, 
+        booking 
+      });
+      
       setDefaultValues({
         title: booking.title,
         description: booking.description || '',
-        startDate: booking.from,
-        endDate: booking.to,
+        startDate,
+        endDate,
         addToGoogle: false,
         useSharedCalendar: false
       });
@@ -70,11 +79,18 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
         return;
       }
       
+      // Convert to proper Date objects if needed
+      const startDate = data.startDate instanceof Date ? 
+        data.startDate : new Date(data.startDate);
+      
+      const endDate = data.endDate instanceof Date ? 
+        data.endDate : new Date(data.endDate);
+      
       const updates = {
         title: data.title,
         description: data.description || '',
-        from: data.startDate,
-        to: data.endDate
+        from: startDate,
+        to: endDate
       };
       
       const success = await onUpdate(booking.id, updates);
