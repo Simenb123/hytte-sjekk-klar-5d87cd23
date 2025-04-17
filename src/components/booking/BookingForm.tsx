@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { format, addDays } from 'date-fns';
+import { format, addDays, parseISO } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,7 @@ type BookingFormProps = {
   isEditing?: boolean;
   defaultValues?: Partial<BookingFormData>;
   submitLabel?: string;
+  isSubmitting?: boolean;
 };
 
 const BookingForm: React.FC<BookingFormProps> = ({
@@ -48,20 +49,32 @@ const BookingForm: React.FC<BookingFormProps> = ({
   sharedCalendarExists,
   isEditing = false,
   defaultValues,
-  submitLabel = 'Opprett booking'
+  submitLabel = 'Opprett booking',
+  isSubmitting = false
 }) => {
   const today = new Date();
   const tomorrow = addDays(today, 1);
   
+  // Ensure default values are proper Date objects
+  const processedDefaultValues = defaultValues ? {
+    ...defaultValues,
+    startDate: defaultValues.startDate instanceof Date ? 
+      defaultValues.startDate : 
+      (typeof defaultValues.startDate === 'string' ? parseISO(defaultValues.startDate) : today),
+    endDate: defaultValues.endDate instanceof Date ? 
+      defaultValues.endDate : 
+      (typeof defaultValues.endDate === 'string' ? parseISO(defaultValues.endDate) : tomorrow)
+  } : {
+    title: '',
+    description: '',
+    startDate: today,
+    endDate: tomorrow,
+    addToGoogle: googleIntegration,
+    useSharedCalendar: sharedCalendarExists
+  };
+  
   const form = useForm<BookingFormData>({
-    defaultValues: defaultValues || {
-      title: '',
-      description: '',
-      startDate: today,
-      endDate: tomorrow,
-      addToGoogle: googleIntegration,
-      useSharedCalendar: sharedCalendarExists
-    }
+    defaultValues: processedDefaultValues
   });
 
   // Update form when props change
@@ -76,13 +89,22 @@ const BookingForm: React.FC<BookingFormProps> = ({
   const handleStartDateChange = (date: Date | undefined) => {
     if (!date) return;
     
+    console.log("Setting start date to:", date);
     form.setValue('startDate', date);
     
     // If end date is before start date, update end date
     const currentEndDate = form.getValues('endDate');
     if (date > currentEndDate) {
+      console.log("Adjusting end date to:", addDays(date, 1));
       form.setValue('endDate', addDays(date, 1));
     }
+  };
+
+  const handleEndDateChange = (date: Date | undefined) => {
+    if (!date) return;
+    
+    console.log("Setting end date to:", date);
+    form.setValue('endDate', date);
   };
 
   const handleSubmit = (data: BookingFormData) => {
@@ -155,7 +177,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                   <Calendar
                     mode="single"
                     selected={field.value}
-                    onSelect={(date) => handleStartDateChange(date)}
+                    onSelect={handleStartDateChange}
                     locale={nb}
                     disabled={(date) =>
                       !isEditing && date < new Date(new Date().setHours(0, 0, 0, 0))
@@ -198,7 +220,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                   <Calendar
                     mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
+                    onSelect={handleEndDateChange}
                     locale={nb}
                     disabled={(date) =>
                       date < form.getValues('startDate')
@@ -260,7 +282,13 @@ const BookingForm: React.FC<BookingFormProps> = ({
           </>
         )}
 
-        <Button type="submit" className="w-full">{submitLabel}</Button>
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Lagrer...' : submitLabel}
+        </Button>
       </form>
     </Form>
   );

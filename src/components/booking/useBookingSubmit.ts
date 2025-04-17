@@ -29,6 +29,24 @@ export const useBookingSubmit = ({ onSuccess, onClose }: UseBookingSubmitProps) 
 
       console.log('Creating booking with data:', data);
       
+      if (!data.title) {
+        toast.error('Booking må ha en tittel');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!data.startDate || !data.endDate) {
+        toast.error('Booking må ha start- og sluttdato');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (data.endDate < data.startDate) {
+        toast.error('Sluttdato kan ikke være før startdato');
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Lagre booking i databasen
       const { data: newBooking, error } = await supabase
         .from('bookings')

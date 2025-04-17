@@ -34,10 +34,22 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
   });
   
   const handleFormSubmit = (data: any) => {
+    console.log("NewBookingDialog - Form submitted with data:", data);
     if (!user) {
       toast.error('Du må være logget inn for å lage en booking');
       return;
     }
+    
+    if (!data.title) {
+      toast.error('Booking må ha en tittel');
+      return;
+    }
+    
+    if (!data.startDate || !data.endDate) {
+      toast.error('Booking må ha start- og sluttdato');
+      return;
+    }
+    
     handleSubmit(data);
   };
 
@@ -56,6 +68,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
           googleIntegration={googleIntegration}
           sharedCalendarExists={sharedCalendarExists}
           submitLabel="Opprett booking"
+          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>

@@ -37,6 +37,24 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
       setIsSubmitting(true);
       console.log("Submitting update with data:", data);
       
+      if (!data.title) {
+        toast.error('Booking må ha en tittel');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (!data.startDate || !data.endDate) {
+        toast.error('Booking må ha start- og sluttdato');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (data.endDate < data.startDate) {
+        toast.error('Sluttdato kan ikke være før startdato');
+        setIsSubmitting(false);
+        return;
+      }
+      
       const updates = {
         title: data.title,
         description: data.description || '',
@@ -85,6 +103,7 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
           isEditing={true}
           defaultValues={defaultValues}
           submitLabel="Lagre endringer"
+          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>
