@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DbArea, DbChecklistItem, DbCompletionLog, ChecklistItemWithStatus, AreaWithItems } from "@/types/database.types";
 import { toast } from "sonner";
@@ -51,30 +50,29 @@ export const fetchCompletionLogs = async (userId: string): Promise<DbCompletionL
 };
 
 // Log completion of a checklist item
-export const logItemCompletion = async (
-  userId: string, 
-  itemId: string, 
-  isCompleted: boolean
-): Promise<void> => {
+export const logItemCompletion = async (userId: string, itemId: string, isCompleted: boolean) => {
+  console.log(`[checklist.service] Logging completion - userId: ${userId}, itemId: ${itemId}, isCompleted: ${isCompleted}`);
+  
   try {
-    console.log('[logItemCompletion] Logging completion:', { userId, itemId, isCompleted });
-    
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('completion_logs')
-      .insert({
-        user_id: userId,
-        item_id: itemId,
-        is_completed: isCompleted
-      });
-
+      .insert([
+        {
+          user_id: userId,
+          item_id: itemId,
+          is_completed: isCompleted,
+        }
+      ]);
+      
     if (error) {
-      console.error('[logItemCompletion] Error logging item completion:', error);
-      toast.error('Kunne ikke registrere fullføringen. Prøv igjen.');
+      console.error('[checklist.service] Error logging completion:', error);
       throw error;
     }
+    
+    console.log('[checklist.service] Successfully logged completion:', data);
+    return data;
   } catch (error) {
-    console.error('[logItemCompletion] Exception:', error);
-    toast.error('Kunne ikke registrere fullføringen. Prøv igjen.');
+    console.error('[checklist.service] Exception logging completion:', error);
     throw error;
   }
 };

@@ -8,6 +8,12 @@ export const useCompletionLogs = () => {
     queryKey: ['completionLogs'],
     queryFn: async () => {
       console.log('Henter fullføringslogger...');
+      
+      // Check authentication status
+      const { data: session } = await supabase.auth.getSession();
+      console.log('Auth status:', session ? 'Authenticated' : 'Not authenticated', 
+                  session?.session?.user?.id ? `User ID: ${session.session.user.id}` : '');
+      
       const { data: logs, error: logsError } = await supabase
         .from('completion_logs')
         .select(`
@@ -44,6 +50,7 @@ export const useCompletionLogs = () => {
 
       return typedResults;
     },
-    staleTime: 1000 * 60 * 2 // 2 minutes
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchInterval: 10000, // Refetch every 10 seconds to see new logs
   });
 };
