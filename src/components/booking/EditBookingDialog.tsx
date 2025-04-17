@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -29,8 +29,23 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
   sharedCalendarExists = false
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [defaultValues, setDefaultValues] = useState<BookingFormData | null>(null);
   
-  if (!booking) return null;
+  useEffect(() => {
+    if (booking) {
+      // Convert booking to form data format when booking changes
+      setDefaultValues({
+        title: booking.title,
+        description: booking.description || '',
+        startDate: booking.from,
+        endDate: booking.to,
+        addToGoogle: false,
+        useSharedCalendar: false
+      });
+    }
+  }, [booking]);
+  
+  if (!booking || !defaultValues) return null;
 
   const handleSubmit = async (data: BookingFormData) => {
     try {
@@ -74,16 +89,6 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Convert booking to form data format
-  const defaultValues: BookingFormData = {
-    title: booking.title,
-    description: booking.description || '',
-    startDate: booking.from,
-    endDate: booking.to,
-    addToGoogle: false,
-    useSharedCalendar: false
   };
 
   return (

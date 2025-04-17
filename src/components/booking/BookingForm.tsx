@@ -160,16 +160,17 @@ const BookingForm: React.FC<BookingFormProps> = ({
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full pl-3 text-left font-normal",
+                        "w-full pl-3 text-left font-normal flex justify-between items-center",
                         !field.value && "text-muted-foreground"
                       )}
+                      type="button" // Explicitly set to avoid form submission
                     >
                       {field.value ? (
                         format(field.value, "PPP", { locale: nb })
                       ) : (
                         <span>Velg dato</span>
                       )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      <CalendarIcon className="h-4 w-4 opacity-50 ml-auto" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
@@ -203,16 +204,17 @@ const BookingForm: React.FC<BookingFormProps> = ({
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full pl-3 text-left font-normal",
+                        "w-full pl-3 text-left font-normal flex justify-between items-center",
                         !field.value && "text-muted-foreground"
                       )}
+                      type="button" // Explicitly set to avoid form submission
                     >
                       {field.value ? (
                         format(field.value, "PPP", { locale: nb })
                       ) : (
                         <span>Velg dato</span>
                       )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      <CalendarIcon className="h-4 w-4 opacity-50 ml-auto" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>

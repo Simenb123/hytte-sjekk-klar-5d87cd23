@@ -50,6 +50,11 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
       return;
     }
     
+    if (data.endDate < data.startDate) {
+      toast.error('Sluttdato kan ikke være før startdato');
+      return;
+    }
+    
     handleSubmit(data);
   };
 

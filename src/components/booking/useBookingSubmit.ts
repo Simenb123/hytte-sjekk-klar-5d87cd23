@@ -47,14 +47,25 @@ export const useBookingSubmit = ({ onSuccess, onClose }: UseBookingSubmitProps) 
         return;
       }
       
+      // Ensure we have Date objects, not complex objects
+      const startDate = data.startDate instanceof Date ? 
+        data.startDate : 
+        new Date(data.startDate);
+        
+      const endDate = data.endDate instanceof Date ? 
+        data.endDate : 
+        new Date(data.endDate);
+      
+      console.log('Processed dates:', { startDate, endDate });
+      
       // Lagre booking i databasen
       const { data: newBooking, error } = await supabase
         .from('bookings')
         .insert({
           title: data.title,
           description: data.description || '',
-          start_date: data.startDate.toISOString(),
-          end_date: data.endDate.toISOString(),
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
           user_id: user.id
         })
         .select()
@@ -74,8 +85,8 @@ export const useBookingSubmit = ({ onSuccess, onClose }: UseBookingSubmitProps) 
       const bookingData = {
         ...data,
         id: newBooking.id,
-        from: data.startDate,
-        to: data.endDate,
+        from: startDate,
+        to: endDate,
         user: user.id
       };
       
