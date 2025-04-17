@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,29 +44,54 @@ const BookingForm: React.FC<BookingFormProps> = ({
   googleIntegration,
   sharedCalendarExists,
 }) => {
+  const today = new Date();
+  const tomorrow = addDays(today, 1);
+  
   const form = useForm<BookingFormData>({
     defaultValues: {
       title: '',
       description: '',
-      startDate: new Date(),
-      endDate: new Date(),
+      startDate: today,
+      endDate: tomorrow,
       addToGoogle: googleIntegration,
       useSharedCalendar: sharedCalendarExists
     }
   });
 
-  // Update form state when props change
-  React.useEffect(() => {
+  // Update form when props change
+  useEffect(() => {
     form.setValue('addToGoogle', googleIntegration);
     form.setValue('useSharedCalendar', sharedCalendarExists);
   }, [googleIntegration, sharedCalendarExists, form]);
 
+  // Handle date changes to ensure end date is after start date
+  const handleStartDateChange = (date: Date | undefined) => {
+    if (!date) return;
+    
+    form.setValue('startDate', date);
+    
+    // If end date is before start date, update end date
+    const currentEndDate = form.getValues('endDate');
+    if (date > currentEndDate) {
+      form.setValue('endDate', addDays(date, 1));
+    }
+  };
+
+  const handleSubmit = (data: BookingFormData) => {
+    // Ensure end date is not before start date
+    if (data.endDate < data.startDate) {
+      data.endDate = addDays(data.startDate, 1);
+    }
+    onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="title"
+          rules={{ required: "Tittel er påkrevd" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tittel</FormLabel>
@@ -121,10 +146,10 @@ const BookingForm: React.FC<BookingFormProps> = ({
                   <Calendar
                     mode="single"
                     selected={field.value}
-                    onSelect={field.onChange}
+                    onSelect={(date) => handleStartDateChange(date)}
                     locale={nb}
                     disabled={(date) =>
-                      date < new Date()
+                      date < new Date(new Date().setHours(0, 0, 0, 0))
                     }
                     initialFocus
                   />
@@ -167,7 +192,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                     onSelect={field.onChange}
                     locale={nb}
                     disabled={(date) =>
-                      date <= form.getValues('startDate')
+                      date < form.getValues('startDate')
                     }
                     initialFocus
                   />

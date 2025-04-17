@@ -20,37 +20,51 @@ export const useBookingSubmit = ({ onSuccess, onClose }: UseBookingSubmitProps) 
     setIsSubmitting(true);
     
     try {
+      // Sjekk at bruker er logget inn
       if (!user) {
         toast.error('Du må være logget inn for å lage en booking');
         return;
       }
 
-      // Save booking to database
-      const { error } = await supabase
+      console.log('Creating booking with data:', data);
+      
+      // Lagre booking i databasen
+      const { data: newBooking, error } = await supabase
         .from('bookings')
         .insert({
           title: data.title,
-          description: data.description,
+          description: data.description || '',
           start_date: data.startDate.toISOString(),
           end_date: data.endDate.toISOString(),
           user_id: user.id
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving booking:', error);
+        throw error;
+      }
 
-      // Update booking data and close dialog
+      console.log('Booking created successfully:', newBooking);
+      
+      // Oppdater bookingdata og lukk dialog
       toast.success('Booking opprettet!');
       
-      // Prepare data to be sent to onSuccess
+      // Forbered data som skal sendes til onSuccess
       const bookingData = {
-        ...data
+        ...data,
+        id: newBooking.id,
+        from: data.startDate,
+        to: data.endDate,
+        user: user.id
       };
       
       onSuccess(bookingData);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating booking:', error);
-      toast.error('Kunne ikke opprette booking');
+      toast.error(`Kunne ikke opprette booking: ${error.message || 'Ukjent feil'}`);
     } finally {
       setIsSubmitting(false);
     }

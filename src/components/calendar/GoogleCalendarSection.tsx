@@ -4,10 +4,11 @@ import { GoogleCalendarTab } from './GoogleCalendarTab';
 import { BookingsTab } from './BookingsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, RefreshCw } from "lucide-react";
 import { isEdgeFunctionError, isAuthError, formatErrorMessage } from './google/utils';
 import { Button } from '@/components/ui/button';
 import { useConnectionRetry } from '@/hooks/google-calendar/useConnectionRetry';
+import { AlertCircle, RefreshCw, InfoIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface GoogleCalendarSectionProps {
   isGoogleConnected: boolean;
@@ -113,16 +114,16 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
           <AlertDescription className="flex justify-between items-center">
             <span>
               {errorMessage}
-              {hasConnectionIssue && " Prøv igjen senere eller kontakt support hvis problemet vedvarer."}
-              {hasAuthIssue && " Dette skjer vanligvis når tilgangen har utløpt."}
+              {hasConnectionIssue && " Prøv igjen senere."}
+              {hasAuthIssue && " Koble til på nytt for å fortsette å bruke integrasjonen."}
             </span>
             
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleRetry}
               disabled={isRetrying}
-              className="ml-4 whitespace-nowrap"
+              className="ml-2 whitespace-nowrap"
             >
               <RefreshCw className={`h-3 w-3 mr-1 ${isRetrying ? 'animate-spin' : ''}`} />
               {isRetrying ? 'Prøver...' : 'Prøv igjen'}
@@ -131,49 +132,74 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
         </Alert>
       )}
 
-      <Tabs defaultValue="bookings" value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="bookings">Bookinger</TabsTrigger>
-          {isGoogleConnected && !hasConnectionIssue && <TabsTrigger value="google">Google Calendar</TabsTrigger>}
-          {isGoogleConnected && hasConnectionIssue && (
-            <TabsTrigger value="google" disabled className="opacity-50 cursor-not-allowed">
-              Google Calendar
-            </TabsTrigger>
-          )}
-          {!isGoogleConnected && (
-            <TabsTrigger value="google" disabled className="opacity-50 cursor-not-allowed">
-              Google Calendar
-            </TabsTrigger>
-          )}
-        </TabsList>
-        
-        <TabsContent value="bookings">
-          <BookingsTab
-            bookings={bookings}
-            isGoogleConnected={isGoogleConnected}
-            onNewBooking={onNewBooking}
-            onConnectGoogle={connectGoogleCalendar}
-            onDisconnectGoogle={disconnectGoogleCalendar}
-            isConnecting={isConnecting || isRetrying}
-            connectionError={connectionError}
-            googleTokens={googleTokens}
-            sharedCalendarExists={sharedCalendarExists}
-            onShareCalendarSuccess={onShareCalendarSuccess}
-          />
-        </TabsContent>
-        
-        {isGoogleConnected && (
-          <TabsContent value="google">
-            <GoogleCalendarTab
-              isLoadingEvents={isLoadingEvents}
-              googleEvents={googleEvents}
-              fetchGoogleEvents={fetchGoogleEvents}
-              connectGoogleCalendar={connectGoogleCalendar}
-              fetchError={fetchError}
+      <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-medium">Bookinger og kalender</h2>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <InfoIcon className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs text-sm">
+                  Her kan du se dine bookinger og Google Calendar-hendelser.
+                  {isGoogleConnected 
+                    ? ' Du er koblet til Google Calendar og kan bruke "Google Calendar"-fanen for å se dine avtaler.'
+                    : ' Koble til Google Calendar for å se dine avtaler i appen.'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <Tabs defaultValue="bookings" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="bookings">Bookinger</TabsTrigger>
+            {isGoogleConnected && !hasConnectionIssue && (
+              <TabsTrigger value="google">Google Calendar</TabsTrigger>
+            )}
+            {isGoogleConnected && hasConnectionIssue && (
+              <TabsTrigger value="google" disabled className="opacity-50 cursor-not-allowed">
+                Google Calendar
+              </TabsTrigger>
+            )}
+            {!isGoogleConnected && (
+              <TabsTrigger value="google" disabled className="opacity-50 cursor-not-allowed">
+                Google Calendar
+              </TabsTrigger>
+            )}
+          </TabsList>
+          
+          <TabsContent value="bookings">
+            <BookingsTab
+              bookings={bookings}
+              isGoogleConnected={isGoogleConnected}
+              onNewBooking={onNewBooking}
+              onConnectGoogle={connectGoogleCalendar}
+              onDisconnectGoogle={disconnectGoogleCalendar}
+              isConnecting={isConnecting}
+              connectionError={connectionError}
+              googleTokens={googleTokens}
+              sharedCalendarExists={sharedCalendarExists}
+              onShareCalendarSuccess={onShareCalendarSuccess}
             />
           </TabsContent>
-        )}
-      </Tabs>
+          
+          {isGoogleConnected && (
+            <TabsContent value="google">
+              <GoogleCalendarTab
+                isLoadingEvents={isLoadingEvents}
+                googleEvents={googleEvents}
+                fetchGoogleEvents={fetchGoogleEvents}
+                connectGoogleCalendar={connectGoogleCalendar}
+                fetchError={fetchError}
+              />
+            </TabsContent>
+          )}
+        </Tabs>
+      </div>
     </>
   );
 };

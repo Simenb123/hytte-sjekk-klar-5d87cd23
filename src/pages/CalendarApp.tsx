@@ -1,27 +1,31 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AppHeader from '../components/AppHeader';
 import NewBookingDialog from '../components/booking/NewBookingDialog';
 import { useBookings } from '@/hooks/useBookings';
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { toast } from 'sonner';
-import { CalendarSection } from '@/components/calendar/CalendarSection';
-import { GoogleCalendarSection } from '@/components/calendar/GoogleCalendarSection';
-import { CalendarInfo } from '@/components/calendar/CalendarInfo';
+import { CalendarSection } from '../components/calendar/CalendarSection';
+import { GoogleCalendarSection } from '../components/calendar/GoogleCalendarSection';
+import { CalendarInfo } from '../components/calendar/CalendarInfo';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from 'lucide-react';
 
 const CalendarApp: React.FC = () => {
+  const { user } = useAuth();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [showNewBookingDialog, setShowNewBookingDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("bookings");
-  const [sharedCalendarExists, setSharedCalendarExists] = useState(false);
-
-  const { bookings, fetchBookings } = useBookings();
+  
+  const { bookings, fetchBookings, isLoading: isLoadingBookings } = useBookings();
+  
   const {
     isGoogleConnected,
-    googleTokens,
     isLoadingEvents,
     googleEvents,
+    googleTokens,
     fetchGoogleEvents,
     connectGoogleCalendar,
     disconnectGoogleCalendar,
@@ -29,8 +33,11 @@ const CalendarApp: React.FC = () => {
     isConnecting,
     connectionError,
     fetchError,
-    googleCalendars
+    googleCalendars,
+    sharedCalendarExists: googleSharedCalendarExists,
   } = useGoogleCalendar();
+
+  const [sharedCalendarExists, setSharedCalendarExists] = useState(false);
 
   // Sjekk om delt kalender eksisterer
   useEffect(() => {
@@ -38,9 +45,9 @@ const CalendarApp: React.FC = () => {
       const hyttaCalendar = googleCalendars.find(cal => 
         cal.summary === 'Hytte Booking' || cal.summary?.includes('Hytte')
       );
-      setSharedCalendarExists(!!hyttaCalendar);
+      setSharedCalendarExists(!!hyttaCalendar || googleSharedCalendarExists);
     }
-  }, [isGoogleConnected, googleCalendars]);
+  }, [isGoogleConnected, googleCalendars, googleSharedCalendarExists]);
 
   // Håndter OAuth callback fra Google
   useEffect(() => {
@@ -68,6 +75,7 @@ const CalendarApp: React.FC = () => {
             
             if (success) {
               toast.success('Koblet til Google Calendar!');
+              setActiveTab("google"); // Bytt til Google-fanen ved vellykket tilkobling
             } else {
               toast.error('Kunne ikke fullføre Google Calendar-autentisering');
             }
@@ -93,8 +101,9 @@ const CalendarApp: React.FC = () => {
   const bookedDays = bookings.flatMap(booking => {
     const days: Date[] = [];
     let currentDate = new Date(booking.from);
+    const endDate = new Date(booking.to);
     
-    while (currentDate <= booking.to) {
+    while (currentDate <= endDate) {
       days.push(new Date(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -102,18 +111,19 @@ const CalendarApp: React.FC = () => {
     return days;
   });
 
-  const handleShareCalendarSuccess = () => {
+  const handleShareCalendarSuccess = useCallback(() => {
     setSharedCalendarExists(true);
     toast.success('Felles hytte-kalender er opprettet og delt!');
     fetchGoogleEvents();
-  };
+  }, [fetchGoogleEvents]);
 
   const handleBookingSuccess = async (booking) => {
+    console.log('Booking success:', booking);
     fetchBookings();
     
     if (isGoogleConnected && googleTokens && booking.addToGoogle) {
       try {
-        console.log('Creating Google Calendar event for new booking:', booking.title);
+        console.log('Creating Google Calendar event for new booking:', booking);
         
         const { data, error } = await supabase.functions.invoke('google-calendar', {
           method: 'POST',
@@ -123,8 +133,8 @@ const CalendarApp: React.FC = () => {
             event: {
               title: booking.title,
               description: booking.description,
-              startDate: booking.startDate,
-              endDate: booking.endDate
+              startDate: booking.startDate.toISOString(),
+              endDate: booking.endDate.toISOString()
             },
             useSharedCalendar: booking.useSharedCalendar
           }
@@ -145,11 +155,23 @@ const CalendarApp: React.FC = () => {
           
           fetchGoogleEvents();
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error creating Google Calendar event:', error);
-        toast.error('Kunne ikke opprette hendelse i Google Calendar');
+        toast.error(`Kunne ikke opprette hendelse i Google Calendar: ${error.message || 'Ukjent feil'}`);
       }
     }
+  };
+
+  const handleNewBooking = useCallback(() => {
+    if (!user) {
+      toast.error('Du må være logget inn for å lage en booking');
+      return;
+    }
+    setShowNewBookingDialog(true);
+  }, [user]);
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setDate(date);
   };
 
   return (
@@ -159,9 +181,16 @@ const CalendarApp: React.FC = () => {
       <div className="max-w-lg mx-auto p-4">
         <CalendarSection 
           date={date} 
-          onDateSelect={setDate} 
+          onDateSelect={handleDateSelect} 
           bookedDays={bookedDays} 
         />
+        
+        <div className="mb-4">
+          <Button onClick={handleNewBooking} className="w-full flex items-center justify-center gap-2">
+            <PlusCircle className="h-4 w-4" />
+            Ny booking
+          </Button>
+        </div>
         
         <GoogleCalendarSection
           isGoogleConnected={isGoogleConnected}
@@ -170,7 +199,7 @@ const CalendarApp: React.FC = () => {
           fetchGoogleEvents={fetchGoogleEvents}
           googleTokens={googleTokens}
           bookings={bookings}
-          onNewBooking={() => setShowNewBookingDialog(true)}
+          onNewBooking={handleNewBooking}
           connectGoogleCalendar={connectGoogleCalendar}
           disconnectGoogleCalendar={disconnectGoogleCalendar}
           isConnecting={isConnecting}

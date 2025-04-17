@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { nb } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { addMonths, subMonths, format } from 'date-fns';
+import { addMonths, subMonths, format, isSameDay } from 'date-fns';
 
 interface CalendarSectionProps {
   date: Date | undefined;
@@ -18,6 +18,17 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
   bookedDays
 }) => {
   const [month, setMonth] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(date);
+
+  // Synkroniser selectedDate med date prop
+  useEffect(() => {
+    setSelectedDate(date);
+  }, [date]);
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    onDateSelect(date);
+  };
 
   const nextMonth = () => {
     setMonth(addMonths(month, 1));
@@ -25,6 +36,21 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
 
   const prevMonth = () => {
     setMonth(subMonths(month, 1));
+  };
+
+  // Funksjon for å sjekke om en dato er booket
+  const isDateBooked = (date: Date) => {
+    return bookedDays.some(bookedDate => 
+      isSameDay(new Date(bookedDate), date)
+    );
+  };
+
+  // Funksjon for å vise booket-status for datoer
+  const getDayClassNames = (date: Date, isSelected: boolean) => {
+    if (isDateBooked(date)) {
+      return "bg-red-100 text-red-600 font-bold hover:bg-red-200";
+    }
+    return undefined;
   };
 
   return (
@@ -55,8 +81,8 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
       
       <Calendar
         mode="single"
-        selected={date}
-        onSelect={onDateSelect}
+        selected={selectedDate}
+        onSelect={handleDateSelect}
         month={month}
         onMonthChange={setMonth}
         className="mx-auto"
@@ -64,9 +90,34 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
         disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
         modifiers={{ booked: bookedDays }}
         modifiersClassNames={{
-          booked: 'bg-red-100 text-red-600 font-bold',
+          booked: "bg-red-100 text-red-600 font-bold"
+        }}
+        components={{
+          DayContent: (props) => (
+            <div 
+              className={cn(
+                "w-full h-full flex items-center justify-center",
+                isDateBooked(props.date) && "font-bold text-red-600"
+              )}
+            >
+              {props.date.getDate()}
+            </div>
+          )
         }}
       />
+      
+      {selectedDate && (
+        <div className="mt-4 text-center">
+          <p className="text-sm font-medium">
+            Valgt dato: {format(selectedDate, 'PPP', { locale: nb })}
+          </p>
+          {isDateBooked(selectedDate) && (
+            <p className="text-xs text-red-600 mt-1">
+              Denne datoen er allerede booket
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
