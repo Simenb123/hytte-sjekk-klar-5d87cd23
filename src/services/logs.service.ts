@@ -33,7 +33,9 @@ export const useCompletionLogs = () => {
         completed_at: log.completed_at,
         is_completed: log.is_completed,
         checklist_items: log.checklist_items,
-        profiles: log.profiles || { first_name: null, last_name: null }
+        profiles: typeof log.profiles === 'object' && log.profiles !== null 
+          ? log.profiles 
+          : { first_name: null, last_name: null }
       })) || [];
 
       return typedResults;
