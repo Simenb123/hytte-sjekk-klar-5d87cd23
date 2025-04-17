@@ -5,28 +5,20 @@ import { GoogleAuthResponse, RequestData, GoogleCalendarEvent } from './types.ts
 
 Deno.serve(async (req) => {
   console.log(`[${new Date().toISOString()}] ${req.method} request received`);
-  console.log('Request URL:', req.url);
-  console.log('Request headers:', Object.fromEntries(req.headers.entries()));
   
-  // Handle CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get the origin, crucial for constructing the correct redirect URI
-    const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/$/, '') || 'https://hytte-sjekk-klar.lovable.app';
-    console.log('Request origin:', origin);
+    const origin = req.headers.get('origin') || 'https://hytte-sjekk-klar.lovable.app';
 
     if (req.method === 'GET') {
       try {
         const GOOGLE_CLIENT_ID = getRequiredEnv('GOOGLE_CLIENT_ID');
-        console.log('GOOGLE_CLIENT_ID exists:', !!GOOGLE_CLIENT_ID);
-        
-        // Use the origin to get the correct redirect URI
         const REDIRECT_URI = getRedirectURI(origin);
-        console.log(`Using redirect URI for auth URL: ${REDIRECT_URI}`);
         
+        console.log(`Generating auth URL with redirect URI: ${REDIRECT_URI}`);
         const authUrl = generateAuthUrl(GOOGLE_CLIENT_ID, REDIRECT_URI);
         console.log('Generated auth URL:', authUrl);
         
@@ -38,8 +30,7 @@ Deno.serve(async (req) => {
       } catch (error) {
         console.error('Error generating auth URL:', error);
         const response: GoogleAuthResponse = { 
-          error: `Error generating auth URL: ${error.message}`,
-          details: error.stack
+          error: `Error generating auth URL: ${error.message}` 
         };
         return new Response(
           JSON.stringify(response),
@@ -50,19 +41,15 @@ Deno.serve(async (req) => {
 
     if (req.method === 'POST') {
       const requestData: RequestData = await req.json();
-      console.log('POST request data keys:', Object.keys(requestData));
       
       // Handle OAuth code exchange
       if (requestData.code) {
         try {
-          console.log('Processing OAuth code exchange');
           const GOOGLE_CLIENT_ID = getRequiredEnv('GOOGLE_CLIENT_ID');
           const GOOGLE_CLIENT_SECRET = getRequiredEnv('GOOGLE_CLIENT_SECRET');
-          
-          // Critical: Use the correct redirect URI, either from the request or from the origin
           const REDIRECT_URI = getRedirectURI(origin, requestData);
-          console.log(`Using redirect URI for token exchange: ${REDIRECT_URI}`);
           
+          console.log(`Exchanging code for tokens using redirect URI: ${REDIRECT_URI}`);
           const tokens = await exchangeCodeForTokens(
             requestData.code,
             GOOGLE_CLIENT_ID,
@@ -70,7 +57,6 @@ Deno.serve(async (req) => {
             REDIRECT_URI
           );
           
-          console.log('Token exchange successful');
           const response: GoogleAuthResponse = { tokens };
           return new Response(
             JSON.stringify(response),
@@ -78,15 +64,18 @@ Deno.serve(async (req) => {
           );
         } catch (error) {
           console.error('Error exchanging code for tokens:', error);
+          // Forbedret feilhåndtering for 403-feil
+          let status = 400;
+          let details = '';
           
-          // Enhanced error reporting
-          const status = error.status || 400;
-          const details = error.details || error.stack || '';
+          if (error.message?.includes('403') || error.toString().includes('403')) {
+            status = 403;
+            details = 'Google returnerte en 403 Forbidden feil. Dette betyr vanligvis at OAuth-konfigurasjonen ikke er riktig oppsatt, eller at redirect URI ikke stemmer med det som er konfigurert i Google Cloud Console.';
+          }
           
           const response: GoogleAuthResponse = { 
             error: error.message, 
-            details: details,
-            status: status
+            details: details || undefined 
           };
           
           return new Response(
