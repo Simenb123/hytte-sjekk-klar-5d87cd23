@@ -31,3 +31,20 @@ export interface AreaWithItems {
   items: ChecklistItemWithStatus[];
   isCompleted: boolean;
 }
+
+export interface CompletionLogWithDetails {
+  id: string;
+  item_id: string;
+  user_id: string;
+  completed_at: string;
+  is_completed: boolean;
+  checklist_items?: {
+    id: string;
+    text: string;
+    type: string;
+  };
+  profiles?: {
+    first_name: string | null;
+    last_name: string | null;
+  };
+}

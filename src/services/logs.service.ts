@@ -1,7 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { CompletionLogWithDetails } from "@/types/database.types";
 
-export const fetchCompletionLogs = async () => {
+export const fetchCompletionLogs = async (): Promise<CompletionLogWithDetails[]> => {
   const { data, error } = await supabase
     .from('completion_logs')
     .select(`
@@ -27,5 +28,5 @@ export const fetchCompletionLogs = async () => {
     throw error;
   }
 
-  return data;
+  return data || [];
 };
