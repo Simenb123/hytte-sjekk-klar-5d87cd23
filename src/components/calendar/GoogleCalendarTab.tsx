@@ -22,10 +22,10 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
   connectGoogleCalendar,
   fetchError
 }) => {
-  // Improved error detection
+  // Improved error detection with dedicated check for third-party cookie issues
   const connectionFailed = isEdgeFunctionError(fetchError);
   const authFailed = isAuthError(fetchError);
-  const isConnectionRefused = fetchError?.includes('avviste tilkoblingsforsøket') || 
+  const isThirdPartyCookieBlocked = fetchError?.includes('avviste tilkoblingsforsøket') || 
                               fetchError?.includes('refused to connect') || 
                               fetchError?.includes('network error') ||
                               fetchError?.includes('tredjepartsinfokapsler');
@@ -34,21 +34,21 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
     fetchError: fetchError?.substring(0, 100),
     connectionFailed,
     authFailed,
-    isConnectionRefused
+    isThirdPartyCookieBlocked
   });
   
   const { isRetrying, handleRetry } = useConnectionRetry(
     async () => {
       try {
-        // If it's an auth error, we need to reconnect, otherwise just fetch events
-        if (authFailed || isConnectionRefused) {
-          console.log('Auth failed or connection refused, trying to reconnect');
+        // If it's an auth error or third-party cookie issue, we need to reconnect
+        if (authFailed || isThirdPartyCookieBlocked) {
+          console.log('Auth failed or third-party cookies blocked, trying to reconnect');
           connectGoogleCalendar();
         } else {
           console.log('Connection error but not auth failed, trying to fetch events');
           await fetchGoogleEvents();
         }
-        return !connectionFailed && !authFailed && !isConnectionRefused;
+        return !connectionFailed && !authFailed && !isThirdPartyCookieBlocked;
       } catch (error) {
         console.error('Retry failed:', error);
         return false;
@@ -58,8 +58,8 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
     5   // initial backoff in seconds
   );
 
-  // If we can't connect to Edge Function
-  if (connectionFailed && !isConnectionRefused) {
+  // If we can't connect to Edge Function but it's not a cookie issue
+  if (connectionFailed && !isThirdPartyCookieBlocked) {
     return (
       <ConnectionErrorView 
         onRetry={handleRetry} 
@@ -69,13 +69,13 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
     );
   }
   
-  // If we have auth issues with Google or connection refused
-  if (authFailed || isConnectionRefused) {
+  // If we have auth issues with Google or third-party cookie issues
+  if (authFailed || isThirdPartyCookieBlocked) {
     return (
       <GoogleAuthErrorView
         onRetry={handleRetry}
         isRetrying={isRetrying}
-        connectionError={isConnectionRefused}
+        connectionError={isThirdPartyCookieBlocked}
       />
     );
   }

@@ -48,9 +48,18 @@ export function useGoogleAuth(setState: any) {
             language: navigator.language,
             platform: navigator.platform,
             vendor: navigator.vendor,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            thirdPartyCookiesSupported: 'Unknown - will be tested during OAuth flow'
           };
           console.log('Browser environment details:', browserInfo);
+          
+          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+          
+          if (isSafari || isIOS) {
+            console.log('Detected Safari or iOS browser which commonly blocks third-party cookies');
+            toast.warning('Du bruker Safari eller iOS som kan blokkere tredjepartsinfokapsler. Hvis innloggingen feiler, prøv å aktivere tredjepartsinfokapsler i nettleserinnstillingene eller bruk en annen nettleser.');
+          }
           
           setTimeout(() => {
             window.location.href = data.url;
@@ -101,7 +110,10 @@ export function useGoogleAuth(setState: any) {
         errorMessage = 'Fikk 403 Forbidden fra Google. Sjekk at OAuth-konfigurasjonen er riktig oppsatt i Google Cloud Console.';
       } else if (error.message?.includes('refused to connect') || 
                 error.message?.includes('avviste tilkoblingsforsøket')) {
-        errorMessage = 'Nettleseren kunne ikke koble til accounts.google.com. Dette kan skyldes at tredjepartsinfokapsler er blokkert i nettleseren. Prøv å aktivere tredjepartsinfokapsler, sjekk brannmur/VPN-innstillinger, eller prøv en annen nettleser.';
+        errorMessage = 'Nettleseren kunne ikke koble til accounts.google.com. Dette skyldes sannsynligvis at tredjepartsinfokapsler er blokkert i nettleseren din. Prøv å:' +
+          '\n1. Aktivere tredjepartsinfokapsler i nettleserinnstillingene' +
+          '\n2. Sjekke brannmur/VPN-innstillinger' + 
+          '\n3. Prøve en annen nettleser som Chrome eller Firefox';
       }
       
       toast.error(errorMessage);
