@@ -51,7 +51,7 @@ export const handleOAuthCodeExchange = async (requestData: RequestData, origin: 
     console.log('Processing OAuth code exchange');
     const GOOGLE_CLIENT_ID = getRequiredEnv('GOOGLE_CLIENT_ID');
     const GOOGLE_CLIENT_SECRET = getRequiredEnv('GOOGLE_CLIENT_SECRET');
-    const REDIRECT_URI = getRedirectURI(origin, requestData);
+    const REDIRECT_URI = getRedirectURI(origin);
     
     console.log(`Exchanging code for tokens using redirect URI: ${REDIRECT_URI}`);
     const tokens = await exchangeCodeForTokens(
@@ -69,24 +69,14 @@ export const handleOAuthCodeExchange = async (requestData: RequestData, origin: 
     );
   } catch (error: any) {
     console.error('Error exchanging code for tokens:', error);
-    // Improved error handling for 403 errors
-    let status = 400;
-    let details = '';
-    
-    if (error.message?.includes('403') || error.toString().includes('403')) {
-      status = 403;
-      details = 'Google returnerte en 403 Forbidden feil. Dette betyr vanligvis at OAuth-konfigurasjonen ikke er riktig oppsatt, eller at redirect URI ikke stemmer med det som er konfigurert i Google Cloud Console.';
-    }
     
     const response: GoogleAuthResponse = { 
-      error: error.message, 
-      details: details || undefined,
-      status
+      error: error.message
     };
     
     return new Response(
       JSON.stringify(response),
-      { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 };
@@ -201,29 +191,11 @@ export const handleCalendarOperations = async (requestData: RequestData): Promis
   } catch (error: any) {
     console.error(`Error in calendar operation ${action}:`, error);
     
-    // Improved error handling for 403 errors and API access errors
-    let status = 400;
-    let requiresReauth = false;
-    let details = '';
-    
-    if (error.message?.includes('403') || error.toString().includes('403')) {
-      status = 403;
-      requiresReauth = true;
-      details = 'Google Calendar API returnerte en 403 Forbidden feil. Dette betyr vanligvis at du ikke har riktig tilgang til Calendar API, eller at tokens har utløpt.';
-    } else if (error.message?.includes('401') || error.toString().includes('401')) {
-      status = 401;
-      requiresReauth = true;
-      details = 'Google Calendar API returnerte en 401 Unauthorized feil. Dette betyr vanligvis at tokens har utløpt og du må autentisere på nytt.';
-    }
-    
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        requiresReauth,
-        details: details || undefined,
-        status
       }),
-      { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 };
