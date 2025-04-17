@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -28,13 +28,18 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
   googleIntegration = false,
   sharedCalendarExists = false
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   if (!booking) return null;
 
   const handleSubmit = async (data: BookingFormData) => {
     try {
+      setIsSubmitting(true);
+      console.log("Submitting update with data:", data);
+      
       const updates = {
         title: data.title,
-        description: data.description,
+        description: data.description || '',
         from: data.startDate,
         to: data.endDate
       };
@@ -42,11 +47,14 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
       const success = await onUpdate(booking.id, updates);
       
       if (success) {
+        toast.success('Booking oppdatert!');
         onOpenChange(false);
       }
     } catch (error: any) {
       console.error('Error updating booking:', error);
       toast.error(`Kunne ikke oppdatere booking: ${error.message || 'Ukjent feil'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/dialog';
 import BookingForm from './BookingForm';
 import { useBookingSubmit } from './useBookingSubmit';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 type NewBookingDialogProps = {
   open: boolean;
@@ -25,10 +27,19 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
   googleIntegration = false,
   sharedCalendarExists = false
 }) => {
+  const { user } = useAuth();
   const { handleSubmit, isSubmitting } = useBookingSubmit({
     onSuccess,
     onClose: () => onOpenChange(false)
   });
+  
+  const handleFormSubmit = (data: any) => {
+    if (!user) {
+      toast.error('Du må være logget inn for å lage en booking');
+      return;
+    }
+    handleSubmit(data);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -41,7 +52,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
         </DialogHeader>
         
         <BookingForm 
-          onSubmit={handleSubmit}
+          onSubmit={handleFormSubmit}
           googleIntegration={googleIntegration}
           sharedCalendarExists={sharedCalendarExists}
           submitLabel="Opprett booking"

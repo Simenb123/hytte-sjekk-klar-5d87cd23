@@ -23,6 +23,7 @@ export const useBookingSubmit = ({ onSuccess, onClose }: UseBookingSubmitProps) 
       // Sjekk at bruker er logget inn
       if (!user) {
         toast.error('Du må være logget inn for å lage en booking');
+        setIsSubmitting(false);
         return;
       }
 

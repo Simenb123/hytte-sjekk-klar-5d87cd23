@@ -86,6 +86,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
   };
 
   const handleSubmit = (data: BookingFormData) => {
+    console.log("Form submitting with data:", data);
     // Ensure end date is not before start date
     if (data.endDate < data.startDate) {
       data.endDate = addDays(data.startDate, 1);
