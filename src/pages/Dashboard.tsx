@@ -1,7 +1,6 @@
-
 import React from 'react';
-import { CheckSquare, CloudSun, Calendar, Layers, LogIn } from 'lucide-react';
-import AppHeader from '@/components/AppHeader'; // Bruk AppHeader i stedet for Header
+import { CheckSquare, CloudSun, Calendar, Layers, LogIn, ClipboardList } from 'lucide-react';
+import AppHeader from '@/components/AppHeader';
 import DashboardCard from '@/components/DashboardCard';
 import { useAuth } from '@/context/AuthContext';
 
@@ -15,7 +14,7 @@ const Dashboard = () => {
       <AppHeader title="Hytte Dashboard" />
       
       <main className="container max-w-5xl mx-auto px-4 py-8 pt-28">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
           <DashboardCard
             title="Sjekklister"
             description="Ankomst- og avreisesjekk"
@@ -46,6 +45,13 @@ const Dashboard = () => {
             icon={<Layers className="h-6 w-6" />}
             linkTo="/other-apps"
             color="bg-purple-500"
+          />
+          
+          <DashboardCard
+            title="Sjekkliste-logger"
+            description="Se historikk over fullførte sjekkpunkter"
+            icon={<ClipboardList className="h-6 w-6" />}
+            to="/logs"
           />
           
           {!user && (
