@@ -16,7 +16,7 @@ export const fetchCompletionLogs = async (): Promise<CompletionLogWithDetails[]>
         text,
         type
       ),
-      profiles (
+      profiles!user_id (
         first_name,
         last_name
       )

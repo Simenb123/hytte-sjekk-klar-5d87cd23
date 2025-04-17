@@ -42,9 +42,9 @@ export interface CompletionLogWithDetails {
     id: string;
     text: string;
     type: string;
-  };
+  } | null;
   profiles?: {
     first_name: string | null;
     last_name: string | null;
-  };
+  } | null;
 }
