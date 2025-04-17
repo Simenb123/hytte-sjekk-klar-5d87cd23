@@ -7,6 +7,7 @@ export const useCompletionLogs = () => {
   return useQuery<CompletionLogWithDetails[]>({
     queryKey: ['completionLogs'],
     queryFn: async () => {
+      console.log('Henter fullføringslogger...');
       const { data: logs, error: logsError } = await supabase
         .from('completion_logs')
         .select(`
@@ -23,6 +24,8 @@ export const useCompletionLogs = () => {
         console.error('Error fetching logs:', logsError);
         throw logsError;
       }
+
+      console.log('Fullføringslogger hentet:', logs);
 
       // Manually map the results to ensure they match the expected type
       const typedResults: CompletionLogWithDetails[] = logs?.map(log => ({
