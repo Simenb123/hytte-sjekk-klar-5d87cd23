@@ -24,6 +24,8 @@ interface GoogleCalendarSectionProps {
   fetchError: string | null;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  sharedCalendarExists?: boolean;
+  onShareCalendarSuccess?: () => void;
 }
 
 export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
@@ -40,7 +42,9 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
   connectionError,
   fetchError,
   activeTab,
-  setActiveTab
+  setActiveTab,
+  sharedCalendarExists = false,
+  onShareCalendarSuccess
 }) => {
   // Improved error detection and handling
   const hasConnectionIssue = isEdgeFunctionError(connectionError) || isEdgeFunctionError(fetchError);
@@ -152,6 +156,9 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
             onDisconnectGoogle={disconnectGoogleCalendar}
             isConnecting={isConnecting || isRetrying}
             connectionError={connectionError}
+            googleTokens={googleTokens}
+            sharedCalendarExists={sharedCalendarExists}
+            onShareCalendarSuccess={onShareCalendarSuccess}
           />
         </TabsContent>
         

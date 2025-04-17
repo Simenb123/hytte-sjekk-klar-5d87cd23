@@ -14,6 +14,7 @@ const CalendarApp: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [showNewBookingDialog, setShowNewBookingDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("bookings");
+  const [sharedCalendarExists, setSharedCalendarExists] = useState(false);
 
   const { bookings, fetchBookings } = useBookings();
   const {
@@ -27,8 +28,19 @@ const CalendarApp: React.FC = () => {
     handleOAuthCallback,
     isConnecting,
     connectionError,
-    fetchError
+    fetchError,
+    googleCalendars
   } = useGoogleCalendar();
+
+  // Sjekk om den delte hytte-kalenderen eksisterer
+  useEffect(() => {
+    if (isGoogleConnected && googleCalendars?.length > 0) {
+      const hyttaCalendar = googleCalendars.find(cal => 
+        cal.summary === 'Hytte Booking' || cal.summary?.includes('Hytte')
+      );
+      setSharedCalendarExists(!!hyttaCalendar);
+    }
+  }, [isGoogleConnected, googleCalendars]);
 
   useEffect(() => {
     const handleOAuthResponse = async () => {
@@ -96,6 +108,12 @@ const CalendarApp: React.FC = () => {
     return days;
   });
 
+  const handleShareCalendarSuccess = () => {
+    setSharedCalendarExists(true);
+    toast.success('Felles hytte-kalender er opprettet og delt!');
+    fetchGoogleEvents();
+  };
+
   const handleBookingSuccess = async (booking) => {
     fetchBookings();
     
@@ -113,7 +131,8 @@ const CalendarApp: React.FC = () => {
               description: booking.description,
               startDate: booking.startDate,
               endDate: booking.endDate
-            }
+            },
+            useSharedCalendar: booking.useSharedCalendar
           }
         });
 
@@ -123,7 +142,13 @@ const CalendarApp: React.FC = () => {
 
         if (data?.event) {
           console.log('Successfully created Google Calendar event:', data.event.id);
-          toast.success('Booking opprettet i Google Calendar!');
+          
+          if (booking.useSharedCalendar) {
+            toast.success('Booking opprettet i felles hytte-kalender!');
+          } else {
+            toast.success('Booking opprettet i Google Calendar!');
+          }
+          
           if (googleTokens) {
             fetchGoogleEvents();
           }
@@ -161,6 +186,8 @@ const CalendarApp: React.FC = () => {
           fetchError={fetchError}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          sharedCalendarExists={sharedCalendarExists}
+          onShareCalendarSuccess={handleShareCalendarSuccess}
         />
         
         <CalendarInfo isGoogleConnected={isGoogleConnected} />
@@ -171,6 +198,7 @@ const CalendarApp: React.FC = () => {
         onOpenChange={setShowNewBookingDialog}
         onSuccess={handleBookingSuccess}
         googleIntegration={isGoogleConnected}
+        sharedCalendarExists={sharedCalendarExists}
       />
     </div>
   );

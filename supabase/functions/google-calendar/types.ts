@@ -25,6 +25,7 @@ export interface GoogleAuthResponse {
   tokens?: GoogleTokens;
   error?: string;
   details?: string;
+  status?: number;
 }
 
 export interface RequestData {
@@ -38,4 +39,15 @@ export interface RequestData {
     startDate: string;
     endDate: string;
   };
+  calendar?: {
+    name?: string;
+    id?: string;
+    shareWith?: string[];
+  };
+  useSharedCalendar?: boolean;
+}
+
+export interface CalendarSharingInfo {
+  googleCalendarUrl: string;
+  icalUrl: string;
 }

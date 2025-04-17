@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
@@ -39,24 +39,36 @@ type NewBookingDialogProps = {
   onOpenChange: (open: boolean) => void;
   onSuccess: (booking: any) => void;
   googleIntegration?: boolean;
+  sharedCalendarExists?: boolean;
 };
 
 const NewBookingDialog: React.FC<NewBookingDialogProps> = ({ 
   open, 
   onOpenChange,
   onSuccess,
-  googleIntegration = false
+  googleIntegration = false,
+  sharedCalendarExists = false
 }) => {
   const { user } = useAuth();
+  const [useSharedCalendar, setUseSharedCalendar] = useState(sharedCalendarExists);
+  
   const form = useForm({
     defaultValues: {
       title: '',
       description: '',
       startDate: new Date(),
       endDate: new Date(),
-      addToGoogle: googleIntegration
+      addToGoogle: googleIntegration,
+      useSharedCalendar: sharedCalendarExists
     }
   });
+
+  // Oppdater form state når props endres
+  useEffect(() => {
+    form.setValue('addToGoogle', googleIntegration);
+    form.setValue('useSharedCalendar', sharedCalendarExists);
+    setUseSharedCalendar(sharedCalendarExists);
+  }, [googleIntegration, sharedCalendarExists, form]);
 
   const onSubmit = async (data) => {
     try {
@@ -65,6 +77,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
         return;
       }
 
+      // Lagre booking i databasen
       const { error } = await supabase
         .from('bookings')
         .insert({
@@ -77,8 +90,16 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
 
       if (error) throw error;
 
+      // Oppdater bookingsdata og lukk dialogen
       toast.success('Booking opprettet!');
-      onSuccess(data);
+      
+      // Sett sammen data som skal sendes til onSuccess
+      const bookingData = {
+        ...data,
+        useSharedCalendar: useSharedCalendar 
+      };
+      
+      onSuccess(bookingData);
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating booking:', error);
@@ -211,26 +232,54 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
             />
 
             {googleIntegration && (
-              <FormField
-                control={form.control}
-                name="addToGoogle"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                      <FormLabel>Legg til i Google Calendar</FormLabel>
-                      <FormDescription className="text-xs">
-                        Bookingen vil også bli lagt til i din Google Calendar
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
+              <>
+                <FormField
+                  control={form.control}
+                  name="addToGoogle"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel>Legg til i Google Calendar</FormLabel>
+                        <FormDescription className="text-xs">
+                          Bookingen vil også bli lagt til i din Google Calendar
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                {sharedCalendarExists && field.value && (
+                  <FormField
+                    control={form.control}
+                    name="useSharedCalendar"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel>Bruk felles hytte-kalender</FormLabel>
+                          <FormDescription className="text-xs">
+                            Legg til i den delte hytte-kalenderen som alle familiemedlemmer har tilgang til
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked);
+                              setUseSharedCalendar(checked);
+                            }}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
+              </>
             )}
 
             <DialogFooter>

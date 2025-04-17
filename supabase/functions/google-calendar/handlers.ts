@@ -2,7 +2,14 @@
 import { corsHeaders } from './constants.ts';
 import { getRequiredEnv, getRedirectURI } from './utils.ts';
 import { generateAuthUrl, exchangeCodeForTokens } from './oauth.ts';
-import { fetchEvents, fetchCalendars, createEvent } from './calendar.ts';
+import { 
+  fetchEvents, 
+  fetchCalendars, 
+  createEvent, 
+  createOrFindHyttaCalendar,
+  shareCalendarWithFamily,
+  getCalendarSharingLink
+} from './calendar.ts';
 import { GoogleAuthResponse, RequestData, GoogleCalendarEvent } from './types.ts';
 
 /**
@@ -121,6 +128,19 @@ export const handleCalendarOperations = async (requestData: RequestData): Promis
         if (!requestData.event) {
           throw new Error('No event data provided');
         }
+        
+        let calendarId = 'primary';
+        let hyttaCalendar = null;
+        
+        // Hvis useSharedCalendar er true, opprett eller finn hytte-kalenderen
+        if (requestData.useSharedCalendar) {
+          console.log('Creating/finding shared hytte calendar');
+          const calendarName = requestData.calendar?.name || 'Hytte Booking';
+          hyttaCalendar = await createOrFindHyttaCalendar(tokens.access_token, calendarName);
+          calendarId = hyttaCalendar.id;
+          console.log(`Using shared hytte calendar with ID: ${calendarId}`);
+        }
+        
         const calendarEvent: GoogleCalendarEvent = {
           summary: requestData.event.title,
           description: requestData.event.description || '',
@@ -133,9 +153,45 @@ export const handleCalendarOperations = async (requestData: RequestData): Promis
             timeZone: 'Europe/Oslo'
           }
         };
-        response = await createEvent(tokens.access_token, calendarEvent);
+        
+        response = await createEvent(tokens.access_token, calendarEvent, calendarId);
+        
         return new Response(
-          JSON.stringify({ event: response }),
+          JSON.stringify({ 
+            event: response,
+            sharedCalendar: hyttaCalendar 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      
+      case 'setup_shared_calendar':
+        console.log('Setting up shared hytte calendar');
+        if (!requestData.calendar) {
+          throw new Error('No calendar configuration provided');
+        }
+        
+        const calendarName = requestData.calendar.name || 'Hytte Booking';
+        const hyttaCalendar = await createOrFindHyttaCalendar(tokens.access_token, calendarName);
+        
+        let sharingResults = null;
+        // Hvis e-poster er oppgitt, del kalenderen
+        if (requestData.calendar.shareWith && requestData.calendar.shareWith.length > 0) {
+          sharingResults = await shareCalendarWithFamily(
+            tokens.access_token, 
+            hyttaCalendar.id, 
+            requestData.calendar.shareWith
+          );
+        }
+        
+        // Generer delings-lenker
+        const sharingLinks = await getCalendarSharingLink(tokens.access_token, hyttaCalendar.id);
+        
+        return new Response(
+          JSON.stringify({ 
+            calendar: hyttaCalendar,
+            sharingResults,
+            sharingLinks
+          }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
         

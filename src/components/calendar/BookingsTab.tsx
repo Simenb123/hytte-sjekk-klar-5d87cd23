@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookingsList } from './BookingsList';
 import { Badge } from '@/components/ui/badge';
 import { isEdgeFunctionError } from './google/utils';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Calendar, Share2 } from 'lucide-react';
+import { ShareCalendarDialog } from './ShareCalendarDialog';
 
 interface BookingsTabProps {
   bookings: any[];
@@ -15,6 +16,9 @@ interface BookingsTabProps {
   onDisconnectGoogle: () => void;
   isConnecting: boolean;
   connectionError: string | null;
+  googleTokens?: any;
+  sharedCalendarExists?: boolean;
+  onShareCalendarSuccess?: () => void;
 }
 
 export const BookingsTab: React.FC<BookingsTabProps> = ({
@@ -24,8 +28,12 @@ export const BookingsTab: React.FC<BookingsTabProps> = ({
   onConnectGoogle,
   onDisconnectGoogle,
   isConnecting,
-  connectionError
+  connectionError,
+  googleTokens,
+  sharedCalendarExists = false,
+  onShareCalendarSuccess
 }) => {
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const hasConnectionIssue = isEdgeFunctionError(connectionError);
 
   return (
@@ -33,16 +41,29 @@ export const BookingsTab: React.FC<BookingsTabProps> = ({
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
           <span>Bookinger</span>
-          {isGoogleConnected && !hasConnectionIssue && (
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              Google tilkoblet
-            </Badge>
-          )}
-          {isGoogleConnected && hasConnectionIssue && (
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-              Google midlertidig utilgjengelig
-            </Badge>
-          )}
+          <div className="flex space-x-2">
+            {isGoogleConnected && !hasConnectionIssue && (
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                Google tilkoblet
+              </Badge>
+            )}
+            {isGoogleConnected && hasConnectionIssue && (
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                Google midlertidig utilgjengelig
+              </Badge>
+            )}
+            {isGoogleConnected && !hasConnectionIssue && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs flex items-center" 
+                onClick={() => setShowShareDialog(true)}
+              >
+                <Share2 className="h-3 w-3 mr-1" />
+                {sharedCalendarExists ? 'Del kalender' : 'Opprett felleskalender'}
+              </Button>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -72,8 +93,18 @@ export const BookingsTab: React.FC<BookingsTabProps> = ({
           onDisconnectGoogle={onDisconnectGoogle}
           isConnecting={isConnecting}
           connectionError={connectionError}
+          sharedCalendarExists={sharedCalendarExists}
         />
       </CardContent>
+      
+      {isGoogleConnected && googleTokens && (
+        <ShareCalendarDialog 
+          open={showShareDialog}
+          onOpenChange={setShowShareDialog}
+          googleTokens={googleTokens}
+          onSuccess={onShareCalendarSuccess}
+        />
+      )}
     </Card>
   );
 };

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, Loader2, AlertCircle } from 'lucide-react';
+import { CalendarIcon, Loader2, AlertCircle, Share2 } from 'lucide-react';
 import type { Booking } from '@/hooks/useBookings';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -14,6 +14,7 @@ interface BookingsListProps {
   onDisconnectGoogle: () => void;
   isConnecting?: boolean;
   connectionError?: string | null;
+  sharedCalendarExists?: boolean;
 }
 
 export const BookingsList: React.FC<BookingsListProps> = ({
@@ -23,7 +24,8 @@ export const BookingsList: React.FC<BookingsListProps> = ({
   onConnectGoogle,
   onDisconnectGoogle,
   isConnecting = false,
-  connectionError = null
+  connectionError = null,
+  sharedCalendarExists = false
 }) => {
   return (
     <div>
@@ -94,6 +96,11 @@ export const BookingsList: React.FC<BookingsListProps> = ({
       {isGoogleConnected && (
         <div className="mt-4 text-xs text-gray-500 text-center">
           Google Calendar er tilkoblet. Alle bookinger vil automatisk synkroniseres.
+          {sharedCalendarExists && (
+            <div className="mt-1 text-green-600">
+              Felles hytte-kalender er aktivert og delt med familien.
+            </div>
+          )}
         </div>
       )}
     </div>
