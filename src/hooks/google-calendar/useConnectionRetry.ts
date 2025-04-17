@@ -1,83 +1,84 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
-interface UseConnectionRetryReturn {
-  isRetrying: boolean;
-  retryCount: number;
-  retryIn: number | null;
-  handleRetry: () => Promise<void>;
-  resetRetry: () => void;
-}
-
+/**
+ * Hook for handling retrying connections with exponential backoff
+ */
 export function useConnectionRetry(
   retryFunction: () => Promise<boolean>,
   maxRetries: number = 3,
-  initialBackoff: number = 5
-): UseConnectionRetryReturn {
+  initialBackoff: number = 2 // seconds
+) {
   const [isRetrying, setIsRetrying] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [retryIn, setRetryIn] = useState<number | null>(null);
-  const [retryTimerId, setRetryTimerId] = useState<number | null>(null);
-
-  const resetRetry = useCallback(() => {
-    setRetryCount(0);
-    setRetryIn(null);
-    if (retryTimerId !== null) {
-      window.clearTimeout(retryTimerId);
-      setRetryTimerId(null);
+  const [retryTimeout, setRetryTimeout] = useState<number | null>(null);
+  
+  const clearRetryTimeout = () => {
+    if (retryTimeout) {
+      window.clearTimeout(retryTimeout);
+      setRetryTimeout(null);
     }
-  }, [retryTimerId]);
+  };
+  
+  const resetRetry = () => {
+    setRetryCount(0);
+    clearRetryTimeout();
+  };
 
   const handleRetry = useCallback(async () => {
     if (isRetrying) return;
     
-    setIsRetrying(true);
     try {
+      setIsRetrying(true);
+      
+      // If manual retry, reset retry count
+      resetRetry();
+      
+      // Attempt connection
       const success = await retryFunction();
       
       if (success) {
+        console.log('Retry successful');
         resetRetry();
-      } else {
-        const nextRetryCount = retryCount + 1;
-        setRetryCount(nextRetryCount);
+        return true;
+      } else if (retryCount < maxRetries) {
+        // Calculate backoff time (exponential)
+        const backoff = initialBackoff * Math.pow(2, retryCount);
+        console.log(`Retry failed, scheduling retry ${retryCount + 1} in ${backoff} seconds`);
         
-        // Exponential backoff calculation
-        if (nextRetryCount < maxRetries) {
-          const backoffSeconds = initialBackoff * Math.pow(2, nextRetryCount - 1);
-          setRetryIn(backoffSeconds);
-          
-          // Set timer for auto-retry
-          const timerId = window.setTimeout(() => {
-            setRetryIn(null);
-            handleRetry();
-          }, backoffSeconds * 1000);
-          
-          setRetryTimerId(timerId);
-        } else {
-          setRetryIn(null);
-        }
+        // Schedule next retry
+        const timeoutId = window.setTimeout(async () => {
+          setRetryCount(prev => prev + 1);
+          await handleRetry();
+        }, backoff * 1000);
+        
+        setRetryTimeout(timeoutId);
+        return false;
+      } else {
+        console.log('Max retries reached');
+        resetRetry();
+        return false;
       }
     } catch (error) {
-      console.error('Error during retry attempt:', error);
+      console.error('Error during retry:', error);
+      resetRetry();
+      return false;
     } finally {
       setIsRetrying(false);
     }
-  }, [isRetrying, retryCount, retryFunction, resetRetry, maxRetries, initialBackoff]);
-
-  // Clean up any timers when component unmounts
+  }, [isRetrying, retryCount, retryFunction, maxRetries, initialBackoff]);
+  
+  // Clean up on unmount
   useEffect(() => {
     return () => {
-      if (retryTimerId !== null) {
-        window.clearTimeout(retryTimerId);
-      }
+      clearRetryTimeout();
     };
-  }, [retryTimerId]);
+  }, []);
 
   return {
     isRetrying,
-    retryCount,
-    retryIn,
     handleRetry,
+    retryCount,
     resetRetry
   };
 }
