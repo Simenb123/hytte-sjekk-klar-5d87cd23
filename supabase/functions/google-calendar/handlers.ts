@@ -156,16 +156,15 @@ export const handleCalendarOperations = async (requestData: RequestData): Promis
       
       case 'setup_shared_calendar':
         console.log('Setting up shared hytte calendar');
-        if (!requestData.calendar) {
-          throw new Error('No calendar configuration provided');
-        }
+        // Angi standardnavn hvis ikke angitt
+        const calendarName = requestData.calendar?.name || 'Hytte Booking';
         
-        const calendarName = requestData.calendar.name || 'Hytte Booking';
+        // Opprett eller finn hytte-kalenderen
         const hyttaCalendar = await createOrFindHyttaCalendar(tokens.access_token, calendarName);
         
         let sharingResults = null;
         // Hvis e-poster er oppgitt, del kalenderen
-        if (requestData.calendar.shareWith && requestData.calendar.shareWith.length > 0) {
+        if (requestData.calendar?.shareWith && requestData.calendar.shareWith.length > 0) {
           sharingResults = await shareCalendarWithFamily(
             tokens.access_token, 
             hyttaCalendar.id, 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
@@ -10,22 +9,22 @@ import { BookingFormData } from './types';
 
 type BookingFormProps = {
   onSubmit: (data: BookingFormData) => void;
-  googleIntegration: boolean;
-  sharedCalendarExists: boolean;
-  isEditing?: boolean;
   defaultValues?: Partial<BookingFormData>;
   submitLabel?: string;
   isSubmitting?: boolean;
+  isEditing?: boolean;
+  googleIntegration?: boolean;
+  sharedCalendarExists?: boolean;
 };
 
 const BookingForm: React.FC<BookingFormProps> = ({
   onSubmit,
-  googleIntegration,
-  sharedCalendarExists,
-  isEditing = false,
   defaultValues,
   submitLabel = 'Opprett booking',
-  isSubmitting = false
+  isSubmitting = false,
+  isEditing = false,
+  googleIntegration = false,
+  sharedCalendarExists = false
 }) => {
   const {
     form,
@@ -47,15 +46,14 @@ const BookingForm: React.FC<BookingFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormTextField
+        <FormTextField 
           form={form}
           name="title"
           label="Tittel"
           placeholder="F.eks. Påskeferie"
-          required
         />
         
-        <FormTextField
+        <FormTextField 
           form={form}
           name="description"
           label="Beskrivelse (valgfritt)"
@@ -66,23 +64,16 @@ const BookingForm: React.FC<BookingFormProps> = ({
           form={form}
           name="startDate"
           label="Fra dato"
-          isOpen={startDateOpen}
-          setIsOpen={setStartDateOpen}
-          onSelect={handleStartDateChange}
-          minDate={!isEditing ? new Date(new Date().setHours(0, 0, 0, 0)) : undefined}
         />
 
         <FormDateField
           form={form}
           name="endDate"
           label="Til dato"
-          isOpen={endDateOpen}
-          setIsOpen={setEndDateOpen}
-          onSelect={handleEndDateChange}
-          minDate={form.getValues('startDate')}
+          minDate={form.watch('startDate')}
         />
 
-        {!isEditing && googleIntegration && (
+        {googleIntegration && (
           <>
             <GoogleIntegrationField
               form={form}
@@ -96,17 +87,13 @@ const BookingForm: React.FC<BookingFormProps> = ({
                 form={form}
                 name="useSharedCalendar"
                 label="Bruk felles hytte-kalender"
-                description="Legg til i den delte hytte-kalenderen som alle familiemedlemmer har tilgang til"
+                description="Legg til i den delte hytte-kalenderen som alle har tilgang til"
               />
             )}
           </>
         )}
 
-        <Button 
-          type="submit" 
-          className="w-full"
-          disabled={isSubmitting}
-        >
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? 'Lagrer...' : submitLabel}
         </Button>
       </form>

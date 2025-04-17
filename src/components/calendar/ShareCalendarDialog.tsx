@@ -1,8 +1,5 @@
 
 import React, { useState } from 'react';
-import { X, Copy, Share, Mail, Calendar } from 'lucide-react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,16 +10,20 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { CopyIcon, CalendarIcon, Share2, PlusCircle, CheckIcon, InfoIcon, Smartphone } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-interface ShareCalendarDialogProps {
+type ShareCalendarDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   googleTokens: any;
   onSuccess?: () => void;
-}
+};
 
 export const ShareCalendarDialog: React.FC<ShareCalendarDialogProps> = ({
   open,
@@ -31,65 +32,44 @@ export const ShareCalendarDialog: React.FC<ShareCalendarDialogProps> = ({
   onSuccess
 }) => {
   const [calendarName, setCalendarName] = useState('Hytte Booking');
-  const [familyEmails, setFamilyEmails] = useState<string[]>(['']);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [sharingLinks, setSharingLinks] = useState<{googleCalendarUrl?: string, icalUrl?: string}>({});
-  const [activeTab, setActiveTab] = useState('setup');
-  const [setupComplete, setSetupComplete] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+  const [emails, setEmails] = useState<string[]>([]);
+  const [currentEmail, setCurrentEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sharingLinks, setSharingLinks] = useState<{
+    googleCalendarUrl: string;
+    icalUrl: string;
+  } | null>(null);
+  
   const handleAddEmail = () => {
-    setFamilyEmails([...familyEmails, '']);
-  };
-
-  const handleRemoveEmail = (index: number) => {
-    const newEmails = [...familyEmails];
-    newEmails.splice(index, 1);
-    setFamilyEmails(newEmails);
-  };
-
-  const handleEmailChange = (index: number, value: string) => {
-    const newEmails = [...familyEmails];
-    newEmails[index] = value;
-    setFamilyEmails(newEmails);
-  };
-
-  const handleCopyLink = (link: string, type: 'Google Calendar' | 'iCal') => {
-    navigator.clipboard.writeText(link);
-    toast.success(`${type}-lenke kopiert til utklippstavlen`);
-  };
-
-  const validateEmails = () => {
-    // Fjern tomme e-poster
-    const validEmails = familyEmails.filter(email => email.trim() !== '');
+    if (!currentEmail) return;
     
-    // Enkel e-postvalidering
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const invalidEmails = validEmails.filter(email => !emailPattern.test(email));
-    
-    if (invalidEmails.length > 0) {
-      setError(`Følgende e-postadresser er ikke gyldige: ${invalidEmails.join(', ')}`);
-      return false;
-    }
-    
-    setFamilyEmails(validEmails);
-    setError(null);
-    return true;
-  };
-
-  const setupSharedCalendar = async () => {
-    if (!validateEmails()) return;
-    if (!googleTokens) {
-      toast.error('Du må være koblet til Google Calendar');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(currentEmail)) {
+      toast.error('Vennligst skriv inn en gyldig e-postadresse');
       return;
     }
     
-    setIsProcessing(true);
-    setError(null);
+    if (emails.includes(currentEmail)) {
+      toast.error('Denne e-postadressen er allerede lagt til');
+      return;
+    }
+    
+    setEmails([...emails, currentEmail]);
+    setCurrentEmail('');
+  };
+  
+  const handleRemoveEmail = (email: string) => {
+    setEmails(emails.filter(e => e !== email));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     
     try {
-      // Filtrer ut tomme e-poster
-      const validEmails = familyEmails.filter(email => email.trim() !== '');
+      toast.info('Oppretter og deler hytte-kalender...');
       
       const { data, error } = await supabase.functions.invoke('google-calendar', {
         method: 'POST',
@@ -98,201 +78,314 @@ export const ShareCalendarDialog: React.FC<ShareCalendarDialogProps> = ({
           tokens: googleTokens,
           calendar: {
             name: calendarName,
-            shareWith: validEmails
+            shareWith: emails
           }
         }
       });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
       
-      if (data?.sharingLinks) {
-        setSharingLinks(data.sharingLinks);
-        setActiveTab('share');
-        setSetupComplete(true);
-        toast.success('Hytte-kalenderen er opprettet og delt!');
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      
+      if (data.calendar) {
+        toast.success('Hytte-kalender opprettet!');
+        
+        if (data.sharingLinks) {
+          setSharingLinks(data.sharingLinks);
+        }
         
         if (onSuccess) {
           onSuccess();
         }
       }
     } catch (error: any) {
-      console.error('Error setting up shared calendar:', error);
-      setError(`Kunne ikke sette opp delt kalender: ${error.message}`);
-      toast.error('Kunne ikke sette opp delt kalender');
+      console.error('Error creating shared calendar:', error);
+      toast.error(`Kunne ikke opprette felles kalender: ${error.message || 'Ukjent feil'}`);
     } finally {
-      setIsProcessing(false);
+      setIsSubmitting(false);
     }
   };
-
-  const sendEmailInvitation = () => {
-    // Åpne e-postklient med forhåndsutfylt melding
-    const subject = encodeURIComponent('Invitasjon til Hytte-kalenderen');
-    const body = encodeURIComponent(
-      `Hei!\n\nJeg vil gjerne dele vår felles hytte-kalender med deg.\n\n` +
-      `Du kan legge til kalenderen i Google Calendar her:\n${sharingLinks.googleCalendarUrl}\n\n` +
-      `Hvis du bruker en annen kalender-app, kan du importere denne iCal-lenken:\n${sharingLinks.icalUrl}\n\n` +
-      `Hilsen`
-    );
-    
-    window.open(`mailto:?subject=${subject}&body=${body}`);
+  
+  const copyToClipboard = (text: string, successMessage: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => toast.success(successMessage))
+      .catch(err => {
+        console.error('Failed to copy:', err);
+        toast.error('Kunne ikke kopiere til utklippstavlen');
+      });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-xl">Del hytte-kalenderen med familien</DialogTitle>
+          <DialogTitle>Oppsett av felles hytte-kalender</DialogTitle>
           <DialogDescription>
-            Sett opp en delt Google-kalender for hytta som alle i familien kan se og bruke.
+            Opprett en delt Google-kalender for hytta som alle kan ha tilgang til.
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs 
-          value={activeTab} 
-          onValueChange={setupComplete ? setActiveTab : undefined} 
-          className="mt-4"
-        >
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="setup" disabled={activeTab === 'share' && !setupComplete}>
-              Oppsett
-            </TabsTrigger>
-            <TabsTrigger value="share" disabled={!setupComplete}>
-              Del kalender
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="setup" className="space-y-4 mt-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+        {sharingLinks ? (
+          <Tabs defaultValue="mobile" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="mobile">
+                <Smartphone className="h-4 w-4 mr-2" />
+                Mobil
+              </TabsTrigger>
+              <TabsTrigger value="share">
+                <Share2 className="h-4 w-4 mr-2" />
+                Del med andre
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="mobile" className="space-y-4">
+              <div className="text-center py-2">
+                <h3 className="text-lg font-medium">Få kalenderen på din mobiltelefon</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Følg instruksjonene under for å legge til hytte-kalenderen på din mobiltelefon
+                </p>
+              </div>
+              
+              <Alert>
+                <div className="flex items-start space-x-2">
+                  <InfoIcon className="h-4 w-4 mt-0.5 text-blue-500" />
+                  <AlertDescription className="text-sm">
+                    <strong>iOS (iPhone)</strong>: Gå til Innstillinger → Kalender → Kontoer → Legg til konto → Andre → 
+                    Legg til abonnert kalender og lim inn iCal-adressen nedenfor.
+                  </AlertDescription>
+                </div>
               </Alert>
-            )}
+              
+              <Alert>
+                <div className="flex items-start space-x-2">
+                  <InfoIcon className="h-4 w-4 mt-0.5 text-green-500" />
+                  <AlertDescription className="text-sm">
+                    <strong>Android</strong>: Åpne Google Calendar-appen → Trykk på meny (≡) → Innstillinger → 
+                    Legg til konto → Abonner på kalender → og lim inn iCal-adressen nedenfor.
+                  </AlertDescription>
+                </div>
+              </Alert>
+              
+              <div className="rounded-lg border p-4 mt-4">
+                <Label htmlFor="ical-url" className="text-sm font-medium mb-2 block">
+                  iCal-adresse (fungerer med alle kalenderapper)
+                </Label>
+                <div className="flex items-center space-x-2">
+                  <Input 
+                    id="ical-url"
+                    value={sharingLinks.icalUrl}
+                    readOnly
+                    className="font-mono text-xs"
+                  />
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => copyToClipboard(sharingLinks.icalUrl, 'iCal-adresse kopiert!')}
+                  >
+                    <CopyIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Kopier denne adressen og lim den inn i kalenderprogrammet ditt for å abonnere på hytte-kalenderen.
+                </p>
+              </div>
+              
+              <div className="rounded-lg border p-4">
+                <Label htmlFor="google-url" className="text-sm font-medium mb-2 block">
+                  Google Calendar-lenke (for direkte tilgang)
+                </Label>
+                <div className="flex items-center space-x-2">
+                  <Input 
+                    id="google-url"
+                    value={sharingLinks.googleCalendarUrl}
+                    readOnly
+                    className="font-mono text-xs"
+                  />
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => copyToClipboard(sharingLinks.googleCalendarUrl, 'Google Calendar-lenke kopiert!')}
+                  >
+                    <CopyIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Åpne denne lenken i en nettleser for å se og legge til kalenderen i din Google Calendar.
+                </p>
+              </div>
+              
+              <DialogFooter>
+                <Button 
+                  onClick={() => onOpenChange(false)}
+                  className="w-full"
+                >
+                  Lukk
+                </Button>
+              </DialogFooter>
+            </TabsContent>
             
-            <div className="space-y-2">
-              <Label htmlFor="calendar-name">Navn på kalenderen</Label>
-              <Input 
-                id="calendar-name" 
-                value={calendarName} 
+            <TabsContent value="share" className="space-y-4">
+              <div className="text-center py-2">
+                <h3 className="text-lg font-medium">Del kalenderen med andre</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Del denne lenken med de som skal ha tilgang til hytte-kalenderen
+                </p>
+              </div>
+              
+              <div className="rounded-lg border p-4">
+                <Label htmlFor="share-ical-url" className="text-sm font-medium mb-2 block">
+                  Del iCal-abonnement (fungerer med alle kalenderprogrammer)
+                </Label>
+                <div className="flex items-center space-x-2">
+                  <Input 
+                    id="share-ical-url"
+                    value={sharingLinks.icalUrl}
+                    readOnly
+                    className="font-mono text-xs"
+                  />
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => copyToClipboard(sharingLinks.icalUrl, 'iCal-adresse kopiert og klar til deling!')}
+                  >
+                    <CopyIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="rounded-lg border p-4">
+                <Label htmlFor="share-google-url" className="text-sm font-medium mb-2 block">
+                  Del Google Calendar-lenke
+                </Label>
+                <div className="flex items-center space-x-2">
+                  <Input 
+                    id="share-google-url"
+                    value={sharingLinks.googleCalendarUrl}
+                    readOnly
+                    className="font-mono text-xs"
+                  />
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => copyToClipboard(sharingLinks.googleCalendarUrl, 'Google Calendar-lenke kopiert og klar til deling!')}
+                  >
+                    <CopyIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <Alert>
+                <div className="flex items-start space-x-2">
+                  <InfoIcon className="h-4 w-4 mt-0.5" />
+                  <AlertDescription className="text-sm">
+                    Alle med disse lenkene vil kunne <strong>se</strong> hendelser i kalenderen.
+                    For å gi noen <strong>redigeringstilgang</strong>, legg til e-postadressen deres i forrige trinn.
+                  </AlertDescription>
+                </div>
+              </Alert>
+              
+              <DialogFooter>
+                <Button 
+                  onClick={() => onOpenChange(false)}
+                  className="w-full"
+                >
+                  Lukk
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="calendar-name" className="text-sm font-medium">
+                Kalendernavn
+              </Label>
+              <Input
+                id="calendar-name"
+                value={calendarName}
                 onChange={(e) => setCalendarName(e.target.value)}
-                placeholder="F.eks. Hytte Booking" 
+                className="mt-1"
+                placeholder="F.eks. Hytte Booking"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label>Del med familiemedlemmer (valgfritt)</Label>
-              <p className="text-sm text-gray-500 mb-2">
-                Legg til e-postadressene til familiemedlemmer som skal ha tilgang til hytte-kalenderen.
+            <div>
+              <Label className="text-sm font-medium">
+                Del med familie/venner (valgfritt)
+              </Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Legg til e-postadresser til de som skal kunne redigere bookinger i kalenderen
               </p>
               
-              {familyEmails.map((email, index) => (
-                <div key={index} className="flex items-center space-x-2 mb-2">
-                  <Input 
-                    value={email} 
-                    onChange={(e) => handleEmailChange(index, e.target.value)}
-                    placeholder="familie@example.com"
-                    type="email"
-                  />
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={() => handleRemoveEmail(index)}
-                    disabled={familyEmails.length === 1}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+              <div className="flex space-x-2 mt-1">
+                <Input
+                  value={currentEmail}
+                  onChange={(e) => setCurrentEmail(e.target.value)}
+                  placeholder="E-postadresse"
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddEmail())}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleAddEmail}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                </Button>
+              </div>
               
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleAddEmail}
-                className="mt-2"
-              >
-                Legg til e-post
-              </Button>
-            </div>
-            
-            <DialogFooter className="mt-6">
-              <Button 
-                onClick={setupSharedCalendar} 
-                disabled={isProcessing}
-                className="w-full"
-              >
-                {isProcessing ? 'Setter opp kalender...' : 'Opprett felles hytte-kalender'}
-              </Button>
-            </DialogFooter>
-          </TabsContent>
-          
-          <TabsContent value="share" className="space-y-4 mt-4">
-            <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-4">
-              <h3 className="font-medium text-green-800 mb-2">Hytte-kalenderen er klar!</h3>
-              <p className="text-sm text-green-700">
-                Kalenderen "{calendarName}" er nå opprettet og delt med de angitte e-postadressene.
-                Du kan dele den med flere ved å bruke lenkene nedenfor.
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="border rounded-md p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-medium flex items-center">
-                    <Calendar className="h-4 w-4 mr-2" /> Google Calendar
-                  </h3>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => handleCopyLink(sharingLinks.googleCalendarUrl || '', 'Google Calendar')}
-                    >
-                      <Copy className="h-3 w-3 mr-1" /> Kopier
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => window.open(sharingLinks.googleCalendarUrl, '_blank')}
-                    >
-                      <Share className="h-3 w-3 mr-1" /> Åpne
-                    </Button>
+              {emails.length > 0 && (
+                <div className="mt-2">
+                  <Label className="text-sm">Personer med redigeringstilgang:</Label>
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {emails.map(email => (
+                      <div 
+                        key={email} 
+                        className="bg-muted text-sm px-2 py-1 rounded-md flex items-center"
+                      >
+                        <span>{email}</span>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-5 w-5 p-0 ml-1" 
+                          onClick={() => handleRemoveEmail(email)}
+                        >
+                          &times;
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 break-all">
-                  {sharingLinks.googleCalendarUrl}
-                </p>
-              </div>
-              
-              <div className="border rounded-md p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-medium flex items-center">
-                    <Calendar className="h-4 w-4 mr-2" /> iCal for andre kalender-apper
-                  </h3>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleCopyLink(sharingLinks.icalUrl || '', 'iCal')}
-                  >
-                    <Copy className="h-3 w-3 mr-1" /> Kopier
-                  </Button>
-                </div>
-                <p className="text-xs text-gray-500 break-all">
-                  {sharingLinks.icalUrl}
-                </p>
-              </div>
+              )}
             </div>
             
-            <div className="mt-6">
-              <Button 
-                onClick={sendEmailInvitation}
-                className="w-full"
-                variant="outline"
-              >
-                <Mail className="h-4 w-4 mr-2" />
-                Send invitasjon på e-post
-              </Button>
+            <div className="pt-4">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Alert>
+                      <CalendarIcon className="h-4 w-4" />
+                      <AlertDescription className="text-sm">
+                        Etter oppretting vil du kunne eksportere kalenderen til din mobiltelefon og andre enheter.
+                      </AlertDescription>
+                    </Alert>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs text-xs">
+                      Du vil få mulighet til å kopiere en lenke du kan bruke på mobiltelefonen din
+                      eller dele med andre familiemedlemmer.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-          </TabsContent>
-        </Tabs>
+            
+            <DialogFooter>
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? 'Oppretter kalender...' : 'Opprett og del kalender'}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

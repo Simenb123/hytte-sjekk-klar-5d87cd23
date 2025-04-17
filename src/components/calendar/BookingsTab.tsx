@@ -5,8 +5,9 @@ import { BookingsList } from './BookingsList';
 import { Badge } from '@/components/ui/badge';
 import { isEdgeFunctionError } from './google/utils';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Calendar, Share2 } from 'lucide-react';
+import { RefreshCw, Calendar, Share2, Smartphone } from 'lucide-react';
 import { ShareCalendarDialog } from './ShareCalendarDialog';
+import { CalendarExportDialog } from './CalendarExportDialog';
 
 interface BookingsTabProps {
   bookings: any[];
@@ -34,6 +35,7 @@ export const BookingsTab: React.FC<BookingsTabProps> = ({
   onShareCalendarSuccess
 }) => {
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
   const hasConnectionIssue = isEdgeFunctionError(connectionError);
 
   return (
@@ -53,15 +55,26 @@ export const BookingsTab: React.FC<BookingsTabProps> = ({
               </Badge>
             )}
             {isGoogleConnected && !hasConnectionIssue && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs flex items-center" 
-                onClick={() => setShowShareDialog(true)}
-              >
-                <Share2 className="h-3 w-3 mr-1" />
-                {sharedCalendarExists ? 'Del kalender' : 'Opprett felleskalender'}
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs flex items-center" 
+                  onClick={() => setShowExportDialog(true)}
+                >
+                  <Smartphone className="h-3 w-3 mr-1" />
+                  Mobil-app
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs flex items-center" 
+                  onClick={() => setShowShareDialog(true)}
+                >
+                  <Share2 className="h-3 w-3 mr-1" />
+                  {sharedCalendarExists ? 'Del kalender' : 'Opprett felleskalender'}
+                </Button>
+              </>
             )}
           </div>
         </CardTitle>
@@ -98,12 +111,20 @@ export const BookingsTab: React.FC<BookingsTabProps> = ({
       </CardContent>
       
       {isGoogleConnected && googleTokens && (
-        <ShareCalendarDialog 
-          open={showShareDialog}
-          onOpenChange={setShowShareDialog}
-          googleTokens={googleTokens}
-          onSuccess={onShareCalendarSuccess}
-        />
+        <>
+          <ShareCalendarDialog 
+            open={showShareDialog}
+            onOpenChange={setShowShareDialog}
+            googleTokens={googleTokens}
+            onSuccess={onShareCalendarSuccess}
+          />
+          
+          <CalendarExportDialog
+            open={showExportDialog}
+            onOpenChange={setShowExportDialog}
+            googleTokens={googleTokens}
+          />
+        </>
       )}
     </Card>
   );
