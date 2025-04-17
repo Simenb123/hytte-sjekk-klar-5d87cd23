@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CheckSquare, CloudSun, Calendar, Layers, LogIn, ClipboardList } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
@@ -51,7 +52,7 @@ const Dashboard = () => {
             title="Sjekkliste-logger"
             description="Se historikk over fullførte sjekkpunkter"
             icon={<ClipboardList className="h-6 w-6" />}
-            to="/logs"
+            linkTo="/logs"
           />
           
           {!user && (
