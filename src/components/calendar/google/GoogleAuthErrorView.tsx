@@ -26,7 +26,7 @@ export const GoogleAuthErrorView: React.FC<GoogleAuthErrorViewProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Alert variant="warning" className="mb-4">
+        <Alert variant="destructive" className="mb-4">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>OAuth Test Mode Restriction</AlertTitle>
           <AlertDescription>
