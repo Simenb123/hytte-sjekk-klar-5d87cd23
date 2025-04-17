@@ -254,7 +254,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
                   )}
                 />
                 
-                {sharedCalendarExists && field.value && (
+                {sharedCalendarExists && form.watch("addToGoogle") && (
                   <FormField
                     control={form.control}
                     name="useSharedCalendar"
