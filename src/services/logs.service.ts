@@ -15,8 +15,7 @@ export const useCompletionLogs = () => {
           user_id,
           completed_at,
           is_completed,
-          checklist_items:item_id(id, text, type),
-          profiles:user_id(first_name, last_name)
+          checklist_items:item_id(id, text, type)
         `)
         .order('completed_at', { ascending: false });
 
@@ -33,9 +32,7 @@ export const useCompletionLogs = () => {
         completed_at: log.completed_at,
         is_completed: log.is_completed,
         checklist_items: log.checklist_items,
-        profiles: typeof log.profiles === 'object' && log.profiles !== null 
-          ? log.profiles 
-          : { first_name: null, last_name: null }
+        profiles: null // Set to null since we're no longer fetching profiles
       })) || [];
 
       return typedResults;
