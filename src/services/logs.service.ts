@@ -25,7 +25,18 @@ export const useCompletionLogs = () => {
         throw logsError;
       }
 
-      return logs || [];
+      // Manually map the results to ensure they match the expected type
+      const typedResults: CompletionLogWithDetails[] = logs?.map(log => ({
+        id: log.id,
+        item_id: log.item_id,
+        user_id: log.user_id,
+        completed_at: log.completed_at,
+        is_completed: log.is_completed,
+        checklist_items: log.checklist_items,
+        profiles: log.profiles || { first_name: null, last_name: null }
+      })) || [];
+
+      return typedResults;
     }
   });
 };
