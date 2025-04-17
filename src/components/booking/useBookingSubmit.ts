@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { BookingFormData } from './BookingForm';
+import { BookingFormData } from './types';
 
 type UseBookingSubmitProps = {
   onSuccess: (booking: any) => void;

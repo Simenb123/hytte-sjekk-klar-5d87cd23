@@ -7,7 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import BookingForm, { BookingFormData } from './BookingForm';
+import BookingForm from './BookingForm';
+import { BookingFormData } from './types';
 import { Booking } from '@/hooks/useBookings';
 import { toast } from 'sonner';
 
