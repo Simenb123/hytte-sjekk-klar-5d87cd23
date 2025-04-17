@@ -22,19 +22,30 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
   connectGoogleCalendar,
   fetchError
 }) => {
+  // Improved error detection
   const connectionFailed = isEdgeFunctionError(fetchError);
   const authFailed = isAuthError(fetchError);
   const isConnectionRefused = fetchError?.includes('avviste tilkoblingsforsøket') || 
                               fetchError?.includes('refused to connect') || 
-                              fetchError?.includes('network error');
+                              fetchError?.includes('network error') ||
+                              fetchError?.includes('tredjepartsinfokapsler');
+  
+  console.log('GoogleCalendarTab - Error state:', {
+    fetchError: fetchError?.substring(0, 100),
+    connectionFailed,
+    authFailed,
+    isConnectionRefused
+  });
   
   const { isRetrying, handleRetry } = useConnectionRetry(
     async () => {
       try {
         // If it's an auth error, we need to reconnect, otherwise just fetch events
         if (authFailed || isConnectionRefused) {
+          console.log('Auth failed or connection refused, trying to reconnect');
           connectGoogleCalendar();
         } else {
+          console.log('Connection error but not auth failed, trying to fetch events');
           await fetchGoogleEvents();
         }
         return !connectionFailed && !authFailed && !isConnectionRefused;

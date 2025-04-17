@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Calendar, Lock, ExternalLink, AlertTriangle, Users, WifiOff, Settings } from 'lucide-react';
+import { RefreshCw, Calendar, Lock, ExternalLink, AlertTriangle, Users, WifiOff, Settings, Cookie } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -18,6 +18,25 @@ export const GoogleAuthErrorView: React.FC<GoogleAuthErrorViewProps> = ({
 }) => {
   const currentUrl = window.location.origin;
   const redirectUri = `${currentUrl}/auth/calendar`;
+  
+  // Get browser info to help with troubleshooting
+  const isChrome = navigator.userAgent.indexOf("Chrome") > -1;
+  const isFirefox = navigator.userAgent.indexOf("Firefox") > -1;
+  const isSafari = navigator.userAgent.indexOf("Safari") > -1 && navigator.userAgent.indexOf("Chrome") === -1;
+  const isEdge = navigator.userAgent.indexOf("Edg") > -1;
+  
+  // Check if we're in a preview environment
+  const isPreviewEnvironment = currentUrl.includes('lovableproject.com');
+  
+  // Get debug info
+  const debugInfo = {
+    browser: isChrome ? 'Chrome' : isFirefox ? 'Firefox' : isSafari ? 'Safari' : isEdge ? 'Edge' : 'Other',
+    cookiesEnabled: navigator.cookieEnabled,
+    isPreviewEnvironment,
+    redirectUri,
+    userAgent: navigator.userAgent.substring(0, 100) + '...',
+    online: navigator.onLine
+  };
 
   return (
     <Card>
@@ -42,7 +61,7 @@ export const GoogleAuthErrorView: React.FC<GoogleAuthErrorViewProps> = ({
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Tilkoblingsfeil</AlertTitle>
             <AlertDescription>
-              "accounts.google.com avviste tilkoblingsforsøket." Dette kan skyldes nettverksproblemer eller blokkering fra nettverket.
+              "accounts.google.com avviste tilkoblingsforsøket." Dette skyldes sannsynligvis blokkering av tredjepartsinfokapsler i nettleseren.
             </AlertDescription>
           </Alert>
         ) : (
@@ -81,29 +100,83 @@ export const GoogleAuthErrorView: React.FC<GoogleAuthErrorViewProps> = ({
           {connectionError ? (
             <div>
               <p className="text-gray-500 mb-4">
-                Nettleseren kunne ikke koble til Google-tjenesten. Dette kan skyldes:
+                Nettleseren kunne ikke koble til Google-tjenesten. Dette skyldes mest sannsynlig:
               </p>
               
               <ul className="text-left text-gray-500 mb-4 list-disc pl-8">
+                <li className="font-medium text-red-600">Blokkering av tredjepartsinfokapsler i nettleseren (mest vanlig årsak)</li>
                 <li>Nettverksproblemer (VPN, proxy, brannmur)</li>
-                <li>Blokkering av tredjepartsinfokapsler i nettleseren</li>
                 <li>Google-tjenesten er midlertidig utilgjengelig</li>
                 <li>Konfigurasjonsproblemer med API-et</li>
               </ul>
               
               <div className="bg-amber-50 p-4 rounded-md border border-amber-200 mb-4">
                 <h3 className="flex items-center text-amber-800 font-medium mb-2">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Feilsøkingsforslag
+                  <Cookie className="h-4 w-4 mr-2" />
+                  Viktig: Aktiver tredjepartsinfokapsler
                 </h3>
-                <ol className="text-left text-amber-700 text-sm list-decimal pl-6">
+                
+                {isChrome && (
+                  <ol className="text-left text-amber-700 text-sm list-decimal pl-6">
+                    <li>Åpne Chrome-innstillinger (⋮ &gt; Innstillinger)</li>
+                    <li>Gå til Personvern og sikkerhet &gt; Informasjonskapsler og andre nettsidedata</li>
+                    <li>Velg "Tillat alle informasjonskapsler" eller legg til denne nettsiden som unntak</li>
+                    <li>Last nettsiden på nytt og prøv igjen</li>
+                  </ol>
+                )}
+                
+                {isFirefox && (
+                  <ol className="text-left text-amber-700 text-sm list-decimal pl-6">
+                    <li>Åpne Firefox-innstillinger (≡ &gt; Innstillinger)</li>
+                    <li>Gå til Personvern og sikkerhet &gt; Utvidet sporing og beskyttelse</li>
+                    <li>Velg "Standard" i stedet for "Streng"</li>
+                    <li>Last nettsiden på nytt og prøv igjen</li>
+                  </ol>
+                )}
+                
+                {isSafari && (
+                  <ol className="text-left text-amber-700 text-sm list-decimal pl-6">
+                    <li>Åpne Safari-innstillinger</li> 
+                    <li>Gå til Personvern &gt; Nettstedsinnstillinger</li>
+                    <li>Deaktiver "Hindre krysssporsporing" eller legg til denne nettsiden som unntak</li>
+                    <li>Last nettsiden på nytt og prøv igjen</li>
+                  </ol>
+                )}
+                
+                {!isChrome && !isFirefox && !isSafari && (
+                  <p className="text-amber-700 text-sm">
+                    Sjekk nettleserens innstillinger for informasjonskapsler og personvern. Sørg for at tredjepartsinfokapsler er tillatt for denne nettsiden.
+                  </p>
+                )}
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-md border border-gray-200 mb-4">
+                <h3 className="flex items-center text-gray-800 font-medium mb-2">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Andre feilsøkingsforslag
+                </h3>
+                <ol className="text-left text-gray-700 text-sm list-decimal pl-6">
                   <li>Prøv å slå av VPN eller proxy hvis du bruker det</li>
-                  <li>Aktiver tredjepartsinfokapsler i nettleseren for denne nettsiden</li>
-                  <li>Sjekk brannmurinnstillinger som kan blokkere Google-tjenester</li>
-                  <li>Prøv en annen nettleser eller enhet om mulig</li>
+                  <li>Prøv en annen nettleser</li>
                   <li>Sjekk at datoen og klokkeslettet på enheten din er riktig</li>
+                  <li>Prøv å åpne en privat/inkognito-fane</li>
                 </ol>
               </div>
+              
+              {isPreviewEnvironment && (
+                <div className="bg-blue-50 p-4 rounded-md border border-blue-200 mb-4">
+                  <h3 className="flex items-center text-blue-800 font-medium mb-2">
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Preview-miljø oppdaget
+                  </h3>
+                  <p className="text-blue-700 text-sm mb-2">
+                    Du bruker et Lovable preview-miljø: <code className="bg-blue-100 px-1 rounded">{currentUrl}</code>
+                  </p>
+                  <p className="text-blue-700 text-sm">
+                    Preview-miljøer kan ha ytterligere begrensninger. Hvis problemet vedvarer etter å ha aktivert tredjepartsinfokapsler, prøv den publiserte versjonen av applikasjonen i stedet.
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <>
@@ -176,6 +249,14 @@ export const GoogleAuthErrorView: React.FC<GoogleAuthErrorViewProps> = ({
               Test Users
             </a>
           </div>
+          
+          {/* Debug info accordion */}
+          <details className="mt-4 text-left text-xs text-gray-500">
+            <summary className="cursor-pointer">Vis teknisk informasjon (for feilsøking)</summary>
+            <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto text-gray-700">
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          </details>
         </div>
       </CardContent>
     </Card>

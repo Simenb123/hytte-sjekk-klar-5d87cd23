@@ -1,4 +1,3 @@
-
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +16,9 @@ export function useGoogleAuth(setState: any) {
       console.log('Invoking google-calendar edge function...');
       
       try {
+        const currentOrigin = window.location.origin;
+        console.log('Current origin for Google OAuth request:', currentOrigin);
+        
         const { data, error } = await supabase.functions.invoke('google-calendar', {
           method: 'GET'
         });
@@ -38,10 +40,18 @@ export function useGoogleAuth(setState: any) {
           console.log('Received Google authorization URL, redirecting...', data.url);
           sessionStorage.setItem('calendarReturnUrl', window.location.href);
           
-          // Log URL before redirect
           console.log('Redirecting to:', data.url);
           
-          // Add a small delay before redirecting to make sure logs are captured
+          const browserInfo = {
+            userAgent: navigator.userAgent,
+            cookiesEnabled: navigator.cookieEnabled,
+            language: navigator.language,
+            platform: navigator.platform,
+            vendor: navigator.vendor,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          };
+          console.log('Browser environment details:', browserInfo);
+          
           setTimeout(() => {
             window.location.href = data.url;
           }, 100);
@@ -49,10 +59,26 @@ export function useGoogleAuth(setState: any) {
           throw new Error('Ingen autoriseringslenke mottatt fra serveren');
         }
       } catch (fetchError: any) {
-        // Enhanced error handling with better user feedback
         console.error('Error detail:', fetchError);
         
-        // Check for network-related errors
+        try {
+          const networkState = {
+            online: navigator.onLine,
+            connection: (navigator as any).connection 
+              ? { 
+                  type: (navigator as any).connection.type,
+                  effectiveType: (navigator as any).connection.effectiveType,
+                  downlink: (navigator as any).connection.downlink,
+                  rtt: (navigator as any).connection.rtt,
+                }
+              : 'Not available',
+            timestamp: new Date().toISOString()
+          };
+          console.log('Network state during error:', networkState);
+        } catch (e) {
+          console.log('Could not retrieve network state:', e);
+        }
+        
         if (fetchError.name === 'FunctionsFetchError' || 
             fetchError.message?.includes('Failed to fetch') ||
             fetchError.context?.value?.message?.includes('Failed to fetch')) {
@@ -75,7 +101,7 @@ export function useGoogleAuth(setState: any) {
         errorMessage = 'Fikk 403 Forbidden fra Google. Sjekk at OAuth-konfigurasjonen er riktig oppsatt i Google Cloud Console.';
       } else if (error.message?.includes('refused to connect') || 
                 error.message?.includes('avviste tilkoblingsforsøket')) {
-        errorMessage = 'Nettleseren kunne ikke koble til accounts.google.com. Dette kan skyldes nettverksproblemer eller blokkering av tredjepartsinfokapsler.';
+        errorMessage = 'Nettleseren kunne ikke koble til accounts.google.com. Dette kan skyldes at tredjepartsinfokapsler er blokkert i nettleseren. Prøv å aktivere tredjepartsinfokapsler, sjekk brannmur/VPN-innstillinger, eller prøv en annen nettleser.';
       }
       
       toast.error(errorMessage);
@@ -84,7 +110,6 @@ export function useGoogleAuth(setState: any) {
         connectionError: errorMessage
       }));
       
-      // Don't auto-retry when explicitly trying to connect
       setIsAutoRetrying(false);
       
       return false;
@@ -143,7 +168,7 @@ export function useGoogleAuth(setState: any) {
         }
       } else if (error.message?.includes('refused to connect') || 
                 error.message?.includes('avviste tilkoblingsforsøket')) {
-        errorMessage = 'Nettleseren kunne ikke koble til accounts.google.com. Dette kan skyldes nettverksproblemer eller blokkering av tredjepartsinfokapsler.';
+        errorMessage = 'Nettleseren kunne ikke koble til accounts.google.com. Dette kan skyldes at tredjepartsinfokapsler er blokkert i nettleseren. Prøv å aktivere tredjepartsinfokapsler, sjekk brannmur/VPN-innstillinger, eller prøv en annen nettleser.';
       }
       
       toast.error(errorMessage);
