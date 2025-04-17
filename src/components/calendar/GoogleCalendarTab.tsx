@@ -24,17 +24,20 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
 }) => {
   const connectionFailed = isEdgeFunctionError(fetchError);
   const authFailed = isAuthError(fetchError);
+  const isConnectionRefused = fetchError?.includes('avviste tilkoblingsforsøket') || 
+                              fetchError?.includes('refused to connect') || 
+                              fetchError?.includes('network error');
   
   const { isRetrying, handleRetry } = useConnectionRetry(
     async () => {
       try {
         // If it's an auth error, we need to reconnect, otherwise just fetch events
-        if (authFailed) {
+        if (authFailed || isConnectionRefused) {
           connectGoogleCalendar();
         } else {
           await fetchGoogleEvents();
         }
-        return !connectionFailed && !authFailed;
+        return !connectionFailed && !authFailed && !isConnectionRefused;
       } catch (error) {
         console.error('Retry failed:', error);
         return false;
@@ -45,7 +48,7 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
   );
 
   // If we can't connect to Edge Function
-  if (connectionFailed) {
+  if (connectionFailed && !isConnectionRefused) {
     return (
       <ConnectionErrorView 
         onRetry={handleRetry} 
@@ -55,12 +58,13 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
     );
   }
   
-  // If we have auth issues with Google
-  if (authFailed) {
+  // If we have auth issues with Google or connection refused
+  if (authFailed || isConnectionRefused) {
     return (
       <GoogleAuthErrorView
         onRetry={handleRetry}
         isRetrying={isRetrying}
+        connectionError={isConnectionRefused}
       />
     );
   }

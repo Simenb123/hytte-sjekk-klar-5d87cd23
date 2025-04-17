@@ -38,9 +38,13 @@ export function useGoogleAuth(setState: any) {
           console.log('Received Google authorization URL, redirecting...', data.url);
           sessionStorage.setItem('calendarReturnUrl', window.location.href);
           
-          // Logg URL-en før redirect
+          // Log URL before redirect
           console.log('Redirecting to:', data.url);
-          window.location.href = data.url;
+          
+          // Add a small delay before redirecting to make sure logs are captured
+          setTimeout(() => {
+            window.location.href = data.url;
+          }, 100);
         } else {
           throw new Error('Ingen autoriseringslenke mottatt fra serveren');
         }
@@ -69,15 +73,18 @@ export function useGoogleAuth(setState: any) {
         errorMessage = 'Kunne ikke nå Edge Function. Sjekk at Supabase-funksjonen er aktiv.';
       } else if (error.message?.includes('403') || error.status === 403) {
         errorMessage = 'Fikk 403 Forbidden fra Google. Sjekk at OAuth-konfigurasjonen er riktig oppsatt i Google Cloud Console.';
+      } else if (error.message?.includes('refused to connect') || 
+                error.message?.includes('avviste tilkoblingsforsøket')) {
+        errorMessage = 'Nettleseren kunne ikke koble til accounts.google.com. Dette kan skyldes nettverksproblemer eller blokkering av tredjepartsinfokapsler.';
       }
       
       toast.error(errorMessage);
       setState(prev => ({
         ...prev,
-        connectionError: errorMessage + ' Prøv igjen senere.' 
+        connectionError: errorMessage
       }));
       
-      // Ikke gjør automatisk retry når brukeren eksplisitt prøvde å koble til
+      // Don't auto-retry when explicitly trying to connect
       setIsAutoRetrying(false);
       
       return false;
@@ -134,12 +141,15 @@ export function useGoogleAuth(setState: any) {
         if (error.details) {
           console.error('Error details:', error.details);
         }
+      } else if (error.message?.includes('refused to connect') || 
+                error.message?.includes('avviste tilkoblingsforsøket')) {
+        errorMessage = 'Nettleseren kunne ikke koble til accounts.google.com. Dette kan skyldes nettverksproblemer eller blokkering av tredjepartsinfokapsler.';
       }
       
       toast.error(errorMessage);
       setState(prev => ({
         ...prev,
-        connectionError: errorMessage + '. Prøv igjen senere.'
+        connectionError: errorMessage
       }));
     }
     return false;

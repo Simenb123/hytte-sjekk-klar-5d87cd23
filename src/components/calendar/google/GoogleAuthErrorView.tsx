@@ -1,18 +1,20 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Calendar, Lock, ExternalLink, AlertTriangle, Users } from 'lucide-react';
+import { RefreshCw, Calendar, Lock, ExternalLink, AlertTriangle, Users, WifiOff, Settings } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface GoogleAuthErrorViewProps {
   onRetry: () => void;
   isRetrying?: boolean;
+  connectionError?: boolean;
 }
 
 export const GoogleAuthErrorView: React.FC<GoogleAuthErrorViewProps> = ({
   onRetry,
-  isRetrying = false
+  isRetrying = false,
+  connectionError = false
 }) => {
   const currentUrl = window.location.origin;
   const redirectUri = `${currentUrl}/auth/calendar`;
@@ -21,57 +23,119 @@ export const GoogleAuthErrorView: React.FC<GoogleAuthErrorViewProps> = ({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Lock className="h-5 w-5 mr-2 text-amber-500" />
-          <span>Google Calendar-tilkobling mislyktes</span>
+          {connectionError ? (
+            <>
+              <WifiOff className="h-5 w-5 mr-2 text-red-500" />
+              <span>Tilkoblingsfeil til Google</span>
+            </>
+          ) : (
+            <>
+              <Lock className="h-5 w-5 mr-2 text-amber-500" />
+              <span>Google Calendar-tilkobling mislyktes</span>
+            </>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Alert variant="destructive" className="mb-4">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>OAuth Test Mode Restriction</AlertTitle>
-          <AlertDescription>
-            Google-prosjektet er i "Testing" modus. I denne modusen må e-postadressen din være lagt til som testbruker
-            i Google Cloud Console for å kunne logge inn.
-          </AlertDescription>
-        </Alert>
+        {connectionError ? (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Tilkoblingsfeil</AlertTitle>
+            <AlertDescription>
+              "accounts.google.com avviste tilkoblingsforsøket." Dette kan skyldes nettverksproblemer eller blokkering fra nettverket.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>OAuth Test Mode Restriction</AlertTitle>
+            <AlertDescription>
+              Google-prosjektet er i "Testing" modus. I denne modusen må e-postadressen din være lagt til som testbruker
+              i Google Cloud Console for å kunne logge inn.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="text-center p-6 border border-dashed rounded-lg">
           <div className="flex justify-center mb-4">
-            <Calendar className="h-12 w-12 text-blue-400" />
-            <Lock className="h-8 w-8 text-amber-500 ml-1 -mt-1" />
+            {connectionError ? (
+              <WifiOff className="h-12 w-12 text-red-500" />
+            ) : (
+              <>
+                <Calendar className="h-12 w-12 text-blue-400" />
+                <Lock className="h-8 w-8 text-amber-500 ml-1 -mt-1" />
+              </>
+            )}
           </div>
           
-          <p className="text-gray-700 font-medium mb-2">
-            403 Forbidden: Ingen tilgang til Google Calendar
-          </p>
-          
-          <p className="text-gray-500 mb-4">
-            Google Calendar-integrasjonen kunne ikke fullføres på grunn av en tilgangsfeil.
-            Dette kan skyldes:
-          </p>
-          
-          <ul className="text-left text-gray-500 mb-4 list-disc pl-8">
-            <li>Autorisasjonen har utløpt eller er ugyldig</li>
-            <li>Appen har ikke riktig tillatelse til Google Calendar</li>
-            <li className="font-medium text-amber-600">Din e-postadresse er ikke lagt til som testbruker</li>
-            <li>Problemer med OAuth-konfigurasjonen</li>
-          </ul>
-          
-          <div className="bg-amber-50 p-4 rounded-md border border-amber-200 mb-4">
-            <h3 className="flex items-center text-amber-800 font-medium mb-2">
-              <Users className="h-4 w-4 mr-2" />
-              Test bruker krav
-            </h3>
-            <p className="text-amber-700 text-sm mb-2">
-              Siden Google-prosjektet er i test modus, må du legge til din e-postadresse som testbruker i Google Cloud Console:
+          {connectionError ? (
+            <p className="text-gray-700 font-medium mb-2">
+              Tilkoblingsproblem med Google-tjeneste
             </p>
-            <ol className="text-left text-amber-700 text-sm list-decimal pl-6">
-              <li>Gå til "OAuth consent screen" i Google Cloud Console</li>
-              <li>Scroll ned til "Test users" seksjonen</li>
-              <li>Klikk på "Add users" og legg til din e-postadresse</li>
-              <li>Lagre endringene og prøv å koble til på nytt</li>
-            </ol>
-          </div>
+          ) : (
+            <p className="text-gray-700 font-medium mb-2">
+              403 Forbidden: Ingen tilgang til Google Calendar
+            </p>
+          )}
+          
+          {connectionError ? (
+            <div>
+              <p className="text-gray-500 mb-4">
+                Nettleseren kunne ikke koble til Google-tjenesten. Dette kan skyldes:
+              </p>
+              
+              <ul className="text-left text-gray-500 mb-4 list-disc pl-8">
+                <li>Nettverksproblemer (VPN, proxy, brannmur)</li>
+                <li>Blokkering av tredjepartsinfokapsler i nettleseren</li>
+                <li>Google-tjenesten er midlertidig utilgjengelig</li>
+                <li>Konfigurasjonsproblemer med API-et</li>
+              </ul>
+              
+              <div className="bg-amber-50 p-4 rounded-md border border-amber-200 mb-4">
+                <h3 className="flex items-center text-amber-800 font-medium mb-2">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Feilsøkingsforslag
+                </h3>
+                <ol className="text-left text-amber-700 text-sm list-decimal pl-6">
+                  <li>Prøv å slå av VPN eller proxy hvis du bruker det</li>
+                  <li>Aktiver tredjepartsinfokapsler i nettleseren for denne nettsiden</li>
+                  <li>Sjekk brannmurinnstillinger som kan blokkere Google-tjenester</li>
+                  <li>Prøv en annen nettleser eller enhet om mulig</li>
+                  <li>Sjekk at datoen og klokkeslettet på enheten din er riktig</li>
+                </ol>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-gray-500 mb-4">
+                Google Calendar-integrasjonen kunne ikke fullføres på grunn av en tilgangsfeil.
+                Dette kan skyldes:
+              </p>
+              
+              <ul className="text-left text-gray-500 mb-4 list-disc pl-8">
+                <li>Autorisasjonen har utløpt eller er ugyldig</li>
+                <li>Appen har ikke riktig tillatelse til Google Calendar</li>
+                <li className="font-medium text-amber-600">Din e-postadresse er ikke lagt til som testbruker</li>
+                <li>Problemer med OAuth-konfigurasjonen</li>
+              </ul>
+              
+              <div className="bg-amber-50 p-4 rounded-md border border-amber-200 mb-4">
+                <h3 className="flex items-center text-amber-800 font-medium mb-2">
+                  <Users className="h-4 w-4 mr-2" />
+                  Test bruker krav
+                </h3>
+                <p className="text-amber-700 text-sm mb-2">
+                  Siden Google-prosjektet er i test modus, må du legge til din e-postadresse som testbruker i Google Cloud Console:
+                </p>
+                <ol className="text-left text-amber-700 text-sm list-decimal pl-6">
+                  <li>Gå til "OAuth consent screen" i Google Cloud Console</li>
+                  <li>Scroll ned til "Test users" seksjonen</li>
+                  <li>Klikk på "Add users" og legg til din e-postadresse</li>
+                  <li>Lagre endringene og prøv å koble til på nytt</li>
+                </ol>
+              </div>
+            </>
+          )}
           
           <p className="text-gray-500 mb-4">
             Sjekk også følgende i Google Cloud Console:
