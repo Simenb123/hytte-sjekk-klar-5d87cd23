@@ -26,6 +26,10 @@ export const useCompletionLogs = () => {
       }
 
       console.log('Fullføringslogger hentet:', logs);
+      
+      if (!logs || logs.length === 0) {
+        console.log('Ingen logger funnet i databasen');
+      }
 
       // Manually map the results to ensure they match the expected type
       const typedResults: CompletionLogWithDetails[] = logs?.map(log => ({
@@ -39,6 +43,7 @@ export const useCompletionLogs = () => {
       })) || [];
 
       return typedResults;
-    }
+    },
+    staleTime: 1000 * 60 * 2 // 2 minutes
   });
 };
