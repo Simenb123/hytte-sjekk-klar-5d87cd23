@@ -23,22 +23,24 @@ const queryClient = new QueryClient({
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ChecklistProvider>
-          <Router>
-            <Toaster position="top-right" />
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/bookings" element={<BookingPage />} />
-              <Route path="/checklist" element={<ChecklistApp />} />
-              <Route path="/logs" element={<LogsPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-            </Routes>
-          </Router>
-        </ChecklistProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ChecklistProvider>
+            <Router>
+              <Toaster position="top-right" />
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/bookings" element={<BookingPage />} />
+                <Route path="/checklist" element={<ChecklistApp />} />
+                <Route path="/logs" element={<LogsPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+              </Routes>
+            </Router>
+          </ChecklistProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
   );
 };
 
