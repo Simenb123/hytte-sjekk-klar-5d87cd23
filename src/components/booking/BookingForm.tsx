@@ -2,6 +2,7 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
+import { nb } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -108,7 +109,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                       )}
                     >
                       {field.value ? (
-                        format(field.value, "PPP")
+                        format(field.value, "PPP", { locale: nb })
                       ) : (
                         <span>Velg dato</span>
                       )}
@@ -121,6 +122,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
+                    locale={nb}
                     disabled={(date) =>
                       date < new Date()
                     }
@@ -150,7 +152,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                       )}
                     >
                       {field.value ? (
-                        format(field.value, "PPP")
+                        format(field.value, "PPP", { locale: nb })
                       ) : (
                         <span>Velg dato</span>
                       )}
@@ -163,6 +165,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
+                    locale={nb}
                     disabled={(date) =>
                       date <= form.getValues('startDate')
                     }

@@ -1,4 +1,7 @@
 
+import { format } from 'date-fns';
+import { nb } from 'date-fns/locale';
+
 export const formatGoogleEventDate = (dateString: string): string => {
   try {
     const date = new Date(dateString);
@@ -8,13 +11,7 @@ export const formatGoogleEventDate = (dateString: string): string => {
       return 'Ugyldig dato';
     }
     
-    return date.toLocaleString('nb-NO', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return format(date, 'PPp', { locale: nb });
   } catch (e) {
     console.error('Error formatting date:', e, dateString);
     return 'Ugyldig dato format';
