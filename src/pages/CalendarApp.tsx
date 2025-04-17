@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import AppHeader from '../components/AppHeader';
 import NewBookingDialog from '../components/booking/NewBookingDialog';
-import { useBookings } from '@/hooks/useBookings';
+import EditBookingDialog from '../components/booking/EditBookingDialog';
+import { useBookings, Booking } from '@/hooks/useBookings';
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { toast } from 'sonner';
 import { CalendarSection } from '../components/calendar/CalendarSection';
@@ -11,14 +13,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from 'lucide-react';
+import BookingListItem from '../components/booking/BookingListItem';
 
 const CalendarApp: React.FC = () => {
   const { user } = useAuth();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [showNewBookingDialog, setShowNewBookingDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("bookings");
+  const [bookingToEdit, setBookingToEdit] = useState<Booking | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   
-  const { bookings, fetchBookings, isLoading: isLoadingBookings } = useBookings();
+  const { bookings, fetchBookings, isLoading: isLoadingBookings, deleteBooking, updateBooking } = useBookings();
   
   const {
     isGoogleConnected,
@@ -157,6 +162,21 @@ const CalendarApp: React.FC = () => {
     }
   };
 
+  const handleEditBooking = (booking: Booking) => {
+    setBookingToEdit(booking);
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateBooking = async (id: string, updates: Partial<Booking>) => {
+    const success = await updateBooking(id, updates);
+    if (success) {
+      setShowEditDialog(false);
+      setBookingToEdit(null);
+      fetchBookings();
+    }
+    return success;
+  };
+
   const handleNewBooking = useCallback(() => {
     if (!user) {
       toast.error('Du må være logget inn for å lage en booking');
@@ -186,6 +206,28 @@ const CalendarApp: React.FC = () => {
             Ny booking
           </Button>
         </div>
+
+        {/* Bookings list section */}
+        <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+          <h2 className="text-lg font-medium mb-4">Dine bookinger</h2>
+          
+          {isLoadingBookings ? (
+            <p className="text-center py-4 text-gray-500">Laster bookinger...</p>
+          ) : bookings.length === 0 ? (
+            <p className="text-center py-4 text-gray-500">Ingen bookinger funnet</p>
+          ) : (
+            <div>
+              {bookings.map(booking => (
+                <BookingListItem
+                  key={booking.id}
+                  booking={booking}
+                  onEdit={handleEditBooking}
+                  onDelete={deleteBooking}
+                />
+              ))}
+            </div>
+          )}
+        </div>
         
         <GoogleCalendarSection
           isGoogleConnected={isGoogleConnected}
@@ -213,6 +255,15 @@ const CalendarApp: React.FC = () => {
         open={showNewBookingDialog}
         onOpenChange={setShowNewBookingDialog}
         onSuccess={handleBookingSuccess}
+        googleIntegration={isGoogleConnected}
+        sharedCalendarExists={sharedCalendarExists}
+      />
+
+      <EditBookingDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        booking={bookingToEdit}
+        onUpdate={handleUpdateBooking}
         googleIntegration={isGoogleConnected}
         sharedCalendarExists={sharedCalendarExists}
       />

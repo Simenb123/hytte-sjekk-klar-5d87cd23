@@ -37,18 +37,24 @@ type BookingFormProps = {
   onSubmit: (data: BookingFormData) => void;
   googleIntegration: boolean;
   sharedCalendarExists: boolean;
+  isEditing?: boolean;
+  defaultValues?: Partial<BookingFormData>;
+  submitLabel?: string;
 };
 
 const BookingForm: React.FC<BookingFormProps> = ({
   onSubmit,
   googleIntegration,
   sharedCalendarExists,
+  isEditing = false,
+  defaultValues,
+  submitLabel = 'Opprett booking'
 }) => {
   const today = new Date();
   const tomorrow = addDays(today, 1);
   
   const form = useForm<BookingFormData>({
-    defaultValues: {
+    defaultValues: defaultValues || {
       title: '',
       description: '',
       startDate: today,
@@ -60,9 +66,11 @@ const BookingForm: React.FC<BookingFormProps> = ({
 
   // Update form when props change
   useEffect(() => {
-    form.setValue('addToGoogle', googleIntegration);
-    form.setValue('useSharedCalendar', sharedCalendarExists);
-  }, [googleIntegration, sharedCalendarExists, form]);
+    if (!isEditing) {
+      form.setValue('addToGoogle', googleIntegration);
+      form.setValue('useSharedCalendar', sharedCalendarExists);
+    }
+  }, [googleIntegration, sharedCalendarExists, form, isEditing]);
 
   // Handle date changes to ensure end date is after start date
   const handleStartDateChange = (date: Date | undefined) => {
@@ -149,7 +157,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
                     onSelect={(date) => handleStartDateChange(date)}
                     locale={nb}
                     disabled={(date) =>
-                      date < new Date(new Date().setHours(0, 0, 0, 0))
+                      !isEditing && date < new Date(new Date().setHours(0, 0, 0, 0))
                     }
                     initialFocus
                   />
@@ -203,7 +211,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
           )}
         />
 
-        {googleIntegration && (
+        {!isEditing && googleIntegration && (
           <>
             <FormField
               control={form.control}
@@ -251,7 +259,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
           </>
         )}
 
-        <Button type="submit" className="w-full">Opprett booking</Button>
+        <Button type="submit" className="w-full">{submitLabel}</Button>
       </form>
     </Form>
   );

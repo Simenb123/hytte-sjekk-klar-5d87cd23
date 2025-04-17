@@ -4,7 +4,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -26,7 +25,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
   googleIntegration = false,
   sharedCalendarExists = false
 }) => {
-  const { handleSubmit } = useBookingSubmit({
+  const { handleSubmit, isSubmitting } = useBookingSubmit({
     onSuccess,
     onClose: () => onOpenChange(false)
   });
@@ -45,6 +44,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
           onSubmit={handleSubmit}
           googleIntegration={googleIntegration}
           sharedCalendarExists={sharedCalendarExists}
+          submitLabel="Opprett booking"
         />
       </DialogContent>
     </Dialog>

@@ -82,11 +82,46 @@ export function useBookings() {
     }
   };
 
+  const updateBooking = async (id: string, updates: Partial<Omit<Booking, 'id' | 'user' | 'googleEventId'>>) => {
+    try {
+      // Map from our Booking interface to the database structure
+      const dbUpdates: any = {};
+      
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.description !== undefined) dbUpdates.description = updates.description;
+      if (updates.from !== undefined) dbUpdates.start_date = updates.from.toISOString();
+      if (updates.to !== undefined) dbUpdates.end_date = updates.to.toISOString();
+      
+      const { error } = await supabase
+        .from('bookings')
+        .update(dbUpdates)
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      toast.success('Booking oppdatert');
+      
+      // Update local state
+      setBookings(prev => prev.map(booking => 
+        booking.id === id 
+          ? { ...booking, ...updates } 
+          : booking
+      ));
+      
+      return true;
+    } catch (error: any) {
+      console.error('Error updating booking:', error);
+      toast.error(`Kunne ikke oppdatere booking: ${error.message}`);
+      return false;
+    }
+  };
+
   return {
     bookings,
     isLoading,
     error,
     fetchBookings,
-    deleteBooking
+    deleteBooking,
+    updateBooking
   };
 }
