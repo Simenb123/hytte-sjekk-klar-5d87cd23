@@ -25,32 +25,10 @@ export const getRedirectURI = (origin: string, requestData?: RequestData): strin
     return requestData.redirectUri;
   }
   
-  // Håndter localhost
-  if (origin.includes('localhost')) {
-    console.log('Using localhost redirect URI');
-    return 'http://localhost:5173/auth/calendar';
-  }
-  
-  // Håndter Lovable preview
-  if (origin.includes('lovableproject.com')) {
-    const projectId = origin.split('//')[1].split('.')[0];
-    const previewUri = `https://${projectId}.lovableproject.com/auth/calendar`;
-    console.log(`Using preview redirect URI: ${previewUri}`);
-    return previewUri;
-  }
-  
-  // Håndter produksjonsmiljø
-  if (origin.includes('lovable.app')) {
-    const subdomain = origin.split('//')[1].split('.')[0];
-    const productionUri = `https://${subdomain}.lovable.app/auth/calendar`;
-    console.log(`Using production redirect URI: ${productionUri}`);
-    return productionUri;
-  }
-  
-  // Fallback til standard produksjons-URI
-  const defaultUri = 'https://hytte-sjekk-klar.lovable.app/auth/calendar';
-  console.log(`Using default production redirect URI: ${defaultUri}`);
-  return defaultUri;
+  // Utfør en mer direkte tilnærming - bruk origin direkte
+  const redirectUri = `${origin}/auth/calendar`;
+  console.log(`Using direct origin-based redirect URI: ${redirectUri}`);
+  return redirectUri;
 };
 
 export const generateAuthUrl = (clientId: string, redirectUri: string): string => {
@@ -58,6 +36,9 @@ export const generateAuthUrl = (clientId: string, redirectUri: string): string =
     'https://www.googleapis.com/auth/calendar.readonly',
     'https://www.googleapis.com/auth/calendar.events'
   ];
+
+  console.log(`Generating auth URL with client ID: ${clientId.substring(0, 10)}...`);
+  console.log(`Using redirect URI: ${redirectUri}`);
 
   const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   authUrl.searchParams.append('client_id', clientId);
@@ -77,34 +58,49 @@ export const exchangeCodeForTokens = async (
   redirectUri: string
 ): Promise<GoogleTokens> => {
   console.log(`Exchanging code for tokens with redirectUri: ${redirectUri}`);
+  console.log(`Code (first few chars): ${code.substring(0, 10)}...`);
   
   try {
+    console.log(`Making token exchange request to Google OAuth API`);
+    
+    const params = new URLSearchParams({
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code'
+    });
+    
+    console.log('Request params prepared (excluding secret values)');
+    
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        code,
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: redirectUri,
-        grant_type: 'authorization_code'
-      })
+      body: params
     });
 
+    console.log(`Token response status: ${tokenResponse.status}`);
+    
     if (!tokenResponse.ok) {
       const responseText = await tokenResponse.text();
+      console.error('Token exchange error response:', responseText);
+      
       let errorMessage = `Google token exchange failed with status ${tokenResponse.status}: ${responseText}`;
       
       // Forbedret håndtering av 403-feil
       if (tokenResponse.status === 403) {
         errorMessage = `403 Forbidden: Google godkjente ikke autentiseringen. Sjekk at redirect URI (${redirectUri}) er riktig konfigurert i Google Cloud Console.`;
+      } else if (tokenResponse.status === 400) {
+        errorMessage = `400 Bad Request: Problem med OAuth-autentiseringen. Sjekk at parameterne er korrekte og at redirect URI (${redirectUri}) er riktig konfigurert.`;
       }
       
       console.error('Token exchange error:', errorMessage);
       throw new Error(errorMessage);
     }
 
-    return tokenResponse.json();
+    const tokenData = await tokenResponse.json();
+    console.log('Successfully received token data from Google');
+    return tokenData;
   } catch (error) {
     console.error('Error in exchangeCodeForTokens:', error);
     throw error;

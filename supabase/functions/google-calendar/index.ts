@@ -5,6 +5,7 @@ import { GoogleAuthResponse, RequestData, GoogleCalendarEvent } from './types.ts
 
 Deno.serve(async (req) => {
   console.log(`[${new Date().toISOString()}] ${req.method} request received`);
+  console.log(`Request URL: ${req.url}`);
   
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -12,10 +13,13 @@ Deno.serve(async (req) => {
 
   try {
     const origin = req.headers.get('origin') || 'https://hytte-sjekk-klar.lovable.app';
+    console.log(`Origin header: ${origin}`);
 
     if (req.method === 'GET') {
       try {
         const GOOGLE_CLIENT_ID = getRequiredEnv('GOOGLE_CLIENT_ID');
+        console.log(`Got GOOGLE_CLIENT_ID from env: ${GOOGLE_CLIENT_ID.substring(0, 10)}...`);
+        
         const REDIRECT_URI = getRedirectURI(origin);
         
         console.log(`Generating auth URL with redirect URI: ${REDIRECT_URI}`);
@@ -41,10 +45,16 @@ Deno.serve(async (req) => {
 
     if (req.method === 'POST') {
       const requestData: RequestData = await req.json();
+      console.log('POST request data:', JSON.stringify({
+        ...requestData,
+        code: requestData.code ? `${requestData.code.substring(0, 10)}...` : undefined,
+        tokens: requestData.tokens ? 'tokens-object-present' : undefined
+      }));
       
       // Handle OAuth code exchange
       if (requestData.code) {
         try {
+          console.log('Processing OAuth code exchange');
           const GOOGLE_CLIENT_ID = getRequiredEnv('GOOGLE_CLIENT_ID');
           const GOOGLE_CLIENT_SECRET = getRequiredEnv('GOOGLE_CLIENT_SECRET');
           const REDIRECT_URI = getRedirectURI(origin, requestData);
@@ -57,6 +67,7 @@ Deno.serve(async (req) => {
             REDIRECT_URI
           );
           
+          console.log('Successfully exchanged code for tokens');
           const response: GoogleAuthResponse = { tokens };
           return new Response(
             JSON.stringify(response),
@@ -75,7 +86,8 @@ Deno.serve(async (req) => {
           
           const response: GoogleAuthResponse = { 
             error: error.message, 
-            details: details || undefined 
+            details: details || undefined,
+            status
           };
           
           return new Response(
@@ -163,7 +175,8 @@ Deno.serve(async (req) => {
             JSON.stringify({ 
               error: error.message,
               requiresReauth,
-              details: details || undefined
+              details: details || undefined,
+              status
             }),
             { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );

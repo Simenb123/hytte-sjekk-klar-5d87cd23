@@ -37,6 +37,9 @@ export function useGoogleAuth(setState: any) {
         if (data?.url) {
           console.log('Received Google authorization URL, redirecting...', data.url);
           sessionStorage.setItem('calendarReturnUrl', window.location.href);
+          
+          // Logg URL-en før redirect
+          console.log('Redirecting to:', data.url);
           window.location.href = data.url;
         } else {
           throw new Error('Ingen autoriseringslenke mottatt fra serveren');
