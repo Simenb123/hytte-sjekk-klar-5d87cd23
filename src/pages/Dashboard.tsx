@@ -1,71 +1,45 @@
 
 import React from 'react';
-import { CheckSquare, CloudSun, Calendar, Layers, LogIn, ClipboardList } from 'lucide-react';
-import AppHeader from '@/components/AppHeader';
-import DashboardCard from '@/components/DashboardCard';
-import { useAuth } from '@/context/AuthContext';
+import Header from '../components/Header';
+import DashboardCard from '../components/DashboardCard';
+import { Check, CalendarDays, ClipboardList } from 'lucide-react';
 
 const Dashboard = () => {
-  const { user } = useAuth();
-  
-  console.log('[Dashboard] Rendering with user:', user?.id);
-  
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Hytte Dashboard" />
+      <Header 
+        title="Hytte-sjekk-klar" 
+        showBackButton={false}
+        showHomeButton={false}
+      />
       
-      <main className="container max-w-5xl mx-auto px-4 py-8 pt-28">
-        <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
-          <DashboardCard
-            title="Sjekklister"
-            description="Ankomst- og avreisesjekk"
-            icon={<CheckSquare className="h-6 w-6" />}
+      <div className="max-w-4xl mx-auto p-4 pt-28">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <DashboardCard 
             linkTo="/checklist"
-            color="bg-emerald-500"
+            icon={<Check className="h-8 w-8" />}
+            title="Sjekklister"
+            description="Gå gjennom sjekkpunkter for ankomst og avreise"
+            color="bg-blue-500"
           />
           
-          <DashboardCard
-            title="Værmelding"
-            description="Lokalt vær og varsler"
-            icon={<CloudSun className="h-6 w-6" />}
-            linkTo="/weather"
-            color="bg-sky-500"
+          <DashboardCard 
+            linkTo="/bookings"
+            icon={<CalendarDays className="h-8 w-8" />}
+            title="Reservasjoner"
+            description="Administrer reservasjoner og kalender"
+            color="bg-green-500"
           />
           
-          <DashboardCard
-            title="Kalender"
-            description="Booking og planlegging"
-            icon={<Calendar className="h-6 w-6" />}
-            linkTo="/calendar"
-            color="bg-indigo-500"
-          />
-          
-          <DashboardCard
-            title="Andre tjenester"
-            description="Nyttige ressurser"
-            icon={<Layers className="h-6 w-6" />}
-            linkTo="/other-apps"
+          <DashboardCard 
+            linkTo="/logs"
+            icon={<ClipboardList className="h-8 w-8" />}
+            title="Logger"
+            description="Se fullførte sjekkpunkter og aktivitet"
             color="bg-purple-500"
           />
-          
-          <DashboardCard
-            title="Sjekkliste-logger"
-            description="Se historikk over fullførte sjekkpunkter"
-            icon={<ClipboardList className="h-6 w-6" />}
-            linkTo="/logs"
-          />
-          
-          {!user && (
-            <DashboardCard
-              title="Logg inn"
-              description="Få tilgang til alle funksjoner"
-              icon={<LogIn className="h-6 w-6" />}
-              linkTo="/auth"
-              color="bg-blue-500"
-            />
-          )}
         </div>
-      </main>
+      </div>
     </div>
   );
 };
