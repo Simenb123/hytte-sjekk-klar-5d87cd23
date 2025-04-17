@@ -26,9 +26,9 @@ interface FormDateFieldProps {
   name: 'startDate' | 'endDate';
   label: string;
   minDate?: Date;
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
-  onSelect: (date: Date | undefined) => void;
+  isOpen?: boolean;
+  setIsOpen?: (open: boolean) => void;
+  onSelect?: (date: Date | undefined) => void;
 }
 
 const FormDateField: React.FC<FormDateFieldProps> = ({
@@ -40,6 +40,23 @@ const FormDateField: React.FC<FormDateFieldProps> = ({
   setIsOpen,
   onSelect
 }) => {
+  // Use hook values if provided, otherwise create local state
+  const [localIsOpen, setLocalIsOpen] = React.useState(false);
+  
+  const dateOpen = isOpen !== undefined ? isOpen : localIsOpen;
+  const setDateOpen = setIsOpen || setLocalIsOpen;
+  
+  const handleSelect = (date: Date | undefined) => {
+    if (onSelect) {
+      onSelect(date);
+    } else {
+      // Default behavior if no onSelect provided
+      if (!date) return;
+      form.setValue(name, date);
+      setDateOpen(false);
+    }
+  };
+
   return (
     <FormField
       control={form.control}
@@ -47,7 +64,7 @@ const FormDateField: React.FC<FormDateFieldProps> = ({
       render={({ field }) => (
         <FormItem className="flex flex-col">
           <FormLabel>{label}</FormLabel>
-          <Popover open={isOpen} onOpenChange={setIsOpen}>
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
             <PopoverTrigger asChild>
               <FormControl>
                 <Button
@@ -71,7 +88,7 @@ const FormDateField: React.FC<FormDateFieldProps> = ({
               <Calendar
                 mode="single"
                 selected={field.value}
-                onSelect={onSelect}
+                onSelect={handleSelect}
                 locale={nb}
                 disabled={(date) => minDate ? date < minDate : false}
                 initialFocus

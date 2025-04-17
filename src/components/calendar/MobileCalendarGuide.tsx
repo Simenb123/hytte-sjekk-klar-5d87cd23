@@ -78,7 +78,7 @@ export const MobileCalendarGuide: React.FC<MobileCalendarGuideProps> = ({
             <span>iCal-adresse:</span>
             <div className="flex space-x-2">
               <Button 
-                size="xs"
+                size="sm"
                 variant="outline"
                 className="h-6 px-2 text-xs"
                 onClick={() => copyToClipboard(icalUrl, 'iCal-adresse kopiert!')}
@@ -138,7 +138,7 @@ export const MobileCalendarGuide: React.FC<MobileCalendarGuideProps> = ({
             <span>iCal-adresse:</span>
             <div className="flex space-x-2">
               <Button 
-                size="xs"
+                size="sm"
                 variant="outline"
                 className="h-6 px-2 text-xs"
                 onClick={() => copyToClipboard(icalUrl, 'iCal-adresse kopiert!')}
@@ -155,7 +155,7 @@ export const MobileCalendarGuide: React.FC<MobileCalendarGuideProps> = ({
             <span>Google Calendar direkte:</span>
             <div className="flex space-x-2">
               <Button 
-                size="xs"
+                size="sm"
                 variant="outline"
                 className="h-6 px-2 text-xs"
                 onClick={() => copyToClipboard(googleCalendarUrl, 'Google Calendar-lenke kopiert!')}
@@ -163,7 +163,7 @@ export const MobileCalendarGuide: React.FC<MobileCalendarGuideProps> = ({
                 <Copy className="h-3 w-3 mr-1" /> Kopier
               </Button>
               <Button 
-                size="xs"
+                size="sm"
                 variant="outline"
                 className="h-6 px-2 text-xs"
                 onClick={() => window.open(googleCalendarUrl, '_blank')}
@@ -209,7 +209,7 @@ export const MobileCalendarGuide: React.FC<MobileCalendarGuideProps> = ({
             <div className="text-sm font-medium flex items-center justify-between">
               <span>iCal-adresse:</span>
               <Button 
-                size="xs"
+                size="sm"
                 variant="outline"
                 className="h-6 px-2 text-xs"
                 onClick={() => copyToClipboard(icalUrl, 'iCal-adresse kopiert!')}
@@ -224,7 +224,7 @@ export const MobileCalendarGuide: React.FC<MobileCalendarGuideProps> = ({
             <div className="text-sm font-medium flex items-center justify-between">
               <span>Google Calendar:</span>
               <Button 
-                size="xs"
+                size="sm"
                 variant="outline"
                 className="h-6 px-2 text-xs"
                 onClick={() => window.open(googleCalendarUrl, '_blank')}

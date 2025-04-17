@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,9 @@ const BookingForm: React.FC<BookingFormProps> = ({
           form={form}
           name="startDate"
           label="Fra dato"
+          isOpen={startDateOpen}
+          setIsOpen={setStartDateOpen}
+          onSelect={handleStartDateChange}
         />
 
         <FormDateField
@@ -71,6 +75,9 @@ const BookingForm: React.FC<BookingFormProps> = ({
           name="endDate"
           label="Til dato"
           minDate={form.watch('startDate')}
+          isOpen={endDateOpen}
+          setIsOpen={setEndDateOpen}
+          onSelect={handleEndDateChange}
         />
 
         {googleIntegration && (
