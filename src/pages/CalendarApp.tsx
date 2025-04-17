@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import AppHeader from '../components/AppHeader';
-import NewBookingDialog from '../components/NewBookingDialog';
+import NewBookingDialog from '../components/booking/NewBookingDialog';
 import { useBookings } from '@/hooks/useBookings';
 import { useGoogleCalendar } from '@/hooks/google-calendar';
 import { toast } from 'sonner';
@@ -32,7 +31,6 @@ const CalendarApp: React.FC = () => {
     googleCalendars
   } = useGoogleCalendar();
 
-  // Sjekk om den delte hytte-kalenderen eksisterer
   useEffect(() => {
     if (isGoogleConnected && googleCalendars?.length > 0) {
       const hyttaCalendar = googleCalendars.find(cal => 
@@ -50,7 +48,6 @@ const CalendarApp: React.FC = () => {
       const error = urlParams.get('error');
       
       if (isCallbackPath) {
-        // Log OAuth callback status
         console.log('Detected OAuth callback path', {
           code: code ? `${code.substring(0, 10)}...` : 'none', 
           error: error || 'none',
