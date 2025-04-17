@@ -1,5 +1,5 @@
 
-import { corsHeaders } from './auth.ts';
+import { corsHeaders } from './constants.ts';
 import { handleAuthUrlGeneration, handleOAuthCodeExchange, handleCalendarOperations } from './handlers.ts';
 import { RequestData } from './types.ts';
 

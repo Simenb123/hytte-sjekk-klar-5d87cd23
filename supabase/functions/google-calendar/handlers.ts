@@ -1,6 +1,7 @@
 
-import { corsHeaders } from './auth.ts';
-import { getRequiredEnv, getRedirectURI, generateAuthUrl, exchangeCodeForTokens } from './auth.ts';
+import { corsHeaders } from './constants.ts';
+import { getRequiredEnv, getRedirectURI } from './utils.ts';
+import { generateAuthUrl, exchangeCodeForTokens } from './oauth.ts';
 import { fetchEvents, fetchCalendars, createEvent } from './calendar.ts';
 import { GoogleAuthResponse, RequestData, GoogleCalendarEvent } from './types.ts';
 
