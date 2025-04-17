@@ -3,15 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { GoogleEvent, GoogleCalendar } from '@/types/googleCalendar.types';
 import { toast } from 'sonner';
 
+/**
+ * Henter kalender-hendelser fra Google Calendar via Edge Function
+ */
 export const fetchCalendarEvents = async (tokens: any): Promise<GoogleEvent[]> => {
-  console.log('Calling edge function to fetch events');
-  
   try {
-    console.log('Starting fetchCalendarEvents with tokens:', 
-      tokens ? {
-        access_token_exists: !!tokens.access_token,
-        refresh_token_exists: !!tokens.refresh_token
-      } : 'No tokens provided'
+    console.log('Fetching calendar events with tokens:', 
+      tokens ? { access_token_exists: !!tokens.access_token } : 'No tokens'
     );
     
     const { data, error } = await supabase.functions.invoke('google-calendar', {
@@ -33,21 +31,21 @@ export const fetchCalendarEvents = async (tokens: any): Promise<GoogleEvent[]> =
     }
 
     if (data?.events) {
-      console.log(`Successfully fetched ${data.events.length} events from Google Calendar`);
+      console.log(`Successfully fetched ${data.events.length} events`);
       return data.events;
     }
 
-    console.warn('No events returned from Google Calendar API');
     return [];
   } catch (error: any) {
-    console.error('Error in fetchCalendarEvents:', error);
+    console.error('Error fetching calendar events:', error);
     throw error;
   }
 };
 
+/**
+ * Henter kalenderliste fra Google via Edge Function
+ */
 export const fetchCalendarList = async (tokens: any): Promise<GoogleCalendar[]> => {
-  console.log('Calling edge function to fetch calendars');
-  
   try {
     const { data, error } = await supabase.functions.invoke('google-calendar', {
       method: 'POST',
@@ -68,22 +66,24 @@ export const fetchCalendarList = async (tokens: any): Promise<GoogleCalendar[]> 
     }
 
     if (data?.calendars) {
-      console.log(`Successfully fetched ${data.calendars.length} calendars from Google`);
+      console.log(`Successfully fetched ${data.calendars.length} calendars`);
       return data.calendars;
     }
 
-    console.warn('No calendars returned from Google Calendar API');
     return [];
   } catch (error) {
-    console.error('Error in fetchCalendarList:', error);
+    console.error('Error fetching calendar list:', error);
     throw error;
   }
 };
 
+/**
+ * Håndterer OAuth-callback og utveksler autorisasjonskode for tokens
+ */
 export const handleOAuthCallback = async (code: string) => {
-  console.log('Processing OAuth callback with code:', code.substring(0, 10) + '...');
-
   try {
+    console.log('Processing OAuth callback with code:', code.substring(0, 10) + '...');
+    
     const { data, error } = await supabase.functions.invoke('google-calendar', {
       method: 'POST',
       body: { code }
@@ -103,7 +103,6 @@ export const handleOAuthCallback = async (code: string) => {
       throw new Error('Ingen tokens mottatt fra serveren');
     }
 
-    console.log('Successfully received tokens from Google');
     return data.tokens;
   } catch (error) {
     console.error('Error in handleOAuthCallback:', error);

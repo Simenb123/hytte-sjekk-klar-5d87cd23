@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import AppHeader from '../components/AppHeader';
 import NewBookingDialog from '../components/booking/NewBookingDialog';
 import { useBookings } from '@/hooks/useBookings';
-import { useGoogleCalendar } from '@/hooks/google-calendar';
+import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { toast } from 'sonner';
 import { CalendarSection } from '@/components/calendar/CalendarSection';
 import { GoogleCalendarSection } from '@/components/calendar/GoogleCalendarSection';
@@ -31,6 +32,7 @@ const CalendarApp: React.FC = () => {
     googleCalendars
   } = useGoogleCalendar();
 
+  // Sjekk om delt kalender eksisterer
   useEffect(() => {
     if (isGoogleConnected && googleCalendars?.length > 0) {
       const hyttaCalendar = googleCalendars.find(cal => 
@@ -40,23 +42,19 @@ const CalendarApp: React.FC = () => {
     }
   }, [isGoogleConnected, googleCalendars]);
 
+  // Håndter OAuth callback fra Google
   useEffect(() => {
     const handleOAuthResponse = async () => {
-      const isCallbackPath = window.location.pathname.includes('/auth/calendar');
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get('code');
-      const error = urlParams.get('error');
+      const url = new URL(window.location.href);
+      const isCallback = url.pathname.includes('/auth/calendar');
+      const code = url.searchParams.get('code');
+      const error = url.searchParams.get('error');
       
-      if (isCallbackPath) {
-        console.log('Detected OAuth callback path', {
-          code: code ? `${code.substring(0, 10)}...` : 'none', 
-          error: error || 'none',
-          path: window.location.pathname,
-          origin: window.location.origin
-        });
+      if (isCallback) {
+        console.log('Detected OAuth callback');
         
         if (error) {
-          console.error('OAuth error returned in callback:', error);
+          console.error('OAuth error:', error);
           toast.error(`Google Calendar-autentisering feilet: ${error}`);
           window.location.href = '/calendar';
           return;
@@ -66,20 +64,19 @@ const CalendarApp: React.FC = () => {
           toast.info('Behandler Google Calendar-autentisering...');
           
           try {
-            console.log('Handling OAuth callback with code', code.substring(0, 10) + '...');
             const success = await handleOAuthCallback(code);
+            
             if (success) {
-              console.log('Successfully authenticated with Google Calendar');
               toast.success('Koblet til Google Calendar!');
-              window.location.href = '/calendar';
             } else {
-              console.error('Failed to complete Google Calendar authentication');
               toast.error('Kunne ikke fullføre Google Calendar-autentisering');
-              window.location.href = '/calendar';
             }
+            
+            // Redirect tilbake til kalender-siden uansett
+            window.location.href = '/calendar';
           } catch (err: any) {
-            console.error('Error in OAuth callback processing:', err);
-            toast.error(`Feil ved behandling av Google Calendar-autentisering: ${err.message || 'Unknown error'}`);
+            console.error('Error processing OAuth callback:', err);
+            toast.error(`Feil ved behandling av Google Calendar-autentisering: ${err.message || 'Ukjent feil'}`);
             window.location.href = '/calendar';
           }
         } else {
@@ -114,7 +111,7 @@ const CalendarApp: React.FC = () => {
   const handleBookingSuccess = async (booking) => {
     fetchBookings();
     
-    if (isGoogleConnected && googleTokens) {
+    if (isGoogleConnected && googleTokens && booking.addToGoogle) {
       try {
         console.log('Creating Google Calendar event for new booking:', booking.title);
         
@@ -138,7 +135,7 @@ const CalendarApp: React.FC = () => {
         }
 
         if (data?.event) {
-          console.log('Successfully created Google Calendar event:', data.event.id);
+          console.log('Successfully created Google Calendar event');
           
           if (booking.useSharedCalendar) {
             toast.success('Booking opprettet i felles hytte-kalender!');
@@ -146,9 +143,7 @@ const CalendarApp: React.FC = () => {
             toast.success('Booking opprettet i Google Calendar!');
           }
           
-          if (googleTokens) {
-            fetchGoogleEvents();
-          }
+          fetchGoogleEvents();
         }
       } catch (error) {
         console.error('Error creating Google Calendar event:', error);

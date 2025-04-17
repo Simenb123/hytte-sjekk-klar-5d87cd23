@@ -24,7 +24,7 @@ const initialState: GoogleCalendarState = {
 export function useGoogleCalendar() {
   const [state, setState] = useState<GoogleCalendarState>(initialState);
 
-  // Load tokens from localStorage on component mount
+  // Last inn tokens fra localStorage ved oppstart
   useEffect(() => {
     console.log('Loading Google Calendar tokens from localStorage');
     const storedTokens = localStorage.getItem('googleCalendarTokens');
@@ -44,10 +44,6 @@ export function useGoogleCalendar() {
       } catch (e) {
         console.error('Error parsing stored tokens:', e);
         localStorage.removeItem('googleCalendarTokens');
-        setState(prev => ({
-          ...prev,
-          connectionError: 'Kunne ikke koble til Google Calendar. Vennligst prøv igjen.'
-        }));
       }
     } else {
       console.log('No Google Calendar tokens found in localStorage');
@@ -67,7 +63,6 @@ export function useGoogleCalendar() {
       setState(prev => ({ ...prev, googleEvents: events }));
     } catch (error: any) {
       console.error('Error fetching Google Calendar events:', error);
-      toast.error('Kunne ikke hente Google Calendar-hendelser');
       setState(prev => ({ ...prev, fetchError: `Kunne ikke hente hendelser: ${error.message}` }));
       
       if (error.message?.includes('invalid_grant') || 
@@ -110,15 +105,20 @@ export function useGoogleCalendar() {
       if (data?.error) throw new Error(data.error);
       
       if (data?.url) {
-        console.log('Received Google authorization URL, redirecting...', data.url);
-        sessionStorage.setItem('calendarReturnUrl', window.location.href);
+        console.log('Received Google authorization URL, redirecting...');
+        
+        // Store return URL for after authentication
+        const returnUrl = window.location.href;
+        sessionStorage.setItem('calendarReturnUrl', returnUrl);
+        
+        // Redirect to Google OAuth page
         window.location.href = data.url;
       } else {
         throw new Error('Ingen autoriseringslenke mottatt fra serveren');
       }
     } catch (error: any) {
       console.error('Error connecting to Google Calendar:', error);
-      toast.error('Kunne ikke koble til Google Calendar. Prøv igjen senere.');
+      toast.error('Kunne ikke koble til Google Calendar');
       setState(prev => ({
         ...prev,
         connectionError: 'Kunne ikke koble til Google Calendar. Prøv igjen senere.'
@@ -132,12 +132,7 @@ export function useGoogleCalendar() {
     console.log('Disconnecting from Google Calendar...');
     localStorage.removeItem('googleCalendarTokens');
     setState({
-      ...initialState,
-      googleTokens: null,
-      isGoogleConnected: false,
-      googleEvents: [],
-      connectionError: null,
-      fetchError: null
+      ...initialState
     });
     toast.success('Koblet fra Google Calendar');
   }, []);
@@ -173,6 +168,7 @@ export function useGoogleCalendar() {
   return {
     ...state,
     fetchGoogleEvents,
+    fetchGoogleCalendars,
     connectGoogleCalendar,
     disconnectGoogleCalendar,
     handleOAuthCallback,

@@ -5,36 +5,34 @@ import { RequestData } from './types.ts';
 
 Deno.serve(async (req) => {
   console.log(`[${new Date().toISOString()}] ${req.method} request received`);
-  console.log(`Request URL: ${req.url}`);
   
+  // CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const origin = req.headers.get('origin') || 'https://hytte-sjekk-klar.lovable.app';
-    console.log(`Origin header: ${origin}`);
+    console.log(`Request origin: ${origin}`);
 
-    // Handle GET requests for OAuth URL generation
+    // Håndter GET-forespørsler for OAuth URL-generering
     if (req.method === 'GET') {
       return await handleAuthUrlGeneration(req, origin);
     }
 
-    // Handle POST requests for OAuth code exchange and calendar operations
+    // Håndter POST-forespørsler for OAuth-kode-utveksling og kalenderoperasjoner
     if (req.method === 'POST') {
       const requestData: RequestData = await req.json();
-      console.log('POST request data:', JSON.stringify({
-        ...requestData,
-        code: requestData.code ? `${requestData.code.substring(0, 10)}...` : undefined,
-        tokens: requestData.tokens ? 'tokens-object-present' : undefined
-      }));
       
-      // Handle OAuth code exchange
+      // Logging uten sensitive data
+      console.log('POST request data keys:', Object.keys(requestData));
+      
+      // Håndter OAuth-kode-utveksling
       if (requestData.code) {
         return await handleOAuthCodeExchange(requestData, origin);
       }
 
-      // Handle calendar operations
+      // Håndter kalenderoperasjoner
       if (requestData.action && requestData.tokens) {
         return await handleCalendarOperations(requestData);
       }
@@ -51,10 +49,10 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Edge function error:', error);
+    
     return new Response(
       JSON.stringify({ 
-        error: `Edge function error: ${error.message}`,
-        details: error.stack
+        error: `Edge function error: ${error.message}` 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

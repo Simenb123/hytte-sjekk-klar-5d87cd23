@@ -120,14 +120,14 @@ export const handleCalendarOperations = async (requestData: RequestData): Promis
         }
         
         let calendarId = 'primary';
-        let hyttaCalendar = null;
+        let createdSharedCalendar = null;
         
         // Hvis useSharedCalendar er true, opprett eller finn hytte-kalenderen
         if (requestData.useSharedCalendar) {
           console.log('Creating/finding shared hytte calendar');
           const calendarName = requestData.calendar?.name || 'Hytte Booking';
-          hyttaCalendar = await createOrFindHyttaCalendar(tokens.access_token, calendarName);
-          calendarId = hyttaCalendar.id;
+          createdSharedCalendar = await createOrFindHyttaCalendar(tokens.access_token, calendarName);
+          calendarId = createdSharedCalendar.id;
           console.log(`Using shared hytte calendar with ID: ${calendarId}`);
         }
         
@@ -149,7 +149,7 @@ export const handleCalendarOperations = async (requestData: RequestData): Promis
         return new Response(
           JSON.stringify({ 
             event: response,
-            sharedCalendar: hyttaCalendar 
+            sharedCalendar: createdSharedCalendar 
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
