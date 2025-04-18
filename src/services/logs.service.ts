@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { CompletionLogWithDetails } from "@/types/database.types";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export const useCompletionLogs = () => {
   return useQuery<CompletionLogWithDetails[]>({
@@ -9,26 +10,39 @@ export const useCompletionLogs = () => {
     queryFn: async () => {
       console.log('Fetching completion logs...');
       
-      const { data: logs, error } = await supabase
-        .from('completion_logs')
-        .select(`
-          id,
-          item_id,
-          user_id,
-          completed_at,
-          is_completed,
-          checklist_items:item_id(id, text, type)
-        `)
-        .order('completed_at', { ascending: false });
+      try {
+        // First verify auth status
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session?.user?.id) {
+          console.warn('No authenticated user found while fetching logs');
+        }
+        
+        const { data: logs, error } = await supabase
+          .from('completion_logs')
+          .select(`
+            id,
+            item_id,
+            user_id,
+            completed_at,
+            is_completed,
+            checklist_items:item_id(id, text, type)
+          `)
+          .order('completed_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching logs:', error);
-        throw error;
+        if (error) {
+          console.error('Error fetching logs:', error);
+          toast.error('Kunne ikke hente logger');
+          throw error;
+        }
+
+        console.log('Logs fetched:', logs);
+        return logs || [];
+      } catch (err) {
+        console.error('Unexpected error in useCompletionLogs:', err);
+        throw err;
       }
-
-      console.log('Logs fetched:', logs);
-      return logs || [];
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 30, // 30 seconds
+    refetchOnWindowFocus: true,
   });
 };
