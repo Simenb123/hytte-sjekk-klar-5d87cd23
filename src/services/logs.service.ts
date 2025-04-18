@@ -7,14 +7,9 @@ export const useCompletionLogs = () => {
   return useQuery<CompletionLogWithDetails[]>({
     queryKey: ['completionLogs'],
     queryFn: async () => {
-      console.log('Henter fullføringslogger...');
+      console.log('Fetching completion logs...');
       
-      // Check authentication status
-      const { data: session } = await supabase.auth.getSession();
-      console.log('Auth status:', session ? 'Authenticated' : 'Not authenticated', 
-                  session?.session?.user?.id ? `User ID: ${session.session.user.id}` : '');
-      
-      const { data: logs, error: logsError } = await supabase
+      const { data: logs, error } = await supabase
         .from('completion_logs')
         .select(`
           id,
@@ -26,31 +21,14 @@ export const useCompletionLogs = () => {
         `)
         .order('completed_at', { ascending: false });
 
-      if (logsError) {
-        console.error('Error fetching logs:', logsError);
-        throw logsError;
+      if (error) {
+        console.error('Error fetching logs:', error);
+        throw error;
       }
 
-      console.log('Fullføringslogger hentet:', logs);
-      
-      if (!logs || logs.length === 0) {
-        console.log('Ingen logger funnet i databasen');
-      }
-
-      // Manually map the results to ensure they match the expected type
-      const typedResults: CompletionLogWithDetails[] = logs?.map(log => ({
-        id: log.id,
-        item_id: log.item_id,
-        user_id: log.user_id,
-        completed_at: log.completed_at,
-        is_completed: log.is_completed,
-        checklist_items: log.checklist_items,
-        profiles: null // Set to null since we're no longer fetching profiles
-      })) || [];
-
-      return typedResults;
+      console.log('Logs fetched:', logs);
+      return logs || [];
     },
     staleTime: 1000 * 60 * 2, // 2 minutes
-    refetchInterval: 10000, // Refetch every 10 seconds to see new logs
   });
 };
