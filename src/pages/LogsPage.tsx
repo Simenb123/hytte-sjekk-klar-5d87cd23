@@ -3,7 +3,7 @@ import React from 'react';
 import Header from '../components/Header';
 import CompletionLogList from '../components/logs/CompletionLogList';
 import LogsDebug from '../components/logs/LogsDebug';
-import { ClipboardList } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 const LogsPage = () => {
   return (
@@ -18,7 +18,7 @@ const LogsPage = () => {
         <LogsDebug />
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center gap-2 mb-6">
-            <ClipboardList className="h-6 w-6 text-blue-500" />
+            <FileText className="h-6 w-6 text-purple-500" />
             <h2 className="text-2xl font-semibold">Fullførte sjekkpunkter</h2>
           </div>
           <CompletionLogList />

@@ -15,6 +15,8 @@ export const useCompletionLogs = () => {
         const { data: session } = await supabase.auth.getSession();
         if (!session?.session?.user?.id) {
           console.warn('No authenticated user found while fetching logs');
+          toast.error('Du må være logget inn for å se logger');
+          return [];
         }
         
         const { data: logs, error } = await supabase
@@ -25,7 +27,8 @@ export const useCompletionLogs = () => {
             user_id,
             completed_at,
             is_completed,
-            checklist_items:item_id(id, text, type)
+            checklist_items:item_id(id, text, type),
+            profiles:user_id(first_name, last_name)
           `)
           .order('completed_at', { ascending: false });
 
@@ -35,7 +38,7 @@ export const useCompletionLogs = () => {
           throw error;
         }
 
-        console.log('Logs fetched:', logs);
+        console.log('Logs fetched successfully:', logs);
         return logs || [];
       } catch (err) {
         console.error('Unexpected error in useCompletionLogs:', err);
