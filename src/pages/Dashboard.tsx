@@ -2,7 +2,7 @@
 import React from 'react';
 import Header from '../components/Header';
 import DashboardCard from '../components/DashboardCard';
-import { Check, CalendarDays, ClipboardList } from 'lucide-react';
+import { Check, CalendarDays, FileText } from 'lucide-react';
 
 const Dashboard = () => {
   return (
@@ -33,7 +33,7 @@ const Dashboard = () => {
           
           <DashboardCard 
             linkTo="/logs"
-            icon={<ClipboardList className="h-8 w-8" />}
+            icon={<FileText className="h-8 w-8" />}
             title="Logger"
             description="Se fullførte sjekkpunkter og aktivitet"
             color="bg-purple-500"
