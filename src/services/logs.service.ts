@@ -39,7 +39,7 @@ export const useCompletionLogs = () => {
         }
 
         console.log('Logs fetched successfully:', logs);
-        return logs || [];
+        return logs as CompletionLogWithDetails[];
       } catch (err) {
         console.error('Unexpected error in useCompletionLogs:', err);
         throw err;
