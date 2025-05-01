@@ -39,7 +39,8 @@ export const useCompletionLogs = () => {
         }
 
         console.log('Logs fetched successfully:', logs);
-        return logs as CompletionLogWithDetails[];
+        // Use a double cast to avoid type errors
+        return (logs || []) as unknown as CompletionLogWithDetails[];
       } catch (err) {
         console.error('Unexpected error in useCompletionLogs:', err);
         throw err;
