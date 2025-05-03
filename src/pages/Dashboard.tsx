@@ -1,47 +1,26 @@
 
-import React from 'react';
-import Header from '../components/Header';
-import DashboardCard from '../components/DashboardCard';
-import { Check, CalendarDays, FileText } from 'lucide-react';
+import { Link } from "react-router-dom";
 
-const Dashboard = () => {
+const tiles = [
+  { path: "/checklists", label: "Sjekklister" },
+  { path: "/weather",    label: "Værmelding" },
+  { path: "/calendar",   label: "Kalender" },
+  { path: "/ai-helper",  label: "AI-Hjelper" },
+  { path: "/inventory",  label: "Lageroversikt" },
+];
+
+export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        title="Hytte-sjekk-klar" 
-        showBackButton={false}
-        showHomeButton={false}
-      />
-      
-      <div className="max-w-4xl mx-auto p-4 pt-28">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <DashboardCard 
-            linkTo="/checklist"
-            icon={<Check className="h-8 w-8" />}
-            title="Sjekklister"
-            description="Gå gjennom sjekkpunkter for ankomst og avreise"
-            color="bg-blue-500"
-          />
-          
-          <DashboardCard 
-            linkTo="/bookings"
-            icon={<CalendarDays className="h-8 w-8" />}
-            title="Reservasjoner"
-            description="Administrer reservasjoner og kalender"
-            color="bg-green-500"
-          />
-          
-          <DashboardCard 
-            linkTo="/logs"
-            icon={<FileText className="h-8 w-8" />}
-            title="Logger"
-            description="Se fullførte sjekkpunkter og aktivitet"
-            color="bg-purple-500"
-          />
-        </div>
-      </div>
+    <div className="grid gap-4 p-6">
+      {tiles.map(t => (
+        <Link
+          key={t.path}
+          to={t.path}
+          className="block rounded-lg bg-blue-600 py-6 text-center text-white text-xl font-semibold hover:bg-blue-700 active:bg-blue-800 transition"
+        >
+          {t.label}
+        </Link>
+      ))}
     </div>
   );
-};
-
-export default Dashboard;
+}
