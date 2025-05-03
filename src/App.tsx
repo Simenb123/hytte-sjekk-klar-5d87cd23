@@ -6,6 +6,9 @@ import BookingPage from './pages/BookingPage';
 import ChecklistApp from './pages/ChecklistApp';
 import LogsPage from './pages/LogsPage';
 import AuthPage from './pages/AuthPage';
+import ChecklistHome from './pages/ChecklistHome';
+import ArrivalChecklist from './pages/ArrivalChecklist';
+import DepartureChecklist from './pages/DepartureChecklist';
 import { AuthProvider } from './context/AuthContext';
 import { ChecklistProvider } from './context/ChecklistContext';
 import { Toaster } from 'sonner';
@@ -35,6 +38,9 @@ const App = () => {
                 <Route path="/checklist" element={<ChecklistApp />} />
                 <Route path="/logs" element={<LogsPage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/checklists" element={<ChecklistHome />} />
+                <Route path="/checklists/arrival" element={<ArrivalChecklist />} />
+                <Route path="/checklists/departure" element={<DepartureChecklist />} />
               </Routes>
             </Router>
           </ChecklistProvider>
