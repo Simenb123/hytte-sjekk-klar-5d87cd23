@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { loadFromStorage, saveToStorage, removeFromStorage } from "../utils/storage.utils";
 
+const STORAGE_KEY = "departure-progress";
+const COMPLETE_KEY = "departure-complete";
+
 const areas = [
   {
     name: "Hovedhytta",
@@ -40,14 +43,18 @@ type ProgressState = {
   checked: boolean[];
 };
 
-const STORAGE_KEY = "departure-progress";
-
 export default function DepartureChecklist() {
   const [areaIdx, setAreaIdx] = useState(0);
   const [checked, setChecked] = useState<boolean[]>(
     Array(areas[0].tasks.length).fill(false)
   );
   const nav = useNavigate();
+
+  // Remove "completed" status when starting the checklist
+  useEffect(() => {
+    // Fjerner evt. gammel «fullført» hvis brukeren åpner sjekklisten på nytt
+    localStorage.removeItem(COMPLETE_KEY);
+  }, []);
 
   // Load progress from localStorage on component mount
   useEffect(() => {
@@ -91,6 +98,7 @@ export default function DepartureChecklist() {
     } else {
       // Remove progress from localStorage when completing the checklist
       removeFromStorage(STORAGE_KEY);
+      localStorage.setItem(COMPLETE_KEY, "true");
       nav("/");
     }
   };

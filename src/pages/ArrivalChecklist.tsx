@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const items = [
@@ -8,10 +8,22 @@ const items = [
   "Rask visuell sjekk innendørs",
 ];
 
+const COMPLETE_KEY = "arrival-complete";
+
 export default function ArrivalChecklist() {
   const [checked, setChecked] = useState<boolean[]>(Array(items.length).fill(false));
   const nav = useNavigate();
   const allDone = checked.every(Boolean);
+
+  // Remove "completed" status when starting the checklist
+  useEffect(() => {
+    localStorage.removeItem(COMPLETE_KEY);
+  }, []);
+
+  const handleComplete = () => {
+    localStorage.setItem(COMPLETE_KEY, "true");
+    nav("/");
+  };
 
   return (
     <div className="p-6 space-y-4">
@@ -28,7 +40,7 @@ export default function ArrivalChecklist() {
       ))}
       <button
         disabled={!allDone}
-        onClick={() => nav("/")}
+        onClick={handleComplete}
         className={`w-full py-3 rounded-lg text-white font-semibold transition
           ${allDone ? "bg-green-600 hover:bg-green-700 active:bg-green-800"
                     : "bg-gray-400 cursor-not-allowed"}`}
