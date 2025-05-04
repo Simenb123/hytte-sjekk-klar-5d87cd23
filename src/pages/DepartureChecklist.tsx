@@ -1,7 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { loadFromStorage, saveToStorage, removeFromStorage } from "../utils/storage.utils";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "sonner";
 
 const STORAGE_KEY = "departure-progress";
 const COMPLETE_KEY = "departure-complete";
@@ -49,6 +51,7 @@ export default function DepartureChecklist() {
     Array(areas[0].tasks.length).fill(false)
   );
   const nav = useNavigate();
+  const { user } = useAuth();
 
   // Remove "completed" status when starting the checklist
   useEffect(() => {
@@ -85,7 +88,7 @@ export default function DepartureChecklist() {
     saveToStorage(STORAGE_KEY, { areaIdx, checked: newChecked });
   };
 
-  const next = () => {
+  const next = async () => {
     if (areaIdx < areas.length - 1) {
       const nextAreaIdx = areaIdx + 1;
       const nextAreaChecked = Array(areas[nextAreaIdx].tasks.length).fill(false);
@@ -96,10 +99,35 @@ export default function DepartureChecklist() {
       // Save progress to localStorage
       saveToStorage(STORAGE_KEY, { areaIdx: nextAreaIdx, checked: nextAreaChecked });
     } else {
-      // Remove progress from localStorage when completing the checklist
-      removeFromStorage(STORAGE_KEY);
-      localStorage.setItem(COMPLETE_KEY, "true");
-      nav("/");
+      try {
+        // Store completion in Supabase
+        const { error } = await supabase.from('completion_logs').insert({
+          id: crypto.randomUUID(),
+          item_id: 'departure',
+          user_id: user?.id,
+          completed_at: new Date().toISOString(),
+          is_completed: true
+        });
+
+        if (error) throw error;
+        
+        // Still keep localStorage for the UI updates
+        localStorage.setItem(COMPLETE_KEY, "true");
+        
+        // Remove progress from localStorage
+        removeFromStorage(STORAGE_KEY);
+        
+        toast.success('Avreise-sjekk fullført og logget');
+        nav("/");
+      } catch (err) {
+        console.error("Error logging completion:", err);
+        toast.error('Kunne ikke lagre fullføring');
+        
+        // Still navigate back even if logging fails
+        localStorage.setItem(COMPLETE_KEY, "true");
+        removeFromStorage(STORAGE_KEY);
+        nav("/");
+      }
     }
   };
 

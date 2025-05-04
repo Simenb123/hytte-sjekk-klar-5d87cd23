@@ -1,6 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "sonner";
 
 const items = [
   "Slå på strøm og vann",
@@ -14,15 +16,39 @@ export default function ArrivalChecklist() {
   const [checked, setChecked] = useState<boolean[]>(Array(items.length).fill(false));
   const nav = useNavigate();
   const allDone = checked.every(Boolean);
+  const { user } = useAuth();
 
   // Remove "completed" status when starting the checklist
   useEffect(() => {
     localStorage.removeItem(COMPLETE_KEY);
   }, []);
 
-  const handleComplete = () => {
-    localStorage.setItem(COMPLETE_KEY, "true");
-    nav("/");
+  const handleComplete = async () => {
+    try {
+      // Store completion in Supabase
+      const { error } = await supabase.from('completion_logs').insert({
+        id: crypto.randomUUID(),
+        item_id: 'arrival',
+        user_id: user?.id,
+        completed_at: new Date().toISOString(),
+        is_completed: true
+      });
+
+      if (error) throw error;
+      
+      // Still keep localStorage for the UI updates
+      localStorage.setItem(COMPLETE_KEY, "true");
+      
+      toast.success('Ankomst-sjekk fullført og logget');
+      nav("/");
+    } catch (err) {
+      console.error("Error logging completion:", err);
+      toast.error('Kunne ikke lagre fullføring');
+      
+      // Still navigate back even if logging fails
+      localStorage.setItem(COMPLETE_KEY, "true");
+      nav("/");
+    }
   };
 
   return (
