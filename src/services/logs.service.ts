@@ -67,30 +67,28 @@ export const getLatestCompletion = async (itemId: string): Promise<{ completed_a
       .from('completion_logs')
       .select(`
         completed_at,
-        auth.users!inner(email)
+        profiles:user_id(email)
       `)
       .eq('item_id', itemId)
       .eq('user_id', session.session.user.id)
       .order('completed_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No data found, not an error
-        console.log('[getLatestCompletion] No completion found for item:', itemId);
-        return null;
-      }
       console.error('[getLatestCompletion] Error:', error);
       return null;
     }
     
     console.log('[getLatestCompletion] Found completion:', data);
     
+    // If no data found, return null
+    if (!data) return null;
+    
     // Transform the data structure to match the expected return type
     return {
       completed_at: data.completed_at,
-      user_email: data.users?.email || 'Unknown user'
+      user_email: data.profiles?.email || 'Unknown user'
     };
   } catch (error) {
     console.error('[getLatestCompletion] Unexpected error:', error);
