@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CompletionLogWithDetails } from "@/types/database.types";
 import { useQuery } from "@tanstack/react-query";
@@ -71,15 +70,12 @@ export const getLatestCompletion = async (itemId: string): Promise<{ completed_a
     
     const { data, error } = await supabase
       .from('completion_logs')
-      .select(`
-        completed_at,
-        profile:profiles(email)
-      `)
+      .select('completed_at, profile:profiles(email)')
       .eq('item_id', itemId)
       .eq('user_id', session.session.user.id)
       .order('completed_at', { ascending: false })
       .limit(1)
-      .maybeSingle();
+      .maybeSingle<CompletionRow>();
 
     if (error) {
       console.error('[getLatestCompletion] Error:', error);
@@ -91,11 +87,10 @@ export const getLatestCompletion = async (itemId: string): Promise<{ completed_a
     // If no data found, return null
     if (!data) return null;
     
-    // Cast to our known type and transform the data structure
-    const row = data as CompletionRow;
+    // Safe to access profile.email since we've used a proper type
     return {
-      completed_at: row.completed_at,
-      user_email: row.profile?.email || 'Unknown user'
+      completed_at: data.completed_at,
+      user_email: data.profile.email ?? 'Unknown user'
     };
   } catch (error) {
     console.error('[getLatestCompletion] Unexpected error:', error);
