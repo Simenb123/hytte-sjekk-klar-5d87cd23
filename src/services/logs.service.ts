@@ -7,7 +7,7 @@ import { toast } from "sonner";
 // Define a type for the completed row
 type CompletionRow = {
   completed_at: string;
-  profiles: { email: string | null } | null;
+  profile: { email: string | null };
 };
 
 export const useCompletionLogs = () => {
@@ -73,7 +73,7 @@ export const getLatestCompletion = async (itemId: string): Promise<{ completed_a
       .from('completion_logs')
       .select(`
         completed_at,
-        profiles(email)
+        profile:profiles(email)
       `)
       .eq('item_id', itemId)
       .eq('user_id', session.session.user.id)
@@ -95,7 +95,7 @@ export const getLatestCompletion = async (itemId: string): Promise<{ completed_a
     const row = data as CompletionRow;
     return {
       completed_at: row.completed_at,
-      user_email: row.profiles?.email || 'Unknown user'
+      user_email: row.profile?.email || 'Unknown user'
     };
   } catch (error) {
     console.error('[getLatestCompletion] Unexpected error:', error);
