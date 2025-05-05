@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { loadFromStorage, saveToStorage, removeFromStorage } from "../utils/storage.utils";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
+import { getFirstDepartureItemId } from "../services/checklist.service";
 
 const STORAGE_KEY = "departure-progress";
 const COMPLETE_KEY = "departure-complete";
@@ -109,10 +111,21 @@ export default function DepartureChecklist() {
         
         console.log("[Completion] Starting departure completion log for user:", user.id);
         
-        // Create completion log object
+        // Get a valid item_id (UUID) for departure items
+        const itemId = await getFirstDepartureItemId();
+        
+        if (!itemId) {
+          console.error("[Completion] No valid departure item ID found");
+          toast.error('Kunne ikke finne gyldig sjekkpunkt');
+          return;
+        }
+        
+        console.log("[Completion] Using item ID:", itemId);
+        
+        // Create completion log object with UUID item_id
         const logItem = {
           id: crypto.randomUUID(),
-          item_id: 'departure', // Note: This might need to be a UUID if the DB expects it
+          item_id: itemId, // Using UUID from database
           user_id: user.id,
           completed_at: new Date().toISOString(),
           is_completed: true

@@ -49,6 +49,56 @@ export const fetchCompletionLogs = async (userId: string): Promise<DbCompletionL
   return data || [];
 };
 
+// Get a valid UUID for an arrival checklist item
+export const getFirstArrivalItemId = async (): Promise<string | null> => {
+  try {
+    console.log('[getFirstArrivalItemId] Fetching first arrival item');
+    
+    const { data, error } = await supabase
+      .from('checklist_items')
+      .select('id')
+      .eq('type', 'arrival')
+      .limit(1)
+      .single();
+    
+    if (error) {
+      console.error('[getFirstArrivalItemId] Error:', error);
+      return null;
+    }
+    
+    console.log('[getFirstArrivalItemId] Found item:', data);
+    return data?.id || null;
+  } catch (error) {
+    console.error('[getFirstArrivalItemId] Unexpected error:', error);
+    return null;
+  }
+};
+
+// Get a valid UUID for a departure checklist item
+export const getFirstDepartureItemId = async (): Promise<string | null> => {
+  try {
+    console.log('[getFirstDepartureItemId] Fetching first departure item');
+    
+    const { data, error } = await supabase
+      .from('checklist_items')
+      .select('id')
+      .eq('type', 'departure')
+      .limit(1)
+      .single();
+    
+    if (error) {
+      console.error('[getFirstDepartureItemId] Error:', error);
+      return null;
+    }
+    
+    console.log('[getFirstDepartureItemId] Found item:', data);
+    return data?.id || null;
+  } catch (error) {
+    console.error('[getFirstDepartureItemId] Unexpected error:', error);
+    return null;
+  }
+};
+
 // Log completion of a checklist item
 export const logItemCompletion = async (userId: string, itemId: string, isCompleted: boolean) => {
   console.log(`[checklist.service] Logging completion - userId: ${userId}, itemId: ${itemId}, isCompleted: ${isCompleted}`);

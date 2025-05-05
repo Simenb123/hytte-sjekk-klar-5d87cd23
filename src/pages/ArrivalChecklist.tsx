@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
+import { getFirstArrivalItemId } from "../services/checklist.service";
 
 const items = [
   "Slå på strøm og vann",
@@ -34,10 +36,21 @@ export default function ArrivalChecklist() {
       
       console.log("[Completion] Starting arrival completion log for user:", user.id);
       
-      // Create completion log object
+      // Get a valid item_id (UUID) for arrival items
+      const itemId = await getFirstArrivalItemId();
+      
+      if (!itemId) {
+        console.error("[Completion] No valid arrival item ID found");
+        toast.error('Kunne ikke finne gyldig sjekkpunkt');
+        return;
+      }
+      
+      console.log("[Completion] Using item ID:", itemId);
+      
+      // Create completion log object with UUID item_id
       const logItem = {
         id: crypto.randomUUID(),
-        item_id: 'arrival', // Note: This might need to be a UUID if the DB expects it
+        item_id: itemId, // Using UUID from database
         user_id: user.id,
         completed_at: new Date().toISOString(),
         is_completed: true
