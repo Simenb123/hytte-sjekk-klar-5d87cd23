@@ -4,6 +4,12 @@ import { CompletionLogWithDetails } from "@/types/database.types";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+// Define a type for the completed row
+type CompletionRow = {
+  completed_at: string;
+  profiles: { email: string | null } | null;
+};
+
 export const useCompletionLogs = () => {
   return useQuery<CompletionLogWithDetails[]>({
     queryKey: ['completionLogs'],
@@ -67,7 +73,7 @@ export const getLatestCompletion = async (itemId: string): Promise<{ completed_a
       .from('completion_logs')
       .select(`
         completed_at,
-        profiles:user_id(email)
+        profiles(email)
       `)
       .eq('item_id', itemId)
       .eq('user_id', session.session.user.id)
@@ -85,10 +91,11 @@ export const getLatestCompletion = async (itemId: string): Promise<{ completed_a
     // If no data found, return null
     if (!data) return null;
     
-    // Transform the data structure to match the expected return type
+    // Cast to our known type and transform the data structure
+    const row = data as CompletionRow;
     return {
-      completed_at: data.completed_at,
-      user_email: data.profiles?.email || 'Unknown user'
+      completed_at: row.completed_at,
+      user_email: row.profiles?.email || 'Unknown user'
     };
   } catch (error) {
     console.error('[getLatestCompletion] Unexpected error:', error);
