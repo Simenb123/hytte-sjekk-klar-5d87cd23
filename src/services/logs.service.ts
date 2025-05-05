@@ -50,3 +50,82 @@ export const useCompletionLogs = () => {
     refetchOnWindowFocus: true,
   });
 };
+
+// Get the latest completion for a specific item and the current user
+export const getLatestCompletion = async (itemId: string): Promise<{ completed_at: string; user_email: string } | null> => {
+  try {
+    console.log('[getLatestCompletion] Fetching latest completion for item:', itemId);
+    
+    // First verify auth status
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user?.id) {
+      console.warn('No authenticated user found while fetching latest completion');
+      return null;
+    }
+    
+    const { data, error } = await supabase
+      .from('completion_logs')
+      .select(`
+        completed_at,
+        auth.users!inner(email)
+      `)
+      .eq('item_id', itemId)
+      .eq('user_id', session.session.user.id)
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No data found, not an error
+        console.log('[getLatestCompletion] No completion found for item:', itemId);
+        return null;
+      }
+      console.error('[getLatestCompletion] Error:', error);
+      return null;
+    }
+    
+    console.log('[getLatestCompletion] Found completion:', data);
+    
+    // Transform the data structure to match the expected return type
+    return {
+      completed_at: data.completed_at,
+      user_email: data.users?.email || 'Unknown user'
+    };
+  } catch (error) {
+    console.error('[getLatestCompletion] Unexpected error:', error);
+    return null;
+  }
+};
+
+// Reset (delete) completion for a specific item and the current user
+export const resetCompletion = async (itemId: string): Promise<void> => {
+  try {
+    console.log('[resetCompletion] Resetting completion for item:', itemId);
+    
+    // First verify auth status
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user?.id) {
+      console.warn('No authenticated user found while resetting completion');
+      toast.error('Du må være logget inn for å nullstille status');
+      return;
+    }
+    
+    const { error } = await supabase
+      .from('completion_logs')
+      .delete()
+      .eq('item_id', itemId)
+      .eq('user_id', session.session.user.id);
+
+    if (error) {
+      console.error('[resetCompletion] Error:', error);
+      toast.error('Kunne ikke nullstille status');
+      throw error;
+    }
+    
+    console.log('[resetCompletion] Successfully reset completion for item:', itemId);
+  } catch (error) {
+    console.error('[resetCompletion] Unexpected error:', error);
+    throw error;
+  }
+};
