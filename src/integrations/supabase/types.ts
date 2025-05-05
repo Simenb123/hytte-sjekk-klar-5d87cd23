@@ -160,6 +160,13 @@ export type Database = {
             referencedRelation: "checklist_items"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "completion_logs_user_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       notification_preferences: {

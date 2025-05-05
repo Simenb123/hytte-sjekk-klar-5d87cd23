@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CompletionLogWithDetails } from "@/types/database.types";
 import { useQuery } from "@tanstack/react-query";
