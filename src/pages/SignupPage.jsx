@@ -3,12 +3,14 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user, login } = useAuth();
+  const { user, signup } = useAuth();
 
   // Redirect if already logged in
   if (user) {
@@ -17,7 +19,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!email || !password || !firstName || !lastName) {
       setMessage('Vennligst fyll ut alle felt');
       return;
     }
@@ -25,10 +27,10 @@ export default function LoginPage() {
     setLoading(true);
     setMessage('');
 
-    const { success, error } = await login(email, password);
+    const { success, error } = await signup(email, password, firstName, lastName);
     
     if (success) {
-      // Successful login will redirect through the auth state change
+      setMessage('Konto opprettet! Du kan nå logge inn.');
     } else {
       setMessage(`Feil: ${error.message}`);
     }
@@ -38,9 +40,39 @@ export default function LoginPage() {
 
   return (
     <div className="p-6 max-w-md mx-auto">
-      <h1 className="text-2xl font-semibold mb-6">Logg inn</h1>
+      <h1 className="text-2xl font-semibold mb-6">Registrer ny konto</h1>
       
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="firstName" className="block text-sm font-medium mb-1">
+              Fornavn
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full p-2 border rounded"
+              disabled={loading}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium mb-1">
+              Etternavn
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full p-2 border rounded"
+              disabled={loading}
+            />
+          </div>
+        </div>
+        
         <div>
           <label htmlFor="email" className="block text-sm font-medium mb-1">
             E-post
@@ -66,7 +98,9 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full p-2 border rounded"
             disabled={loading}
+            minLength={6}
           />
+          <p className="text-xs text-gray-500 mt-1">Minst 6 tegn</p>
         </div>
         
         <button
@@ -77,11 +111,11 @@ export default function LoginPage() {
               : 'bg-blue-600 hover:bg-blue-700'}`}
           disabled={loading}
         >
-          {loading ? 'Logger inn...' : 'Logg inn'}
+          {loading ? 'Registrerer...' : 'Registrer konto'}
         </button>
 
         <div className="text-center mt-4">
-          <p>Har du ikke en konto? <Link to="/signup" className="text-blue-600 hover:underline">Registrer deg her</Link></p>
+          <p>Har du allerede en konto? <Link to="/login" className="text-blue-600 hover:underline">Logg inn her</Link></p>
         </div>
       </form>
       

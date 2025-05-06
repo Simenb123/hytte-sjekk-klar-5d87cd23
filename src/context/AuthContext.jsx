@@ -31,18 +31,36 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const login = async (email) => {
+  const login = async (email, password) => {
     try {
-      const { error } = await supabase.auth.signInWithOtp({ 
+      const { data, error } = await supabase.auth.signInWithPassword({ 
         email,
-        options: {
-          emailRedirectTo: window.location.origin + '/checklists'
-        }
+        password
       });
       if (error) throw error;
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);
+      return { success: false, error };
+    }
+  };
+
+  const signup = async (email, password, firstName, lastName) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { 
+            first_name: firstName, 
+            last_name: lastName 
+          }
+        }
+      });
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('Signup error:', error);
       return { success: false, error };
     }
   };
@@ -57,7 +75,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, session, loading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

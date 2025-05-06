@@ -8,7 +8,7 @@ import { getFirstArrivalItemId, getFirstDepartureItemId } from "../services/chec
 
 type CompletionInfo = {
   completed_at: string;
-  user_email: string;
+  user_name: string;
 } | null;
 
 export default function ChecklistHome() {
@@ -71,7 +71,7 @@ export default function ChecklistHome() {
         </Link>
         {arrivalInfo && arrivalItemId && (
           <p className="text-xs text-gray-600 mt-1">
-            ✅ Ankomst registrert {format(new Date(arrivalInfo.completed_at), "dd.MM.yyyy HH:mm")} av {arrivalInfo.user_email}
+            ✅ Ankomst registrert {format(new Date(arrivalInfo.completed_at), "dd.MM.yyyy HH:mm")} av {arrivalInfo.user_name}
             <button
               onClick={async (e) => {
                 e.preventDefault();
@@ -100,7 +100,7 @@ export default function ChecklistHome() {
         </Link>
         {departureInfo && departureItemId && (
           <p className="text-xs text-gray-600 mt-1">
-            ✅ Avreise registrert {format(new Date(departureInfo.completed_at), "dd.MM.yyyy HH:mm")} av {departureInfo.user_email}
+            ✅ Avreise registrert {format(new Date(departureInfo.completed_at), "dd.MM.yyyy HH:mm")} av {departureInfo.user_name}
             <button
               onClick={async (e) => {
                 e.preventDefault();

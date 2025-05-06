@@ -7,7 +7,7 @@ import { toast } from "sonner";
 // Define a type for the completed row
 type CompletionRow = {
   completed_at: string;
-  profile: { email: string | null };
+  profile: { first_name: string | null; last_name: string | null };
 };
 
 export const useCompletionLogs = () => {
@@ -58,7 +58,7 @@ export const useCompletionLogs = () => {
 };
 
 // Get the latest completion for a specific item and the current user
-export const getLatestCompletion = async (itemId: string): Promise<{ completed_at: string; user_email: string } | null> => {
+export const getLatestCompletion = async (itemId: string): Promise<{ completed_at: string; user_name: string } | null> => {
   try {
     console.log('[getLatestCompletion] Fetching latest completion for item:', itemId);
     
@@ -71,7 +71,7 @@ export const getLatestCompletion = async (itemId: string): Promise<{ completed_a
     
     const { data, error } = await supabase
       .from('completion_logs')
-      .select('completed_at, profile:profiles(email)')
+      .select('completed_at, profile:profiles(first_name,last_name)')
       .eq('item_id', itemId)
       .eq('user_id', session.session.user.id)
       .order('completed_at', { ascending: false })
@@ -88,10 +88,12 @@ export const getLatestCompletion = async (itemId: string): Promise<{ completed_a
     // If no data found, return null
     if (!data) return null;
     
-    // Safe to access profile.email since we've used a proper type
+    // Format the user's name
+    const userName = `${data.profile.first_name ?? ''} ${data.profile.last_name ?? ''}`.trim() || 'Ukjent';
+    
     return {
       completed_at: data.completed_at,
-      user_email: data.profile.email ?? 'Unknown user'
+      user_name: userName
     };
   } catch (error) {
     console.error('[getLatestCompletion] Unexpected error:', error);

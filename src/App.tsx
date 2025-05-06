@@ -10,6 +10,7 @@ import ChecklistHome from './pages/ChecklistHome';
 import ArrivalChecklist from './pages/ArrivalChecklist';
 import DepartureChecklist from './pages/DepartureChecklist';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 import { AuthProvider } from './context/AuthContext';
 import { ChecklistProvider } from './context/ChecklistContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -41,6 +42,7 @@ const App = () => {
                 <Route path="/logs" element={<LogsPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
                 <Route path="/checklists" element={
                   <ProtectedRoute>
                     <ChecklistHome />
