@@ -1,95 +1,104 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import Logo from '../components/Logo';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const { user, login } = useAuth();
+  const navigate = useNavigate();
 
   // Redirect if already logged in
-  if (user) {
-    return <Navigate to="/checklists" />;
-  }
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
-      setMessage('Vennligst fyll ut alle felt');
+      toast.error('Vennligst fyll ut alle felt');
       return;
     }
 
     setLoading(true);
-    setMessage('');
 
-    const { success, error } = await login(email, password);
-    
-    if (success) {
-      // Successful login will redirect through the auth state change
-    } else {
-      setMessage(`Feil: ${error.message}`);
+    try {
+      const { success, error } = await login(email, password);
+      
+      if (success) {
+        // Successful login will redirect through the auth state change
+        toast.success('Innlogging vellykket!');
+      } else {
+        toast.error(`Feil ved innlogging: ${error.message}`);
+      }
+    } catch (error) {
+      toast.error('En uventet feil oppstod');
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto">
-      <h1 className="text-2xl font-semibold mb-6">Logg inn</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
+      <div className="mb-8">
+        <Logo />
+      </div>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            E-post
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border rounded"
-            disabled={loading}
-          />
-        </div>
+      <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-md">
+        <h1 className="text-2xl font-semibold mb-6 text-center">Logg inn</h1>
         
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            Passord
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border rounded"
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium mb-1">
+              E-post
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-2 border rounded"
+              disabled={loading}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium mb-1">
+              Passord
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-2 border rounded"
+              disabled={loading}
+            />
+          </div>
+          
+          <button
+            type="submit"
+            className={`w-full py-2 rounded text-white font-medium
+              ${loading 
+                ? 'bg-gray-400' 
+                : 'bg-blue-600 hover:bg-blue-700'}`}
             disabled={loading}
-          />
-        </div>
-        
-        <button
-          type="submit"
-          className={`w-full py-2 rounded text-white font-medium
-            ${loading 
-              ? 'bg-gray-400' 
-              : 'bg-blue-600 hover:bg-blue-700'}`}
-          disabled={loading}
-        >
-          {loading ? 'Logger inn...' : 'Logg inn'}
-        </button>
+          >
+            {loading ? 'Logger inn...' : 'Logg inn'}
+          </button>
 
-        <div className="text-center mt-4">
-          <p>Har du ikke en konto? <Link to="/signup" className="text-blue-600 hover:underline">Registrer deg her</Link></p>
-        </div>
-      </form>
-      
-      {message && (
-        <div className="mt-4 p-3 bg-blue-50 text-blue-800 rounded">
-          {message}
-        </div>
-      )}
+          <div className="text-center mt-4">
+            <p>Har du ikke en konto? <Link to="/signup" className="text-blue-600 hover:underline">Registrer deg her</Link></p>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

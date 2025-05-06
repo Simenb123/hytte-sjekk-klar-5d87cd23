@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { getLatestCompletion, resetCompletion } from "../services/logs.service";
 import { getFirstArrivalItemId, getFirstDepartureItemId } from "../services/checklist.service";
+import { CheckCircle } from "lucide-react";
 
 type CompletionInfo = {
   completed_at: string;
@@ -54,70 +55,99 @@ export default function ChecklistHome() {
     fetchData();
   }, []);
 
-  const baseBtn = "block rounded py-3 text-center text-white transition";
-  const blue = "bg-blue-600 hover:bg-blue-700";
-  const green = "bg-green-600 hover:bg-green-700";
+  // Handle reset for arrival checklist
+  const handleArrivalReset = async () => {
+    if (!arrivalItemId) return;
+    
+    try {
+      await resetCompletion(arrivalItemId);
+      setArrivalInfo(null);
+      toast.success("Status nullstilt");
+    } catch (error) {
+      console.error("Error resetting arrival completion:", error);
+      toast.error("Kunne ikke nullstille status");
+    }
+  };
+
+  // Handle reset for departure checklist
+  const handleDepartureReset = async () => {
+    if (!departureItemId) return;
+    
+    try {
+      await resetCompletion(departureItemId);
+      setDepartureInfo(null);
+      toast.success("Status nullstilt");
+    } catch (error) {
+      console.error("Error resetting departure completion:", error);
+      toast.error("Kunne ikke nullstille status");
+    }
+  };
+
+  if (loading) {
+    return <div className="p-6 text-center">Laster sjekklister...</div>;
+  }
 
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Sjekklister</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-semibold mb-6">Sjekklister</h1>
 
-      <div>
-        <Link
-          to="/checklists/arrival"
-          className={`${baseBtn} ${arrivalInfo ? green : blue}`}
-        >
-          Ankomst-sjekk
-        </Link>
-        {arrivalInfo && arrivalItemId && (
-          <p className="text-xs text-gray-600 mt-1">
-            ✅ Ankomst registrert {format(new Date(arrivalInfo.completed_at), "dd.MM.yyyy HH:mm")} av {arrivalInfo.user_name}
-            <button
-              onClick={async (e) => {
-                e.preventDefault();
-                try {
-                  await resetCompletion(arrivalItemId);
-                  setArrivalInfo(null);
-                  toast.success("Status nullstilt");
-                } catch (error) {
-                  console.error("Error resetting arrival completion:", error);
-                }
-              }}
-              className="ml-2 underline"
-            >
-              Nullstill
-            </button>
-          </p>
-        )}
-      </div>
+      {(arrivalInfo || departureInfo) && (
+        <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+          <div className="flex items-center">
+            <CheckCircle className="text-green-500 mr-2" />
+            <p className="font-medium">Status nullstilt</p>
+          </div>
+        </div>
+      )}
 
-      <div>
-        <Link
-          to="/checklists/departure"
-          className={`${baseBtn} ${departureInfo ? green : blue}`}
-        >
-          Avreise-sjekk
-        </Link>
-        {departureInfo && departureItemId && (
-          <p className="text-xs text-gray-600 mt-1">
-            ✅ Avreise registrert {format(new Date(departureInfo.completed_at), "dd.MM.yyyy HH:mm")} av {departureInfo.user_name}
-            <button
-              onClick={async (e) => {
-                e.preventDefault();
-                try {
-                  await resetCompletion(departureItemId);
-                  setDepartureInfo(null);
-                  toast.success("Status nullstilt");
-                } catch (error) {
-                  console.error("Error resetting departure completion:", error);
-                }
-              }}
-              className="ml-2 underline"
-            >
-              Nullstill
-            </button>
-          </p>
-        )}
+      <div className="space-y-6">
+        <div>
+          <Link
+            to="/checklists/arrival"
+            className={`block w-full py-4 text-center text-white text-xl font-medium rounded-lg transition
+              ${arrivalInfo ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+          >
+            Ankomst-sjekk
+          </Link>
+          
+          {arrivalInfo && (
+            <p className="text-sm text-gray-600 mt-2 flex items-center">
+              <CheckCircle className="text-green-500 mr-1" size={16} />
+              Ankomst registrert {format(new Date(arrivalInfo.completed_at), "dd.MM.yyyy HH:mm")} 
+              av {arrivalInfo.user_name}
+              <button
+                onClick={handleArrivalReset}
+                className="ml-2 text-blue-600 underline"
+              >
+                Nullstill
+              </button>
+            </p>
+          )}
+        </div>
+
+        <div>
+          <Link
+            to="/checklists/departure"
+            className={`block w-full py-4 text-center text-white text-xl font-medium rounded-lg transition
+              ${departureInfo ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+          >
+            Avreise-sjekk
+          </Link>
+          
+          {departureInfo && (
+            <p className="text-sm text-gray-600 mt-2 flex items-center">
+              <CheckCircle className="text-green-500 mr-1" size={16} />
+              Avreise registrert {format(new Date(departureInfo.completed_at), "dd.MM.yyyy HH:mm")} 
+              av {departureInfo.user_name}
+              <button
+                onClick={handleDepartureReset}
+                className="ml-2 text-blue-600 underline"
+              >
+                Nullstill
+              </button>
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
