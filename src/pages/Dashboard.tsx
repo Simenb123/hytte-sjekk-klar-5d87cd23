@@ -15,25 +15,29 @@ const Dashboard = () => {
             title="Kalender"
             description="Se og administrer bookinger"
             linkTo="/bookings"
-            icon={<Calendar className="h-8 w-8 text-blue-600" />}
+            icon={<Calendar className="h-8 w-8" />}
+            color="bg-blue-600"
           />
           <DashboardCard
             title="Sjekklister"
             description="Rutiner for ankomst og avreise"
             linkTo="/checklists"
-            icon={<ListChecks className="h-8 w-8 text-green-600" />}
+            icon={<ListChecks className="h-8 w-8" />}
+            color="bg-green-600"
           />
           <DashboardCard
             title="Hyttehjelper"
             description="Spør vår AI-assistent om hytta"
             linkTo="/ai-helper"
-            icon={<Bot className="h-8 w-8 text-purple-600" />}
+            icon={<Bot className="h-8 w-8" />}
+            color="bg-purple-600"
           />
           <DashboardCard
             title="Inventar"
             description="Se og administrer gjenstander"
             linkTo="/inventory"
-            icon={<Archive className="h-8 w-8 text-orange-600" />}
+            icon={<Archive className="h-8 w-8" />}
+            color="bg-orange-600"
           />
         </div>
       </main>
