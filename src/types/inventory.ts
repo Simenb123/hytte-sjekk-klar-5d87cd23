@@ -1,4 +1,3 @@
-
 export interface InventoryItem {
   id: string;
   name: string;
@@ -14,6 +13,7 @@ export interface InventoryItem {
   size: string | null;
   owner: string | null;
   notes: string | null;
+  category: string | null;
 }
 
 export interface Profile {

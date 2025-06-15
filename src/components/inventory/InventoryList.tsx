@@ -10,6 +10,7 @@ import { InventoryItem } from '@/types/inventory';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { EditItemDialog } from './EditItemDialog';
+import { Badge } from '../ui/badge';
 
 interface InventoryListProps {
   searchTerm: string;
@@ -17,15 +18,20 @@ interface InventoryListProps {
     key: string;
     direction: "asc" | "desc";
   };
+  category: string;
 }
 
-const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig }) => {
+const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, category }) => {
   const { data: items, isLoading, error } = useInventory();
 
   const processedItems = useMemo(() => {
     if (!items) return [];
 
     let filteredItems = [...items];
+
+    if (category !== 'all') {
+      filteredItems = filteredItems.filter(item => item.category === category);
+    }
 
     if (searchTerm) {
       const lowercasedTerm = searchTerm.toLowerCase();
@@ -36,7 +42,8 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig })
         (item.color && item.color.toLowerCase().includes(lowercasedTerm)) ||
         (item.owner && item.owner.toLowerCase().includes(lowercasedTerm)) ||
         (item.location && item.location.toLowerCase().includes(lowercasedTerm)) ||
-        (item.notes && item.notes.toLowerCase().includes(lowercasedTerm))
+        (item.notes && item.notes.toLowerCase().includes(lowercasedTerm)) ||
+        (item.category && item.category.toLowerCase().includes(lowercasedTerm))
       );
     }
     
@@ -65,7 +72,7 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig })
     });
 
     return filteredItems;
-  }, [items, searchTerm, sortConfig]);
+  }, [items, searchTerm, sortConfig, category]);
 
   if (isLoading) {
     return (
@@ -158,7 +165,10 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig })
             </div>
           </div>
           <CardHeader>
-            <CardTitle>{item.name || "Uten navn"}</CardTitle>
+            <div className="flex justify-between items-start gap-2">
+                <CardTitle>{item.name || "Uten navn"}</CardTitle>
+                {item.category && <Badge variant="secondary" className="whitespace-nowrap">{item.category}</Badge>}
+            </div>
             <CardDescription className="flex items-center text-xs text-gray-500 gap-4 pt-1">
                  <span className="flex items-center gap-1">
                     <User size={12}/> {item.owner || 'Ukjent'}

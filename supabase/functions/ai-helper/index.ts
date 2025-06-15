@@ -45,7 +45,7 @@ serve(async (req) => {
     // Fetch user's inventory
     const { data: inventoryItems, error: inventoryError } = await supabaseClient
       .from('inventory_items')
-      .select('name, description, brand, color, size, location, shelf, owner, notes');
+      .select('name, description, brand, color, size, location, shelf, owner, notes, category');
       
     if (inventoryError) {
         console.error('Error fetching inventory for AI helper:', inventoryError);
@@ -59,6 +59,7 @@ Her er en liste over gjenstander i inventaret. Bruk denne informasjonen til å s
 ${inventoryItems.map(item => `
 - Navn: ${item.name || 'N/A'}
   Beskrivelse: ${item.description || 'N/A'}
+  Kategori: ${item.category || 'N/A'}
   Merke: ${item.brand || 'N/A'}
   Farge: ${item.color || 'N/A'}
   Størrelse: ${item.size || 'N/A'}

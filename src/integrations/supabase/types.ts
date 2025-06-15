@@ -175,6 +175,7 @@ export type Database = {
       inventory_items: {
         Row: {
           brand: string | null
+          category: string | null
           color: string | null
           created_at: string
           description: string | null
@@ -189,6 +190,7 @@ export type Database = {
         }
         Insert: {
           brand?: string | null
+          category?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -203,6 +205,7 @@ export type Database = {
         }
         Update: {
           brand?: string | null
+          category?: string | null
           color?: string | null
           created_at?: string
           description?: string | null

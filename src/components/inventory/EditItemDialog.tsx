@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +19,7 @@ import { useUpdateInventoryItem, UpdateInventoryItemData } from '@/hooks/useInve
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { InventoryItem } from '@/types/inventory';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 const formSchema = z.object({
   name: z.string().optional(),
@@ -32,6 +32,7 @@ const formSchema = z.object({
   size: z.string().optional(),
   owner: z.string().optional(),
   notes: z.string().optional(),
+  category: z.string().optional(),
 });
 
 interface EditItemDialogProps {
@@ -60,6 +61,7 @@ export function EditItemDialog({ item, children }: EditItemDialogProps) {
         size: item.size || "",
         owner: item.owner || "",
         notes: item.notes || "",
+        category: item.category || "Annet",
       });
     }
   }, [item, form, open]);
@@ -87,6 +89,32 @@ export function EditItemDialog({ item, children }: EditItemDialogProps) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
             <FormField control={form.control} name="name" render={({ field }) => ( <FormItem> <FormLabel>Navn</FormLabel> <FormControl><Input placeholder="F.eks. Rød Norrøna-jakke" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
+            
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kategori</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Velg en kategori" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Klær">Klær</SelectItem>
+                      <SelectItem value="Langrennski">Langrennski</SelectItem>
+                      <SelectItem value="Langrennstaver">Langrennstaver</SelectItem>
+                      <SelectItem value="Alpint">Alpint</SelectItem>
+                      <SelectItem value="Annet">Annet</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <FormField control={form.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>Beskrivelse</FormLabel> <FormControl><Textarea placeholder="F.eks. Funnet på hemsen." {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="brand" render={({ field }) => ( <FormItem> <FormLabel>Merke</FormLabel> <FormControl><Input placeholder="F.eks. Norrøna" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="color" render={({ field }) => ( <FormItem> <FormLabel>Farge</FormLabel> <FormControl><Input placeholder="F.eks. Rød" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>

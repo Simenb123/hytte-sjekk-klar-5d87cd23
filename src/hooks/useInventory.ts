@@ -19,6 +19,7 @@ const fetchInventory = async (): Promise<InventoryItem[]> => {
       size,
       owner,
       notes,
+      category,
       item_images ( image_url )
     `)
     .order('created_at', { ascending: false });
@@ -50,6 +51,7 @@ export type NewInventoryItemData = {
   size?: string;
   owner?: string;
   notes?: string;
+  category?: string;
 };
 
 export type UpdateInventoryItemData = NewInventoryItemData & {
@@ -78,6 +80,7 @@ export const useAddInventoryItem = () => {
             size: newItem.size || null,
             owner: newItem.owner || null,
             notes: newItem.notes || null,
+            category: newItem.category || 'Annet',
         })
         .select()
         .single();
@@ -133,6 +136,7 @@ export const useUpdateInventoryItem = () => {
             size: itemDetails.size || null,
             owner: itemDetails.owner || null,
             notes: itemDetails.notes || null,
+            category: itemDetails.category || null,
         })
         .eq('id', id);
 
@@ -214,6 +218,7 @@ export const useBulkAddInventoryItems = () => {
           size: item.size || null,
           owner: item.owner || null,
           notes: item.notes || null,
+          category: item.category || 'Annet',
           user_id: user.id,
         }));
 
