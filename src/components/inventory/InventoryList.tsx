@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -133,8 +134,12 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {processedItems.map((item) => (
-        <Card key={item.id} className="flex flex-col">
+      {processedItems.map((item, index) => (
+        <Card 
+          key={item.id} 
+          className="flex flex-col animate-fade-in hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out"
+          style={{ animationDelay: `${index * 50}ms` }}
+        >
           <div className="relative">
             {item.item_images && item.item_images.length > 0 ? (
               <div className="aspect-video w-full overflow-hidden rounded-t-lg">

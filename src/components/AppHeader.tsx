@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, Home } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfileButton from './ProfileButton';
 import { useAuth } from '@/context/AuthContext';
@@ -64,11 +64,11 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             {showHomeButton && (
               <button 
                 onClick={handleHome}
-                className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center bg-white text-black"
+                className="p-1 rounded-full hover:bg-gray-100 flex items-center justify-center bg-white text-black transition-colors"
                 aria-label="Hjem"
-                type="button" // Explicitly set type to prevent form submission
+                type="button"
               >
-                <Home size={24} />
+                <img src="/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png" alt="Hjem" className="h-8 w-8" />
               </button>
             )}
             {user && <ProfileButton />}

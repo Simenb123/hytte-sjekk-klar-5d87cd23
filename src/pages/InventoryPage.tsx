@@ -21,8 +21,8 @@ export default function InventoryPage() {
   const [category, setCategory] = useState("all");
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <AppHeader title="Inventar" showBackButton={true} rightContent={
+    <div className="flex flex-col h-screen bg-hytte-snow">
+      <AppHeader title="Inventar" showBackButton={true} showHomeButton={true} rightContent={
         <div className="flex items-center gap-2">
           <SkiImportButton />
           <BulkImportButton />
