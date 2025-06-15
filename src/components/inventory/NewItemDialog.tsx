@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ export function NewItemDialog() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = async (values) => {
     try {
       await addItemMutation.mutateAsync(values);
       toast.success("Gjenstand lagt til!");
