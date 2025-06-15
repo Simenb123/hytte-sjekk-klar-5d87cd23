@@ -11,12 +11,12 @@ export function useAiChat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendMessage = async (prompt: string, messageHistory: ChatMessage[]): Promise<string | null> => {
+  const sendMessage = async (messageHistory: ChatMessage[]): Promise<string | null> => {
     setLoading(true);
     setError(null);
     try {
       const { data, error: functionError } = await supabase.functions.invoke('ai-helper', {
-        body: { prompt, history: messageHistory },
+        body: { history: messageHistory },
       });
 
       if (functionError) throw functionError;
@@ -35,4 +35,3 @@ export function useAiChat() {
 
   return { sendMessage, loading, error };
 }
-

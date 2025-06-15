@@ -26,9 +26,9 @@ serve(async (req) => {
 
     const openai = new OpenAI({ apiKey: openAIApiKey });
     
-    const { prompt } = await req.json();
-    if (!prompt) {
-      return new Response(JSON.stringify({ error: 'Prompt is required.' }), {
+    const { history } = await req.json();
+    if (!history || !Array.isArray(history) || history.length === 0) {
+      return new Response(JSON.stringify({ error: 'History is required.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -56,7 +56,7 @@ Når du svarer, hold deg til din rolle som hyttehjelper. Hvis du ikke vet svaret
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt },
+        ...history,
       ],
     });
 
@@ -74,4 +74,3 @@ Når du svarer, hold deg til din rolle som hyttehjelper. Hvis du ikke vet svaret
     });
   }
 });
-

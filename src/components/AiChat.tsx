@@ -36,7 +36,7 @@ const AiChat: React.FC = () => {
     setMessages(newMessages);
     setInput("");
 
-    const aiResponse = await sendMessage(input, newMessages);
+    const aiResponse = await sendMessage(newMessages);
     
     if (aiResponse) {
       setMessages((prev) => [...prev, { role: 'assistant', content: aiResponse }]);
@@ -74,4 +74,3 @@ const AiChat: React.FC = () => {
 };
 
 export default AiChat;
-
