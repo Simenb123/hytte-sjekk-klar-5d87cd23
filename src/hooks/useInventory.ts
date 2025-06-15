@@ -52,6 +52,10 @@ export type NewInventoryItemData = {
   notes?: string;
 };
 
+export type UpdateInventoryItemData = NewInventoryItemData & {
+  id: string;
+};
+
 export const useAddInventoryItem = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -96,6 +100,90 @@ export const useAddInventoryItem = () => {
         const { error: imageError } = await supabase
           .from('item_images')
           .insert({ item_id: itemData.id, image_url: publicUrl, user_id: user.id });
+
+        if (imageError) throw imageError;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+  });
+};
+
+export const useUpdateInventoryItem = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation<void, Error, UpdateInventoryItemData>({
+    mutationFn: async (itemToUpdate) => {
+      if (!user) throw new Error("User not authenticated");
+
+      const { id, image, ...itemDetails } = itemToUpdate;
+
+      // 1. Update item details
+      const { error: itemError } = await supabase
+        .from('inventory_items')
+        .update({
+            name: itemDetails.name || null,
+            description: itemDetails.description || null,
+            brand: itemDetails.brand || null,
+            color: itemDetails.color || null,
+            location: itemDetails.location || null,
+            shelf: itemDetails.shelf || null,
+            size: itemDetails.size || null,
+            owner: itemDetails.owner || null,
+            notes: itemDetails.notes || null,
+        })
+        .eq('id', id);
+
+      if (itemError) throw itemError;
+
+      // 2. Handle image update if a new image is provided
+      if (image) {
+        // First, find old images to delete them
+        const { data: oldImages, error: oldImagesError } = await supabase
+          .from('item_images')
+          .select('image_url')
+          .eq('item_id', id);
+
+        if (oldImagesError) console.error("Could not fetch old images to delete", oldImagesError);
+
+        if (oldImages && oldImages.length > 0) {
+            const oldImagePaths = oldImages.map(img => {
+                const urlParts = img.image_url.split('/');
+                return urlParts.slice(urlParts.indexOf('inventory_images') + 1).join('/');
+            });
+            // Delete old images from storage
+            const { error: removeError } = await supabase.storage
+              .from('inventory_images')
+              .remove(oldImagePaths);
+
+            if (removeError) console.error("Failed to remove old images from storage:", removeError);
+
+            // Also delete from item_images table
+            const { error: dbDeleteError } = await supabase
+                .from('item_images')
+                .delete()
+                .eq('item_id', id);
+            
+            if (dbDeleteError) console.error("Failed to delete old image records from db:", dbDeleteError);
+        }
+
+        // Upload new image
+        const fileExt = image.name.split('.').pop();
+        const fileName = `${user.id}/${id}-${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('inventory_images')
+          .upload(fileName, image);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL and link image to item
+        const { data: { publicUrl } } = supabase.storage.from('inventory_images').getPublicUrl(fileName);
+        
+        const { error: imageError } = await supabase
+          .from('item_images')
+          .insert({ item_id: id, image_url: publicUrl, user_id: user.id });
 
         if (imageError) throw imageError;
       }

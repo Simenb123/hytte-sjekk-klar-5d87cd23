@@ -1,15 +1,71 @@
-
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertTriangle, User, Calendar, Info, Tag, Palette, Ruler, Home, StickyNote } from "lucide-react";
+import { AlertTriangle, User, Calendar, Info, Tag, Palette, Ruler, Home, StickyNote, MoreVertical, Edit } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import { InventoryItem } from '@/types/inventory';
+import { Button } from '../ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { EditItemDialog } from './EditItemDialog';
 
-const InventoryList: React.FC = () => {
+interface InventoryListProps {
+  searchTerm: string;
+  sortConfig: {
+    key: string;
+    direction: "asc" | "desc";
+  };
+}
+
+const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig }) => {
   const { data: items, isLoading, error } = useInventory();
+
+  const processedItems = useMemo(() => {
+    if (!items) return [];
+
+    let filteredItems = [...items];
+
+    if (searchTerm) {
+      const lowercasedTerm = searchTerm.toLowerCase();
+      filteredItems = filteredItems.filter(item => 
+        (item.name && item.name.toLowerCase().includes(lowercasedTerm)) ||
+        (item.description && item.description.toLowerCase().includes(lowercasedTerm)) ||
+        (item.brand && item.brand.toLowerCase().includes(lowercasedTerm)) ||
+        (item.color && item.color.toLowerCase().includes(lowercasedTerm)) ||
+        (item.owner && item.owner.toLowerCase().includes(lowercasedTerm)) ||
+        (item.location && item.location.toLowerCase().includes(lowercasedTerm)) ||
+        (item.notes && item.notes.toLowerCase().includes(lowercasedTerm))
+      );
+    }
+    
+    filteredItems.sort((a, b) => {
+      const key = sortConfig.key as keyof InventoryItem;
+      let valA = a[key];
+      let valB = b[key];
+
+      if (key === 'created_at') {
+        const dateA = new Date(valA as string).getTime();
+        const dateB = new Date(valB as string).getTime();
+        return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+      
+      if (valA === null || valA === undefined || valA === '') return 1;
+      if (valB === null || valB === undefined || valB === '') return -1;
+      
+      if (typeof valA === 'string' && typeof valB === 'string') {
+        valA = valA.toLowerCase();
+        valB = valB.toLowerCase();
+      }
+
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filteredItems;
+  }, [items, searchTerm, sortConfig]);
 
   if (isLoading) {
     return (
@@ -56,20 +112,56 @@ const InventoryList: React.FC = () => {
      )
   }
 
+  if (processedItems.length === 0) {
+    return (
+       <Alert>
+           <Info className="h-4 w-4" />
+           <AlertTitle>Ingen treff</AlertTitle>
+           <AlertDescription>
+               Ditt søk ga ingen resultater. Prøv å endre søkeordet eller fjerne filtre.
+           </AlertDescription>
+       </Alert>
+    )
+ }
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {items.map((item) => (
+      {processedItems.map((item) => (
         <Card key={item.id} className="flex flex-col">
-          {item.item_images && item.item_images.length > 0 && (
-            <div className="aspect-video w-full overflow-hidden rounded-t-lg">
-                <img src={item.item_images[0].image_url} alt={item.name} className="w-full h-full object-cover"/>
+          <div className="relative">
+            {item.item_images && item.item_images.length > 0 ? (
+              <div className="aspect-video w-full overflow-hidden rounded-t-lg">
+                  <img src={item.item_images[0].image_url} alt={item.name || 'Inventar Bilde'} className="w-full h-full object-cover"/>
+              </div>
+            ) : (
+              <div className="aspect-video w-full overflow-hidden rounded-t-lg bg-gray-200 flex items-center justify-center">
+                <Palette className="h-12 w-12 text-gray-400" />
+              </div>
+            )}
+             <div className="absolute top-2 right-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-8 w-8 bg-white/80 hover:bg-white backdrop-blur-sm">
+                    <MoreVertical className="h-4 w-4" />
+                    <span className="sr-only">Handlinger</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <EditItemDialog item={item}>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      <span>Rediger</span>
+                    </DropdownMenuItem>
+                  </EditItemDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          )}
+          </div>
           <CardHeader>
-            <CardTitle>{item.name}</CardTitle>
+            <CardTitle>{item.name || "Uten navn"}</CardTitle>
             <CardDescription className="flex items-center text-xs text-gray-500 gap-4 pt-1">
                  <span className="flex items-center gap-1">
-                    <User size={12}/> {item.owner || item.profiles?.first_name || 'Ukjent'}
+                    <User size={12}/> {item.owner || 'Ukjent'}
                  </span>
                  <span className="flex items-center gap-1">
                     <Calendar size={12}/> {format(new Date(item.created_at), 'd. MMM yyyy', { locale: nb })}
