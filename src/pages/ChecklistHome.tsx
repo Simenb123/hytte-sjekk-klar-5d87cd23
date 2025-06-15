@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { checklistCategories, ChecklistCategory } from "../models/checklist";
 import { ChevronRight, Home, KeyRound, LogOut, Luggage, Wrench, Loader2, Bot } from "lucide-react";
@@ -31,7 +30,7 @@ export default function ChecklistHome() {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Sjekklister" showHomeButton={true} />
+      <AppHeader title="Sjekklister" />
       <main className="p-4 sm:p-6 max-w-lg mx-auto pb-24">
         {isLoading && (
           <div className="flex justify-center items-center h-64">
@@ -91,4 +90,3 @@ export default function ChecklistHome() {
     </div>
   );
 }
-

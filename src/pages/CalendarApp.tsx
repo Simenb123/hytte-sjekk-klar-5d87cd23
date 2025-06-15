@@ -193,7 +193,7 @@ const CalendarApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Kalender og booking" showBackButton showHomeButton />
+      <AppHeader title="Kalender og booking" showBackButton />
       
       <div className="max-w-lg mx-auto p-4">
         <CalendarSection 

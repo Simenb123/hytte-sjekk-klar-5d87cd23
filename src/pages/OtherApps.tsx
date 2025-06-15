@@ -28,7 +28,7 @@ const OtherApps: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Andre apper" showBackButton showHomeButton />
+      <AppHeader title="Andre apper" showBackButton />
       
       <div className="max-w-lg mx-auto p-4">
         <div className="grid grid-cols-2 gap-4 mb-6">
