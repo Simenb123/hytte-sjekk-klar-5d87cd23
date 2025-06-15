@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { InventoryItem } from '@/types/inventory';
@@ -20,8 +19,7 @@ const fetchInventory = async (): Promise<InventoryItem[]> => {
       size,
       owner,
       notes,
-      item_images ( image_url ),
-      profiles ( id, first_name, last_name )
+      item_images ( image_url )
     `)
     .order('created_at', { ascending: false });
 
@@ -30,12 +28,8 @@ const fetchInventory = async (): Promise<InventoryItem[]> => {
     throw new Error(error.message);
   }
 
-  // The join with profiles on user_id might return an array, but it should be a single profile.
-  // We'll map to ensure `profiles` is an object, not an array.
-  return data.map(item => ({
-    ...item,
-    profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles,
-  })) as InventoryItem[];
+  // The problematic join is removed, so we can return data directly.
+  return data as InventoryItem[];
 };
 
 export const useInventory = () => {
