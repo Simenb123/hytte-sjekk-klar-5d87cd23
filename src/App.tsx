@@ -15,6 +15,7 @@ import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NotFound from './pages/NotFound';
 import InventoryPage from './pages/InventoryPage';
+import ProfilePage from './pages/ProfilePage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -73,6 +74,11 @@ const App = () => {
               <Route path="/inventory" element={
                 <ProtectedRoute>
                   <InventoryPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <ProfilePage />
                 </ProtectedRoute>
               } />
               

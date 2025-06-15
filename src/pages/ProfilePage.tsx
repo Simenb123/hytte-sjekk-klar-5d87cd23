@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import Header from '@/components/Header';
+import AppHeader from '@/components/AppHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogOut, User, Loader2 } from 'lucide-react';
@@ -25,10 +24,9 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <AppHeader 
         title="Min profil" 
         showBackButton={true}
-        showHomeButton={false}
         onBackClick={handleBackClick}
         rightContent={
           <Button 
