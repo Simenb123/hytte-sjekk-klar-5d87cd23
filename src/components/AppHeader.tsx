@@ -10,13 +10,15 @@ interface AppHeaderProps {
   showBackButton?: boolean;
   showHomeButton?: boolean;
   onBackClick?: () => void;
+  rightContent?: React.ReactNode;
 }
 
 const AppHeader: React.FC<AppHeaderProps> = ({ 
   title, 
   showBackButton = false, 
   showHomeButton = false,
-  onBackClick
+  onBackClick,
+  rightContent
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -27,7 +29,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     if (onBackClick) {
       onBackClick();
     } else {
-      navigate('/');
+      navigate(-1);
     }
   };
 
@@ -58,6 +60,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
           </div>
           
           <div className="flex items-center gap-2">
+            {rightContent}
             {showHomeButton && (
               <button 
                 onClick={handleHome}

@@ -27,7 +27,7 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
   
   return (
     <div 
-      className="flex items-center py-3 px-4 border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50"
+      className="flex items-center py-3 px-4 cursor-pointer hover:bg-gray-50"
       onClick={handleToggle}
       data-state={isCompleted ? 'checked' : 'unchecked'}
     >

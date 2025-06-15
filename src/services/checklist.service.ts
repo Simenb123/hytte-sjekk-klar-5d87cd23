@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DbArea, DbChecklistItem, DbCompletionLog, ChecklistItemWithStatus, AreaWithItems } from "@/types/database.types";
 import { toast } from "sonner";
+import { ChecklistCategory, checklistCategories } from "@/models/checklist";
 
 // Fetch all areas from the database
 export const fetchAreas = async (): Promise<DbArea[]> => {
@@ -140,6 +140,76 @@ export const getChecklistForCategory = async (userId: string, category: string):
 
   } catch (error) {
     console.error('[getChecklistForCategory] Error:', error);
+    throw error;
+  }
+};
+
+// New function to fetch all checklist items for a given season
+export const fetchAllChecklistItemsForSeason = async (season: 'winter' | 'summer'): Promise<DbChecklistItem[]> => {
+  const { data, error } = await supabase
+    .from('checklist_items')
+    .select('*')
+    .in('season', [season, 'all']);
+
+  if (error) {
+    console.error(`[fetchAllChecklistItemsForSeason] Error fetching items for season ${season}:`, error);
+    throw error;
+  }
+  return data || [];
+};
+
+// New type for category summary
+export type CategorySummary = {
+  totalItems: number;
+  completedItems: number;
+  progress: number;
+};
+
+// New function to get summary for all categories
+export const getCategoriesSummary = async (userId: string): Promise<Record<string, CategorySummary>> => {
+  try {
+    const month = new Date().getMonth();
+    const season = (month >= 9 || month <= 2) ? 'winter' : 'summer';
+
+    const [allItems, logs] = await Promise.all([
+      fetchAllChecklistItemsForSeason(season),
+      fetchCompletionLogs(userId)
+    ]);
+
+    const completionMap = new Map<string, boolean>();
+    logs.forEach(log => {
+      if (!completionMap.has(log.item_id)) {
+        completionMap.set(log.item_id, log.is_completed);
+      }
+    });
+    
+    const summary: Record<string, { totalItems: number, completedItems: number }> = {};
+    Object.keys(checklistCategories).forEach(key => {
+        summary[key] = { totalItems: 0, completedItems: 0 };
+    });
+
+    allItems.forEach(item => {
+      if (item.category && summary[item.category]) {
+        summary[item.category].totalItems++;
+        if (completionMap.get(item.id) === true) {
+          summary[item.category].completedItems++;
+        }
+      }
+    });
+    
+    const result: Record<string, CategorySummary> = {};
+    for (const categoryKey in summary) {
+      const { totalItems, completedItems } = summary[categoryKey];
+      result[categoryKey] = {
+        totalItems,
+        completedItems,
+        progress: totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0,
+      };
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('[getCategoriesSummary] Error:', error);
     throw error;
   }
 };
