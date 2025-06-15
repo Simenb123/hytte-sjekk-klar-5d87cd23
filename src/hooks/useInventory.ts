@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { InventoryItem } from '@/types/inventory';
@@ -38,12 +37,18 @@ export const useInventory = () => {
   });
 };
 
+export type NewInventoryItemData = {
+  name: string;
+  description?: string;
+  image?: File;
+};
+
 export const useAddInventoryItem = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  return useMutation({
-    mutationFn: async (newItem: { name: string; description?: string; image?: File }) => {
+  return useMutation<void, Error, NewInventoryItemData>({
+    mutationFn: async (newItem) => {
       if (!user) throw new Error("User not authenticated");
 
       // 1. Insert item details
