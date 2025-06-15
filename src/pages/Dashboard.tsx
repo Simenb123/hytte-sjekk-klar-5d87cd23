@@ -1,37 +1,44 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Link } from 'react-router-dom';
+import DashboardCard from '../components/DashboardCard';
+import AppHeader from '../components/AppHeader';
+import { Calendar, ListChecks, Bot, Archive } from 'lucide-react';
 
-const tiles = [
-  { path: "/checklists", label: "Sjekklister" },
-  { path: "/weather", label: "Værmelding" },
-  { path: "/calendar", label: "Kalender" },
-  { path: "/ai-helper", label: "AI-Hjelper" },
-  { path: "/inventory", label: "Lageroversikt" },
-];
-
-export default function Dashboard() {
-  const { user } = useAuth();
-  
+const Dashboard = () => {
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Velkommen{user?.user_metadata?.first_name ? `, ${user.user_metadata.first_name}` : ''}!</h1>
-        <p className="text-gray-600">Velg en funksjon under for å komme i gang</p>
-      </div>
-      
-      <div className="grid gap-4">
-        {tiles.map(t => (
-          <Link
-            key={t.path}
-            to={t.path}
-            className="block rounded-lg bg-blue-600 py-6 text-center text-white text-xl font-semibold hover:bg-blue-700 active:bg-blue-800 transition"
-          >
-            {t.label}
-          </Link>
-        ))}
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <AppHeader title="Dashbord" />
+
+      <main className="p-4 md:p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <DashboardCard
+            title="Kalender"
+            description="Se og administrer bookinger"
+            linkTo="/bookings"
+            icon={<Calendar className="h-8 w-8 text-blue-600" />}
+          />
+          <DashboardCard
+            title="Sjekklister"
+            description="Rutiner for ankomst og avreise"
+            linkTo="/checklists"
+            icon={<ListChecks className="h-8 w-8 text-green-600" />}
+          />
+          <DashboardCard
+            title="Hyttehjelper"
+            description="Spør vår AI-assistent om hytta"
+            linkTo="/ai-helper"
+            icon={<Bot className="h-8 w-8 text-purple-600" />}
+          />
+          <DashboardCard
+            title="Inventar"
+            description="Se og administrer gjenstander"
+            linkTo="/inventory"
+            icon={<Archive className="h-8 w-8 text-orange-600" />}
+          />
+        </div>
+      </main>
     </div>
   );
-}
+};
+
+export default Dashboard;

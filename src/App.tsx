@@ -14,6 +14,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NotFound from './pages/NotFound';
+import InventoryPage from './pages/InventoryPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -67,6 +68,11 @@ const App = () => {
               <Route path="/ai-helper" element={
                 <ProtectedRoute>
                   <AiHelperPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/inventory" element={
+                <ProtectedRoute>
+                  <InventoryPage />
                 </ProtectedRoute>
               } />
               
