@@ -1,4 +1,3 @@
-
 export interface DbArea {
   id: string;
   name: string;
@@ -8,9 +7,10 @@ export interface DbArea {
 export interface DbChecklistItem {
   id: string;
   text: string;
-  type: 'arrival' | 'departure';
   area_id: string | null;
   created_at: string;
+  category: string | null;
+  season: string | null;
 }
 
 export interface DbCompletionLog {

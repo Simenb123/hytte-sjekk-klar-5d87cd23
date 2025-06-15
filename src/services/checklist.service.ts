@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { DbArea, DbChecklistItem, DbCompletionLog, ChecklistItemWithStatus, AreaWithItems } from "@/types/database.types";
 import { toast } from "sonner";
@@ -17,23 +18,29 @@ export const fetchAreas = async (): Promise<DbArea[]> => {
   return data || [];
 };
 
-// Fetch all checklist items from the database
-export const fetchChecklistItems = async (type: 'arrival' | 'departure'): Promise<DbChecklistItem[]> => {
-  const { data, error } = await supabase
+// This function now fetches items by category and optionally filters by season.
+export const fetchChecklistItems = async (category: string, season?: 'winter' | 'summer' | 'all'): Promise<DbChecklistItem[]> => {
+  let query = supabase
     .from('checklist_items')
     .select('*')
-    .eq('type', type)
-    .order('created_at');
+    .eq('category', category);
+
+  if (season && season !== 'all') {
+    // Fetches items for the specific season OR items for 'all' seasons.
+    query = query.in('season', [season, 'all']);
+  }
+  
+  const { data, error } = await query.order('created_at');
 
   if (error) {
-    console.error(`[fetchChecklistItems] Error fetching ${type} items:`, error);
+    console.error(`[fetchChecklistItems] Error fetching ${category} items:`, error);
     throw error;
   }
 
   return data as DbChecklistItem[] || [];
 };
 
-// Fetch completion logs for a user
+// Fetch completion logs for a user, ordered to get the latest status first.
 export const fetchCompletionLogs = async (userId: string): Promise<DbCompletionLog[]> => {
   const { data, error } = await supabase
     .from('completion_logs')
@@ -49,61 +56,13 @@ export const fetchCompletionLogs = async (userId: string): Promise<DbCompletionL
   return data || [];
 };
 
-// Get a valid UUID for an arrival checklist item
-export const getFirstArrivalItemId = async (): Promise<string | null> => {
-  try {
-    console.log('[getFirstArrivalItemId] Fetching first arrival item');
-    
-    const { data, error } = await supabase
-      .from('checklist_items')
-      .select('id')
-      .eq('type', 'arrival')
-      .limit(1)
-      .single();
-    
-    if (error) {
-      console.error('[getFirstArrivalItemId] Error:', error);
-      return null;
-    }
-    
-    console.log('[getFirstArrivalItemId] Found item:', data);
-    return data?.id || null;
-  } catch (error) {
-    console.error('[getFirstArrivalItemId] Unexpected error:', error);
-    return null;
-  }
-};
-
-// Get a valid UUID for a departure checklist item
-export const getFirstDepartureItemId = async (): Promise<string | null> => {
-  try {
-    console.log('[getFirstDepartureItemId] Fetching first departure item');
-    
-    const { data, error } = await supabase
-      .from('checklist_items')
-      .select('id')
-      .eq('type', 'departure')
-      .limit(1)
-      .single();
-    
-    if (error) {
-      console.error('[getFirstDepartureItemId] Error:', error);
-      return null;
-    }
-    
-    console.log('[getFirstDepartureItemId] Found item:', data);
-    return data?.id || null;
-  } catch (error) {
-    console.error('[getFirstDepartureItemId] Unexpected error:', error);
-    return null;
-  }
-};
-
 // Log completion of a checklist item
 export const logItemCompletion = async (userId: string, itemId: string, isCompleted: boolean) => {
   console.log(`[checklist.service] Logging completion - userId: ${userId}, itemId: ${itemId}, isCompleted: ${isCompleted}`);
   
   try {
+    // We upsert to ensure we only have one log entry that matters per user per item, storing the latest state.
+    // Or we just insert and find the latest. Let's stick with insert, it's simpler.
     const { data, error } = await supabase
       .from('completion_logs')
       .insert([
@@ -127,84 +86,60 @@ export const logItemCompletion = async (userId: string, itemId: string, isComple
   }
 };
 
-// Get arrival items with completion status
-export const getArrivalItemsWithStatus = async (userId: string): Promise<ChecklistItemWithStatus[]> => {
+// This function is a replacement for getArrivalItemsWithStatus and getDepartureAreasWithItems.
+export const getChecklistForCategory = async (userId: string, category: string): Promise<AreaWithItems[]> => {
   try {
-    console.log('[getArrivalItemsWithStatus] Fetching for user:', userId);
-    
-    // Fetch all arrival checklist items
-    const items = await fetchChecklistItems('arrival');
-    
-    // Fetch all completion logs for the user
-    const logs = await fetchCompletionLogs(userId);
-    
-    console.log('[getArrivalItemsWithStatus] Items:', items.length, 'Logs:', logs.length);
-    
-    // Create a map of item IDs to their completed status
-    const completionMap = new Map<string, boolean>();
-    logs.forEach(log => {
-      completionMap.set(log.item_id, log.is_completed === true);
-    });
-    
-    // Map items to include their completion status
-    return items.map(item => ({
-      ...item,
-      isCompleted: completionMap.has(item.id) ? completionMap.get(item.id)! : false
-    }));
-  } catch (error) {
-    console.error('[getArrivalItemsWithStatus] Error:', error);
-    throw error;
-  }
-};
+    console.log(`[getChecklistForCategory] Fetching for user: ${userId}, category: ${category}`);
 
-// Get departure areas with items and completion status
-export const getDepartureAreasWithItems = async (userId: string): Promise<AreaWithItems[]> => {
-  try {
-    console.log('[getDepartureAreasWithItems] Fetching for user:', userId);
-    
-    // Fetch all areas
+    // Determine season
+    const month = new Date().getMonth(); // 0-11
+    const season = (month >= 9 || month <= 2) ? 'winter' : 'summer'; // Oct-Mar is winter
+
+    // Fetch all areas and items for the category, filtered by season
     const areas = await fetchAreas();
-    
-    // Fetch all departure checklist items
-    const items = await fetchChecklistItems('departure');
-    
-    // Fetch all completion logs for the user
+    const items = await fetchChecklistItems(category, season);
     const logs = await fetchCompletionLogs(userId);
-    
-    console.log('[getDepartureAreasWithItems] Areas:', areas.length, 'Items:', items.length, 'Logs:', logs.length);
-    
-    // Create a map of item IDs to their completed status
+
+    console.log(`[getChecklistForCategory] Areas: ${areas.length}, Items: ${items.length}, Logs: ${logs.length}, Season: ${season}`);
+
+    // Create a map of item IDs to their latest completed status
     const completionMap = new Map<string, boolean>();
     logs.forEach(log => {
-      completionMap.set(log.item_id, log.is_completed === true);
+      // Since logs are ordered by date descending, the first one we see is the latest.
+      if (!completionMap.has(log.item_id)) {
+        completionMap.set(log.item_id, log.is_completed);
+      }
     });
-    
+
     // Group items by area
     const itemsByArea = items.reduce((acc, item) => {
-      const areaId = item.area_id || 'undefined';
+      const areaId = item.area_id;
+      if (!areaId) return acc;
       if (!acc[areaId]) {
         acc[areaId] = [];
       }
-      
       acc[areaId].push({
         ...item,
-        isCompleted: completionMap.has(item.id) ? completionMap.get(item.id)! : false
+        isCompleted: completionMap.get(item.id) ?? false
       });
-      
       return acc;
     }, {} as Record<string, ChecklistItemWithStatus[]>);
-    
+
     // Map areas to include their items and completion status
-    return areas.map(area => {
+    const result = areas.map(area => {
       const areaItems = itemsByArea[area.id] || [];
       return {
         ...area,
+        name: area.name,
         items: areaItems,
-        isCompleted: areaItems.length > 0 && areaItems.every(item => item.isCompleted === true)
+        isCompleted: areaItems.length > 0 && areaItems.every(item => item.isCompleted)
       };
-    });
+    }).filter(area => area.items.length > 0); // Only return areas that have items for this category
+
+    return result;
+
   } catch (error) {
-    console.error('[getDepartureAreasWithItems] Error:', error);
+    console.error('[getChecklistForCategory] Error:', error);
     throw error;
   }
 };

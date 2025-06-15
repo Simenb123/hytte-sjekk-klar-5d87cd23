@@ -101,24 +101,27 @@ export type Database = {
       checklist_items: {
         Row: {
           area_id: string | null
+          category: string | null
           created_at: string
           id: string
+          season: string | null
           text: string
-          type: string
         }
         Insert: {
           area_id?: string | null
+          category?: string | null
           created_at?: string
           id?: string
+          season?: string | null
           text: string
-          type: string
         }
         Update: {
           area_id?: string | null
+          category?: string | null
           created_at?: string
           id?: string
+          season?: string | null
           text?: string
-          type?: string
         }
         Relationships: [
           {
