@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { InventoryItem } from '@/types/inventory';
@@ -12,6 +13,13 @@ const fetchInventory = async (): Promise<InventoryItem[]> => {
       description,
       created_at,
       user_id,
+      brand,
+      color,
+      location,
+      shelf,
+      size,
+      owner,
+      notes,
       item_images ( image_url ),
       profiles ( id, first_name, last_name )
     `)
@@ -41,6 +49,13 @@ export type NewInventoryItemData = {
   name: string;
   description?: string;
   image?: File;
+  brand?: string;
+  color?: string;
+  location?: string;
+  shelf?: string;
+  size?: string;
+  owner?: string;
+  notes?: string;
 };
 
 export const useAddInventoryItem = () => {
@@ -54,7 +69,18 @@ export const useAddInventoryItem = () => {
       // 1. Insert item details
       const { data: itemData, error: itemError } = await supabase
         .from('inventory_items')
-        .insert({ name: newItem.name, description: newItem.description, user_id: user.id })
+        .insert({ 
+            name: newItem.name, 
+            description: newItem.description, 
+            user_id: user.id,
+            brand: newItem.brand || null,
+            color: newItem.color || null,
+            location: newItem.location || null,
+            shelf: newItem.shelf || null,
+            size: newItem.size || null,
+            owner: newItem.owner || null,
+            notes: newItem.notes || null,
+        })
         .select()
         .single();
 

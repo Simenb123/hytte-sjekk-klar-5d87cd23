@@ -24,6 +24,13 @@ const formSchema = z.object({
   name: z.string().min(2, { message: "Navn må ha minst 2 tegn." }),
   description: z.string().optional(),
   image: z.instanceof(File).optional(),
+  brand: z.string().optional(),
+  color: z.string().optional(),
+  location: z.string().optional(),
+  shelf: z.string().optional(),
+  size: z.string().optional(),
+  owner: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 export function NewItemDialog() {
@@ -35,6 +42,13 @@ export function NewItemDialog() {
     defaultValues: {
       name: "",
       description: "",
+      brand: "",
+      color: "",
+      location: "",
+      shelf: "",
+      size: "",
+      owner: "",
+      notes: "",
     },
   });
 
@@ -62,7 +76,7 @@ export function NewItemDialog() {
           <Plus className="mr-2 h-4 w-4" /> Legg til gjenstand
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Legg til ny gjenstand</DialogTitle>
           <DialogDescription>
@@ -70,7 +84,7 @@ export function NewItemDialog() {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
             <FormField
               control={form.control}
               name="name"
@@ -91,7 +105,98 @@ export function NewItemDialog() {
                 <FormItem>
                   <FormLabel>Beskrivelse</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="F.eks. Størrelse L, funnet på hemsen." {...field} />
+                    <Textarea placeholder="F.eks. Funnet på hemsen." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="brand"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Merke</FormLabel>
+                  <FormControl>
+                    <Input placeholder="F.eks. Norrøna" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="color"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Farge</FormLabel>
+                  <FormControl>
+                    <Input placeholder="F.eks. Rød" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="size"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Størrelse</FormLabel>
+                  <FormControl>
+                    <Input placeholder="F.eks. L" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="owner"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Eier</FormLabel>
+                  <FormControl>
+                    <Input placeholder="F.eks. EB" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Plassering</FormLabel>
+                  <FormControl>
+                    <Input placeholder="F.eks. Venstre hylle" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="shelf"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Skuff/Hylle nr.</FormLabel>
+                  <FormControl>
+                    <Input placeholder="F.eks. 1" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notater</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="F.eks. EB gammelt?" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

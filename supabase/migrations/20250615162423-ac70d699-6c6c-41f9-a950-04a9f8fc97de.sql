@@ -1,0 +1,9 @@
+
+ALTER TABLE public.inventory_items
+ADD COLUMN brand TEXT,
+ADD COLUMN color TEXT,
+ADD COLUMN location TEXT,
+ADD COLUMN shelf TEXT,
+ADD COLUMN size TEXT,
+ADD COLUMN owner TEXT,
+ADD COLUMN notes TEXT;

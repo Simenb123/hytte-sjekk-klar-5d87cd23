@@ -3,7 +3,7 @@ import React from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertTriangle, User, Calendar, Info } from "lucide-react";
+import { AlertTriangle, User, Calendar, Info, Tag, Palette, Ruler, Home, StickyNote } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
@@ -57,9 +57,9 @@ const InventoryList: React.FC = () => {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {items.map((item) => (
-        <Card key={item.id}>
+        <Card key={item.id} className="flex flex-col">
           {item.item_images && item.item_images.length > 0 && (
             <div className="aspect-video w-full overflow-hidden rounded-t-lg">
                 <img src={item.item_images[0].image_url} alt={item.name} className="w-full h-full object-cover"/>
@@ -67,17 +67,25 @@ const InventoryList: React.FC = () => {
           )}
           <CardHeader>
             <CardTitle>{item.name}</CardTitle>
-            <CardDescription className="flex items-center text-xs text-gray-500 gap-4">
+            <CardDescription className="flex items-center text-xs text-gray-500 gap-4 pt-1">
                  <span className="flex items-center gap-1">
-                    <User size={12}/> {item.profiles?.first_name || 'Ukjent'}
+                    <User size={12}/> {item.owner || item.profiles?.first_name || 'Ukjent'}
                  </span>
                  <span className="flex items-center gap-1">
                     <Calendar size={12}/> {format(new Date(item.created_at), 'd. MMM yyyy', { locale: nb })}
                  </span>
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-700">{item.description}</p>
+          <CardContent className="flex-grow">
+            {item.description && <p className="text-sm text-gray-700 mb-4">{item.description}</p>}
+            
+            <div className="text-xs text-gray-600 space-y-2">
+              {item.brand && <p className="flex items-center gap-2"><Tag size={12} className="text-gray-500"/> <span className="font-semibold">Merke:</span> {item.brand}</p>}
+              {item.color && <p className="flex items-center gap-2"><Palette size={12} className="text-gray-500"/> <span className="font-semibold">Farge:</span> {item.color}</p>}
+              {item.size && <p className="flex items-center gap-2"><Ruler size={12} className="text-gray-500"/> <span className="font-semibold">Størrelse:</span> {item.size}</p>}
+              {item.location && <p className="flex items-center gap-2"><Home size={12} className="text-gray-500"/> <span className="font-semibold">Plassering:</span> {item.location}{item.shelf ? `, hylle ${item.shelf}`: ''}</p>}
+              {item.notes && <p className="flex items-start gap-2 pt-2"><StickyNote size={12} className="text-gray-500 mt-0.5"/> <span className="italic">"{item.notes}"</span></p>}
+            </div>
           </CardContent>
         </Card>
       ))}

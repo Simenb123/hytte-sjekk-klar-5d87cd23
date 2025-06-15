@@ -174,24 +174,45 @@ export type Database = {
       }
       inventory_items: {
         Row: {
+          brand: string | null
+          color: string | null
           created_at: string
           description: string | null
           id: string
+          location: string | null
           name: string
+          notes: string | null
+          owner: string | null
+          shelf: string | null
+          size: string | null
           user_id: string
         }
         Insert: {
+          brand?: string | null
+          color?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          location?: string | null
           name: string
+          notes?: string | null
+          owner?: string | null
+          shelf?: string | null
+          size?: string | null
           user_id: string
         }
         Update: {
+          brand?: string | null
+          color?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          location?: string | null
           name?: string
+          notes?: string | null
+          owner?: string | null
+          shelf?: string | null
+          size?: string | null
           user_id?: string
         }
         Relationships: [
