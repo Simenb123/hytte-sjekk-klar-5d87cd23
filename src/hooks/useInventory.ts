@@ -105,3 +105,42 @@ export const useAddInventoryItem = () => {
     },
   });
 };
+
+export const useBulkAddInventoryItems = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation<void, Error, NewInventoryItemData[]>({
+    mutationFn: async (newItems) => {
+      if (!user) throw new Error("User not authenticated");
+
+      const itemsToInsert = newItems
+        .filter(item => Object.values(item).some(val => val)) // Filter out completely empty rows
+        .map(item => ({
+          name: item.name || null,
+          description: item.description || null,
+          brand: item.brand || null,
+          color: item.color || null,
+          location: item.location || null,
+          shelf: item.shelf || null,
+          size: item.size || null,
+          owner: item.owner || null,
+          notes: item.notes || null,
+          user_id: user.id,
+        }));
+
+      if (itemsToInsert.length === 0) {
+        return;
+      }
+
+      const { error } = await supabase
+        .from('inventory_items')
+        .insert(itemsToInsert);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+  });
+};

@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 import { Loader2, Plus } from 'lucide-react';
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: "Navn må ha minst 2 tegn." }),
+  name: z.string().optional(),
   description: z.string().optional(),
   image: z.instanceof(File).optional(),
   brand: z.string().optional(),
@@ -54,12 +54,6 @@ export function NewItemDialog() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Although Zod validates this, the type guard helps TypeScript and adds a runtime check.
-      if (!values.name) {
-        toast.error("Navn er påkrevd for å lagre.");
-        return;
-      }
-      
       await addItemMutation.mutateAsync(values as NewInventoryItemData);
       toast.success("Gjenstand lagt til!");
       form.reset();
