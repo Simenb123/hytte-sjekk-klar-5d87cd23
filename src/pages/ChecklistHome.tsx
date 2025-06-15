@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { checklistCategories, ChecklistCategory } from "../models/checklist";
-import { ChevronRight, Home, KeyRound, LogOut, Luggage, Wrench, Loader2 } from "lucide-react";
+import { ChevronRight, Home, KeyRound, LogOut, Luggage, Wrench, Loader2, Bot } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getCategoriesSummary } from "@/services/checklist.service";
 import { useAuth } from "@/context/AuthContext";
@@ -32,7 +32,7 @@ export default function ChecklistHome() {
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader title="Sjekklister" showHomeButton={true} />
-      <main className="p-4 sm:p-6 max-w-lg mx-auto">
+      <main className="p-4 sm:p-6 max-w-lg mx-auto pb-24">
         {isLoading && (
           <div className="flex justify-center items-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -81,6 +81,14 @@ export default function ChecklistHome() {
           })}
         </div>
       </main>
+      <Link
+        to="/ai-helper"
+        className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform hover:scale-110 active:scale-100 z-20"
+        aria-label="AI Hyttehjelper"
+      >
+        <Bot className="h-6 w-6" />
+      </Link>
     </div>
   );
 }
+

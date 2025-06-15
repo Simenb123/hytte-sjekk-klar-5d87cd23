@@ -6,6 +6,7 @@ import LogsPage from './pages/LogsPage';
 import AuthPage from './pages/AuthPage';
 import ChecklistHome from './pages/ChecklistHome';
 import ChecklistPage from './pages/ChecklistPage';
+import AiHelperPage from './pages/AiHelperPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import { AuthProvider } from './context/AuthContext';
@@ -61,6 +62,11 @@ const App = () => {
               <Route path="/checklists/:category" element={
                 <ProtectedRoute>
                   <ChecklistPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/ai-helper" element={
+                <ProtectedRoute>
+                  <AiHelperPage />
                 </ProtectedRoute>
               } />
               
