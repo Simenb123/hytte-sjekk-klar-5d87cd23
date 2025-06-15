@@ -1,4 +1,3 @@
-
 import AppHeader from "@/components/AppHeader";
 import InventoryList from "@/components/inventory/InventoryList";
 import { NewItemDialog } from "@/components/inventory/NewItemDialog";
@@ -22,7 +21,7 @@ export default function InventoryPage() {
 
   return (
     <div className="flex flex-col h-screen bg-hytte-snow">
-      <AppHeader title="Inventar" showBackButton={true} showHomeButton={true} rightContent={
+      <AppHeader title="Inventar" showBackButton={true} rightContent={
         <div className="flex items-center gap-2">
           <SkiImportButton />
           <BulkImportButton />
