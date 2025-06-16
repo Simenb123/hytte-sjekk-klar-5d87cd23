@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { InventoryItem } from '@/types/inventory';
@@ -48,20 +49,21 @@ const fetchInventory = async (userId?: string): Promise<InventoryItem[]> => {
 };
 
 export const useInventory = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   
-  console.log('[useInventory] Hook called with user:', user?.id);
+  console.log('[useInventory] Hook called with user:', user?.id, 'session exists:', !!session);
 
   const result = useQuery({
     queryKey: ['inventory', user?.id],
     queryFn: () => fetchInventory(user?.id),
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!session,
     retry: (failureCount, error) => {
       console.log('[useInventory] Query failed, retry count:', failureCount);
       console.log('[useInventory] Error:', error);
       return failureCount < 3;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Log success and error using the result object

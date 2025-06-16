@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User } from 'lucide-react';
 import {
@@ -13,10 +13,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from '@/context/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { toast } from 'sonner';
 
 const ProfileButton = () => {
   const { user, signOut } = useAuth();
   const { profile } = useProfile(user);
+  const navigate = useNavigate();
   
   const getInitials = () => {
     if (!profile) return 'U';
@@ -27,6 +29,18 @@ const ProfileButton = () => {
     if (!firstName && !lastName) return 'U';
     
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
+  const handleSignOut = async () => {
+    try {
+      console.log('[ProfileButton] Starting logout process');
+      await signOut();
+      console.log('[ProfileButton] Logout successful, navigating to login');
+      navigate('/login');
+    } catch (error) {
+      console.error('[ProfileButton] Logout error:', error);
+      toast.error('Feil ved utlogging');
+    }
   };
   
   return (
@@ -47,7 +61,7 @@ const ProfileButton = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={signOut} className="text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer font-medium">
+        <DropdownMenuItem onClick={handleSignOut} className="text-red-500 hover:text-red-600 hover:bg-red-50 cursor-pointer font-medium">
           Logg ut
         </DropdownMenuItem>
       </DropdownMenuContent>

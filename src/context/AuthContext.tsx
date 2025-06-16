@@ -47,14 +47,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (event === 'SIGNED_IN') {
               console.log('[AuthContext] User signed in successfully');
               toast.success('Du er nå logget inn!');
-              // Clear any cached data and force refresh
-              window.location.reload();
             } else if (event === 'SIGNED_OUT') {
               console.log('[AuthContext] User signed out');
               toast.info('Du er nå logget ut');
-              // Clear any cached data
-              localStorage.clear();
-              sessionStorage.clear();
+              // Clear session state immediately without page reload
+              setSession(null);
+              setUser(null);
             } else if (event === 'TOKEN_REFRESHED') {
               console.log('[AuthContext] Token refreshed for user:', currentSession?.user?.id);
             }
@@ -152,18 +150,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('[AuthContext] Attempting to sign out user:', user?.id);
       
+      // Clear state immediately to ensure UI updates
+      setSession(null);
+      setUser(null);
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('[AuthContext] Sign out error:', error);
-        toast.error(error.message);
-        throw error;
+        // Even if signOut fails, we've already cleared local state
+        // Show a warning but don't throw to prevent UI issues
+        toast.error('Utlogging feilet, men du er logget ut lokalt');
+        return;
       }
       
       console.log('[AuthContext] Sign out successful');
     } catch (error: any) {
       console.error('[AuthContext] Sign out error:', error);
-      throw error;
+      // Don't throw errors from signOut as it can break the UI
+      // The user appears logged out locally anyway
+      toast.error('Utlogging feilet, men du er logget ut lokalt');
     }
   };
 
