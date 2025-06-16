@@ -12,6 +12,7 @@ import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { EditItemDialog } from './EditItemDialog';
 import { Badge } from '../ui/badge';
+import { useAuth } from '@/context/AuthContext';
 
 interface InventoryListProps {
   searchTerm: string;
@@ -23,7 +24,17 @@ interface InventoryListProps {
 }
 
 const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, category }) => {
+  const { user } = useAuth();
   const { data: items, isLoading, error } = useInventory();
+
+  console.log('[InventoryList] Render with:', {
+    user: user?.id,
+    itemsCount: items?.length || 0,
+    isLoading,
+    error: error?.message,
+    searchTerm,
+    category
+  });
 
   const processedItems = useMemo(() => {
     if (!items) return [];
@@ -72,10 +83,26 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
       return 0;
     });
 
+    console.log('[InventoryList] Processed items:', filteredItems.length);
     return filteredItems;
   }, [items, searchTerm, sortConfig, category]);
 
+  // Check auth status
+  if (!user) {
+    console.log('[InventoryList] No authenticated user found');
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Ikke logget inn</AlertTitle>
+        <AlertDescription>
+          Du må logge inn for å se inventaret ditt. <a href="/login" className="underline">Logg inn her</a>.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   if (isLoading) {
+    console.log('[InventoryList] Loading state');
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(3)].map((_, i) => (
@@ -97,40 +124,58 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
   }
 
   if (error) {
+    console.error('[InventoryList] Error state:', error);
     return (
         <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Feil</AlertTitle>
+            <AlertTitle>Feil ved henting av inventar</AlertTitle>
             <AlertDescription>
                 Klarte ikke å hente inventarliste: {error.message}
+                <br />
+                <small className="text-xs mt-2 block">
+                  Bruker ID: {user.id}<br />
+                  Prøv å logge ut og inn igjen, eller kontakt support hvis problemet vedvarer.
+                </small>
             </AlertDescription>
         </Alert>
     );
   }
 
   if (!items || items.length === 0) {
+     console.log('[InventoryList] No items found');
      return (
         <Alert>
             <Info className="h-4 w-4" />
             <AlertTitle>Ingen gjenstander funnet</AlertTitle>
             <AlertDescription>
                 Det er ingen gjenstander i inventarlisten ennå. Trykk på "Legg til gjenstand" for å starte.
+                <br />
+                <small className="text-xs mt-2 block">
+                  Bruker ID: {user.id}
+                </small>
             </AlertDescription>
         </Alert>
      )
   }
 
   if (processedItems.length === 0) {
+    console.log('[InventoryList] No items after filtering');
     return (
        <Alert>
            <Info className="h-4 w-4" />
            <AlertTitle>Ingen treff</AlertTitle>
            <AlertDescription>
                Ditt søk ga ingen resultater. Prøv å endre søkeordet eller fjerne filtre.
+               <br />
+               <small className="text-xs mt-2 block">
+                 Totalt antall gjenstander: {items.length}
+               </small>
            </AlertDescription>
        </Alert>
     )
  }
+
+  console.log('[InventoryList] Rendering', processedItems.length, 'items');
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

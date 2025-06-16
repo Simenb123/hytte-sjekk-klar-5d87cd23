@@ -3,7 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { InventoryItem } from '@/types/inventory';
 import { useAuth } from '@/context/AuthContext';
 
-const fetchInventory = async (): Promise<InventoryItem[]> => {
+const fetchInventory = async (userId?: string): Promise<InventoryItem[]> => {
+  console.log('[useInventory] Fetching inventory for user:', userId);
+  
+  if (!userId) {
+    console.log('[useInventory] No user ID provided, returning empty array');
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('inventory_items')
     .select(`
@@ -22,21 +29,45 @@ const fetchInventory = async (): Promise<InventoryItem[]> => {
       category,
       item_images ( image_url )
     `)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching inventory:', error);
-    throw new Error(error.message);
+    console.error('[useInventory] Error fetching inventory:', error);
+    console.error('[useInventory] Error details:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint
+    });
+    throw new Error(`Kunne ikke hente inventar: ${error.message}`);
   }
 
-  // The problematic join is removed, so we can return data directly.
+  console.log('[useInventory] Successfully fetched', data?.length || 0, 'items');
   return data as InventoryItem[];
 };
 
 export const useInventory = () => {
+  const { user } = useAuth();
+  
+  console.log('[useInventory] Hook called with user:', user?.id);
+
   return useQuery({
-    queryKey: ['inventory'],
-    queryFn: fetchInventory,
+    queryKey: ['inventory', user?.id],
+    queryFn: () => fetchInventory(user?.id),
+    enabled: !!user?.id,
+    retry: (failureCount, error) => {
+      console.log('[useInventory] Query failed, retry count:', failureCount);
+      console.log('[useInventory] Error:', error);
+      return failureCount < 3;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    onError: (error) => {
+      console.error('[useInventory] Query error:', error);
+    },
+    onSuccess: (data) => {
+      console.log('[useInventory] Query success, items count:', data.length);
+    }
   });
 };
 
@@ -64,7 +95,12 @@ export const useAddInventoryItem = () => {
 
   return useMutation<void, Error, NewInventoryItemData>({
     mutationFn: async (newItem) => {
-      if (!user) throw new Error("User not authenticated");
+      if (!user) {
+        console.error('[useAddInventoryItem] No authenticated user');
+        throw new Error("Bruker ikke autentisert");
+      }
+
+      console.log('[useAddInventoryItem] Adding item for user:', user.id);
 
       // 1. Insert item details
       const { data: itemData, error: itemError } = await supabase
@@ -85,17 +121,26 @@ export const useAddInventoryItem = () => {
         .select()
         .single();
 
-      if (itemError) throw itemError;
+      if (itemError) {
+        console.error('[useAddInventoryItem] Error inserting item:', itemError);
+        throw new Error(`Kunne ikke legge til gjenstand: ${itemError.message}`);
+      }
+
+      console.log('[useAddInventoryItem] Item inserted successfully:', itemData.id);
 
       // 2. Upload image if it exists
       if (newItem.image) {
+        console.log('[useAddInventoryItem] Uploading image');
         const fileExt = newItem.image.name.split('.').pop();
         const fileName = `${user.id}/${itemData.id}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from('inventory_images')
           .upload(fileName, newItem.image);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('[useAddInventoryItem] Error uploading image:', uploadError);
+          throw new Error(`Kunne ikke laste opp bilde: ${uploadError.message}`);
+        }
 
         // 3. Get public URL and link image to item
         const { data: { publicUrl } } = supabase.storage.from('inventory_images').getPublicUrl(fileName);
@@ -104,12 +149,21 @@ export const useAddInventoryItem = () => {
           .from('item_images')
           .insert({ item_id: itemData.id, image_url: publicUrl, user_id: user.id });
 
-        if (imageError) throw imageError;
+        if (imageError) {
+          console.error('[useAddInventoryItem] Error linking image:', imageError);
+          throw new Error(`Kunne ikke knytte bilde til gjenstand: ${imageError.message}`);
+        }
+
+        console.log('[useAddInventoryItem] Image uploaded and linked successfully');
       }
     },
     onSuccess: () => {
+      console.log('[useAddInventoryItem] Invalidating inventory queries');
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
+    onError: (error) => {
+      console.error('[useAddInventoryItem] Mutation error:', error);
+    }
   });
 };
 
@@ -119,7 +173,12 @@ export const useUpdateInventoryItem = () => {
 
   return useMutation<void, Error, UpdateInventoryItemData>({
     mutationFn: async (itemToUpdate) => {
-      if (!user) throw new Error("User not authenticated");
+      if (!user) {
+        console.error('[useUpdateInventoryItem] No authenticated user');
+        throw new Error("Bruker ikke autentisert");
+      }
+
+      console.log('[useUpdateInventoryItem] Updating item:', itemToUpdate.id, 'for user:', user.id);
 
       const { id, image, ...itemDetails } = itemToUpdate;
 
@@ -138,19 +197,30 @@ export const useUpdateInventoryItem = () => {
             notes: itemDetails.notes || null,
             category: itemDetails.category || null,
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('user_id', user.id);
 
-      if (itemError) throw itemError;
+      if (itemError) {
+        console.error('[useUpdateInventoryItem] Error updating item:', itemError);
+        throw new Error(`Kunne ikke oppdatere gjenstand: ${itemError.message}`);
+      }
+
+      console.log('[useUpdateInventoryItem] Item updated successfully');
 
       // 2. Handle image update if a new image is provided
       if (image) {
+        console.log('[useUpdateInventoryItem] Updating image');
+        
         // First, find old images to delete them
         const { data: oldImages, error: oldImagesError } = await supabase
           .from('item_images')
           .select('image_url')
-          .eq('item_id', id);
+          .eq('item_id', id)
+          .eq('user_id', user.id);
 
-        if (oldImagesError) console.error("Could not fetch old images to delete", oldImagesError);
+        if (oldImagesError) {
+          console.error('[useUpdateInventoryItem] Could not fetch old images to delete:', oldImagesError);
+        }
 
         if (oldImages && oldImages.length > 0) {
             const oldImagePaths = oldImages.map(img => {
@@ -162,15 +232,20 @@ export const useUpdateInventoryItem = () => {
               .from('inventory_images')
               .remove(oldImagePaths);
 
-            if (removeError) console.error("Failed to remove old images from storage:", removeError);
+            if (removeError) {
+              console.error('[useUpdateInventoryItem] Failed to remove old images from storage:', removeError);
+            }
 
             // Also delete from item_images table
             const { error: dbDeleteError } = await supabase
                 .from('item_images')
                 .delete()
-                .eq('item_id', id);
+                .eq('item_id', id)
+                .eq('user_id', user.id);
             
-            if (dbDeleteError) console.error("Failed to delete old image records from db:", dbDeleteError);
+            if (dbDeleteError) {
+              console.error('[useUpdateInventoryItem] Failed to delete old image records from db:', dbDeleteError);
+            }
         }
 
         // Upload new image
@@ -180,7 +255,10 @@ export const useUpdateInventoryItem = () => {
           .from('inventory_images')
           .upload(fileName, image);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('[useUpdateInventoryItem] Error uploading new image:', uploadError);
+          throw new Error(`Kunne ikke laste opp nytt bilde: ${uploadError.message}`);
+        }
 
         // Get public URL and link image to item
         const { data: { publicUrl } } = supabase.storage.from('inventory_images').getPublicUrl(fileName);
@@ -189,12 +267,21 @@ export const useUpdateInventoryItem = () => {
           .from('item_images')
           .insert({ item_id: id, image_url: publicUrl, user_id: user.id });
 
-        if (imageError) throw imageError;
+        if (imageError) {
+          console.error('[useUpdateInventoryItem] Error linking new image:', imageError);
+          throw new Error(`Kunne ikke knytte nytt bilde til gjenstand: ${imageError.message}`);
+        }
+
+        console.log('[useUpdateInventoryItem] Image updated successfully');
       }
     },
     onSuccess: () => {
+      console.log('[useUpdateInventoryItem] Invalidating inventory queries');
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
+    onError: (error) => {
+      console.error('[useUpdateInventoryItem] Mutation error:', error);
+    }
   });
 };
 
@@ -204,7 +291,12 @@ export const useBulkAddInventoryItems = () => {
 
   return useMutation<void, Error, NewInventoryItemData[]>({
     mutationFn: async (newItems) => {
-      if (!user) throw new Error("User not authenticated");
+      if (!user) {
+        console.error('[useBulkAddInventoryItems] No authenticated user');
+        throw new Error("Bruker ikke autentisert");
+      }
+
+      console.log('[useBulkAddInventoryItems] Adding', newItems.length, 'items for user:', user.id);
 
       const itemsToInsert = newItems
         .filter(item => Object.values(item).some(val => val)) // Filter out completely empty rows
@@ -223,17 +315,29 @@ export const useBulkAddInventoryItems = () => {
         }));
 
       if (itemsToInsert.length === 0) {
+        console.log('[useBulkAddInventoryItems] No valid items to insert');
         return;
       }
+
+      console.log('[useBulkAddInventoryItems] Inserting', itemsToInsert.length, 'filtered items');
 
       const { error } = await supabase
         .from('inventory_items')
         .insert(itemsToInsert);
       
-      if (error) throw error;
+      if (error) {
+        console.error('[useBulkAddInventoryItems] Error bulk inserting items:', error);
+        throw new Error(`Kunne ikke legge til gjenstander: ${error.message}`);
+      }
+
+      console.log('[useBulkAddInventoryItems] Bulk insert successful');
     },
     onSuccess: () => {
+      console.log('[useBulkAddInventoryItems] Invalidating inventory queries');
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
+    onError: (error) => {
+      console.error('[useBulkAddInventoryItems] Mutation error:', error);
+    }
   });
 };
