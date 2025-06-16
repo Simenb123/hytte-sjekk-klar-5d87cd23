@@ -52,7 +52,7 @@ export const useInventory = () => {
   
   console.log('[useInventory] Hook called with user:', user?.id);
 
-  return useQuery({
+  const result = useQuery({
     queryKey: ['inventory', user?.id],
     queryFn: () => fetchInventory(user?.id),
     enabled: !!user?.id,
@@ -62,13 +62,18 @@ export const useInventory = () => {
       return failureCount < 3;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-    onError: (error) => {
-      console.error('[useInventory] Query error:', error);
-    },
-    onSuccess: (data) => {
-      console.log('[useInventory] Query success, items count:', data.length);
-    }
   });
+
+  // Log success and error using the result object
+  if (result.error) {
+    console.error('[useInventory] Query error:', result.error);
+  }
+  
+  if (result.data) {
+    console.log('[useInventory] Query success, items count:', result.data.length);
+  }
+
+  return result;
 };
 
 export type NewInventoryItemData = {
