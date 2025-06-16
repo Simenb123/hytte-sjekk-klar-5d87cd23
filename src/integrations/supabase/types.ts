@@ -101,6 +101,7 @@ export type Database = {
       checklist_items: {
         Row: {
           area_id: string | null
+          assigned_to: string | null
           category: string | null
           created_at: string
           id: string
@@ -109,6 +110,7 @@ export type Database = {
         }
         Insert: {
           area_id?: string | null
+          assigned_to?: string | null
           category?: string | null
           created_at?: string
           id?: string
@@ -117,6 +119,7 @@ export type Database = {
         }
         Update: {
           area_id?: string | null
+          assigned_to?: string | null
           category?: string | null
           created_at?: string
           id?: string
@@ -124,6 +127,13 @@ export type Database = {
           text?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "checklist_items_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_area"
             columns: ["area_id"]
@@ -172,6 +182,45 @@ export type Database = {
           },
         ]
       }
+      family_members: {
+        Row: {
+          birth_date: string | null
+          created_at: string
+          id: string
+          is_user: boolean | null
+          linked_user_id: string | null
+          name: string
+          nickname: string | null
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string
+          id?: string
+          is_user?: boolean | null
+          linked_user_id?: string | null
+          name: string
+          nickname?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string
+          id?: string
+          is_user?: boolean | null
+          linked_user_id?: string | null
+          name?: string
+          nickname?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       inventory_items: {
         Row: {
           brand: string | null
@@ -179,6 +228,7 @@ export type Database = {
           color: string | null
           created_at: string
           description: string | null
+          family_member_id: string | null
           id: string
           location: string | null
           name: string
@@ -194,6 +244,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           description?: string | null
+          family_member_id?: string | null
           id?: string
           location?: string | null
           name: string
@@ -209,6 +260,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           description?: string | null
+          family_member_id?: string | null
           id?: string
           location?: string | null
           name?: string
@@ -219,6 +271,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "inventory_items_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inventory_items_user_id_fkey"
             columns: ["user_id"]
@@ -398,6 +457,54 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      task_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by_user_id: string
+          checklist_item_id: string
+          completed_at: string | null
+          family_member_id: string
+          id: string
+          is_completed: boolean | null
+          notes: string | null
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by_user_id: string
+          checklist_item_id: string
+          completed_at?: string | null
+          family_member_id: string
+          id?: string
+          is_completed?: boolean | null
+          notes?: string | null
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by_user_id?: string
+          checklist_item_id?: string
+          completed_at?: string | null
+          family_member_id?: string
+          id?: string
+          is_completed?: boolean | null
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_assignments_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_assignments_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

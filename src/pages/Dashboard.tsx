@@ -1,48 +1,114 @@
-
+import React from 'react';
 import { Link } from 'react-router-dom';
-import DashboardCard from '../components/DashboardCard';
-import AppHeader from '../components/AppHeader';
-import { Calendar, ListChecks, Bot, Archive } from 'lucide-react';
+import DashboardCard from '@/components/DashboardCard';
+import AppHeader from '@/components/AppHeader';
+import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User } from 'lucide-react';
 
-const Dashboard = () => {
+export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Dashbord" />
+    <div className="flex flex-col h-screen bg-hytte-snow">
+      <AppHeader title="Gaustablikk" />
+      
+      <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-3xl font-bold text-hytte-darkblue mb-8 text-center">
+            Velkommen til Gaustablikk
+          </h1>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Link to="/checklist">
+              <DashboardCard
+                title="Sjekkliste"
+                description="Hold styr på alle gjøremål før, under og etter oppholdet"
+                icon={<ClipboardList className="h-8 w-8" />}
+                color="bg-gradient-to-br from-blue-500 to-blue-600"
+              />
+            </Link>
+            
+            <Link to="/inventory">
+              <DashboardCard
+                title="Inventar"
+                description="Oversikt over alle gjenstander på hytta"
+                icon={<Package className="h-8 w-8" />}
+                color="bg-gradient-to-br from-green-500 to-green-600"
+              />
+            </Link>
 
-      <main className="p-4 md:p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <DashboardCard
-            title="Kalender"
-            description="Se og administrer bookinger"
-            linkTo="/bookings"
-            icon={<Calendar className="h-8 w-8" />}
-            color="bg-blue-600"
-          />
-          <DashboardCard
-            title="Sjekklister"
-            description="Rutiner for ankomst og avreise"
-            linkTo="/checklists"
-            icon={<ListChecks className="h-8 w-8" />}
-            color="bg-green-600"
-          />
-          <DashboardCard
-            title="Hyttehjelper"
-            description="Spør vår AI-assistent om hytta"
-            linkTo="/ai-helper"
-            icon={<Bot className="h-8 w-8" />}
-            color="bg-purple-600"
-          />
-          <DashboardCard
-            title="Inventar"
-            description="Se og administrer gjenstander"
-            linkTo="/inventory"
-            icon={<Archive className="h-8 w-8" />}
-            color="bg-orange-600"
-          />
+            <Link to="/family">
+              <DashboardCard
+                title="Familie"
+                description="Administrer familiemedlemmer og tilordne oppgaver"
+                icon={<Users className="h-8 w-8" />}
+                color="bg-gradient-to-br from-purple-500 to-purple-600"
+              />
+            </Link>
+            
+            <Link to="/booking">
+              <DashboardCard
+                title="Booking"
+                description="Planlegg og administrer hytteopphold"
+                icon={<Calendar className="h-8 w-8" />}
+                color="bg-gradient-to-br from-orange-500 to-orange-600"
+              />
+            </Link>
+            
+            <Link to="/calendar">
+              <DashboardCard
+                title="Kalender"
+                description="Se kommende opphold og arrangementer"
+                icon={<Calendar className="h-8 w-8" />}
+                color="bg-gradient-to-br from-indigo-500 to-indigo-600"
+              />
+            </Link>
+            
+            <Link to="/weather">
+              <DashboardCard
+                title="Vær"
+                description="Værmeldingen for Gaustaområdet"
+                icon={<Cloud className="h-8 w-8" />}
+                color="bg-gradient-to-br from-cyan-500 to-cyan-600"
+              />
+            </Link>
+            
+            <Link to="/ai-helper">
+              <DashboardCard
+                title="AI-assistent"
+                description="Få hjelp og råd om hytta"
+                icon={<MessageCircle className="h-8 w-8" />}
+                color="bg-gradient-to-br from-rose-500 to-rose-600"
+              />
+            </Link>
+            
+            <Link to="/other-apps">
+              <DashboardCard
+                title="Andre apper"
+                description="Nyttige apper for hyttelivet"
+                icon={<Gamepad2 className="h-8 w-8" />}
+                color="bg-gradient-to-br from-amber-500 to-amber-600"
+              />
+            </Link>
+            
+            <Link to="/logs">
+              <DashboardCard
+                title="Logger"
+                description="Se systemlogger og feilmeldinger"
+                icon={<FileText className="h-8 w-8" />}
+                color="bg-gradient-to-br from-gray-500 to-gray-600"
+              />
+            </Link>
+          </div>
+          
+          <div className="mt-8 text-center">
+            <Link 
+              to="/profile" 
+              className="inline-flex items-center gap-2 px-4 py-2 text-hytte-darkblue hover:text-hytte-darkblue/80 transition-colors"
+            >
+              <User className="h-4 w-4" />
+              Min profil
+            </Link>
+          </div>
         </div>
       </main>
     </div>
   );
-};
-
-export default Dashboard;
+}

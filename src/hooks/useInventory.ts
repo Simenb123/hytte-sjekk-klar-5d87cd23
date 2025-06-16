@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { InventoryItem } from '@/types/inventory';
@@ -28,7 +27,9 @@ const fetchInventory = async (userId?: string): Promise<InventoryItem[]> => {
       owner,
       notes,
       category,
-      item_images ( image_url )
+      family_member_id,
+      item_images ( image_url ),
+      family_members ( id, name, nickname )
     `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
@@ -90,6 +91,7 @@ export type NewInventoryItemData = {
   owner?: string;
   notes?: string;
   category?: string;
+  family_member_id?: string;
 };
 
 export type UpdateInventoryItemData = NewInventoryItemData & {
@@ -124,6 +126,7 @@ export const useAddInventoryItem = () => {
             owner: newItem.owner || null,
             notes: newItem.notes || null,
             category: newItem.category || 'Annet',
+            family_member_id: newItem.family_member_id || null,
         })
         .select()
         .single();
@@ -203,6 +206,7 @@ export const useUpdateInventoryItem = () => {
             owner: itemDetails.owner || null,
             notes: itemDetails.notes || null,
             category: itemDetails.category || null,
+            family_member_id: itemDetails.family_member_id || null,
         })
         .eq('id', id)
         .eq('user_id', user.id);
@@ -318,6 +322,7 @@ export const useBulkAddInventoryItems = () => {
           owner: item.owner || null,
           notes: item.notes || null,
           category: item.category || 'Annet',
+          family_member_id: item.family_member_id || null,
           user_id: user.id,
         }));
 
