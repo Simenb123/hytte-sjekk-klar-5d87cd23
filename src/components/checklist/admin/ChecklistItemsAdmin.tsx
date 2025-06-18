@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useForm } from 'react-hook-form';
@@ -160,6 +159,17 @@ const ChecklistItemsAdmin: React.FC = () => {
     form.reset();
   };
 
+  const handleNewItem = () => {
+    setEditingItem(null);
+    form.reset({
+      text: '',
+      category: selectedCategory,
+      season: 'all',
+      area_id: '',
+    });
+    setIsDialogOpen(true);
+  };
+
   const getSeasonIcon = (season: string) => {
     switch (season) {
       case 'winter': return <Snowflake className="h-4 w-4 text-blue-500" />;
@@ -182,7 +192,7 @@ const ChecklistItemsAdmin: React.FC = () => {
         <h3 className="text-lg font-semibold">Sjekkliste-punkter</h3>
         <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={handleNewItem}>
               <Plus className="h-4 w-4 mr-2" />
               Nytt punkt
             </Button>
@@ -192,6 +202,9 @@ const ChecklistItemsAdmin: React.FC = () => {
               <DialogTitle>
                 {editingItem ? 'Rediger sjekkliste-punkt' : 'Nytt sjekkliste-punkt'}
               </DialogTitle>
+              <DialogDescription>
+                {editingItem ? 'Oppdater informasjonen for dette sjekkliste-punktet.' : 'Legg til et nytt sjekkliste-punkt.'}
+              </DialogDescription>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
