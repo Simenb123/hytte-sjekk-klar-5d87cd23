@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2, Trash2 } from "lucide-react";
 import ChatMessage from "./ChatMessage";
@@ -14,6 +14,7 @@ const AiChat: React.FC = () => {
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const { sendMessage, loading, error } = useAiChat();
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,6 +30,20 @@ const AiChat: React.FC = () => {
       },
     ]);
   }, []);
+
+  // Auto-resize textarea
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 120; // max 5-6 lines
+      textareaRef.current.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [input]);
 
   const handleSend = async (messageText?: string, image?: string) => {
     const textToSend = messageText || input.trim();
@@ -67,6 +82,13 @@ const AiChat: React.FC = () => {
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSend();
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   const clearChat = () => {
@@ -108,38 +130,54 @@ const AiChat: React.FC = () => {
       
       <div className="p-4 bg-white border-t shadow-lg">
         {error && (
-          <div className="text-red-500 text-center p-2 text-sm mb-2 bg-red-50 rounded border">
+          <div className="text-red-500 text-center p-2 text-sm mb-3 bg-red-50 rounded border">
             {error}
           </div>
         )}
         
         {pendingImage && (
-          <div className="mb-3 flex items-center gap-3 p-2 bg-blue-50 rounded border">
+          <div className="mb-3 flex items-center gap-3 p-3 bg-blue-50 rounded-lg border">
             <img src={pendingImage} alt="Pending" className="w-12 h-12 object-cover rounded border" />
             <span className="text-sm text-gray-700 flex-1">Bilde klart for sending</span>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => setPendingImage(null)}
+              className="text-xs"
             >
               Fjern
             </Button>
           </div>
         )}
         
-        <form onSubmit={handleFormSubmit} className="flex gap-2 items-end">
-          <div className="flex-1">
-            <Input
+        <form onSubmit={handleFormSubmit} className="space-y-3">
+          <div className="relative">
+            <Textarea
+              ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Still et spørsmål..."
+              onKeyPress={handleKeyPress}
+              placeholder="Skriv en melding... (Trykk Enter for å sende, Shift+Enter for ny linje)"
               disabled={loading}
-              autoComplete="off"
-              className="text-base"
+              className="resize-none pr-12 min-h-[48px] text-base leading-relaxed"
+              style={{ height: 'auto' }}
             />
+            <Button 
+              type="submit" 
+              disabled={loading || (!input.trim() && !pendingImage)}
+              size="sm"
+              className="absolute bottom-2 right-2 h-8 w-8 p-0"
+            >
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              <span className="sr-only">Send</span>
+            </Button>
           </div>
           
-          <div className="flex gap-1">
+          <div className="flex justify-center gap-2">
             <VoiceRecordButton 
               onTranscription={handleVoiceTranscription}
               disabled={loading}
@@ -149,19 +187,6 @@ const AiChat: React.FC = () => {
               onImageCapture={handleImageCapture}
               disabled={loading}
             />
-            
-            <Button 
-              type="submit" 
-              disabled={loading || (!input.trim() && !pendingImage)}
-              size="sm"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-              <span className="sr-only">Send</span>
-            </Button>
           </div>
         </form>
       </div>

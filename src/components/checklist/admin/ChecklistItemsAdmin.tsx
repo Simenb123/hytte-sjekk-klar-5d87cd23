@@ -1,378 +1,238 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { Plus, Edit, Trash2, Sun, Snowflake, Calendar } from 'lucide-react';
-import { DbArea, DbChecklistItem } from '@/types/database.types';
-import { checklistCategories, ChecklistCategory } from '@/models/checklist';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Loader2 } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { ChecklistError } from '../ChecklistError';
+import { ChecklistLoading } from '../ChecklistLoading';
+import { EditChecklistItemDialog } from './EditChecklistItemDialog';
+import { ChecklistSearch } from './ChecklistSearch';
+import { useChecklistAdmin } from '@/hooks/useChecklistAdmin';
+import { useToast } from '@/hooks/use-toast';
 
-interface ChecklistItemFormData {
-  text: string;
-  category: string;
-  season: string;
-  area_id: string;
-}
-
-const ChecklistItemsAdmin: React.FC = () => {
-  const [editingItem, setEditingItem] = useState<DbChecklistItem | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<ChecklistCategory>('før_ankomst');
-  const queryClient = useQueryClient();
-
-  const form = useForm<ChecklistItemFormData>({
-    defaultValues: {
-      text: '',
-      category: 'før_ankomst',
-      season: 'all',
-      area_id: '',
-    },
+export function ChecklistItemsAdmin() {
+  const [newItem, setNewItem] = useState({
+    title: '',
+    description: '',
+    area_id: '',
+    is_critical: false
   });
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { updateChecklistItem, deleteChecklistItem } = useChecklistAdmin();
 
-  // Fetch areas
-  const { data: areas } = useQuery({
+  const { data: areas = [], isLoading: areasLoading } = useQuery({
     queryKey: ['areas'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('areas')
         .select('*')
         .order('name');
-      
       if (error) throw error;
-      return data as DbArea[];
-    },
+      return data;
+    }
   });
 
-  // Fetch checklist items
-  const { data: items, isLoading } = useQuery({
-    queryKey: ['checklist-items', selectedCategory],
+  const { data: items = [], isLoading: itemsLoading, error } = useQuery({
+    queryKey: ['checklist-items'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('checklist_items')
-        .select('*, areas(name)')
-        .eq('category', selectedCategory)
-        .order('created_at');
-      
+        .select(`
+          *,
+          areas (name)
+        `)
+        .order('order_index');
       if (error) throw error;
-      return data as (DbChecklistItem & { areas?: { name: string } })[];
-    },
+      return data;
+    }
   });
 
-  // Create item mutation
-  const createItemMutation = useMutation({
-    mutationFn: async (data: ChecklistItemFormData) => {
-      const { error } = await supabase
+  const addItemMutation = useMutation({
+    mutationFn: async (item: typeof newItem) => {
+      const { data, error } = await supabase
         .from('checklist_items')
-        .insert([data]);
-      
+        .insert([{
+          ...item,
+          order_index: items.length
+        }])
+        .select()
+        .single();
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['checklist-items'] });
-      toast.success('Sjekkliste-punkt opprettet');
-      setIsDialogOpen(false);
-      form.reset();
+      setNewItem({ title: '', description: '', area_id: '', is_critical: false });
+      toast({
+        title: "Oppgave lagt til",
+        description: "Ny oppgave er opprettet.",
+      });
     },
-    onError: (error) => {
-      console.error('Error creating item:', error);
-      toast.error('Feil ved opprettelse av sjekkliste-punkt');
-    },
+    onError: (error: any) => {
+      toast({
+        title: "Feil",
+        description: "Kunne ikke legge til oppgaven.",
+        variant: "destructive",
+      });
+    }
   });
 
-  // Update item mutation
-  const updateItemMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: ChecklistItemFormData }) => {
-      const { error } = await supabase
-        .from('checklist_items')
-        .update(data)
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['checklist-items'] });
-      toast.success('Sjekkliste-punkt oppdatert');
-      setIsDialogOpen(false);
-      setEditingItem(null);
-      form.reset();
-    },
-    onError: (error) => {
-      console.error('Error updating item:', error);
-      toast.error('Feil ved oppdatering av sjekkliste-punkt');
-    },
-  });
-
-  // Delete item mutation
-  const deleteItemMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('checklist_items')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['checklist-items'] });
-      toast.success('Sjekkliste-punkt slettet');
-    },
-    onError: (error) => {
-      console.error('Error deleting item:', error);
-      toast.error('Feil ved sletting av sjekkliste-punkt');
-    },
-  });
-
-  const onSubmit = (data: ChecklistItemFormData) => {
-    if (editingItem) {
-      updateItemMutation.mutate({ id: editingItem.id, data });
-    } else {
-      createItemMutation.mutate(data);
-    }
+  const handleUpdateItem = async (itemId: string, updates: any) => {
+    await updateChecklistItem(itemId, updates);
+    queryClient.invalidateQueries({ queryKey: ['checklist-items'] });
   };
 
-  const handleEdit = (item: DbChecklistItem) => {
-    setEditingItem(item);
-    form.setValue('text', item.text);
-    form.setValue('category', item.category || '');
-    form.setValue('season', item.season || 'all');
-    form.setValue('area_id', item.area_id || '');
-    setIsDialogOpen(true);
+  const handleDeleteItem = async (itemId: string) => {
+    await deleteChecklistItem(itemId);
+    queryClient.invalidateQueries({ queryKey: ['checklist-items'] });
   };
 
-  const handleDelete = (item: DbChecklistItem) => {
-    if (confirm(`Er du sikker på at du vil slette "${item.text}"?`)) {
-      deleteItemMutation.mutate(item.id);
-    }
-  };
+  const filteredItems = useMemo(() => {
+    if (!searchTerm.trim()) return items;
+    
+    const search = searchTerm.toLowerCase();
+    return items.filter(item => 
+      item.title.toLowerCase().includes(search) ||
+      item.description?.toLowerCase().includes(search) ||
+      item.areas?.name.toLowerCase().includes(search)
+    );
+  }, [items, searchTerm]);
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setEditingItem(null);
-    form.reset();
-  };
-
-  const handleNewItem = () => {
-    setEditingItem(null);
-    form.reset({
-      text: '',
-      category: selectedCategory,
-      season: 'all',
-      area_id: '',
-    });
-    setIsDialogOpen(true);
-  };
-
-  const getSeasonIcon = (season: string) => {
-    switch (season) {
-      case 'winter': return <Snowflake className="h-4 w-4 text-blue-500" />;
-      case 'summer': return <Sun className="h-4 w-4 text-yellow-500" />;
-      default: return <Calendar className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const getSeasonText = (season: string) => {
-    switch (season) {
-      case 'winter': return 'Vinter';
-      case 'summer': return 'Sommer';
-      default: return 'Hele året';
-    }
-  };
+  if (areasLoading || itemsLoading) return <ChecklistLoading />;
+  if (error) return <ChecklistError error={error.message} />;
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Sjekkliste-punkter</h3>
-        <Button onClick={handleNewItem}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nytt punkt
-        </Button>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Legg til ny oppgave</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="title">Tittel *</Label>
+            <Input
+              id="title"
+              value={newItem.title}
+              onChange={(e) => setNewItem(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="Tittel på oppgaven"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="description">Beskrivelse</Label>
+            <Textarea
+              id="description"
+              value={newItem.description}
+              onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Utfyllende beskrivelse (valgfritt)"
+              rows={3}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="area">Område *</Label>
+            <Select value={newItem.area_id} onValueChange={(value) => setNewItem(prev => ({ ...prev, area_id: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Velg område" />
+              </SelectTrigger>
+              <SelectContent>
+                {areas.map((area) => (
+                  <SelectItem key={area.id} value={area.id}>
+                    {area.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="critical"
+              checked={newItem.is_critical}
+              onChange={(e) => setNewItem(prev => ({ ...prev, is_critical: e.target.checked }))}
+              className="rounded"
+            />
+            <Label htmlFor="critical">Kritisk oppgave</Label>
+          </div>
+          
+          <Button 
+            onClick={() => addItemMutation.mutate(newItem)}
+            disabled={addItemMutation.isPending || !newItem.title.trim() || !newItem.area_id}
+            className="w-full"
+          >
+            {addItemMutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Legger til...
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-2" />
+                Legg til oppgave
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {editingItem ? 'Rediger sjekkliste-punkt' : 'Nytt sjekkliste-punkt'}
-            </DialogTitle>
-            <DialogDescription>
-              {editingItem ? 'Oppdater informasjonen for dette sjekkliste-punktet.' : 'Legg til et nytt sjekkliste-punkt.'}
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="text"
-                rules={{ required: 'Tekst er påkrevd' }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Beskrivelse</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Beskriv oppgaven..." 
-                        className="resize-none"
-                        rows={3}
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Kategori</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Velg kategori" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.entries(checklistCategories).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="season"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sesong</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Velg sesong" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="all">Hele året</SelectItem>
-                        <SelectItem value="winter">Vinter</SelectItem>
-                        <SelectItem value="summer">Sommer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="area_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Område</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Velg område" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {areas?.map((area) => (
-                          <SelectItem key={area.id} value={area.id}>
-                            {area.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={handleDialogClose}>
-                  Avbryt
-                </Button>
-                <Button type="submit" disabled={createItemMutation.isPending || updateItemMutation.isPending}>
-                  {editingItem ? 'Oppdater' : 'Opprett'}
-                </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle>Eksisterende oppgaver ({filteredItems.length})</CardTitle>
+          <ChecklistSearch 
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Søk etter oppgaver..."
+          />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {filteredItems.map((item) => (
+              <div 
+                key={item.id} 
+                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-medium text-sm">{item.title}</h4>
+                    {item.is_critical && (
+                      <Badge variant="destructive" className="text-xs">Kritisk</Badge>
+                    )}
+                  </div>
+                  {item.description && (
+                    <p className="text-xs text-gray-600 mb-1">{item.description}</p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Område: {item.areas?.name}
+                  </p>
+                </div>
+                
+                <EditChecklistItemDialog
+                  item={item}
+                  areas={areas}
+                  onUpdate={handleUpdateItem}
+                  onDelete={handleDeleteItem}
+                />
               </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as ChecklistCategory)}>
-        <TabsList className="grid w-full grid-cols-5">
-          {Object.entries(checklistCategories).map(([key, label]) => (
-            <TabsTrigger key={key} value={key} className="text-xs">
-              {label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {Object.keys(checklistCategories).map((category) => (
-          <TabsContent key={category} value={category} className="space-y-4">
-            <div className="text-sm text-gray-600">
-              {items?.length || 0} punkter i denne kategorien
-            </div>
+            ))}
             
-            <div className="space-y-3">
-              {isLoading ? (
-                <div>Laster sjekkliste-punkter...</div>
-              ) : (
-                items?.map((item) => (
-                  <Card key={item.id}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1">
-                          <p className="font-medium mb-2">{item.text}</p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <div className="flex items-center gap-1">
-                              {getSeasonIcon(item.season || 'all')}
-                              {getSeasonText(item.season || 'all')}
-                            </div>
-                            <div>
-                              📍 {item.areas?.name || 'Ukjent område'}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleDelete(item)}
-                            disabled={deleteItemMutation.isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+            {filteredItems.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                {searchTerm ? 'Ingen oppgaver matcher søket' : 'Ingen oppgaver funnet'}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default ChecklistItemsAdmin;
+}
