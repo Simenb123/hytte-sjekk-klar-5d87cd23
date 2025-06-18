@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -18,14 +19,12 @@ const ChecklistHome: React.FC = () => {
     setUserId(storedUserId);
   }, []);
 
-  const { data: categoriesSummary, isLoading } = useQuery(
-    ['categoriesSummary', userId],
-    () => getCategoriesSummary(userId!),
-    {
-      enabled: !!userId, // Only run the query when userId is available
-      retry: false,
-    }
-  );
+  const { data: categoriesSummary, isLoading } = useQuery({
+    queryKey: ['categoriesSummary', userId],
+    queryFn: () => getCategoriesSummary(userId!),
+    enabled: !!userId, // Only run the query when userId is available
+    retry: false,
+  });
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
@@ -51,7 +50,7 @@ const ChecklistHome: React.FC = () => {
               <CardTitle>{categoryName}</CardTitle>
               <CardDescription>
                 {isLoading ? (
-                  <Skeleton width={100} />
+                  <Skeleton className="h-4 w-24" />
                 ) : (
                   `${categoriesSummary?.[categoryKey]?.progress || 0}% fullført`
                 )}
