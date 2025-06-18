@@ -38,15 +38,15 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   return (
     <header className="bg-white shadow-md w-full z-50 sticky top-0 left-0">
       <div className="max-w-lg mx-auto">
-        <div className="grid grid-cols-3 items-center py-3 px-2 h-16">
-          <div className="flex items-center gap-1 justify-start">
+        <div className="flex items-center justify-between py-3 px-2 h-16">
+          <div className="flex items-center gap-2">
             <button 
               onClick={handleHome}
               className="rounded-full hover:bg-gray-100 flex items-center justify-center bg-white text-black transition-colors"
               aria-label="Hjem"
               type="button"
             >
-              <img src="/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png" alt="Hjem" className="h-10 w-10" />
+              <img src="/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png" alt="Hjem" className="h-14 w-14" />
             </button>
             {showBackButton && (
               <button 
@@ -60,9 +60,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             )}
           </div>
           
-          <h2 className="text-xl font-semibold text-center truncate">{title}</h2>
+          <h2 className="text-xl font-semibold flex-1 text-center truncate mx-4">{title}</h2>
           
-          <div className="flex items-center gap-2 justify-end">
+          <div className="flex items-center gap-2">
             {rightContent}
             {user && <ProfileButton />}
           </div>
