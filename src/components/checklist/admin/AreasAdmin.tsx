@@ -142,6 +142,14 @@ const AreasAdmin: React.FC = () => {
     form.reset();
   };
 
+  const handleNewArea = () => {
+    setEditingArea(null);
+    form.reset({
+      name: '',
+    });
+    setIsDialogOpen(true);
+  };
+
   if (isLoading) {
     return <div>Laster områder...</div>;
   }
@@ -150,48 +158,47 @@ const AreasAdmin: React.FC = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Områder ({areas?.length || 0})</h3>
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Nytt område
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingArea ? 'Rediger område' : 'Nytt område'}
-              </DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  rules={{ required: 'Navn er påkrevd' }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Navn</FormLabel>
-                      <FormControl>
-                        <Input placeholder="F.eks. Hovedhytta" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={handleDialogClose}>
-                    Avbryt
-                  </Button>
-                  <Button type="submit" disabled={createAreaMutation.isPending || updateAreaMutation.isPending}>
-                    {editingArea ? 'Oppdater' : 'Opprett'}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleNewArea}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nytt område
+        </Button>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingArea ? 'Rediger område' : 'Nytt område'}
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                rules={{ required: 'Navn er påkrevd' }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Navn</FormLabel>
+                    <FormControl>
+                      <Input placeholder="F.eks. Hovedhytta" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={handleDialogClose}>
+                  Avbryt
+                </Button>
+                <Button type="submit" disabled={createAreaMutation.isPending || updateAreaMutation.isPending}>
+                  {editingArea ? 'Oppdater' : 'Opprett'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4">
         {areas?.map((area) => (
