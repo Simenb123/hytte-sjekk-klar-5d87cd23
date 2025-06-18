@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from '@/components/ui/sonner';
 import Index from './pages/Index';
@@ -51,6 +52,8 @@ function App() {
                   <BookingPage />
                 </ProtectedRoute>
               } />
+              {/* Redirect /checklist to /checklists for backwards compatibility */}
+              <Route path="/checklist" element={<Navigate to="/checklists" replace />} />
               <Route path="/checklists" element={
                 <ProtectedRoute>
                   <ChecklistHome />
