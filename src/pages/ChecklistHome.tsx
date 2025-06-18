@@ -1,92 +1,94 @@
-import { Link } from "react-router-dom";
-import { checklistCategories, ChecklistCategory } from "../models/checklist";
-import { ChevronRight, Home, KeyRound, LogOut, Luggage, Wrench, Loader2, Bot } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { getCategoriesSummary } from "@/services/checklist.service";
-import { useAuth } from "@/context/AuthContext";
-import { Progress } from "@/components/ui/progress";
-import AppHeader from "@/components/AppHeader";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getCategoriesSummary } from '@/services/checklist.service';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { checklistCategories } from '@/models/checklist';
+import { Settings } from 'lucide-react';
 
-const categoryIcons: Record<ChecklistCategory, React.ElementType> = {
-  før_ankomst: Luggage,
-  ankomst: KeyRound,
-  opphold: Home,
-  avreise: LogOut,
-  årlig_vedlikehold: Wrench,
-};
+const ChecklistHome: React.FC = () => {
+  const navigate = useNavigate();
+  const [userId, setUserId] = useState<string | null>(null);
 
-export default function ChecklistHome() {
-  const { user } = useAuth();
-  const categories = Object.entries(checklistCategories) as [ChecklistCategory, string][];
+  useEffect(() => {
+    // Fetch user ID from local storage or any other auth mechanism
+    const storedUserId = localStorage.getItem('sb-fwwyxpmefqducboktzar-auth-user')?.slice(6, 42);
+    setUserId(storedUserId);
+  }, []);
 
-  const { data: summaryData, isLoading, error } = useQuery({
-    queryKey: ['checklistsSummary', user?.id],
-    queryFn: () => {
-      if (!user?.id) throw new Error("User not defined");
-      return getCategoriesSummary(user.id);
-    },
-    enabled: !!user?.id,
-  });
-  
+  const { data: categoriesSummary, isLoading } = useQuery(
+    ['categoriesSummary', userId],
+    () => getCategoriesSummary(userId!),
+    {
+      enabled: !!userId, // Only run the query when userId is available
+      retry: false,
+    }
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Sjekklister" />
-      <main className="p-4 sm:p-6 max-w-lg mx-auto pb-24">
-        {isLoading && (
-          <div className="flex justify-center items-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            <p className="ml-4 text-lg">Laster...</p>
-          </div>
-        )}
-        {error && <div className="text-center text-red-500 p-4 bg-red-50 rounded-lg">Kunne ikke laste sjekklistene.</div>}
-        
-        <div className="space-y-4">
-          {summaryData && categories.map(([key, value]) => {
-            const summary = summaryData[key];
-            if (!summary) return null;
-
-            const Icon = categoryIcons[key];
-            const isCompleted = summary.progress === 100;
-
-            return (
-              <Link
-                key={key}
-                to={`/checklists/${key}`}
-                className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="p-4">
-                  <div className="flex items-center">
-                    <div className={`p-3 rounded-full mr-4 ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h2 className="font-semibold text-lg text-gray-800">{value}</h2>
-                      {summary.totalItems > 0 ? (
-                         <p className="text-sm text-gray-500">{summary.completedItems} av {summary.totalItems} fullført</p>
-                      ) : (
-                         <p className="text-sm text-gray-500">Ingen oppgaver</p>
-                      )}
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  </div>
-                  {summary.totalItems > 0 && (
-                    <div className="mt-3">
-                      <Progress value={summary.progress} className="h-2" />
-                    </div>
-                  )}
-                </div>
-              </Link>
-            )
-          })}
+    <div className="container mx-auto p-6 max-w-4xl">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Sjekklister</h1>
+          <p className="text-gray-600">Hold oversikt over alle oppgaver for hytta</p>
         </div>
-      </main>
-      <Link
-        to="/ai-helper"
-        className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-transform hover:scale-110 active:scale-100 z-20"
-        aria-label="AI Hyttehjelper"
-      >
-        <Bot className="h-6 w-6" />
-      </Link>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/checklists/admin')}
+          className="flex items-center gap-2"
+        >
+          <Settings className="h-4 w-4" />
+          Administrer
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Object.entries(checklistCategories).map(([categoryKey, categoryName]) => (
+          <Card key={categoryKey} className="bg-white shadow-md rounded-lg">
+            <CardHeader>
+              <CardTitle>{categoryName}</CardTitle>
+              <CardDescription>
+                {isLoading ? (
+                  <Skeleton width={100} />
+                ) : (
+                  `${categoriesSummary?.[categoryKey]?.progress || 0}% fullført`
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4">
+              {isLoading ? (
+                <>
+                  <Skeleton className="h-4 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </>
+              ) : (
+                <>
+                  <div className="text-sm text-gray-500">
+                    {categoriesSummary?.[categoryKey]?.completedItems || 0} av {categoriesSummary?.[categoryKey]?.totalItems || 0} oppgaver
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div
+                      className="bg-blue-500 h-2 rounded-full"
+                      style={{ width: `${categoriesSummary?.[categoryKey]?.progress || 0}%` }}
+                    ></div>
+                  </div>
+                </>
+              )}
+              <Button
+                onClick={() => navigate(`/checklists/${categoryKey}`)}
+                className="mt-4 w-full"
+                disabled={isLoading}
+              >
+                Gå til {categoryName.toLowerCase()}
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
-}
+};
+
+export default ChecklistHome;
