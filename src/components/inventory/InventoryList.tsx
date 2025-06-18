@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertTriangle, User, Calendar, Info, Tag, Palette, Ruler, Home, StickyNote, MoreVertical, Edit } from "lucide-react";
+import { AlertTriangle, User, Calendar, Info, Tag, Palette, Ruler, Home, StickyNote, MoreVertical, Edit, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
@@ -21,9 +21,10 @@ interface InventoryListProps {
     direction: "asc" | "desc";
   };
   category: string;
+  familyMemberId?: string;
 }
 
-const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, category }) => {
+const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, category, familyMemberId }) => {
   const { user } = useAuth();
   const { data: items, isLoading, error } = useInventory();
 
@@ -33,7 +34,8 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
     isLoading,
     error: error?.message,
     searchTerm,
-    category
+    category,
+    familyMemberId
   });
 
   const processedItems = useMemo(() => {
@@ -43,6 +45,14 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
 
     if (category !== 'all') {
       filteredItems = filteredItems.filter(item => item.category === category);
+    }
+
+    if (familyMemberId && familyMemberId !== 'all') {
+      if (familyMemberId === 'none') {
+        filteredItems = filteredItems.filter(item => !item.family_member_id);
+      } else {
+        filteredItems = filteredItems.filter(item => item.family_member_id === familyMemberId);
+      }
     }
 
     if (searchTerm) {
@@ -55,7 +65,9 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
         (item.owner && item.owner.toLowerCase().includes(lowercasedTerm)) ||
         (item.location && item.location.toLowerCase().includes(lowercasedTerm)) ||
         (item.notes && item.notes.toLowerCase().includes(lowercasedTerm)) ||
-        (item.category && item.category.toLowerCase().includes(lowercasedTerm))
+        (item.category && item.category.toLowerCase().includes(lowercasedTerm)) ||
+        (item.family_members?.name && item.family_members.name.toLowerCase().includes(lowercasedTerm)) ||
+        (item.family_members?.nickname && item.family_members.nickname.toLowerCase().includes(lowercasedTerm))
       );
     }
     
@@ -85,7 +97,7 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
 
     console.log('[InventoryList] Processed items:', filteredItems.length);
     return filteredItems;
-  }, [items, searchTerm, sortConfig, category]);
+  }, [items, searchTerm, sortConfig, category, familyMemberId]);
 
   // Check auth status
   if (!user) {
@@ -221,7 +233,21 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
             </div>
             <CardDescription className="flex items-center text-xs text-gray-500 gap-4 pt-1">
                  <span className="flex items-center gap-1">
-                    <User size={12}/> {item.owner || 'Ukjent'}
+                    {item.family_members ? (
+                      <>
+                        <Users size={12}/> 
+                        {item.family_members.name}
+                        {item.family_members.nickname && ` (${item.family_members.nickname})`}
+                      </>
+                    ) : item.owner ? (
+                      <>
+                        <User size={12}/> {item.owner}
+                      </>
+                    ) : (
+                      <>
+                        <User size={12}/> Ingen eier
+                      </>
+                    )}
                  </span>
                  <span className="flex items-center gap-1">
                     <Calendar size={12}/> {format(new Date(item.created_at), 'd. MMM yyyy', { locale: nb })}

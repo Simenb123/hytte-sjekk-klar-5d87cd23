@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useAddInventoryItem, NewInventoryItemData } from '@/hooks/useInventory';
+import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 import { toast } from 'sonner';
 import { Loader2, Plus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -32,11 +34,13 @@ const formSchema = z.object({
   owner: z.string().optional(),
   notes: z.string().optional(),
   category: z.string().optional(),
+  family_member_id: z.string().optional(),
 });
 
 export function NewItemDialog() {
   const [open, setOpen] = useState(false);
   const addItemMutation = useAddInventoryItem();
+  const { data: familyMembers, isLoading: familyMembersLoading } = useFamilyMembers();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,6 +55,7 @@ export function NewItemDialog() {
       owner: "",
       notes: "",
       category: "Annet",
+      family_member_id: "",
     },
   });
 
@@ -108,17 +113,43 @@ export function NewItemDialog() {
               )}
             />
 
+            <FormField
+              control={form.control}
+              name="family_member_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Eier (familiemedlem)</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Velg familiemedlem" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">Ingen spesifikk eier</SelectItem>
+                      {familyMembers?.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name} {member.nickname ? `(${member.nickname})` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField control={form.control} name="description" render={({ field }) => ( <FormItem> <FormLabel>Beskrivelse</FormLabel> <FormControl><Textarea placeholder="F.eks. Funnet på hemsen." {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="brand" render={({ field }) => ( <FormItem> <FormLabel>Merke</FormLabel> <FormControl><Input placeholder="F.eks. Norrøna" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="color" render={({ field }) => ( <FormItem> <FormLabel>Farge</FormLabel> <FormControl><Input placeholder="F.eks. Rød" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="size" render={({ field }) => ( <FormItem> <FormLabel>Størrelse</FormLabel> <FormControl><Input placeholder="F.eks. L" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
-            <FormField control={form.control} name="owner" render={({ field }) => ( <FormItem> <FormLabel>Eier</FormLabel> <FormControl><Input placeholder="F.eks. EB" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
+            <FormField control={form.control} name="owner" render={({ field }) => ( <FormItem> <FormLabel>Eier (fritekst)</FormLabel> <FormControl><Input placeholder="F.eks. EB" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="location" render={({ field }) => ( <FormItem> <FormLabel>Plassering</FormLabel> <FormControl><Input placeholder="F.eks. Venstre hylle" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="shelf" render={({ field }) => ( <FormItem> <FormLabel>Skuff/Hylle nr.</FormLabel> <FormControl><Input placeholder="F.eks. 1" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="notes" render={({ field }) => ( <FormItem> <FormLabel>Notater</FormLabel> <FormControl><Textarea placeholder="F.eks. EB gammelt?" {...field} /></FormControl> <FormMessage /> </FormItem> )}/>
             <FormField control={form.control} name="image" render={({ field }) => ( <FormItem> <FormLabel>Bilde (valgfritt)</FormLabel> <FormControl> <Input type="file" accept="image/*" onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} /> </FormControl> <FormMessage /> </FormItem> )}/>
             <DialogFooter>
-              <Button type="submit" disabled={addItemMutation.isPending}>
+              <Button type="submit" disabled={addItemMutation.isPending || familyMembersLoading}>
                 {addItemMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Lagre
               </Button>

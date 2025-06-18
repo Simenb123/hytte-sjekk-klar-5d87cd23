@@ -1,3 +1,4 @@
+
 import AppHeader from "@/components/AppHeader";
 import InventoryList from "@/components/inventory/InventoryList";
 import { NewItemDialog } from "@/components/inventory/NewItemDialog";
@@ -12,12 +13,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SkiImportButton } from "@/components/inventory/SkiImportButton";
+import { useFamilyMembers } from "@/hooks/useFamilyMembers";
 
 export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState("created_at");
   const [sortDirection, setSortDirection] = useState("desc");
   const [category, setCategory] = useState("all");
+  const [familyMemberId, setFamilyMemberId] = useState("all");
+  
+  const { data: familyMembers } = useFamilyMembers();
 
   return (
     <div className="flex flex-col h-screen bg-hytte-snow">
@@ -37,6 +42,20 @@ export default function InventoryPage() {
             className="max-w-sm"
           />
           <div className="flex items-center gap-2 ml-auto">
+             <Select value={familyMemberId} onValueChange={setFamilyMemberId}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Velg familiemedlem" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Alle familiemedlemmer</SelectItem>
+                    <SelectItem value="none">Ingen spesifikk eier</SelectItem>
+                    {familyMembers?.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.name} {member.nickname ? `(${member.nickname})` : ''}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+             </Select>
              <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Velg kategori" />
@@ -80,6 +99,7 @@ export default function InventoryPage() {
           searchTerm={searchTerm} 
           sortConfig={{ key: sortKey, direction: sortDirection as "asc" | "desc" }} 
           category={category}
+          familyMemberId={familyMemberId}
         />
       </main>
     </div>
