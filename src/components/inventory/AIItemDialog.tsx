@@ -339,10 +339,10 @@ export function AIItemDialog() {
               </Button>
               <Button 
                 onClick={handleSave}
-                disabled={addLoading || !formData.name.trim()}
+                disabled={addItemMutation.isPending || !formData.name.trim()}
                 className="flex-1"
               >
-                {addLoading ? (
+                {addItemMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Lagrer...
