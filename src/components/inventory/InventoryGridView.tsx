@@ -1,0 +1,109 @@
+
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Edit2, MapPin, User, Package } from 'lucide-react';
+import { EditItemDialog } from './EditItemDialog';
+
+interface InventoryItem {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  brand?: string;
+  color?: string;
+  size?: string;
+  location?: string;
+  shelf?: string;
+  owner?: string;
+  notes?: string;
+  family_members?: { name: string };
+}
+
+interface InventoryGridViewProps {
+  items: InventoryItem[];
+}
+
+export function InventoryGridView({ items }: InventoryGridViewProps) {
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Ingen gjenstander funnet</h3>
+        <p className="text-gray-500">Legg til din første gjenstand for å komme i gang.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {items.map((item) => (
+        <Card key={item.id} className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <h3 className="font-semibold text-sm line-clamp-2">{item.name}</h3>
+              <EditItemDialog item={item}>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+              </EditItemDialog>
+            </div>
+            
+            {item.description && (
+              <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                {item.description}
+              </p>
+            )}
+            
+            <div className="space-y-2">
+              {item.category && (
+                <Badge variant="secondary" className="text-xs">
+                  {item.category}
+                </Badge>
+              )}
+              
+              <div className="space-y-1">
+                {item.brand && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <span className="font-medium">Merke:</span>
+                    <span>{item.brand}</span>
+                  </div>
+                )}
+                
+                {item.color && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <span className="font-medium">Farge:</span>
+                    <span>{item.color}</span>
+                  </div>
+                )}
+                
+                {item.size && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <span className="font-medium">Størrelse:</span>
+                    <span>{item.size}</span>
+                  </div>
+                )}
+                
+                {item.location && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <MapPin className="h-3 w-3" />
+                    <span>{item.location}</span>
+                    {item.shelf && <span>({item.shelf})</span>}
+                  </div>
+                )}
+                
+                {(item.family_members?.name || item.owner) && (
+                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <User className="h-3 w-3" />
+                    <span>{item.family_members?.name || item.owner}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
