@@ -1,4 +1,3 @@
-
 import React, { useMemo, useCallback } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +12,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { EditItemDialog } from './EditItemDialog';
 import { Badge } from '../ui/badge';
 import { useAuth } from '@/context/AuthContext';
+import { InventoryViewType } from '@/hooks/useInventoryView';
+import InventoryListView from './InventoryListView';
 
 interface InventoryListProps {
   searchTerm: string;
@@ -22,9 +23,10 @@ interface InventoryListProps {
   };
   category: string;
   familyMemberId?: string;
+  viewType: InventoryViewType;
 }
 
-const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, category, familyMemberId }) => {
+const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, category, familyMemberId, viewType }) => {
   const { user } = useAuth();
   const { data: items, isLoading, error, isFetching } = useInventory();
 
@@ -37,6 +39,7 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
     searchTerm,
     category,
     familyMemberId,
+    viewType,
     renderTime: new Date().toISOString()
   });
 
@@ -135,7 +138,6 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
       return [];
     }
 
-    // First filter, then sort for better performance
     const filtered = filterItems(items, searchTerm, category, familyMemberId);
     const sorted = sortItems(filtered, sortConfig);
     
@@ -228,7 +230,7 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
     )
  }
 
-  console.log('[InventoryList] Rendering', processedItems.length, 'items');
+  console.log('[InventoryList] Rendering', processedItems.length, 'items in', viewType, 'view');
 
   return (
     <div>
@@ -239,88 +241,92 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
         </div>
       )}
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {processedItems.map((item) => (
-          <Card 
-            key={item.id}
-            className="flex flex-col hover:shadow-lg transition-shadow duration-200"
-          >
-            <div className="relative">
-              {item.item_images && item.item_images.length > 0 ? (
-                <div className="aspect-video w-full overflow-hidden rounded-t-lg">
-                    <img 
-                      src={item.item_images[0].image_url} 
-                      alt={item.name || 'Inventar Bilde'} 
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
+      {viewType === 'list' ? (
+        <InventoryListView items={processedItems} />
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {processedItems.map((item) => (
+            <Card 
+              key={item.id}
+              className="flex flex-col hover:shadow-lg transition-shadow duration-200"
+            >
+              <div className="relative">
+                {item.item_images && item.item_images.length > 0 ? (
+                  <div className="aspect-video w-full overflow-hidden rounded-t-lg">
+                      <img 
+                        src={item.item_images[0].image_url} 
+                        alt={item.name || 'Inventar Bilde'} 
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                  </div>
+                ) : (
+                  <div className="aspect-video w-full overflow-hidden rounded-t-lg bg-gray-200 flex items-center justify-center">
+                    <Palette className="h-12 w-12 text-gray-400" />
+                  </div>
+                )}
+                 <div className="absolute top-2 right-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" className="h-8 w-8 bg-white/80 hover:bg-white backdrop-blur-sm">
+                        <MoreVertical className="h-4 w-4" />
+                        <span className="sr-only">Handlinger</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <EditItemDialog item={item}>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          <span>Rediger</span>
+                        </DropdownMenuItem>
+                      </EditItemDialog>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-              ) : (
-                <div className="aspect-video w-full overflow-hidden rounded-t-lg bg-gray-200 flex items-center justify-center">
-                  <Palette className="h-12 w-12 text-gray-400" />
+              </div>
+              <CardHeader>
+                <div className="flex justify-between items-start gap-2">
+                    <CardTitle className="text-base">{item.name || "Uten navn"}</CardTitle>
+                    {item.category && <Badge variant="secondary" className="whitespace-nowrap text-xs">{item.category}</Badge>}
                 </div>
-              )}
-               <div className="absolute top-2 right-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-8 w-8 bg-white/80 hover:bg-white backdrop-blur-sm">
-                      <MoreVertical className="h-4 w-4" />
-                      <span className="sr-only">Handlinger</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <EditItemDialog item={item}>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Rediger</span>
-                      </DropdownMenuItem>
-                    </EditItemDialog>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-            <CardHeader>
-              <div className="flex justify-between items-start gap-2">
-                  <CardTitle className="text-base">{item.name || "Uten navn"}</CardTitle>
-                  {item.category && <Badge variant="secondary" className="whitespace-nowrap text-xs">{item.category}</Badge>}
-              </div>
-              <CardDescription className="flex items-center text-xs text-gray-500 gap-4 pt-1">
-                   <span className="flex items-center gap-1">
-                      {item.family_members ? (
-                        <>
-                          <Users size={12}/> 
-                          {item.family_members.name}
-                          {item.family_members.nickname && ` (${item.family_members.nickname})`}
-                        </>
-                      ) : item.owner ? (
-                        <>
-                          <User size={12}/> {item.owner}
-                        </>
-                      ) : (
-                        <>
-                          <User size={12}/> Ingen eier
-                        </>
-                      )}
-                   </span>
-                   <span className="flex items-center gap-1">
-                      <Calendar size={12}/> {format(new Date(item.created_at), 'd. MMM yyyy', { locale: nb })}
-                   </span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              {item.description && <p className="text-sm text-gray-700 mb-4">{item.description}</p>}
-              
-              <div className="text-xs text-gray-600 space-y-2">
-                {item.brand && <p className="flex items-center gap-2"><Tag size={12} className="text-gray-500"/> <span className="font-semibold">Merke:</span> {item.brand}</p>}
-                {item.color && <p className="flex items-center gap-2"><Palette size={12} className="text-gray-500"/> <span className="font-semibold">Farge:</span> {item.color}</p>}
-                {item.size && <p className="flex items-center gap-2"><Ruler size={12} className="text-gray-500"/> <span className="font-semibold">Størrelse:</span> {item.size}</p>}
-                {item.location && <p className="flex items-center gap-2"><Home size={12} className="text-gray-500"/> <span className="font-semibold">Plassering:</span> {item.location}{item.shelf ? `, hylle ${item.shelf}`: ''}</p>}
-                {item.notes && <p className="flex items-start gap-2 pt-2"><StickyNote size={12} className="text-gray-500 mt-0.5"/> <span className="italic">"{item.notes}"</span></p>}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <CardDescription className="flex items-center text-xs text-gray-500 gap-4 pt-1">
+                     <span className="flex items-center gap-1">
+                        {item.family_members ? (
+                          <>
+                            <Users size={12}/> 
+                            {item.family_members.name}
+                            {item.family_members.nickname && ` (${item.family_members.nickname})`}
+                          </>
+                        ) : item.owner ? (
+                          <>
+                            <User size={12}/> {item.owner}
+                          </>
+                        ) : (
+                          <>
+                            <User size={12}/> Ingen eier
+                          </>
+                        )}
+                     </span>
+                     <span className="flex items-center gap-1">
+                        <Calendar size={12}/> {format(new Date(item.created_at), 'd. MMM yyyy', { locale: nb })}
+                     </span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                {item.description && <p className="text-sm text-gray-700 mb-4">{item.description}</p>}
+                
+                <div className="text-xs text-gray-600 space-y-2">
+                  {item.brand && <p className="flex items-center gap-2"><Tag size={12} className="text-gray-500"/> <span className="font-semibold">Merke:</span> {item.brand}</p>}
+                  {item.color && <p className="flex items-center gap-2"><Palette size={12} className="text-gray-500"/> <span className="font-semibold">Farge:</span> {item.color}</p>}
+                  {item.size && <p className="flex items-center gap-2"><Ruler size={12} className="text-gray-500"/> <span className="font-semibold">Størrelse:</span> {item.size}</p>}
+                  {item.location && <p className="flex items-center gap-2"><Home size={12} className="text-gray-500"/> <span className="font-semibold">Plassering:</span> {item.location}{item.shelf ? `, hylle ${item.shelf}`: ''}</p>}
+                  {item.notes && <p className="flex items-start gap-2 pt-2"><StickyNote size={12} className="text-gray-500 mt-0.5"/> <span className="italic">"{item.notes}"</span></p>}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
