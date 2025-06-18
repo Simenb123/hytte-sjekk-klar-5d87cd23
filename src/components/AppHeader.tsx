@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ProfileButton from './ProfileButton';
 import { useAuth } from '@/context/AuthContext';
 
@@ -19,7 +19,11 @@ const AppHeader: React.FC<AppHeaderProps> = ({
   rightContent
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+
+  // Automatically determine if we should show back button based on route
+  const shouldShowBackButton = showBackButton || (location.pathname !== '/' && location.pathname !== '/dashboard');
 
   const handleBack = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -32,7 +36,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
 
   const handleHome = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate('/');
+    navigate('/dashboard');
   };
 
   return (
@@ -48,7 +52,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             >
               <img src="/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png" alt="Hjem" className="h-16 w-16" />
             </button>
-            {showBackButton && (
+            {shouldShowBackButton && (
               <button 
                 onClick={handleBack}
                 className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center bg-white text-black"
