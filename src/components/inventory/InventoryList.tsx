@@ -36,10 +36,11 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
     error: error?.message,
     searchTerm,
     category,
-    familyMemberId
+    familyMemberId,
+    renderTime: new Date().toISOString()
   });
 
-  // Memoized filtering function for better performance
+  // Stable filtering function - memoized with better dependencies
   const filterItems = useCallback((items: InventoryItem[], searchTerm: string, category: string, familyMemberId?: string) => {
     if (!items || !Array.isArray(items)) {
       console.log('[InventoryList] No valid items array provided');
@@ -47,32 +48,26 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
     }
 
     let filteredItems = [...items];
-    console.log('[InventoryList] Starting with', filteredItems.length, 'items');
-
+    
     // Category filtering
     if (category && category !== 'all') {
-      const beforeCount = filteredItems.length;
       filteredItems = filteredItems.filter(item => {
         const itemCategory = item.category || '';
         return itemCategory === category;
       });
-      console.log('[InventoryList] After category filter:', beforeCount, '->', filteredItems.length);
     }
 
     // Family member filtering
     if (familyMemberId && familyMemberId !== 'all') {
-      const beforeCount = filteredItems.length;
       if (familyMemberId === 'none') {
         filteredItems = filteredItems.filter(item => !item.family_member_id);
       } else {
         filteredItems = filteredItems.filter(item => item.family_member_id === familyMemberId);
       }
-      console.log('[InventoryList] After family member filter:', beforeCount, '->', filteredItems.length);
     }
 
-    // Search term filtering - more robust
+    // Search term filtering
     if (searchTerm && searchTerm.trim()) {
-      const beforeCount = filteredItems.length;
       const lowercasedTerm = searchTerm.toLowerCase().trim();
       filteredItems = filteredItems.filter(item => {
         const searchFields = [
@@ -92,13 +87,13 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
           field.toLowerCase().includes(lowercasedTerm)
         );
       });
-      console.log('[InventoryList] After search filter:', beforeCount, '->', filteredItems.length);
     }
 
+    console.log('[InventoryList] Filtered items:', filteredItems.length, 'from', items.length, 'total');
     return filteredItems;
-  }, []);
+  }, []); // Empty dependency array since this function is pure
 
-  // Memoized sorting function
+  // Stable sorting function
   const sortItems = useCallback((items: InventoryItem[], sortConfig: { key: string; direction: "asc" | "desc" }) => {
     if (!items || !Array.isArray(items)) return [];
 
@@ -129,11 +124,11 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
       if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
-  }, []);
+  }, []); // Empty dependency array since this function is pure
 
-  // Stable processed items with better memoization
+  // Stable processed items with minimal re-computation
   const processedItems = useMemo(() => {
-    console.log('[InventoryList] Processing items, raw items:', items?.length || 0);
+    console.log('[InventoryList] Recomputing processed items');
     
     if (!items || !Array.isArray(items)) {
       console.log('[InventoryList] No items to process');
@@ -146,11 +141,10 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
     
     console.log('[InventoryList] Final processed items:', sorted.length);
     return sorted;
-  }, [items, searchTerm, sortConfig, category, familyMemberId, filterItems, sortItems]);
+  }, [items, searchTerm, sortConfig.key, sortConfig.direction, category, familyMemberId, filterItems, sortItems]);
 
   // Auth check
   if (!user) {
-    console.log('[InventoryList] No authenticated user found');
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
@@ -162,9 +156,9 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
     );
   }
 
-  // Loading state - show loading even during background refetch
-  if (isLoading) {
-    console.log('[InventoryList] Loading state');
+  // Loading state - only show skeleton on initial load
+  if (isLoading && !items) {
+    console.log('[InventoryList] Initial loading state');
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, i) => (
@@ -206,17 +200,12 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
 
   // No items at all
   if (!items || items.length === 0) {
-     console.log('[InventoryList] No items found');
      return (
         <Alert>
             <Info className="h-4 w-4" />
             <AlertTitle>Ingen gjenstander funnet</AlertTitle>
             <AlertDescription>
                 Det er ingen gjenstander i inventarlisten ennå. Trykk på "Legg til gjenstand" for å starte.
-                <br />
-                <small className="text-xs mt-2 block">
-                  Bruker ID: {user.id}
-                </small>
             </AlertDescription>
         </Alert>
      )
@@ -224,7 +213,6 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
 
   // No items after filtering
   if (processedItems.length === 0) {
-    console.log('[InventoryList] No items after filtering');
     return (
        <Alert>
            <Info className="h-4 w-4" />
@@ -244,19 +232,18 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
 
   return (
     <div>
-      {/* Show fetching indicator if background refresh is happening */}
-      {isFetching && !isLoading && (
-        <div className="mb-4 text-sm text-gray-500 text-center">
-          Oppdaterer inventar...
+      {/* Show subtle fetching indicator only if background refresh is happening */}
+      {isFetching && !isLoading && items && (
+        <div className="mb-2 text-xs text-gray-400 text-center">
+          Oppdaterer...
         </div>
       )}
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {processedItems.map((item, index) => (
+        {processedItems.map((item) => (
           <Card 
-            key={`${item.id}-${index}`}
-            className="flex flex-col animate-fade-in hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out"
-            style={{ animationDelay: `${Math.min(index * 50, 500)}ms` }}
+            key={item.id}
+            className="flex flex-col hover:shadow-lg transition-shadow duration-200"
           >
             <div className="relative">
               {item.item_images && item.item_images.length > 0 ? (

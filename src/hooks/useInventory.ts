@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { InventoryItem } from '@/types/inventory';
@@ -76,17 +75,28 @@ export const useInventory = () => {
     queryKey: ['inventory', user?.id],
     queryFn: () => fetchInventory(user?.id),
     enabled: !!user?.id && !!session,
-    retry: 2,
-    staleTime: 1000 * 60 * 10, // 10 minutes - longer stale time for stability
-    gcTime: 1000 * 60 * 30, // 30 minutes cache time
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes - data is considered fresh for 5 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes cache time - reduced from 30 minutes
     refetchOnWindowFocus: false,
-    refetchOnMount: 'always',
+    refetchOnMount: false, // Changed from 'always' to false to prevent continuous refetching
     refetchInterval: false,
+    refetchOnReconnect: false, // Don't refetch on reconnect
     // Add network mode for better offline handling
     networkMode: 'online',
   });
 
-  // Enhanced logging
+  // Enhanced logging with render tracking
+  console.log('[useInventory] Query state:', {
+    isLoading: result.isLoading,
+    isFetching: result.isFetching,
+    isStale: result.isStale,
+    dataUpdatedAt: result.dataUpdatedAt,
+    errorUpdatedAt: result.errorUpdatedAt,
+    itemsCount: result.data?.length || 0,
+    hasError: !!result.error
+  });
+
   if (result.error) {
     console.error('[useInventory] Query error:', result.error);
   }
