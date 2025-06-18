@@ -27,7 +27,7 @@ serve(async (req) => {
 
     const openai = new OpenAI({ apiKey: openAIApiKey });
     
-    const { history } = await req.json();
+    const { history, image } = await req.json();
     if (!history || !Array.isArray(history) || history.length === 0) {
       return new Response(JSON.stringify({ error: 'History is required.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -49,7 +49,6 @@ serve(async (req) => {
       
     if (inventoryError) {
         console.error('Error fetching inventory for AI helper:', inventoryError);
-        // Don't fail the request, just proceed without inventory context. The user will be notified in the prompt.
     }
 
     let inventoryContext = "Inventarlisten er for øyeblikket ikke tilgjengelig.";
@@ -70,7 +69,6 @@ ${inventoryItems.map(item => `
       `.trim();
     }
 
-
     const systemPrompt = `
 Du er "Hyttehjelperen", en vennlig og hjelpsom AI-assistent for en familiehytte.
 Din kunnskap er basert på informasjon om hytta, dens omgivelser, generelle hytterutiner, og en sanntids inventarliste.
@@ -87,15 +85,32 @@ ${inventoryContext}
 - **Vær:** Du kan gi generelle råd, men oppfordre brukeren til å sjekke en dedikert værtjeneste for nøyaktig varsel.
 - **Smøretips:** Gi generelle smøretips basert på temperatur (f.eks. "for minusgrader, bruk blå voks").
 
+${image ? '**Bildeanalyse:** Du kan se bildet brukeren har sendt. Analyser det og gi relevant hjelp basert på hva du ser.' : ''}
+
 Når du svarer, hold deg til din rolle som hyttehjelper. Svar på spørsmål om inventar basert på listen over. Hvis du ikke vet svaret, si det og foreslå hvor brukeren kan finne informasjonen.
     `;
 
+    // Prepare messages with optional image
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...history.map((msg: any) => {
+        if (msg.role === 'user' && image && msg === history[history.length - 1]) {
+          // Add image to the last user message
+          return {
+            role: 'user',
+            content: [
+              { type: 'text', text: msg.content },
+              { type: 'image_url', image_url: { url: image } }
+            ]
+          };
+        }
+        return msg;
+      }),
+    ];
+
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        ...history,
-      ],
+      model: image ? 'gpt-4o-mini' : 'gpt-4o-mini',
+      messages: messages,
     });
 
     const reply = completion.choices[0].message.content;

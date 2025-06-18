@@ -5,18 +5,26 @@ import { supabase } from "@/integrations/supabase/client";
 export type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
+  image?: string;
+  isVoice?: boolean;
 };
 
 export function useAiChat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendMessage = async (messageHistory: ChatMessage[]): Promise<string | null> => {
+  const sendMessage = async (messageHistory: ChatMessage[], image?: string): Promise<string | null> => {
     setLoading(true);
     setError(null);
     try {
       const { data, error: functionError } = await supabase.functions.invoke('ai-helper', {
-        body: { history: messageHistory },
+        body: { 
+          history: messageHistory.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
+          image 
+        },
       });
 
       if (functionError) throw functionError;
