@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { createCalendarEvent } from '@/services/googleCalendar.service';
 
 type NewBookingDialogProps = {
   open: boolean;
@@ -51,19 +53,20 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const [useSharedCalendar, setUseSharedCalendar] = useState(sharedCalendarExists);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm({
     defaultValues: {
       title: '',
       description: '',
       startDate: new Date(),
-      endDate: new Date(),
+      endDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
       addToGoogle: googleIntegration,
       useSharedCalendar: sharedCalendarExists
     }
   });
 
-  // Oppdater form state når props endres
+  // Update form state when props change
   useEffect(() => {
     form.setValue('addToGoogle', googleIntegration);
     form.setValue('useSharedCalendar', sharedCalendarExists);
@@ -71,14 +74,22 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
   }, [googleIntegration, sharedCalendarExists, form]);
 
   const onSubmit = async (data) => {
+    if (!user) {
+      toast.error('Du må være logget inn for å lage en booking');
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      if (!user) {
-        toast.error('Du må være logget inn for å lage en booking');
+      // Validate dates
+      if (data.endDate <= data.startDate) {
+        toast.error('Sluttdato må være etter startdato');
         return;
       }
 
-      // Lagre booking i databasen
-      const { error } = await supabase
+      // Save booking in database
+      const { data: bookingData, error } = await supabase
         .from('bookings')
         .insert({
           title: data.title,
@@ -86,30 +97,57 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
           start_date: data.startDate.toISOString(),
           end_date: data.endDate.toISOString(),
           user_id: user.id
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      // Oppdater bookingsdata og lukk dialogen
-      toast.success('Booking opprettet!');
+      // Add to Google Calendar if requested
+      if (data.addToGoogle && googleIntegration) {
+        try {
+          const tokens = JSON.parse(localStorage.getItem('googleCalendarTokens') || '{}');
+          if (tokens.access_token) {
+            await createCalendarEvent(tokens, {
+              title: data.title,
+              description: data.description,
+              startDate: data.startDate.toISOString(),
+              endDate: data.endDate.toISOString()
+            }, useSharedCalendar);
+            
+            toast.success('Booking opprettet og lagt til i Google Calendar!');
+          } else {
+            toast.warning('Booking opprettet, men kunne ikke legge til i Google Calendar');
+          }
+        } catch (googleError) {
+          console.error('Google Calendar error:', googleError);
+          toast.warning('Booking opprettet, men kunne ikke legge til i Google Calendar');
+        }
+      } else {
+        toast.success('Booking opprettet!');
+      }
+
+      // Reset form
+      form.reset();
       
-      // Sett sammen data som skal sendes til onSuccess
-      const bookingData = {
-        ...data,
+      // Call success callback
+      onSuccess({
+        ...bookingData,
         useSharedCalendar: useSharedCalendar 
-      };
+      });
       
-      onSuccess(bookingData);
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating booking:', error);
       toast.error('Kunne ikke opprette booking');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ny booking</DialogTitle>
           <DialogDescription>
@@ -122,9 +160,10 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
             <FormField
               control={form.control}
               name="title"
+              rules={{ required: 'Tittel er påkrevd' }}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tittel</FormLabel>
+                  <FormLabel>Tittel *</FormLabel>
                   <FormControl>
                     <Input placeholder="F.eks. Påskeferie" {...field} />
                   </FormControl>
@@ -138,98 +177,100 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Beskrivelse (valgfritt)</FormLabel>
+                  <FormLabel>Beskrivelse</FormLabel>
                   <FormControl>
-                    <Input placeholder="Legg til mer informasjon" {...field} />
+                    <Textarea 
+                      placeholder="Legg til mer informasjon om oppholdet..."
+                      rows={3}
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Fra dato</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Velg dato</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date()
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Fra dato *</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "dd.MM.yyyy")
+                            ) : (
+                              <span>Velg dato</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="endDate"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Til dato</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, "PPP")
-                          ) : (
-                            <span>Velg dato</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) =>
-                          date <= form.getValues('startDate')
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Til dato *</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "dd.MM.yyyy")
+                            ) : (
+                              <span>Velg dato</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date <= form.getValues('startDate')}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {googleIntegration && (
               <>
@@ -237,10 +278,10 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
                   control={form.control}
                   name="addToGoogle"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
-                        <FormLabel>Legg til i Google Calendar</FormLabel>
-                        <FormDescription className="text-xs">
+                        <FormLabel className="text-base">Legg til i Google Calendar</FormLabel>
+                        <FormDescription>
                           Bookingen vil også bli lagt til i din Google Calendar
                         </FormDescription>
                       </div>
@@ -259,10 +300,10 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
                     control={form.control}
                     name="useSharedCalendar"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                          <FormLabel>Bruk felles hytte-kalender</FormLabel>
-                          <FormDescription className="text-xs">
+                          <FormLabel className="text-base">Bruk felles hytte-kalender</FormLabel>
+                          <FormDescription>
                             Legg til i den delte hytte-kalenderen som alle familiemedlemmer har tilgang til
                           </FormDescription>
                         </div>
@@ -283,7 +324,28 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
             )}
 
             <DialogFooter>
-              <Button type="submit" className="w-full">Opprett booking</Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Avbryt
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Oppretter...
+                  </>
+                ) : (
+                  'Opprett booking'
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
