@@ -5,21 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Edit2, MapPin, User, Package } from 'lucide-react';
 import { EditItemDialog } from './EditItemDialog';
-
-interface InventoryItem {
-  id: string;
-  name: string;
-  description?: string;
-  category?: string;
-  brand?: string;
-  color?: string;
-  size?: string;
-  location?: string;
-  shelf?: string;
-  owner?: string;
-  notes?: string;
-  family_members?: { name: string };
-}
+import { InventoryItem } from '@/types/inventory';
 
 interface InventoryGridViewProps {
   items: InventoryItem[];

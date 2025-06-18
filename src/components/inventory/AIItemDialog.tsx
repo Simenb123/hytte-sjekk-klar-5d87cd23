@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Camera, Loader2, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 import { useInventoryAI } from '@/hooks/useInventoryAI';
-import { useInventory } from '@/hooks/useInventory';
+import { useAddInventoryItem } from '@/hooks/useInventory';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 import { useToast } from '@/hooks/use-toast';
 import ImageCaptureButton from '@/components/ImageCaptureButton';
@@ -32,7 +32,7 @@ export function AIItemDialog() {
   });
 
   const { analyzeItemFromImage, loading: aiLoading, error: aiError } = useInventoryAI();
-  const { addItem, loading: addLoading } = useInventory();
+  const addItemMutation = useAddInventoryItem();
   const { data: familyMembers = [] } = useFamilyMembers();
   const { toast } = useToast();
 
@@ -80,9 +80,9 @@ export function AIItemDialog() {
     }
 
     try {
-      await addItem.mutateAsync({
+      await addItemMutation.mutateAsync({
         ...formData,
-        family_member_id: formData.family_member_id || null
+        family_member_id: formData.family_member_id || undefined
       });
       
       toast({

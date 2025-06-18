@@ -14,7 +14,7 @@ const InventoryViewToggle: React.FC<InventoryViewToggleProps> = ({ viewType, onV
     <ToggleGroup type="single" value={viewType} onValueChange={(value) => {
       if (value) onViewChange(value as InventoryViewType);
     }}>
-      <ToggleGroupItem value="cards" aria-label="Kort-visning">
+      <ToggleGroupItem value="grid" aria-label="Kort-visning">
         <LayoutGrid className="h-4 w-4" />
       </ToggleGroupItem>
       <ToggleGroupItem value="list" aria-label="Liste-visning">

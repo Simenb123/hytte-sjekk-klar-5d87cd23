@@ -1,13 +1,13 @@
 
 import { useState } from 'react';
 
-export type InventoryViewType = 'cards' | 'list';
+export type InventoryViewType = 'list' | 'grid';
 
 export const useInventoryView = () => {
-  const [viewType, setViewType] = useState<InventoryViewType>('cards');
+  const [viewType, setViewType] = useState<InventoryViewType>('grid');
 
   const toggleView = () => {
-    setViewType(prev => prev === 'cards' ? 'list' : 'cards');
+    setViewType(prev => prev === 'list' ? 'grid' : 'list');
   };
 
   return {
