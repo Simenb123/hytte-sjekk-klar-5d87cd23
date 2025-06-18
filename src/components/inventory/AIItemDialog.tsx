@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Camera, Loader2, Sparkles } from 'lucide-react';
 import { useInventoryAI, InventoryAIResult } from '@/hooks/useInventoryAI';
 import { useImageCapture } from '@/hooks/useImageCapture';
-import { useInventory } from '@/hooks/useInventory';
+import { useAddInventoryItem } from '@/hooks/useInventory';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 
 export function AIItemDialog() {
@@ -31,7 +31,7 @@ export function AIItemDialog() {
 
   const { analyzeItemFromImage, loading: aiLoading } = useInventoryAI();
   const { capturedImage, captureFromCamera, selectFromGallery, clearImage, fileInputRef, handleFileSelect } = useImageCapture();
-  const { addItem, loading: saveLoading } = useInventory();
+  const addItemMutation = useAddInventoryItem();
   const { data: familyMembers } = useFamilyMembers();
 
   const handleAnalyzeImage = async () => {
@@ -55,12 +55,12 @@ export function AIItemDialog() {
   const handleSave = async () => {
     if (!formData.name.trim()) return;
     
-    const success = await addItem({
-      ...formData,
-      family_member_id: formData.family_member_id || null
-    });
-    
-    if (success) {
+    try {
+      await addItemMutation.mutateAsync({
+        ...formData,
+        family_member_id: formData.family_member_id || undefined
+      });
+      
       setOpen(false);
       setAiResult(null);
       clearImage();
@@ -77,6 +77,8 @@ export function AIItemDialog() {
         notes: '',
         family_member_id: ''
       });
+    } catch (error) {
+      console.error('Error saving item:', error);
     }
   };
 
@@ -261,10 +263,10 @@ export function AIItemDialog() {
               
               <Button 
                 onClick={handleSave} 
-                disabled={saveLoading || !formData.name.trim()}
+                disabled={addItemMutation.isPending || !formData.name.trim()}
                 className="w-full"
               >
-                {saveLoading ? (
+                {addItemMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Lagrer...
