@@ -38,7 +38,7 @@ const ImageCaptureButton: React.FC<ImageCaptureButtonProps> = ({
             <img 
               src={capturedImage} 
               alt="Captured" 
-              className="w-16 h-16 object-cover rounded-lg border"
+              className="w-20 h-20 object-cover rounded-lg border shadow-sm"
             />
             <Button
               type="button"
@@ -56,6 +56,7 @@ const ImageCaptureButton: React.FC<ImageCaptureButtonProps> = ({
             size="sm"
             onClick={handleSendImage}
             disabled={disabled}
+            className="text-xs px-3 py-1"
           >
             Send bilde
           </Button>
@@ -68,6 +69,7 @@ const ImageCaptureButton: React.FC<ImageCaptureButtonProps> = ({
             size="sm"
             onClick={captureFromCamera}
             disabled={disabled || isCapturing}
+            className="flex-1"
           >
             <Camera className="h-4 w-4" />
             <span className="sr-only">Ta bilde</span>
@@ -79,6 +81,7 @@ const ImageCaptureButton: React.FC<ImageCaptureButtonProps> = ({
             size="sm"
             onClick={selectFromGallery}
             disabled={disabled || isCapturing}
+            className="flex-1"
           >
             <ImageIcon className="h-4 w-4" />
             <span className="sr-only">Velg bilde</span>

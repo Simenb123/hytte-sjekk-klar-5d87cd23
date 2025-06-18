@@ -5,6 +5,7 @@ import InventoryErrorBoundary from "@/components/inventory/InventoryErrorBoundar
 import InventoryViewToggle from "@/components/inventory/InventoryViewToggle";
 import { NewItemDialog } from "@/components/inventory/NewItemDialog";
 import { BulkImportButton } from "@/components/inventory/BulkImportButton";
+import { AIItemDialog } from "@/components/inventory/AIItemDialog";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,6 +43,7 @@ export default function InventoryPage() {
     <div className="flex flex-col h-screen bg-hytte-snow">
       <AppHeader title="Inventar" showBackButton={true} rightContent={
         <div className="flex items-center gap-2">
+          <AIItemDialog />
           <SkiImportButton />
           <BulkImportButton />
           <NewItemDialog />
@@ -81,6 +83,11 @@ export default function InventoryPage() {
                       <SelectItem value="Langrennski">Langrennski</SelectItem>
                       <SelectItem value="Langrennstaver">Langrennstaver</SelectItem>
                       <SelectItem value="Alpint">Alpint</SelectItem>
+                      <SelectItem value="Verktøy">Verktøy</SelectItem>
+                      <SelectItem value="Kjøkkenutstyr">Kjøkkenutstyr</SelectItem>
+                      <SelectItem value="Møbler">Møbler</SelectItem>
+                      <SelectItem value="Elektronikk">Elektronikk</SelectItem>
+                      <SelectItem value="Sport">Sport</SelectItem>
                       <SelectItem value="Annet">Annet</SelectItem>
                   </SelectContent>
                </Select>

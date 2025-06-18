@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Trash2 } from "lucide-react";
 import ChatMessage from "./ChatMessage";
 import VoiceRecordButton from "./VoiceRecordButton";
 import ImageCaptureButton from "./ImageCaptureButton";
@@ -25,7 +25,7 @@ const AiChat: React.FC = () => {
     setMessages([
       {
         role: 'assistant',
-        content: 'Hei! Jeg er din personlige hyttehjelper. Du kan spørre meg med tekst, lyd eller bilder om hva som helst som har med hytta å gjøre!',
+        content: 'Hei! Jeg er din personlige hyttehjelper. Du kan spørre meg med tekst, lyd eller bilder om hva som helst som har med hytta å gjøre! Prøv for eksempel:\n\n• Ta et bilde av en gjenstand for identifikasjon\n• Spør med stemmen din mens du har hendene opptatt\n• Be om hjelp med vedlikehold eller problemer',
       },
     ]);
   }, []);
@@ -39,7 +39,7 @@ const AiChat: React.FC = () => {
 
     const userMessage: ChatMessageType = { 
       role: 'user', 
-      content: textToSend || "Se på dette bildet",
+      content: textToSend || "Kan du se på dette bildet?",
       image: imageToSend || undefined,
       isVoice: !!messageText // If messageText is provided, it came from voice
     };
@@ -69,9 +69,30 @@ const AiChat: React.FC = () => {
     handleSend();
   };
 
+  const clearChat = () => {
+    setMessages([
+      {
+        role: 'assistant',
+        content: 'Hei! Jeg er din personlige hyttehjelper. Du kan spørre meg med tekst, lyd eller bilder om hva som helst som har med hytta å gjøre!',
+      },
+    ]);
+  };
+
   return (
-    <div className="flex flex-col h-full max-w-lg mx-auto">
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+    <div className="flex flex-col h-full max-w-lg mx-auto bg-white">
+      <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+        <h2 className="text-lg font-semibold text-gray-800">AI Hyttehjelper</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={clearChat}
+          className="text-gray-600"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="flex-1 space-y-4 overflow-y-auto p-4 bg-gray-50">
         {messages.map((msg, index) => (
           <ChatMessage 
             key={index} 
@@ -85,13 +106,17 @@ const AiChat: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      <div className="p-4 bg-white border-t">
-        {error && <div className="text-red-500 text-center p-2 text-sm mb-2">{error}</div>}
+      <div className="p-4 bg-white border-t shadow-lg">
+        {error && (
+          <div className="text-red-500 text-center p-2 text-sm mb-2 bg-red-50 rounded border">
+            {error}
+          </div>
+        )}
         
         {pendingImage && (
-          <div className="mb-2 flex items-center gap-2">
+          <div className="mb-3 flex items-center gap-3 p-2 bg-blue-50 rounded border">
             <img src={pendingImage} alt="Pending" className="w-12 h-12 object-cover rounded border" />
-            <span className="text-sm text-gray-600">Bilde klart for sending</span>
+            <span className="text-sm text-gray-700 flex-1">Bilde klart for sending</span>
             <Button 
               variant="outline" 
               size="sm" 
@@ -110,6 +135,7 @@ const AiChat: React.FC = () => {
               placeholder="Still et spørsmål..."
               disabled={loading}
               autoComplete="off"
+              className="text-base"
             />
           </div>
           
@@ -127,6 +153,7 @@ const AiChat: React.FC = () => {
             <Button 
               type="submit" 
               disabled={loading || (!input.trim() && !pendingImage)}
+              size="sm"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

@@ -34,7 +34,7 @@ const VoiceRecordButton: React.FC<VoiceRecordButtonProps> = ({
         size="sm"
         onClick={handleClick}
         disabled={disabled || isTranscribing}
-        className={`${isRecording ? 'animate-pulse' : ''}`}
+        className={`${isRecording ? 'animate-pulse bg-red-500 hover:bg-red-600 scale-110' : ''} transition-all duration-200`}
       >
         {isTranscribing ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -55,7 +55,7 @@ const VoiceRecordButton: React.FC<VoiceRecordButtonProps> = ({
       )}
       
       {isRecording && (
-        <span className="text-xs text-red-500 animate-pulse">
+        <span className="text-xs text-red-500 animate-pulse font-medium">
           Tar opp...
         </span>
       )}
