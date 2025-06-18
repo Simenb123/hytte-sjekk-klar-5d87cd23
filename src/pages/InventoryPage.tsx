@@ -1,6 +1,7 @@
 
 import AppHeader from "@/components/AppHeader";
 import InventoryList from "@/components/inventory/InventoryList";
+import InventoryErrorBoundary from "@/components/inventory/InventoryErrorBoundary";
 import { NewItemDialog } from "@/components/inventory/NewItemDialog";
 import { BulkImportButton } from "@/components/inventory/BulkImportButton";
 import { useState } from "react";
@@ -23,6 +24,15 @@ export default function InventoryPage() {
   const [familyMemberId, setFamilyMemberId] = useState("all");
   
   const { data: familyMembers } = useFamilyMembers();
+
+  console.log('[InventoryPage] Render with state:', {
+    searchTerm,
+    sortKey,
+    sortDirection,
+    category,
+    familyMemberId,
+    familyMembersCount: familyMembers?.length
+  });
 
   return (
     <div className="flex flex-col h-screen bg-hytte-snow">
@@ -95,12 +105,14 @@ export default function InventoryPage() {
         </div>
       </div>
       <main className="flex-1 overflow-y-auto p-4 md:p-6">
-        <InventoryList 
-          searchTerm={searchTerm} 
-          sortConfig={{ key: sortKey, direction: sortDirection as "asc" | "desc" }} 
-          category={category}
-          familyMemberId={familyMemberId}
-        />
+        <InventoryErrorBoundary>
+          <InventoryList 
+            searchTerm={searchTerm} 
+            sortConfig={{ key: sortKey, direction: sortDirection as "asc" | "desc" }} 
+            category={category}
+            familyMemberId={familyMemberId}
+          />
+        </InventoryErrorBoundary>
       </main>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { InventoryItem } from '@/types/inventory';
@@ -11,42 +12,59 @@ const fetchInventory = async (userId?: string): Promise<InventoryItem[]> => {
     return [];
   }
 
-  const { data, error } = await supabase
-    .from('inventory_items')
-    .select(`
-      id,
-      name,
-      description,
-      created_at,
-      user_id,
-      brand,
-      color,
-      location,
-      shelf,
-      size,
-      owner,
-      notes,
-      category,
-      family_member_id,
-      item_images ( image_url ),
-      family_members ( id, name, nickname )
-    `)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('inventory_items')
+      .select(`
+        id,
+        name,
+        description,
+        created_at,
+        user_id,
+        brand,
+        color,
+        location,
+        shelf,
+        size,
+        owner,
+        notes,
+        category,
+        family_member_id,
+        item_images ( image_url ),
+        family_members ( id, name, nickname )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('[useInventory] Error fetching inventory:', error);
-    console.error('[useInventory] Error details:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint
-    });
-    throw new Error(`Kunne ikke hente inventar: ${error.message}`);
+    if (error) {
+      console.error('[useInventory] Error fetching inventory:', error);
+      throw new Error(`Kunne ikke hente inventar: ${error.message}`);
+    }
+
+    const processedData = (data || []).map(item => ({
+      ...item,
+      // Ensure all fields have proper fallback values
+      name: item.name || '',
+      description: item.description || null,
+      brand: item.brand || null,
+      color: item.color || null,
+      location: item.location || null,
+      shelf: item.shelf || null,
+      size: item.size || null,
+      owner: item.owner || null,
+      notes: item.notes || null,
+      category: item.category || null,
+      family_member_id: item.family_member_id || null,
+      item_images: item.item_images || [],
+      family_members: item.family_members || null
+    }));
+
+    console.log('[useInventory] Successfully fetched and processed', processedData.length, 'items');
+    return processedData as InventoryItem[];
+  } catch (error) {
+    console.error('[useInventory] Fetch error:', error);
+    throw error;
   }
-
-  console.log('[useInventory] Successfully fetched', data?.length || 0, 'items');
-  return data as InventoryItem[];
 };
 
 export const useInventory = () => {
@@ -58,22 +76,28 @@ export const useInventory = () => {
     queryKey: ['inventory', user?.id],
     queryFn: () => fetchInventory(user?.id),
     enabled: !!user?.id && !!session,
-    retry: (failureCount, error) => {
-      console.log('[useInventory] Query failed, retry count:', failureCount);
-      console.log('[useInventory] Error:', error);
-      return failureCount < 3;
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+    staleTime: 1000 * 60 * 10, // 10 minutes - longer stale time for stability
+    gcTime: 1000 * 60 * 30, // 30 minutes cache time
     refetchOnWindowFocus: false,
+    refetchOnMount: 'always',
+    refetchInterval: false,
+    // Add network mode for better offline handling
+    networkMode: 'online',
   });
 
-  // Log success and error using the result object
+  // Enhanced logging
   if (result.error) {
     console.error('[useInventory] Query error:', result.error);
   }
   
   if (result.data) {
     console.log('[useInventory] Query success, items count:', result.data.length);
+    console.log('[useInventory] Sample item:', result.data[0]);
+  }
+
+  if (result.isLoading) {
+    console.log('[useInventory] Query is loading...');
   }
 
   return result;

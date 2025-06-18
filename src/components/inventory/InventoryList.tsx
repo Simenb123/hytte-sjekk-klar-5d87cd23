@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useInventory } from '@/hooks/useInventory';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -26,65 +26,100 @@ interface InventoryListProps {
 
 const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, category, familyMemberId }) => {
   const { user } = useAuth();
-  const { data: items, isLoading, error } = useInventory();
+  const { data: items, isLoading, error, isFetching } = useInventory();
 
   console.log('[InventoryList] Render with:', {
     user: user?.id,
     itemsCount: items?.length || 0,
     isLoading,
+    isFetching,
     error: error?.message,
     searchTerm,
     category,
     familyMemberId
   });
 
-  const processedItems = useMemo(() => {
-    if (!items) return [];
-
-    let filteredItems = [...items];
-
-    if (category !== 'all') {
-      filteredItems = filteredItems.filter(item => item.category === category);
+  // Memoized filtering function for better performance
+  const filterItems = useCallback((items: InventoryItem[], searchTerm: string, category: string, familyMemberId?: string) => {
+    if (!items || !Array.isArray(items)) {
+      console.log('[InventoryList] No valid items array provided');
+      return [];
     }
 
+    let filteredItems = [...items];
+    console.log('[InventoryList] Starting with', filteredItems.length, 'items');
+
+    // Category filtering
+    if (category && category !== 'all') {
+      const beforeCount = filteredItems.length;
+      filteredItems = filteredItems.filter(item => {
+        const itemCategory = item.category || '';
+        return itemCategory === category;
+      });
+      console.log('[InventoryList] After category filter:', beforeCount, '->', filteredItems.length);
+    }
+
+    // Family member filtering
     if (familyMemberId && familyMemberId !== 'all') {
+      const beforeCount = filteredItems.length;
       if (familyMemberId === 'none') {
         filteredItems = filteredItems.filter(item => !item.family_member_id);
       } else {
         filteredItems = filteredItems.filter(item => item.family_member_id === familyMemberId);
       }
+      console.log('[InventoryList] After family member filter:', beforeCount, '->', filteredItems.length);
     }
 
-    if (searchTerm) {
-      const lowercasedTerm = searchTerm.toLowerCase();
-      filteredItems = filteredItems.filter(item => 
-        (item.name && item.name.toLowerCase().includes(lowercasedTerm)) ||
-        (item.description && item.description.toLowerCase().includes(lowercasedTerm)) ||
-        (item.brand && item.brand.toLowerCase().includes(lowercasedTerm)) ||
-        (item.color && item.color.toLowerCase().includes(lowercasedTerm)) ||
-        (item.owner && item.owner.toLowerCase().includes(lowercasedTerm)) ||
-        (item.location && item.location.toLowerCase().includes(lowercasedTerm)) ||
-        (item.notes && item.notes.toLowerCase().includes(lowercasedTerm)) ||
-        (item.category && item.category.toLowerCase().includes(lowercasedTerm)) ||
-        (item.family_members?.name && item.family_members.name.toLowerCase().includes(lowercasedTerm)) ||
-        (item.family_members?.nickname && item.family_members.nickname.toLowerCase().includes(lowercasedTerm))
-      );
+    // Search term filtering - more robust
+    if (searchTerm && searchTerm.trim()) {
+      const beforeCount = filteredItems.length;
+      const lowercasedTerm = searchTerm.toLowerCase().trim();
+      filteredItems = filteredItems.filter(item => {
+        const searchFields = [
+          item.name || '',
+          item.description || '',
+          item.brand || '',
+          item.color || '',
+          item.owner || '',
+          item.location || '',
+          item.notes || '',
+          item.category || '',
+          item.family_members?.name || '',
+          item.family_members?.nickname || ''
+        ];
+        
+        return searchFields.some(field => 
+          field.toLowerCase().includes(lowercasedTerm)
+        );
+      });
+      console.log('[InventoryList] After search filter:', beforeCount, '->', filteredItems.length);
     }
-    
-    filteredItems.sort((a, b) => {
+
+    return filteredItems;
+  }, []);
+
+  // Memoized sorting function
+  const sortItems = useCallback((items: InventoryItem[], sortConfig: { key: string; direction: "asc" | "desc" }) => {
+    if (!items || !Array.isArray(items)) return [];
+
+    return [...items].sort((a, b) => {
       const key = sortConfig.key as keyof InventoryItem;
       let valA = a[key];
       let valB = b[key];
 
+      // Special handling for date sorting
       if (key === 'created_at') {
         const dateA = new Date(valA as string).getTime();
         const dateB = new Date(valB as string).getTime();
         return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
       }
       
-      if (valA === null || valA === undefined || valA === '') return 1;
-      if (valB === null || valB === undefined || valB === '') return -1;
+      // Handle null/undefined values
+      if (!valA && !valB) return 0;
+      if (!valA) return 1;
+      if (!valB) return -1;
       
+      // String comparison
       if (typeof valA === 'string' && typeof valB === 'string') {
         valA = valA.toLowerCase();
         valB = valB.toLowerCase();
@@ -94,12 +129,26 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
       if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
+  }, []);
 
-    console.log('[InventoryList] Processed items:', filteredItems.length);
-    return filteredItems;
-  }, [items, searchTerm, sortConfig, category, familyMemberId]);
+  // Stable processed items with better memoization
+  const processedItems = useMemo(() => {
+    console.log('[InventoryList] Processing items, raw items:', items?.length || 0);
+    
+    if (!items || !Array.isArray(items)) {
+      console.log('[InventoryList] No items to process');
+      return [];
+    }
 
-  // Check auth status
+    // First filter, then sort for better performance
+    const filtered = filterItems(items, searchTerm, category, familyMemberId);
+    const sorted = sortItems(filtered, sortConfig);
+    
+    console.log('[InventoryList] Final processed items:', sorted.length);
+    return sorted;
+  }, [items, searchTerm, sortConfig, category, familyMemberId, filterItems, sortItems]);
+
+  // Auth check
   if (!user) {
     console.log('[InventoryList] No authenticated user found');
     return (
@@ -113,11 +162,12 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
     );
   }
 
+  // Loading state - show loading even during background refetch
   if (isLoading) {
     console.log('[InventoryList] Loading state');
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[...Array(3)].map((_, i) => (
+        {[...Array(6)].map((_, i) => (
           <Card key={i}>
             <CardHeader>
               <Skeleton className="h-6 w-3/4" />
@@ -135,6 +185,7 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
     );
   }
 
+  // Error state
   if (error) {
     console.error('[InventoryList] Error state:', error);
     return (
@@ -146,13 +197,14 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
                 <br />
                 <small className="text-xs mt-2 block">
                   Bruker ID: {user.id}<br />
-                  Prøv å logge ut og inn igjen, eller kontakt support hvis problemet vedvarer.
+                  Prøv å oppdatere siden eller kontakt support hvis problemet vedvarer.
                 </small>
             </AlertDescription>
         </Alert>
     );
   }
 
+  // No items at all
   if (!items || items.length === 0) {
      console.log('[InventoryList] No items found');
      return (
@@ -170,6 +222,7 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
      )
   }
 
+  // No items after filtering
   if (processedItems.length === 0) {
     console.log('[InventoryList] No items after filtering');
     return (
@@ -190,83 +243,97 @@ const InventoryList: React.FC<InventoryListProps> = ({ searchTerm, sortConfig, c
   console.log('[InventoryList] Rendering', processedItems.length, 'items');
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {processedItems.map((item, index) => (
-        <Card 
-          key={item.id} 
-          className="flex flex-col animate-fade-in hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out"
-          style={{ animationDelay: `${index * 50}ms` }}
-        >
-          <div className="relative">
-            {item.item_images && item.item_images.length > 0 ? (
-              <div className="aspect-video w-full overflow-hidden rounded-t-lg">
-                  <img src={item.item_images[0].image_url} alt={item.name || 'Inventar Bilde'} className="w-full h-full object-cover"/>
+    <div>
+      {/* Show fetching indicator if background refresh is happening */}
+      {isFetching && !isLoading && (
+        <div className="mb-4 text-sm text-gray-500 text-center">
+          Oppdaterer inventar...
+        </div>
+      )}
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {processedItems.map((item, index) => (
+          <Card 
+            key={`${item.id}-${index}`}
+            className="flex flex-col animate-fade-in hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out"
+            style={{ animationDelay: `${Math.min(index * 50, 500)}ms` }}
+          >
+            <div className="relative">
+              {item.item_images && item.item_images.length > 0 ? (
+                <div className="aspect-video w-full overflow-hidden rounded-t-lg">
+                    <img 
+                      src={item.item_images[0].image_url} 
+                      alt={item.name || 'Inventar Bilde'} 
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                </div>
+              ) : (
+                <div className="aspect-video w-full overflow-hidden rounded-t-lg bg-gray-200 flex items-center justify-center">
+                  <Palette className="h-12 w-12 text-gray-400" />
+                </div>
+              )}
+               <div className="absolute top-2 right-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8 bg-white/80 hover:bg-white backdrop-blur-sm">
+                      <MoreVertical className="h-4 w-4" />
+                      <span className="sr-only">Handlinger</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <EditItemDialog item={item}>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        <span>Rediger</span>
+                      </DropdownMenuItem>
+                    </EditItemDialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-            ) : (
-              <div className="aspect-video w-full overflow-hidden rounded-t-lg bg-gray-200 flex items-center justify-center">
-                <Palette className="h-12 w-12 text-gray-400" />
+            </div>
+            <CardHeader>
+              <div className="flex justify-between items-start gap-2">
+                  <CardTitle className="text-base">{item.name || "Uten navn"}</CardTitle>
+                  {item.category && <Badge variant="secondary" className="whitespace-nowrap text-xs">{item.category}</Badge>}
               </div>
-            )}
-             <div className="absolute top-2 right-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-8 w-8 bg-white/80 hover:bg-white backdrop-blur-sm">
-                    <MoreVertical className="h-4 w-4" />
-                    <span className="sr-only">Handlinger</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <EditItemDialog item={item}>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      <span>Rediger</span>
-                    </DropdownMenuItem>
-                  </EditItemDialog>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-          <CardHeader>
-            <div className="flex justify-between items-start gap-2">
-                <CardTitle>{item.name || "Uten navn"}</CardTitle>
-                {item.category && <Badge variant="secondary" className="whitespace-nowrap">{item.category}</Badge>}
-            </div>
-            <CardDescription className="flex items-center text-xs text-gray-500 gap-4 pt-1">
-                 <span className="flex items-center gap-1">
-                    {item.family_members ? (
-                      <>
-                        <Users size={12}/> 
-                        {item.family_members.name}
-                        {item.family_members.nickname && ` (${item.family_members.nickname})`}
-                      </>
-                    ) : item.owner ? (
-                      <>
-                        <User size={12}/> {item.owner}
-                      </>
-                    ) : (
-                      <>
-                        <User size={12}/> Ingen eier
-                      </>
-                    )}
-                 </span>
-                 <span className="flex items-center gap-1">
-                    <Calendar size={12}/> {format(new Date(item.created_at), 'd. MMM yyyy', { locale: nb })}
-                 </span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-grow">
-            {item.description && <p className="text-sm text-gray-700 mb-4">{item.description}</p>}
-            
-            <div className="text-xs text-gray-600 space-y-2">
-              {item.brand && <p className="flex items-center gap-2"><Tag size={12} className="text-gray-500"/> <span className="font-semibold">Merke:</span> {item.brand}</p>}
-              {item.color && <p className="flex items-center gap-2"><Palette size={12} className="text-gray-500"/> <span className="font-semibold">Farge:</span> {item.color}</p>}
-              {item.size && <p className="flex items-center gap-2"><Ruler size={12} className="text-gray-500"/> <span className="font-semibold">Størrelse:</span> {item.size}</p>}
-              {item.location && <p className="flex items-center gap-2"><Home size={12} className="text-gray-500"/> <span className="font-semibold">Plassering:</span> {item.location}{item.shelf ? `, hylle ${item.shelf}`: ''}</p>}
-              {item.notes && <p className="flex items-start gap-2 pt-2"><StickyNote size={12} className="text-gray-500 mt-0.5"/> <span className="italic">"{item.notes}"</span></p>}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              <CardDescription className="flex items-center text-xs text-gray-500 gap-4 pt-1">
+                   <span className="flex items-center gap-1">
+                      {item.family_members ? (
+                        <>
+                          <Users size={12}/> 
+                          {item.family_members.name}
+                          {item.family_members.nickname && ` (${item.family_members.nickname})`}
+                        </>
+                      ) : item.owner ? (
+                        <>
+                          <User size={12}/> {item.owner}
+                        </>
+                      ) : (
+                        <>
+                          <User size={12}/> Ingen eier
+                        </>
+                      )}
+                   </span>
+                   <span className="flex items-center gap-1">
+                      <Calendar size={12}/> {format(new Date(item.created_at), 'd. MMM yyyy', { locale: nb })}
+                   </span>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex-grow">
+              {item.description && <p className="text-sm text-gray-700 mb-4">{item.description}</p>}
+              
+              <div className="text-xs text-gray-600 space-y-2">
+                {item.brand && <p className="flex items-center gap-2"><Tag size={12} className="text-gray-500"/> <span className="font-semibold">Merke:</span> {item.brand}</p>}
+                {item.color && <p className="flex items-center gap-2"><Palette size={12} className="text-gray-500"/> <span className="font-semibold">Farge:</span> {item.color}</p>}
+                {item.size && <p className="flex items-center gap-2"><Ruler size={12} className="text-gray-500"/> <span className="font-semibold">Størrelse:</span> {item.size}</p>}
+                {item.location && <p className="flex items-center gap-2"><Home size={12} className="text-gray-500"/> <span className="font-semibold">Plassering:</span> {item.location}{item.shelf ? `, hylle ${item.shelf}`: ''}</p>}
+                {item.notes && <p className="flex items-start gap-2 pt-2"><StickyNote size={12} className="text-gray-500 mt-0.5"/> <span className="italic">"{item.notes}"</span></p>}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
