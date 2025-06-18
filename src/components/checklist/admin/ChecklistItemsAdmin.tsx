@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,19 +10,28 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ChecklistError } from '../ChecklistError';
-import { ChecklistLoading } from '../ChecklistLoading';
+import ChecklistError from '../ChecklistError';
+import ChecklistLoading from '../ChecklistLoading';
 import { EditChecklistItemDialog } from './EditChecklistItemDialog';
 import { ChecklistSearch } from './ChecklistSearch';
 import { useChecklistAdmin } from '@/hooks/useChecklistAdmin';
 import { useToast } from '@/hooks/use-toast';
 
+interface ChecklistItem {
+  id: string;
+  text: string;
+  area_id: string;
+  category?: string;
+  season?: string;
+  areas?: { name: string };
+}
+
 export function ChecklistItemsAdmin() {
   const [newItem, setNewItem] = useState({
-    title: '',
-    description: '',
+    text: '',
     area_id: '',
-    is_critical: false
+    category: '',
+    season: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -50,7 +60,7 @@ export function ChecklistItemsAdmin() {
           *,
           areas (name)
         `)
-        .order('order_index');
+        .order('text');
       if (error) throw error;
       return data;
     }
@@ -61,8 +71,10 @@ export function ChecklistItemsAdmin() {
       const { data, error } = await supabase
         .from('checklist_items')
         .insert([{
-          ...item,
-          order_index: items.length
+          text: item.text,
+          area_id: item.area_id,
+          category: item.category || null,
+          season: item.season || null
         }])
         .select()
         .single();
@@ -71,7 +83,7 @@ export function ChecklistItemsAdmin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['checklist-items'] });
-      setNewItem({ title: '', description: '', area_id: '', is_critical: false });
+      setNewItem({ text: '', area_id: '', category: '', season: '' });
       toast({
         title: "Oppgave lagt til",
         description: "Ny oppgave er opprettet.",
@@ -101,8 +113,8 @@ export function ChecklistItemsAdmin() {
     
     const search = searchTerm.toLowerCase();
     return items.filter(item => 
-      item.title.toLowerCase().includes(search) ||
-      item.description?.toLowerCase().includes(search) ||
+      item.text.toLowerCase().includes(search) ||
+      item.category?.toLowerCase().includes(search) ||
       item.areas?.name.toLowerCase().includes(search)
     );
   }, [items, searchTerm]);
@@ -118,23 +130,12 @@ export function ChecklistItemsAdmin() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="title">Tittel *</Label>
+            <Label htmlFor="text">Oppgave *</Label>
             <Input
-              id="title"
-              value={newItem.title}
-              onChange={(e) => setNewItem(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Tittel på oppgaven"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="description">Beskrivelse</Label>
-            <Textarea
-              id="description"
-              value={newItem.description}
-              onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Utfyllende beskrivelse (valgfritt)"
-              rows={3}
+              id="text"
+              value={newItem.text}
+              onChange={(e) => setNewItem(prev => ({ ...prev, text: e.target.value }))}
+              placeholder="Beskrivelse av oppgaven"
             />
           </div>
           
@@ -153,21 +154,41 @@ export function ChecklistItemsAdmin() {
               </SelectContent>
             </Select>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="critical"
-              checked={newItem.is_critical}
-              onChange={(e) => setNewItem(prev => ({ ...prev, is_critical: e.target.checked }))}
-              className="rounded"
-            />
-            <Label htmlFor="critical">Kritisk oppgave</Label>
+
+          <div>
+            <Label htmlFor="category">Kategori</Label>
+            <Select value={newItem.category} onValueChange={(value) => setNewItem(prev => ({ ...prev, category: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Velg kategori (valgfritt)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="før_ankomst">Før ankomst</SelectItem>
+                <SelectItem value="ankomst">Ankomst</SelectItem>
+                <SelectItem value="opphold">Under oppholdet</SelectItem>
+                <SelectItem value="avreise">Avreise</SelectItem>
+                <SelectItem value="årlig_vedlikehold">Årlig vedlikehold</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="season">Sesong</Label>
+            <Select value={newItem.season} onValueChange={(value) => setNewItem(prev => ({ ...prev, season: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Velg sesong (valgfritt)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="vinter">Vinter</SelectItem>
+                <SelectItem value="sommer">Sommer</SelectItem>
+                <SelectItem value="høst">Høst</SelectItem>
+                <SelectItem value="vår">Vår</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <Button 
             onClick={() => addItemMutation.mutate(newItem)}
-            disabled={addItemMutation.isPending || !newItem.title.trim() || !newItem.area_id}
+            disabled={addItemMutation.isPending || !newItem.text.trim() || !newItem.area_id}
             className="w-full"
           >
             {addItemMutation.isPending ? (
@@ -202,18 +223,12 @@ export function ChecklistItemsAdmin() {
                 className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-medium text-sm">{item.title}</h4>
-                    {item.is_critical && (
-                      <Badge variant="destructive" className="text-xs">Kritisk</Badge>
-                    )}
+                  <h4 className="font-medium text-sm mb-1">{item.text}</h4>
+                  <div className="flex gap-2 text-xs text-gray-500">
+                    <span>Område: {item.areas?.name}</span>
+                    {item.category && <span>• Kategori: {item.category}</span>}
+                    {item.season && <span>• Sesong: {item.season}</span>}
                   </div>
-                  {item.description && (
-                    <p className="text-xs text-gray-600 mb-1">{item.description}</p>
-                  )}
-                  <p className="text-xs text-gray-500">
-                    Område: {item.areas?.name}
-                  </p>
                 </div>
                 
                 <EditChecklistItemDialog
@@ -236,3 +251,5 @@ export function ChecklistItemsAdmin() {
     </div>
   );
 }
+
+export default ChecklistItemsAdmin;

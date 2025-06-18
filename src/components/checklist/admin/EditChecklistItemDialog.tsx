@@ -4,18 +4,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Edit2, Loader2, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface ChecklistItem {
   id: string;
-  title: string;
-  description?: string;
+  text: string;
   area_id: string;
-  order_index: number;
-  is_critical: boolean;
+  category?: string;
+  season?: string;
 }
 
 interface EditChecklistItemDialogProps {
@@ -30,18 +28,23 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [formData, setFormData] = useState({
-    title: item.title,
-    description: item.description || '',
+    text: item.text,
     area_id: item.area_id,
-    is_critical: item.is_critical
+    category: item.category || '',
+    season: item.season || ''
   });
 
   const handleSave = async () => {
-    if (!formData.title.trim()) return;
+    if (!formData.text.trim()) return;
     
     setLoading(true);
     try {
-      await onUpdate(item.id, formData);
+      await onUpdate(item.id, {
+        text: formData.text,
+        area_id: formData.area_id,
+        category: formData.category || null,
+        season: formData.season || null
+      });
       setOpen(false);
     } catch (error) {
       console.error('Error updating item:', error);
@@ -77,23 +80,12 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
         
         <div className="space-y-4">
           <div>
-            <Label htmlFor="title">Tittel *</Label>
+            <Label htmlFor="text">Oppgave *</Label>
             <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Tittel på oppgaven"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="description">Beskrivelse</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Utfyllende beskrivelse (valgfritt)"
-              rows={3}
+              id="text"
+              value={formData.text}
+              onChange={(e) => setFormData(prev => ({ ...prev, text: e.target.value }))}
+              placeholder="Beskrivelse av oppgaven"
             />
           </div>
           
@@ -112,22 +104,44 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
               </SelectContent>
             </Select>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="critical"
-              checked={formData.is_critical}
-              onChange={(e) => setFormData(prev => ({ ...prev, is_critical: e.target.checked }))}
-              className="rounded"
-            />
-            <Label htmlFor="critical">Kritisk oppgave</Label>
+
+          <div>
+            <Label htmlFor="category">Kategori</Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Velg kategori (valgfritt)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Ingen kategori</SelectItem>
+                <SelectItem value="før_ankomst">Før ankomst</SelectItem>
+                <SelectItem value="ankomst">Ankomst</SelectItem>
+                <SelectItem value="opphold">Under oppholdet</SelectItem>
+                <SelectItem value="avreise">Avreise</SelectItem>
+                <SelectItem value="årlig_vedlikehold">Årlig vedlikehold</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="season">Sesong</Label>
+            <Select value={formData.season} onValueChange={(value) => setFormData(prev => ({ ...prev, season: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Velg sesong (valgfritt)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Ingen sesong</SelectItem>
+                <SelectItem value="vinter">Vinter</SelectItem>
+                <SelectItem value="sommer">Sommer</SelectItem>
+                <SelectItem value="høst">Høst</SelectItem>
+                <SelectItem value="vår">Vår</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="flex gap-2 pt-4">
             <Button 
               onClick={handleSave} 
-              disabled={loading || !formData.title.trim()}
+              disabled={loading || !formData.text.trim()}
               className="flex-1"
             >
               {loading ? (
@@ -150,7 +164,7 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
                 <AlertDialogHeader>
                   <AlertDialogTitle>Slett oppgave</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Er du sikker på at du vil slette "{item.title}"? Denne handlingen kan ikke angres.
+                    Er du sikker på at du vil slette "{item.text}"? Denne handlingen kan ikke angres.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

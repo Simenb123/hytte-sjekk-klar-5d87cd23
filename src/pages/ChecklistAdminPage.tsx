@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AreasAdmin from '@/components/checklist/admin/AreasAdmin';
-import ChecklistItemsAdmin from '@/components/checklist/admin/ChecklistItemsAdmin';
+import { ChecklistItemsAdmin } from '@/components/checklist/admin/ChecklistItemsAdmin';
 import AppHeader from '@/components/AppHeader';
 import { Settings, MapPin, CheckSquare } from 'lucide-react';
 
