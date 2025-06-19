@@ -220,9 +220,9 @@ const BookingPage = () => {
                             <p className="text-sm font-medium text-gray-900 truncate">
                               {event.summary || 'Ingen tittel'}
                             </p>
-                            {event.start && (
+                            {event.start?.dateTime && (
                               <p className="text-xs text-gray-500">
-                                {format(new Date(event.start.dateTime || event.start.date || ''), 'dd.MM.yyyy HH:mm', { locale: nb })}
+                                {format(new Date(event.start.dateTime), 'dd.MM.yyyy HH:mm', { locale: nb })}
                               </p>
                             )}
                           </div>
