@@ -1,10 +1,11 @@
 
-export type BookingFormData = {
+export interface BookingFormData {
+  id?: string;
   title: string;
-  description: string;
+  description?: string;
   startDate: Date;
   endDate: Date;
-  addToGoogle: boolean;
-  useSharedCalendar: boolean;
-  familyMemberIds: string[];
-};
+  addToGoogle?: boolean;
+  useSharedCalendar?: boolean;
+  familyMemberIds?: string[];
+}

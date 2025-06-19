@@ -3,10 +3,12 @@ import React from 'react';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { useBookingForm } from '@/hooks/useBookingForm';
+import { useBookingConflicts } from '@/hooks/useBookingConflicts';
 import FormTextField from './FormTextField';
 import FormDateField from './FormDateField';
 import GoogleIntegrationField from './GoogleIntegrationField';
 import FamilyMemberSelector from './FamilyMemberSelector';
+import BookingConflictAlert from './BookingConflictAlert';
 import { BookingFormData } from './types';
 
 type BookingFormProps = {
@@ -43,6 +45,15 @@ const BookingForm: React.FC<BookingFormProps> = ({
     isEditing,
     defaultValues,
     onSubmit
+  });
+
+  const startDate = form.watch('startDate');
+  const endDate = form.watch('endDate');
+
+  const { conflicts, isLoading: isCheckingConflicts } = useBookingConflicts({
+    startDate,
+    endDate,
+    excludeBookingId: isEditing ? defaultValues?.id : undefined
   });
 
   return (
@@ -82,6 +93,8 @@ const BookingForm: React.FC<BookingFormProps> = ({
           setIsOpen={setEndDateOpen}
           onSelect={handleEndDateChange}
         />
+
+        {!isCheckingConflicts && <BookingConflictAlert conflicts={conflicts} />}
 
         <FamilyMemberSelector form={form} />
 
