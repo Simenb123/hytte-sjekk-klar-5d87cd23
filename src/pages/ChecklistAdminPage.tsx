@@ -4,15 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AreasAdmin from '@/components/checklist/admin/AreasAdmin';
 import { ChecklistItemsAdmin } from '@/components/checklist/admin/ChecklistItemsAdmin';
-import AppHeader from '@/components/AppHeader';
+import Header from '@/components/Header';
 import { Settings, MapPin, CheckSquare } from 'lucide-react';
 
 const ChecklistAdminPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Administrasjon" showBackButton={true} />
+      <Header title="Administrasjon" showBackButton={true} />
       
-      <div className="container mx-auto p-6 max-w-6xl">
+      <div className="container mx-auto p-6 max-w-6xl pt-24">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Sjekkliste-administrasjon</h1>
           <p className="text-gray-600">Administrer områder og sjekkliste-punkter</p>

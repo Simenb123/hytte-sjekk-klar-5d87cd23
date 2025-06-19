@@ -1,6 +1,6 @@
 
 import React from 'react';
-import AppHeader from '../components/AppHeader';
+import Header from '../components/Header';
 import DashboardCard from '../components/DashboardCard';
 import { 
   Snowflake, 
@@ -28,9 +28,9 @@ const OtherApps: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Andre apper" showBackButton />
+      <Header title="Andre apper" showBackButton />
       
-      <div className="max-w-lg mx-auto p-4">
+      <div className="max-w-lg mx-auto p-4 pt-20">
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div onClick={() => openExternalLink('https://apps.apple.com/no/app/gausta/id1447369775?l=nb', 'Gausta')} className="cursor-pointer">
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full">

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { checklistCategories } from '@/models/checklist';
-import AppHeader from '@/components/AppHeader';
+import Header from '@/components/Header';
 import { Settings } from 'lucide-react';
 
 const ChecklistHome: React.FC = () => {
@@ -29,7 +29,7 @@ const ChecklistHome: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader 
+      <Header 
         title="Sjekklister" 
         showBackButton={true}
         rightContent={
@@ -45,7 +45,7 @@ const ChecklistHome: React.FC = () => {
         }
       />
       
-      <div className="container mx-auto p-6 max-w-4xl">
+      <div className="container mx-auto p-6 max-w-4xl pt-24">
         <div className="mb-6">
           <p className="text-gray-600">Hold oversikt over alle oppgaver for hytta</p>
         </div>

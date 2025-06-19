@@ -1,5 +1,6 @@
+
 import React from 'react';
-import AppHeader from '../components/AppHeader';
+import Header from '../components/Header';
 import { Cloud, CloudRain, Sun, Wind } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -19,9 +20,9 @@ const WeatherApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Værmelding (YR)" showBackButton />
+      <Header title="Værmelding (YR)" showBackButton />
       
-      <div className="max-w-lg mx-auto p-4">
+      <div className="max-w-lg mx-auto p-4 pt-20">
         <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 text-white mb-6">
           <div className="flex justify-between items-center">
             <div>

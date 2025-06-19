@@ -28,9 +28,11 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
   sharedCalendarExists = false
 }) => {
   const { user } = useAuth();
-  const { handleSubmit, isSubmitting } = useBookingSubmit({
-    onSuccess,
-    onClose: () => onOpenChange(false)
+  const { submitBooking, isSubmitting } = useBookingSubmit({
+    onSuccess: () => {
+      onSuccess({});
+      onOpenChange(false);
+    }
   });
   
   const handleFormSubmit = (data: any) => {
@@ -55,7 +57,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
       return;
     }
     
-    handleSubmit(data);
+    submitBooking(data);
   };
 
   return (
