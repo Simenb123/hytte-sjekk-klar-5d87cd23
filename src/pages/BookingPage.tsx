@@ -13,6 +13,7 @@ import NewBookingDialog from '@/components/NewBookingDialog';
 import { BookingsList } from '@/components/calendar/BookingsList';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import BookingFamilyMembers from '@/components/booking/BookingFamilyMembers';
 
 const BookingPage = () => {
   const [showNewBooking, setShowNewBooking] = useState(false);
@@ -179,6 +180,7 @@ const BookingPage = () => {
                             <span>Hytta</span>
                           </div>
                         </div>
+                        <BookingFamilyMembers familyMembers={booking.familyMembers || []} />
                       </CardContent>
                     </Card>
                   );

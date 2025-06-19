@@ -27,6 +27,42 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_family_members: {
+        Row: {
+          booking_id: string
+          created_at: string
+          family_member_id: string
+          id: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          family_member_id: string
+          id?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          family_member_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_family_members_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_family_members_family_member_id_fkey"
+            columns: ["family_member_id"]
+            isOneToOne: false
+            referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_notifications: {
         Row: {
           booking_id: string

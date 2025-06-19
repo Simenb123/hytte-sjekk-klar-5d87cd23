@@ -12,6 +12,11 @@ export interface Booking {
   to: Date;
   user: string;
   googleEventId?: string;
+  familyMembers?: Array<{
+    id: string;
+    name: string;
+    nickname?: string;
+  }>;
 }
 
 export function useBookings() {
@@ -26,7 +31,17 @@ export function useBookings() {
       console.log('Fetching bookings...');
       const { data, error } = await supabase
         .from('bookings')
-        .select('*')
+        .select(`
+          *,
+          booking_family_members (
+            family_member_id,
+            family_members (
+              id,
+              name,
+              nickname
+            )
+          )
+        `)
         .order('start_date', { ascending: true });
 
       if (error) {
@@ -42,10 +57,14 @@ export function useBookings() {
           title: booking.title || 'Ingen tittel',
           description: booking.description,
           from: new Date(booking.start_date),
-          // Ensure the end date is at the end of the day
           to: new Date(booking.end_date),
           user: booking.user_id || 'Ukjent',
-          googleEventId: booking.google_event_id
+          googleEventId: booking.google_event_id,
+          familyMembers: booking.booking_family_members?.map((bfm: any) => ({
+            id: bfm.family_members.id,
+            name: bfm.family_members.name,
+            nickname: bfm.family_members.nickname
+          })) || []
         }));
         
         setBookings(formattedBookings);
@@ -84,7 +103,7 @@ export function useBookings() {
     }
   };
 
-  const updateBooking = async (id: string, updates: Partial<Omit<Booking, 'id' | 'user' | 'googleEventId'>>) => {
+  const updateBooking = async (id: string, updates: Partial<Omit<Booking, 'id' | 'user' | 'googleEventId' | 'familyMembers'>>) => {
     try {
       // Map from our Booking interface to the database structure
       const dbUpdates: any = {};
@@ -93,7 +112,6 @@ export function useBookings() {
       if (updates.description !== undefined) dbUpdates.description = updates.description;
       if (updates.from !== undefined) dbUpdates.start_date = updates.from.toISOString();
       if (updates.to !== undefined) {
-        // Make sure end date is at the end of the day to include the full day
         dbUpdates.end_date = updates.to.toISOString();
       }
       

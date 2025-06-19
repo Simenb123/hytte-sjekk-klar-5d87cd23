@@ -52,6 +52,26 @@ export const useBookingSubmit = ({ onSuccess, onClose }: UseBookingSubmitProps) 
 
       console.log('Booking created in database:', bookingData);
 
+      // Save family member associations if any are selected
+      if (data.familyMemberIds && data.familyMemberIds.length > 0) {
+        const familyMemberInserts = data.familyMemberIds.map(familyMemberId => ({
+          booking_id: bookingData.id,
+          family_member_id: familyMemberId
+        }));
+
+        const { error: familyMemberError } = await supabase
+          .from('booking_family_members')
+          .insert(familyMemberInserts);
+
+        if (familyMemberError) {
+          console.error('Error saving family members:', familyMemberError);
+          // Don't fail the entire booking creation for this
+          toast.warning('Booking opprettet, men kunne ikke lagre familiemedlemmer');
+        } else {
+          console.log('Family members saved successfully');
+        }
+      }
+
       // Add to Google Calendar if requested
       if (data.addToGoogle) {
         try {
