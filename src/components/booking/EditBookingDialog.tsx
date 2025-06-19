@@ -50,7 +50,8 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
         startDate,
         endDate,
         addToGoogle: false,
-        useSharedCalendar: false
+        useSharedCalendar: false,
+        familyMemberIds: []
       });
     }
   }, [booking]);
