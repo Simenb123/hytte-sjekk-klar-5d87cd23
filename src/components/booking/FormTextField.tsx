@@ -43,13 +43,13 @@ const FormTextField: React.FC<FormTextFieldProps> = ({
                 placeholder={placeholder}
                 rows={3}
                 {...field}
-                value={field.value || ''}
+                value={typeof field.value === 'string' ? field.value : ''}
               />
             ) : (
               <Input 
                 placeholder={placeholder} 
                 {...field}
-                value={field.value || ''}
+                value={typeof field.value === 'string' ? field.value : ''}
               />
             )}
           </FormControl>
