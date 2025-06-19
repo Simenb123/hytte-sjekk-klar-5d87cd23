@@ -1,15 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/DashboardCard';
-import AppHeader from '@/components/AppHeader';
+import Header from '@/components/Header';
 import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User } from 'lucide-react';
 
 export default function Dashboard() {
   return (
     <div className="flex flex-col h-screen bg-hytte-snow">
-      <AppHeader title="Gaustablikk" />
+      <Header title="Gaustablikk" />
       
-      <main className="flex-1 overflow-y-auto p-4 md:p-6">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 pt-20">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold text-hytte-darkblue mb-8 text-center">
             Velkommen til Gaustablikk

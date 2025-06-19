@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import AppHeader from '../components/AppHeader';
+import Header from '../components/Header';
 import NewBookingDialog from '../components/booking/NewBookingDialog';
 import EditBookingDialog from '../components/booking/EditBookingDialog';
 import { useBookings, Booking } from '@/hooks/useBookings';
@@ -193,9 +193,9 @@ const CalendarApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="Kalender og booking" showBackButton />
+      <Header title="Kalender og booking" showBackButton />
       
-      <div className="max-w-lg mx-auto p-4">
+      <div className="max-w-lg mx-auto p-4 pt-20">
         <CalendarSection 
           date={date} 
           onDateSelect={handleDateSelect} 

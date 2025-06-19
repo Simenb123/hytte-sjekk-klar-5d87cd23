@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getChecklistForCategory } from "@/services/checklist.service";
@@ -9,7 +8,7 @@ import { logItemCompletion } from "@/services/checklist.service";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle, Loader2 } from "lucide-react";
-import AppHeader from "@/components/AppHeader";
+import Header from "@/components/Header";
 import { Progress } from "@/components/ui/progress";
 
 export default function ChecklistPage() {
@@ -61,7 +60,7 @@ export default function ChecklistPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader 
+      <Header 
         title={pageTitle} 
         showBackButton={true} 
         rightContent={
@@ -73,7 +72,7 @@ export default function ChecklistPage() {
           )
         }
       />
-      <main className="p-4 sm:p-6 max-w-lg mx-auto">
+      <main className="p-4 sm:p-6 max-w-lg mx-auto pt-20">
         {areas && areas.length > 0 ? (
           <Accordion type="multiple" defaultValue={areas.map(area => area.id)} className="w-full space-y-3">
             {areas.map((area) => (
