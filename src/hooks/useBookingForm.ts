@@ -1,13 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { addDays, parseISO } from 'date-fns';
 import { BookingFormData } from '@/components/booking/types';
 
 interface UseBookingFormProps {
   googleIntegration: boolean;
   sharedCalendarExists: boolean;
-  isEditing?: boolean;
+  isEditing: boolean;
   defaultValues?: Partial<BookingFormData>;
   onSubmit: (data: BookingFormData) => void;
 }
@@ -15,72 +14,55 @@ interface UseBookingFormProps {
 export const useBookingForm = ({
   googleIntegration,
   sharedCalendarExists,
-  isEditing = false,
+  isEditing,
   defaultValues,
-  onSubmit,
+  onSubmit
 }: UseBookingFormProps) => {
-  const today = new Date();
-  const tomorrow = addDays(today, 1);
-  
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
-  
-  // Ensure default values are proper Date objects
-  const processedDefaultValues = defaultValues ? {
-    ...defaultValues,
-    startDate: defaultValues.startDate instanceof Date ? 
-      defaultValues.startDate : 
-      (typeof defaultValues.startDate === 'string' ? parseISO(defaultValues.startDate) : today),
-    endDate: defaultValues.endDate instanceof Date ? 
-      defaultValues.endDate : 
-      (typeof defaultValues.endDate === 'string' ? parseISO(defaultValues.endDate) : tomorrow)
-  } : {
-    title: '',
-    description: '',
-    startDate: today,
-    endDate: tomorrow,
-    addToGoogle: googleIntegration,
-    useSharedCalendar: sharedCalendarExists
-  };
-  
+
   const form = useForm<BookingFormData>({
-    defaultValues: processedDefaultValues
+    defaultValues: {
+      title: defaultValues?.title || '',
+      description: defaultValues?.description || '',
+      startDate: defaultValues?.startDate || new Date(),
+      endDate: defaultValues?.endDate || new Date(Date.now() + 24 * 60 * 60 * 1000),
+      addToGoogle: defaultValues?.addToGoogle ?? googleIntegration,
+      useSharedCalendar: defaultValues?.useSharedCalendar ?? sharedCalendarExists,
+    }
   });
 
   // Update form when props change
   useEffect(() => {
-    if (!isEditing) {
-      form.setValue('addToGoogle', googleIntegration);
-      form.setValue('useSharedCalendar', sharedCalendarExists);
-    }
-  }, [googleIntegration, sharedCalendarExists, form, isEditing]);
+    form.setValue('addToGoogle', googleIntegration);
+    form.setValue('useSharedCalendar', sharedCalendarExists);
+  }, [googleIntegration, sharedCalendarExists, form]);
 
-  // Handle date changes to ensure end date is after start date
   const handleStartDateChange = (date: Date | undefined) => {
-    if (!date) return;
-    
-    form.setValue('startDate', date);
-    setStartDateOpen(false);
-    
-    // If end date is before start date, update end date
-    const currentEndDate = form.getValues('endDate');
-    if (date > currentEndDate) {
-      form.setValue('endDate', addDays(date, 1));
+    if (date) {
+      form.setValue('startDate', date);
+      
+      // Auto-adjust end date if it's before the new start date
+      const currentEndDate = form.getValues('endDate');
+      if (currentEndDate <= date) {
+        const newEndDate = new Date(date);
+        newEndDate.setDate(date.getDate() + 1);
+        form.setValue('endDate', newEndDate);
+      }
+      
+      setStartDateOpen(false);
     }
   };
 
   const handleEndDateChange = (date: Date | undefined) => {
-    if (!date) return;
-    
-    form.setValue('endDate', date);
-    setEndDateOpen(false);
+    if (date) {
+      form.setValue('endDate', date);
+      setEndDateOpen(false);
+    }
   };
 
   const handleSubmit = (data: BookingFormData) => {
-    // Ensure end date is not before start date
-    if (data.endDate < data.startDate) {
-      data.endDate = addDays(data.startDate, 1);
-    }
+    console.log('Form submitted with data:', data);
     onSubmit(data);
   };
 

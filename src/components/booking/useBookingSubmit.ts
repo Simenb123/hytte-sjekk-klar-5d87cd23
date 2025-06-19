@@ -3,98 +3,92 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { createCalendarEvent } from '@/services/googleCalendar.service';
 import { BookingFormData } from './types';
 
-type UseBookingSubmitProps = {
+interface UseBookingSubmitProps {
   onSuccess: (booking: any) => void;
   onClose: () => void;
-};
+}
 
 export const useBookingSubmit = ({ onSuccess, onClose }: UseBookingSubmitProps) => {
-  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const handleSubmit = async (data: BookingFormData) => {
-    if (isSubmitting) return;
-    
+    if (!user) {
+      toast.error('Du må være logget inn for å lage en booking');
+      return;
+    }
+
     setIsSubmitting(true);
-    
+
     try {
-      // Sjekk at bruker er logget inn
-      if (!user) {
-        toast.error('Du må være logget inn for å lage en booking');
-        setIsSubmitting(false);
+      // Validate dates
+      if (data.endDate <= data.startDate) {
+        toast.error('Sluttdato må være etter startdato');
         return;
       }
 
       console.log('Creating booking with data:', data);
-      
-      if (!data.title) {
-        toast.error('Booking må ha en tittel');
-        setIsSubmitting(false);
-        return;
-      }
 
-      if (!data.startDate || !data.endDate) {
-        toast.error('Booking må ha start- og sluttdato');
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (data.endDate < data.startDate) {
-        toast.error('Sluttdato kan ikke være før startdato');
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Ensure we have Date objects, not complex objects
-      const startDate = data.startDate instanceof Date ? 
-        data.startDate : 
-        new Date(data.startDate);
-        
-      const endDate = data.endDate instanceof Date ? 
-        data.endDate : 
-        new Date(data.endDate);
-      
-      console.log('Processed dates:', { startDate, endDate });
-      
-      // Lagre booking i databasen
-      const { data: newBooking, error } = await supabase
+      // Save booking in database
+      const { data: bookingData, error } = await supabase
         .from('bookings')
         .insert({
           title: data.title,
-          description: data.description || '',
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString(),
+          description: data.description || null,
+          start_date: data.startDate.toISOString(),
+          end_date: data.endDate.toISOString(),
           user_id: user.id
         })
         .select()
         .single();
 
       if (error) {
-        console.error('Error saving booking:', error);
+        console.error('Database error:', error);
         throw error;
       }
 
-      console.log('Booking created successfully:', newBooking);
-      
-      // Oppdater bookingdata og lukk dialog
-      toast.success('Booking opprettet!');
-      
-      // Forbered data som skal sendes til onSuccess
-      const bookingData = {
-        ...data,
-        id: newBooking.id,
-        from: startDate,
-        to: endDate,
+      console.log('Booking created in database:', bookingData);
+
+      // Add to Google Calendar if requested
+      if (data.addToGoogle) {
+        try {
+          const tokens = JSON.parse(localStorage.getItem('googleCalendarTokens') || '{}');
+          if (tokens.access_token) {
+            console.log('Adding booking to Google Calendar');
+            await createCalendarEvent(tokens, {
+              title: data.title,
+              description: data.description,
+              startDate: data.startDate.toISOString(),
+              endDate: data.endDate.toISOString()
+            }, data.useSharedCalendar);
+            
+            toast.success('Booking opprettet og lagt til i Google Calendar!');
+          } else {
+            toast.warning('Booking opprettet, men kunne ikke legge til i Google Calendar');
+          }
+        } catch (googleError) {
+          console.error('Google Calendar error:', googleError);
+          toast.warning('Booking opprettet, men kunne ikke legge til i Google Calendar');
+        }
+      } else {
+        toast.success('Booking opprettet!');
+      }
+
+      // Call success callback with formatted booking data
+      onSuccess({
+        ...bookingData,
+        from: new Date(bookingData.start_date),
+        to: new Date(bookingData.end_date),
         user: user.id
-      };
+      });
       
-      onSuccess(bookingData);
       onClose();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating booking:', error);
-      toast.error(`Kunne ikke opprette booking: ${error.message || 'Ukjent feil'}`);
+      toast.error('Kunne ikke opprette booking');
     } finally {
       setIsSubmitting(false);
     }

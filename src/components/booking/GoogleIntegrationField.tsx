@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { UseFormReturn } from 'react-hook-form';
 import {
   FormControl,
   FormField,
@@ -8,7 +9,6 @@ import {
   FormDescription,
 } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
-import { UseFormReturn } from 'react-hook-form';
 import { BookingFormData } from './types';
 
 interface GoogleIntegrationFieldProps {
@@ -29,12 +29,10 @@ const GoogleIntegrationField: React.FC<GoogleIntegrationFieldProps> = ({
       control={form.control}
       name={name}
       render={({ field }) => (
-        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
           <div className="space-y-0.5">
-            <FormLabel>{label}</FormLabel>
-            <FormDescription className="text-xs">
-              {description}
-            </FormDescription>
+            <FormLabel className="text-base">{label}</FormLabel>
+            <FormDescription>{description}</FormDescription>
           </div>
           <FormControl>
             <Switch

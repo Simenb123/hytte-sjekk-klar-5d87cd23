@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { UseFormReturn } from 'react-hook-form';
 import {
   FormControl,
   FormField,
@@ -8,14 +9,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { UseFormReturn } from 'react-hook-form';
+import { Textarea } from '@/components/ui/textarea';
 import { BookingFormData } from './types';
 
 interface FormTextFieldProps {
   form: UseFormReturn<BookingFormData>;
-  name: 'title' | 'description';
+  name: keyof BookingFormData;
   label: string;
-  placeholder: string;
+  placeholder?: string;
+  multiline?: boolean;
   required?: boolean;
 }
 
@@ -24,6 +26,7 @@ const FormTextField: React.FC<FormTextFieldProps> = ({
   name,
   label,
   placeholder,
+  multiline = false,
   required = false
 }) => {
   return (
@@ -33,9 +36,22 @@ const FormTextField: React.FC<FormTextFieldProps> = ({
       rules={required ? { required: `${label} er påkrevd` } : undefined}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <FormLabel>{label} {required && '*'}</FormLabel>
           <FormControl>
-            <Input placeholder={placeholder} {...field} />
+            {multiline ? (
+              <Textarea 
+                placeholder={placeholder}
+                rows={3}
+                {...field}
+                value={field.value || ''}
+              />
+            ) : (
+              <Input 
+                placeholder={placeholder} 
+                {...field}
+                value={field.value || ''}
+              />
+            )}
           </FormControl>
           <FormMessage />
         </FormItem>
