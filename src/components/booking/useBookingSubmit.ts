@@ -1,61 +1,55 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { createCalendarEvent } from '@/services/googleCalendar.service';
+import { toast } from 'sonner';
 import { BookingFormData } from './types';
+import { useBookingNotifications } from './useBookingNotifications';
 
 interface UseBookingSubmitProps {
-  onSuccess: (booking: any) => void;
-  onClose: () => void;
+  onSuccess?: () => void;
+  onBookingCreated?: () => void;
 }
 
-export const useBookingSubmit = ({ onSuccess, onClose }: UseBookingSubmitProps) => {
+export const useBookingSubmit = ({ onSuccess, onBookingCreated }: UseBookingSubmitProps = {}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+  const { sendBookingConfirmation } = useBookingNotifications();
 
-  const handleSubmit = async (data: BookingFormData) => {
+  const submitBooking = async (data: BookingFormData) => {
     if (!user) {
-      toast.error('Du må være logget inn for å lage en booking');
+      toast.error('Du må være logget inn for å opprette en booking');
       return;
     }
 
     setIsSubmitting(true);
+    console.log('Submitting booking:', data);
 
     try {
-      // Validate dates
-      if (data.endDate <= data.startDate) {
-        toast.error('Sluttdato må være etter startdato');
-        return;
-      }
-
-      console.log('Creating booking with data:', data);
-
-      // Save booking in database
-      const { data: bookingData, error } = await supabase
+      // Insert booking into database
+      const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .insert({
+          user_id: user.id,
           title: data.title,
           description: data.description || null,
           start_date: data.startDate.toISOString(),
           end_date: data.endDate.toISOString(),
-          user_id: user.id
         })
         .select()
         .single();
 
-      if (error) {
-        console.error('Database error:', error);
-        throw error;
+      if (bookingError) {
+        console.error('Error creating booking:', bookingError);
+        throw bookingError;
       }
 
-      console.log('Booking created in database:', bookingData);
+      console.log('Booking created:', booking);
 
-      // Save family member associations if any are selected
+      // Insert family member associations if any
       if (data.familyMemberIds && data.familyMemberIds.length > 0) {
         const familyMemberInserts = data.familyMemberIds.map(familyMemberId => ({
-          booking_id: bookingData.id,
+          booking_id: booking.id,
           family_member_id: familyMemberId
         }));
 
@@ -64,58 +58,100 @@ export const useBookingSubmit = ({ onSuccess, onClose }: UseBookingSubmitProps) 
           .insert(familyMemberInserts);
 
         if (familyMemberError) {
-          console.error('Error saving family members:', familyMemberError);
-          // Don't fail the entire booking creation for this
-          toast.warning('Booking opprettet, men kunne ikke lagre familiemedlemmer');
-        } else {
-          console.log('Family members saved successfully');
+          console.error('Error associating family members:', familyMemberError);
+          // Don't throw here as the booking was already created
+          toast.error('Booking opprettet, men kunne ikke knytte familiemedlemmer');
         }
       }
 
-      // Add to Google Calendar if requested
-      if (data.addToGoogle) {
-        try {
-          const tokens = JSON.parse(localStorage.getItem('googleCalendarTokens') || '{}');
-          if (tokens.access_token) {
-            console.log('Adding booking to Google Calendar');
-            await createCalendarEvent(tokens, {
-              title: data.title,
-              description: data.description,
-              startDate: data.startDate.toISOString(),
-              endDate: data.endDate.toISOString()
-            }, data.useSharedCalendar);
-            
-            toast.success('Booking opprettet og lagt til i Google Calendar!');
-          } else {
-            toast.warning('Booking opprettet, men kunne ikke legge til i Google Calendar');
-          }
-        } catch (googleError) {
-          console.error('Google Calendar error:', googleError);
-          toast.warning('Booking opprettet, men kunne ikke legge til i Google Calendar');
-        }
-      } else {
-        toast.success('Booking opprettet!');
-      }
-
-      // Call success callback with formatted booking data
-      onSuccess({
-        ...bookingData,
-        from: new Date(bookingData.start_date),
-        to: new Date(bookingData.end_date),
-        user: user.id
+      // Send confirmation notification
+      await sendBookingConfirmation({
+        bookingId: booking.id,
+        title: data.title,
+        startDate: data.startDate,
+        endDate: data.endDate
       });
-      
-      onClose();
-    } catch (error) {
+
+      toast.success('Booking opprettet!');
+      onSuccess?.();
+      onBookingCreated?.();
+    } catch (error: any) {
       console.error('Error creating booking:', error);
-      toast.error('Kunne ikke opprette booking');
+      toast.error(error.message || 'Kunne ikke opprette booking');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const updateBooking = async (id: string, data: BookingFormData) => {
+    if (!user) {
+      toast.error('Du må være logget inn for å oppdatere en booking');
+      return;
+    }
+
+    setIsSubmitting(true);
+    console.log('Updating booking:', id, data);
+
+    try {
+      // Update booking in database
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .update({
+          title: data.title,
+          description: data.description || null,
+          start_date: data.startDate.toISOString(),
+          end_date: data.endDate.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (bookingError) {
+        console.error('Error updating booking:', bookingError);
+        throw bookingError;
+      }
+
+      // Delete existing family member associations
+      const { error: deleteError } = await supabase
+        .from('booking_family_members')
+        .delete()
+        .eq('booking_id', id);
+
+      if (deleteError) {
+        console.error('Error deleting family member associations:', deleteError);
+        throw deleteError;
+      }
+
+      // Insert new family member associations if any
+      if (data.familyMemberIds && data.familyMemberIds.length > 0) {
+        const familyMemberInserts = data.familyMemberIds.map(familyMemberId => ({
+          booking_id: id,
+          family_member_id: familyMemberId
+        }));
+
+        const { error: familyMemberError } = await supabase
+          .from('booking_family_members')
+          .insert(familyMemberInserts);
+
+        if (familyMemberError) {
+          console.error('Error associating family members:', familyMemberError);
+          // Don't throw here as the booking was already updated
+          toast.error('Booking oppdatert, men kunne ikke knytte familiemedlemmer');
+        }
+      }
+
+      toast.success('Booking oppdatert!');
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Error updating booking:', error);
+      toast.error(error.message || 'Kunne ikke oppdatere booking');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return {
-    handleSubmit,
+    submitBooking,
+    updateBooking,
     isSubmitting
   };
 };

@@ -1,74 +1,85 @@
 
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Menu } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import Logo from './Logo';
 import ProfileButton from './ProfileButton';
-import { useAuth } from '@/context/AuthContext';
+import NotificationBell from './NotificationBell';
 
-interface AppHeaderProps {
-  title: string;
-  showBackButton?: boolean;
-  onBackClick?: () => void;
-  rightContent?: React.ReactNode;
-}
-
-const AppHeader: React.FC<AppHeaderProps> = ({ 
-  title, 
-  showBackButton = false, 
-  onBackClick,
-  rightContent
-}) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { user } = useAuth();
-
-  // Automatically determine if we should show back button based on route
-  const shouldShowBackButton = showBackButton || (location.pathname !== '/' && location.pathname !== '/dashboard');
-
-  const handleBack = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onBackClick) {
-      onBackClick();
-    } else {
-      navigate(-1);
-    }
-  };
-
-  const handleHome = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate('/dashboard');
-  };
+const AppHeader = () => {
+  const navItems = [
+    { href: '/', label: 'Hjem' },
+    { href: '/checklist', label: 'Sjekkliste' },
+    { href: '/booking', label: 'Booking' },
+    { href: '/calendar', label: 'Kalender' },
+    { href: '/inventory', label: 'Inventar' },
+    { href: '/family', label: 'Familie' },
+    { href: '/ai-helper', label: 'AI Hjelper' },
+    { href: '/other-apps', label: 'Andre apper' },
+  ];
 
   return (
-    <header className="bg-white shadow-md w-full z-50 sticky top-0 left-0">
-      <div className="max-w-lg mx-auto">
-        <div className="flex items-center justify-between py-2 pl-1 pr-2 h-16">
-          <div className="flex items-center gap-1">
-            <button 
-              onClick={handleHome}
-              className="rounded-full hover:bg-gray-100 flex items-center justify-center bg-white text-black transition-colors p-0"
-              aria-label="Hjem"
-              type="button"
-            >
-              <img src="/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png" alt="Hjem" className="h-16 w-16" />
-            </button>
-            {shouldShowBackButton && (
-              <button 
-                onClick={handleBack}
-                className="p-2 rounded-full hover:bg-gray-100 flex items-center justify-center bg-white text-black"
-                aria-label="Tilbake"
-                type="button"
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 hidden md:flex">
+          <Link to="/" className="mr-6 flex items-center space-x-2">
+            <Logo />
+          </Link>
+          <nav className="flex items-center space-x-6 text-sm font-medium">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className="transition-colors hover:text-foreground/80 text-foreground/60"
               >
-                <ArrowLeft size={24} />
-              </button>
-            )}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+        
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+            >
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle Menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="pr-0">
+            <Link to="/" className="flex items-center">
+              <Logo />
+            </Link>
+            <div className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
+              <nav className="flex flex-col space-y-3">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className="transition-colors hover:text-foreground/80 text-foreground/60"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          </SheetContent>
+        </Sheet>
+        
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
+            <Link to="/" className="md:hidden">
+              <Logo />
+            </Link>
           </div>
           
-          <h2 className="text-xl font-semibold flex-1 text-center truncate mx-2">{title}</h2>
-          
-          <div className="flex items-center gap-2">
-            {rightContent}
-            {user && <ProfileButton />}
+          <div className="flex items-center space-x-2">
+            <NotificationBell />
+            <ProfileButton />
           </div>
         </div>
       </div>
