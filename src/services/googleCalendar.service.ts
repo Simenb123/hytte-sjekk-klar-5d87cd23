@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { GoogleEvent, GoogleCalendar } from '@/types/googleCalendar.types';
 import { toast } from 'sonner';
@@ -106,6 +105,46 @@ export const handleOAuthCallback = async (code: string) => {
     return data.tokens;
   } catch (error) {
     console.error('Error in handleOAuthCallback:', error);
+    throw error;
+  }
+};
+
+/**
+ * Oppretter en ny kalenderhendelse i Google Calendar
+ */
+export const createCalendarEvent = async (tokens: any, eventData: {
+  title: string;
+  description?: string;
+  startDate: string;
+  endDate: string;
+}, useSharedCalendar: boolean = false) => {
+  try {
+    console.log('Creating calendar event with data:', eventData);
+    
+    const { data, error } = await supabase.functions.invoke('google-calendar', {
+      method: 'POST',
+      body: { 
+        action: 'create_event',
+        tokens,
+        event: eventData,
+        useSharedCalendar
+      }
+    });
+
+    if (error) {
+      console.error('Supabase function error:', error);
+      throw error;
+    }
+
+    if (data?.error) {
+      console.error('Google Calendar API error:', data.error);
+      throw new Error(data.error);
+    }
+
+    console.log('Successfully created calendar event');
+    return data;
+  } catch (error: any) {
+    console.error('Error creating calendar event:', error);
     throw error;
   }
 };

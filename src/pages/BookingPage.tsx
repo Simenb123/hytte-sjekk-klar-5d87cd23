@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const BookingPage = () => {
   const [showNewBooking, setShowNewBooking] = useState(false);
-  const { data: bookings = [], isLoading, error, refetch } = useBookings();
+  const { bookings, isLoading, error, fetchBookings } = useBookings();
   const { 
     isGoogleConnected, 
     googleEvents = [],
@@ -55,7 +55,7 @@ const BookingPage = () => {
   };
 
   const handleNewBookingSuccess = async (booking: any) => {
-    await refetch();
+    await fetchBookings();
     setShowNewBooking(false);
   };
 
@@ -92,7 +92,7 @@ const BookingPage = () => {
         <div className="max-w-4xl mx-auto p-4 pt-28">
           <Alert variant="destructive">
             <AlertDescription>
-              Kunne ikke laste bookinger: {error.message}
+              Kunne ikke laste bookinger: {error}
             </AlertDescription>
           </Alert>
         </div>
@@ -150,7 +150,7 @@ const BookingPage = () => {
             ) : (
               <div className="grid gap-4">
                 {bookings.map((booking) => {
-                  const status = getBookingStatus(new Date(booking.start_date), new Date(booking.end_date));
+                  const status = getBookingStatus(booking.from, booking.to);
                   return (
                     <Card key={booking.id} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
@@ -171,7 +171,7 @@ const BookingPage = () => {
                           <div className="flex items-center gap-2">
                             <CalendarIcon className="h-4 w-4" />
                             <span>
-                              {formatDate(new Date(booking.start_date))} - {formatDate(new Date(booking.end_date))}
+                              {formatDate(booking.from)} - {formatDate(booking.to)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -200,13 +200,7 @@ const BookingPage = () => {
               </CardHeader>
               <CardContent>
                 <BookingsList 
-                  bookings={bookings.map(b => ({
-                    id: b.id,
-                    user: 'Du',
-                    from: new Date(b.start_date),
-                    to: new Date(b.end_date),
-                    description: b.description || undefined
-                  }))}
+                  bookings={bookings}
                   isGoogleConnected={isGoogleConnected}
                   onNewBooking={() => setShowNewBooking(true)}
                   onConnectGoogle={connectGoogleCalendar}
@@ -228,7 +222,7 @@ const BookingPage = () => {
                             </p>
                             {event.start && (
                               <p className="text-xs text-gray-500">
-                                {format(new Date(event.start.dateTime || event.start.date), 'dd.MM.yyyy HH:mm', { locale: nb })}
+                                {format(new Date(event.start.dateTime || event.start.date || ''), 'dd.MM.yyyy HH:mm', { locale: nb })}
                               </p>
                             )}
                           </div>
