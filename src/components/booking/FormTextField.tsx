@@ -14,7 +14,7 @@ import { BookingFormData } from './types';
 
 interface FormTextFieldProps {
   form: UseFormReturn<BookingFormData>;
-  name: keyof BookingFormData;
+  name: 'title' | 'description';
   label: string;
   placeholder?: string;
   multiline?: boolean;

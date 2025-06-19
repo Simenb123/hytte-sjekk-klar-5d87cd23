@@ -29,6 +29,7 @@ export const useBookingForm = ({
       endDate: defaultValues?.endDate || new Date(Date.now() + 24 * 60 * 60 * 1000),
       addToGoogle: defaultValues?.addToGoogle ?? googleIntegration,
       useSharedCalendar: defaultValues?.useSharedCalendar ?? sharedCalendarExists,
+      familyMemberIds: defaultValues?.familyMemberIds || [],
     }
   });
 

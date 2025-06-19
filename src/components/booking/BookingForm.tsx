@@ -6,6 +6,7 @@ import { useBookingForm } from '@/hooks/useBookingForm';
 import FormTextField from './FormTextField';
 import FormDateField from './FormDateField';
 import GoogleIntegrationField from './GoogleIntegrationField';
+import FamilyMemberSelector from './FamilyMemberSelector';
 import { BookingFormData } from './types';
 
 type BookingFormProps = {
@@ -52,6 +53,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
           name="title"
           label="Tittel"
           placeholder="F.eks. Påskeferie"
+          required
         />
         
         <FormTextField 
@@ -59,6 +61,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
           name="description"
           label="Beskrivelse (valgfritt)"
           placeholder="Legg til mer informasjon"
+          multiline
         />
 
         <FormDateField
@@ -79,6 +82,8 @@ const BookingForm: React.FC<BookingFormProps> = ({
           setIsOpen={setEndDateOpen}
           onSelect={handleEndDateChange}
         />
+
+        <FamilyMemberSelector form={form} />
 
         {googleIntegration && (
           <>

@@ -6,4 +6,5 @@ export type BookingFormData = {
   endDate: Date;
   addToGoogle: boolean;
   useSharedCalendar: boolean;
+  familyMemberIds: string[];
 };
