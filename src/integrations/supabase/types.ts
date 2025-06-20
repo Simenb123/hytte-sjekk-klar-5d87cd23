@@ -134,6 +134,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cabin_documents: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          file_url: string | null
+          id: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       checklist_items: {
         Row: {
           area_id: string | null
@@ -591,7 +624,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_cabin_documents: {
+        Args: { search_query: string }
+        Returns: {
+          id: string
+          title: string
+          category: string
+          content: string
+          tags: string[]
+          relevance: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

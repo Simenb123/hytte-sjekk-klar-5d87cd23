@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/DashboardCard';
 import Header from '@/components/Header';
-import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User } from 'lucide-react';
+import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen } from 'lucide-react';
 
 export default function Dashboard() {
   return (
@@ -76,6 +77,15 @@ export default function Dashboard() {
                 description="Få hjelp og råd om hytta"
                 icon={<MessageCircle className="h-8 w-8" />}
                 color="bg-gradient-to-br from-rose-500 to-rose-600"
+              />
+            </Link>
+            
+            <Link to="/documents">
+              <DashboardCard
+                title="Dokumenter"
+                description="Administrer hytte-manualer og guider"
+                icon={<BookOpen className="h-8 w-8" />}
+                color="bg-gradient-to-br from-teal-500 to-teal-600"
               />
             </Link>
             

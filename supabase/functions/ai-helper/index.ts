@@ -42,6 +42,33 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     )
 
+    // Get the latest user message to search for relevant documents
+    const latestUserMessage = history[history.length - 1];
+    const userQuery = latestUserMessage?.content || '';
+
+    // Search for relevant cabin documents
+    let documentContext = "Ingen relevante dokumenter funnet.";
+    try {
+      const { data: relevantDocs, error: docsError } = await supabaseClient
+        .rpc('search_cabin_documents', { search_query: userQuery })
+        .limit(3);
+
+      if (docsError) {
+        console.error('Error searching cabin documents:', docsError);
+      } else if (relevantDocs && relevantDocs.length > 0) {
+        documentContext = `
+**Relevante hytte-dokumenter:**
+${relevantDocs.map(doc => `
+**${doc.title}** (${doc.category})
+${doc.content}
+---
+`).join('')}
+        `.trim();
+      }
+    } catch (error) {
+      console.error('Error in document search:', error);
+    }
+
     // Fetch user's inventory
     const { data: inventoryItems, error: inventoryError } = await supabaseClient
       .from('inventory_items')
@@ -54,9 +81,9 @@ serve(async (req) => {
     let inventoryContext = "Inventarlisten er for øyeblikket ikke tilgjengelig.";
     if (inventoryItems && inventoryItems.length > 0) {
       inventoryContext = `
-Her er en liste over gjenstander i inventaret. Bruk denne informasjonen til å svare på brukerens spørsmål om gjenstander:
+**Inventarliste:**
 ${inventoryItems.map(item => `
-- Navn: ${item.name || 'N/A'}
+- **${item.name || 'N/A'}**
   Beskrivelse: ${item.description || 'N/A'}
   Kategori: ${item.category || 'N/A'}
   Merke: ${item.brand || 'N/A'}
@@ -70,15 +97,16 @@ ${inventoryItems.map(item => `
     }
 
     const systemPrompt = `
-Du er "Hyttehjelperen", en vennlig og hjelpsom AI-assistent for en familiehytte.
-Din kunnskap er basert på informasjon om hytta, dens omgivelser, generelle hytterutiner, og en sanntids inventarliste.
+Du er "Hyttehjelperen", en vennlig og hjelpsom AI-assistent for Gaustablikk familiehytte.
+Din kunnskap er basert på informasjon om hytta, dens omgivelser, generelle hytterutiner, inventarliste og interne dokumenter/manualer.
 Vær alltid hyggelig, konsis og hjelpsom.
 
-**Inventarliste:**
+${documentContext}
+
 ${inventoryContext}
 
-**Kunnskapsbase:**
-- **Sted:** Vatnedalsvegen 27. Området er kjent for gode ski- og turmuligheter.
+**Generell kunnskapsbase:**
+- **Sted:** Vatnedalsvegen 27, Gaustablikk (1200 moh). Området er kjent for fantastisk utsikt mot Gaustatoppen og gode ski- og turmuligheter.
 - **Sjekklister:** Du kjenner til sjekklistene for ankomst, avreise, og vedlikehold.
   - Ankomst: Slå på strøm og vann, sett varmepumpe til komfort.
   - Avreise: Varmepumpe til økonomi, kraner lukket, vinduer/dører stengt, strøm av i anneks.
@@ -87,7 +115,14 @@ ${inventoryContext}
 
 ${image ? '**Bildeanalyse:** Du kan se bildet brukeren har sendt. Analyser det og gi relevant hjelp basert på hva du ser.' : ''}
 
-Når du svarer, hold deg til din rolle som hyttehjelper. Svar på spørsmål om inventar basert på listen over. Hvis du ikke vet svaret, si det og foreslå hvor brukeren kan finne informasjonen.
+**VIKTIGE INSTRUKSJONER:**
+- Når du svarer på spørsmål om utstyr, manualer eller prosedyrer, bruk ALLTID informasjon fra de relevante dokumentene først.
+- Hvis du finner relevant informasjon i dokumentene, referer eksplisitt til dokumentet (f.eks. "Ifølge boblebad brukermanualen...")
+- Kombiner informasjon fra dokumenter med dine generelle kunnskaper for å gi omfattende svar.
+- Hvis spørsmålet gjelder inventar, søk først i inventarlisten.
+- Gi alltid praktiske, konkrete råd basert på hytta sine spesifikke forhold.
+
+Når du svarer, hold deg til din rolle som hyttehjelper. Hvis du ikke vet svaret, si det og foreslå hvor brukeren kan finne informasjonen.
     `;
 
     // Prepare messages with optional image
