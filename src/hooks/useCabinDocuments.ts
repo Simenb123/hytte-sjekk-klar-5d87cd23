@@ -46,7 +46,30 @@ export function useCabinDocuments() {
         .rpc('search_cabin_documents', { search_query: query });
 
       if (error) throw error;
-      return data || [];
+      
+      // Get full document details for search results
+      if (data && data.length > 0) {
+        const documentIds = data.map(item => item.id);
+        const { data: fullDocs, error: docsError } = await supabase
+          .from('cabin_documents')
+          .select('*')
+          .in('id', documentIds);
+
+        if (docsError) throw docsError;
+
+        // Combine search results with full document data
+        const searchResults: SearchResult[] = data.map(searchItem => {
+          const fullDoc = fullDocs?.find(doc => doc.id === searchItem.id);
+          return {
+            ...fullDoc!,
+            relevance: searchItem.relevance
+          };
+        });
+
+        return searchResults;
+      }
+      
+      return [];
     } catch (error: any) {
       console.error('Error searching cabin documents:', error);
       toast.error('Kunne ikke søke i dokumenter');
