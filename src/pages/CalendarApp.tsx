@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { CalendarSection } from '../components/calendar/CalendarSection';
 import { GoogleCalendarSection } from '../components/calendar/GoogleCalendarSection';
 import { CalendarInfo } from '../components/calendar/CalendarInfo';
+import ReminderTestButton from '../components/calendar/ReminderTestButton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -202,11 +203,12 @@ const CalendarApp: React.FC = () => {
           bookedDays={bookedDays} 
         />
         
-        <div className="mb-4">
-          <Button onClick={handleNewBooking} className="w-full flex items-center justify-center gap-2">
+        <div className="mb-4 flex gap-2">
+          <Button onClick={handleNewBooking} className="flex-1 flex items-center justify-center gap-2">
             <PlusCircle className="h-4 w-4" />
             Ny booking
           </Button>
+          <ReminderTestButton />
         </div>
 
         {/* Bookings list section */}
