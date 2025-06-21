@@ -1,115 +1,56 @@
 
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
 import { Toaster } from '@/components/ui/sonner';
+import './App.css';
+
+// Import pages
 import Index from './pages/Index';
-import AuthPage from './pages/AuthPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
 import Dashboard from './pages/Dashboard';
-import ProfilePage from './pages/ProfilePage';
-import BookingPage from './pages/BookingPage';
-import ChecklistHome from './pages/ChecklistHome';
 import ChecklistPage from './pages/ChecklistPage';
-import CalendarApp from './pages/CalendarApp';
+import ChecklistHome from './pages/ChecklistHome';
+import ChecklistAdminPage from './pages/ChecklistAdminPage';
 import InventoryPage from './pages/InventoryPage';
 import FamilyPage from './pages/FamilyPage';
+import BookingPage from './pages/BookingPage';
+import CalendarApp from './pages/CalendarApp';
 import WeatherApp from './pages/WeatherApp';
 import AiHelperPage from './pages/AiHelperPage';
-import LogsPage from './pages/LogsPage';
+import DocumentsPage from './pages/DocumentsPage';
 import OtherApps from './pages/OtherApps';
+import LogsPage from './pages/LogsPage';
+import ProfilePage from './pages/ProfilePage';
 import NotFound from './pages/NotFound';
-import ProtectedRoute from './components/ProtectedRoute';
-import ChecklistAdminPage from './pages/ChecklistAdminPage';
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
-          <div className="min-h-screen bg-gray-50">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              } />
-              <Route path="/booking" element={
-                <ProtectedRoute>
-                  <BookingPage />
-                </ProtectedRoute>
-              } />
-              {/* Redirect /checklist to /checklists for backwards compatibility */}
-              <Route path="/checklist" element={<Navigate to="/checklists" replace />} />
-              <Route path="/checklists" element={
-                <ProtectedRoute>
-                  <ChecklistHome />
-                </ProtectedRoute>
-              } />
-              <Route path="/checklists/:category" element={
-                <ProtectedRoute>
-                  <ChecklistPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/checklists/admin" element={
-                <ProtectedRoute>
-                  <ChecklistAdminPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/calendar" element={
-                <ProtectedRoute>
-                  <CalendarApp />
-                </ProtectedRoute>
-              } />
-              <Route path="/inventory" element={
-                <ProtectedRoute>
-                  <InventoryPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/family" element={
-                <ProtectedRoute>
-                  <FamilyPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/weather" element={
-                <ProtectedRoute>
-                  <WeatherApp />
-                </ProtectedRoute>
-              } />
-              <Route path="/ai-helper" element={
-                <ProtectedRoute>
-                  <AiHelperPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/logs" element={
-                <ProtectedRoute>
-                  <LogsPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/other-apps" element={
-                <ProtectedRoute>
-                  <OtherApps />
-                </ProtectedRoute>
-              } />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </Router>
-        <Toaster />
-      </AuthProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/checklist" element={<ChecklistHome />} />
+            <Route path="/checklist/:area" element={<ChecklistPage />} />
+            <Route path="/checklist-admin" element={<ChecklistAdminPage />} />
+            <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/family" element={<FamilyPage />} />
+            <Route path="/booking" element={<BookingPage />} />
+            <Route path="/calendar" element={<CalendarApp />} />
+            <Route path="/weather" element={<WeatherApp />} />
+            <Route path="/ai-helper" element={<AiHelperPage />} />
+            <Route path="/documents" element={<DocumentsPage />} />
+            <Route path="/other-apps" element={<OtherApps />} />
+            <Route path="/logs" element={<LogsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </div>
+      </Router>
     </QueryClientProvider>
   );
 }
