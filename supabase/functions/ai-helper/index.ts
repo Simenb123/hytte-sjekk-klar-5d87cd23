@@ -9,6 +9,122 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+interface WeatherData {
+  location: string;
+  current: {
+    temperature: number;
+    condition: string;
+    humidity: number;
+    windSpeed: number;
+    windDirection: string;
+  };
+  forecast: Array<{
+    date: string;
+    day: string;
+    temperature: { min: number; max: number };
+    condition: string;
+    precipitation: number;
+    windSpeed: number;
+  }>;
+  lastUpdated: string;
+}
+
+async function fetchWeatherData(): Promise<WeatherData | null> {
+  try {
+    const GAUSTABLIKK_LAT = 59.8726;
+    const GAUSTABLIKK_LON = 8.6475;
+    const YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
+
+    const response = await fetch(
+      `${YR_API_BASE}?lat=${GAUSTABLIKK_LAT}&lon=${GAUSTABLIKK_LON}`,
+      {
+        headers: {
+          'User-Agent': 'Gaustablikk-Hytte-App/1.0 (contact@gaustablikk.no)',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Failed to fetch weather data:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    return transformWeatherData(data);
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+    return null;
+  }
+}
+
+function transformWeatherData(data: any): WeatherData {
+  const now = new Date();
+  const currentData = data.properties.timeseries[0];
+  
+  // Get forecast for next 5 days
+  const forecast = [];
+  const seenDates = new Set();
+  
+  for (const item of data.properties.timeseries) {
+    const itemDate = new Date(item.time);
+    const dateStr = itemDate.toISOString().split('T')[0];
+    
+    if (seenDates.has(dateStr) || forecast.length >= 5) continue;
+    
+    seenDates.add(dateStr);
+    forecast.push({
+      date: dateStr,
+      day: itemDate.toLocaleDateString('no-NO', { weekday: 'long' }),
+      temperature: {
+        min: Math.round(item.data.instant.details.air_temperature - 2),
+        max: Math.round(item.data.instant.details.air_temperature + 2),
+      },
+      condition: getConditionFromSymbol(item.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),
+      precipitation: item.data?.next_1_hours?.details?.precipitation_amount || 0,
+      windSpeed: Math.round(item.data.instant.details.wind_speed || 0),
+    });
+  }
+
+  return {
+    location: 'Gaustablikk, Tinn',
+    current: {
+      temperature: Math.round(currentData.data.instant.details.air_temperature),
+      condition: getConditionFromSymbol(currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),
+      humidity: Math.round(currentData.data.instant.details.relative_humidity),
+      windSpeed: Math.round(currentData.data.instant.details.wind_speed),
+      windDirection: getWindDirection(currentData.data.instant.details.wind_from_direction),
+    },
+    forecast,
+    lastUpdated: now.toISOString(),
+  };
+}
+
+function getConditionFromSymbol(symbol: string): string {
+  const conditionMap: Record<string, string> = {
+    'clearsky_day': 'Sol',
+    'clearsky_night': 'Klar natt',
+    'partlycloudy_day': 'Delvis skyet',
+    'partlycloudy_night': 'Delvis skyet natt',
+    'cloudy': 'Overskyet',
+    'rain': 'Regn',
+    'lightrain': 'Lett regn',
+    'heavyrain': 'Kraftig regn',
+    'snow': 'Snø',
+    'lightsnow': 'Lett snø',
+    'heavysnow': 'Kraftig snø',
+    'sleet': 'Sludd',
+    'fog': 'Tåke',
+  };
+  
+  return conditionMap[symbol] || 'Ukjent';
+}
+
+function getWindDirection(degrees: number): string {
+  const directions = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'];
+  const index = Math.round(degrees / 45) % 8;
+  return directions[index];
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -41,6 +157,46 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     )
+
+    // Get current date and time information
+    const now = new Date();
+    const norskTid = new Intl.DateTimeFormat('no-NO', {
+      timeZone: 'Europe/Oslo',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(now);
+
+    const årstid = getÅrstid(now.getMonth());
+    const månedsnavn = now.toLocaleDateString('no-NO', { month: 'long' });
+
+    // Get weather data
+    let weatherContext = "Værdata er for øyeblikket ikke tilgjengelig.";
+    try {
+      const weatherData = await fetchWeatherData();
+      if (weatherData) {
+        weatherContext = `
+**Nåværende værforhold for ${weatherData.location}:**
+- Temperatur: ${weatherData.current.temperature}°C
+- Forhold: ${weatherData.current.condition}
+- Fuktighet: ${weatherData.current.humidity}%
+- Vind: ${weatherData.current.windSpeed} m/s fra ${weatherData.current.windDirection}
+
+**Værprognose for de neste dagene:**
+${weatherData.forecast.map(day => `
+- **${day.day}** (${day.date}): ${day.temperature.min}°-${day.temperature.max}°C, ${day.condition}
+  Nedbør: ${day.precipitation}mm, Vind: ${day.windSpeed} m/s
+`).join('')}
+
+*Værdata sist oppdatert: ${new Date(weatherData.lastUpdated).toLocaleString('no-NO')}*
+        `.trim();
+      }
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+    }
 
     // Get the latest user message to search for relevant documents
     const latestUserMessage = history[history.length - 1];
@@ -98,8 +254,15 @@ ${inventoryItems.map(item => `
 
     const systemPrompt = `
 Du er "Hyttehjelperen", en vennlig og hjelpsom AI-assistent for Gaustablikk familiehytte.
-Din kunnskap er basert på informasjon om hytta, dens omgivelser, generelle hytterutiner, inventarliste og interne dokumenter/manualer.
+Din kunnskap er basert på informasjon om hytta, dens omgivelser, generelle hytterutiner, inventarliste, værdata og interne dokumenter/manualer.
 Vær alltid hyggelig, konsis og hjelpsom.
+
+**NÅVÆRENDE DATO OG TID:**
+${norskTid}
+Årstid: ${årstid}
+Måned: ${månedsnavn}
+
+${weatherContext}
 
 ${documentContext}
 
@@ -110,17 +273,20 @@ ${inventoryContext}
 - **Sjekklister:** Du kjenner til sjekklistene for ankomst, avreise, og vedlikehold.
   - Ankomst: Slå på strøm og vann, sett varmepumpe til komfort.
   - Avreise: Varmepumpe til økonomi, kraner lukket, vinduer/dører stengt, strøm av i anneks.
-- **Vær:** Du kan gi generelle råd, men oppfordre brukeren til å sjekke en dedikert værtjeneste for nøyaktig varsel.
-- **Smøretips:** Gi generelle smøretips basert på temperatur (f.eks. "for minusgrader, bruk blå voks").
+- **Vær og aktiviteter:** Kombiner værdata med årstid for å gi relevante råd om aktiviteter og forberedelser.
+- **Smøretips:** Gi smøretips basert på nåværende og forventet temperatur.
 
 ${image ? '**Bildeanalyse:** Du kan se bildet brukeren har sendt. Analyser det og gi relevant hjelp basert på hva du ser.' : ''}
 
 **VIKTIGE INSTRUKSJONER:**
-- Når du svarer på spørsmål om utstyr, manualer eller prosedyrer, bruk ALLTID informasjon fra de relevante dokumentene først.
-- Hvis du finner relevant informasjon i dokumentene, referer eksplisitt til dokumentet (f.eks. "Ifølge boblebad brukermanualen...")
-- Kombiner informasjon fra dokumenter med dine generelle kunnskaper for å gi omfattende svar.
-- Hvis spørsmålet gjelder inventar, søk først i inventarlisten.
-- Gi alltid praktiske, konkrete råd basert på hytta sine spesifikke forhold.
+- Bruk ALLTID den nåværende datoen og tiden i dine svar når det er relevant.
+- Kombiner værdata med årstid og måned for å gi sesongprogramme råd.
+- Når du svarer på værrelaterte spørsmål, bruk de faktiske værdataene.
+- Gi spesifikke råd basert på nåværende og forventet vær (f.eks. "Med dagens temperatur på X°C og morgen regn...")
+- Når du svarer på spørsmål om utstyr, manualer eller prosedyrer, bruk informasjon fra de relevante dokumentene først.
+- Hvis du finner relevant informasjon i dokumentene, referer eksplisitt til dokumentet.
+- Kombiner informasjon fra dokumenter, vær og inventar for å gi omfattende svar.
+- Gi alltid praktiske, konkrete råd basert på hytta sine spesifikke forhold og nåværende situasjon.
 
 Når du svarer, hold deg til din rolle som hyttehjelper. Hvis du ikke vet svaret, si det og foreslå hvor brukeren kan finne informasjonen.
     `;
@@ -162,3 +328,10 @@ Når du svarer, hold deg til din rolle som hyttehjelper. Hvis du ikke vet svaret
     });
   }
 });
+
+function getÅrstid(måned: number): string {
+  if (måned >= 2 && måned <= 4) return 'Vår';
+  if (måned >= 5 && måned <= 7) return 'Sommer';
+  if (måned >= 8 && måned <= 10) return 'Høst';
+  return 'Vinter';
+}
