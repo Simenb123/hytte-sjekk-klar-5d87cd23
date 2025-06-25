@@ -63,7 +63,8 @@ const transform = (WeatherService as any).transformWeatherData.bind(WeatherServi
 
 afterEach(() => {
   vi.restoreAllMocks();
-  (WeatherService as any).cache = null;
+  WeatherService.clearCache();
+  localStorage.clear();
 });
 
 describe('transformWeatherData', () => {
@@ -101,5 +102,6 @@ describe('getWeatherData', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(first).toEqual(second);
+    expect(localStorage.getItem('weatherData')).not.toBeNull();
   });
 });

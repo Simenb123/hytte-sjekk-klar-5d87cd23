@@ -28,14 +28,32 @@ export class WeatherService {
   private static readonly GAUSTABLIKK_LAT = 59.8726;
   private static readonly GAUSTABLIKK_LON = 8.6475;
   private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
-  private static cache: { data: WeatherData; timestamp: number } | null = null;
+  private static readonly CACHE_KEY = 'weatherData';
   private static readonly CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
-  static async getWeatherData(): Promise<WeatherData | null> {
-    if (this.cache && Date.now() - this.cache.timestamp < this.CACHE_DURATION) {
-      return this.cache.data;
+  static clearCache() {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(this.CACHE_KEY);
     }
+  }
+
+  static async getWeatherData(): Promise<WeatherData | null> {
     try {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem(this.CACHE_KEY);
+        if (cached) {
+          try {
+            const parsed: WeatherData = JSON.parse(cached);
+            const age = Date.now() - new Date(parsed.lastUpdated).getTime();
+            if (age < this.CACHE_DURATION) {
+              return parsed;
+            }
+          } catch (e) {
+            console.warn('[WeatherService] Failed to parse cached data', e);
+          }
+        }
+      }
+
       const response = await fetch(
         `${this.YR_API_BASE}?lat=${this.GAUSTABLIKK_LAT}&lon=${this.GAUSTABLIKK_LON}`,
         {
@@ -52,7 +70,15 @@ export class WeatherService {
 
       const data = await response.json();
       const transformed = this.transformWeatherData(data);
-      this.cache = { data: transformed, timestamp: Date.now() };
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(this.CACHE_KEY, JSON.stringify(transformed));
+        } catch (e) {
+          console.warn('[WeatherService] Failed to cache weather data', e);
+        }
+      }
+
       return transformed;
     } catch (error) {
       console.error('Error fetching weather data:', error);
