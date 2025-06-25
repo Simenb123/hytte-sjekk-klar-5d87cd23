@@ -60,6 +60,11 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Weather data caching
+
+The app stores the last successful weather forecast in `localStorage` for 30 minutes.
+Use the refresh icon in the weather view to clear this cache and fetch new data from YR.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/97756950-3c85-41a4-94ae-a14ccf690d68) and click on Share -> Publish.
