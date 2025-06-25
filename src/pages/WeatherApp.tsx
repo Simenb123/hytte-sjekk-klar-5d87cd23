@@ -1,13 +1,20 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../components/Header';
-import { Cloud, CloudRain, Sun, Wind, RefreshCw } from 'lucide-react';
+import { Cloud, CloudRain, Sun, Wind, RefreshCw, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWeather } from '@/hooks/useWeather';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { WeatherSettingsDialog } from '@/components/weather/WeatherSettingsDialog';
+import { WeatherService } from '@/services/weather.service';
+import { WeatherLocation } from '@/types/weather';
 
 const WeatherApp: React.FC = () => {
-  const { weatherData, loading, error, refetch } = useWeather();
+  const [location, setLocation] = useState<WeatherLocation>(
+    WeatherService.getPreferredLocation()
+  );
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { weatherData, loading, error, refetch } = useWeather(location);
 
   const getWeatherIcon = (condition: string) => {
     if (condition.includes('Sol')) return Sun;
@@ -23,7 +30,29 @@ const WeatherApp: React.FC = () => {
   if (loading && !weatherData) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header title="Værmelding" showBackButton />
+        <Header
+          title="Værmelding"
+          showBackButton
+          rightContent={
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSettingsOpen(true)}
+            >
+              <MapPin className="h-4 w-4" />
+            </Button>
+          }
+        />
+        <WeatherSettingsDialog
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          location={location}
+          onSave={(loc) => {
+            setLocation(loc);
+            WeatherService.savePreferredLocation(loc);
+            refetch();
+          }}
+        />
         <div className="max-w-lg mx-auto p-4 pt-20">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -36,7 +65,29 @@ const WeatherApp: React.FC = () => {
   if (error || !weatherData) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header title="Værmelding" showBackButton />
+        <Header
+          title="Værmelding"
+          showBackButton
+          rightContent={
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSettingsOpen(true)}
+            >
+              <MapPin className="h-4 w-4" />
+            </Button>
+          }
+        />
+        <WeatherSettingsDialog
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          location={location}
+          onSave={(loc) => {
+            setLocation(loc);
+            WeatherService.savePreferredLocation(loc);
+            refetch();
+          }}
+        />
         <div className="max-w-lg mx-auto p-4 pt-20">
           <Card>
             <CardContent className="p-6 text-center">
@@ -53,7 +104,29 @@ const WeatherApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header title="Værmelding" showBackButton />
+      <Header
+        title="Værmelding"
+        showBackButton
+        rightContent={
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <MapPin className="h-4 w-4" />
+          </Button>
+        }
+      />
+      <WeatherSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        location={location}
+        onSave={(loc) => {
+          setLocation(loc);
+          WeatherService.savePreferredLocation(loc);
+          refetch();
+        }}
+      />
       
       <div className="max-w-lg mx-auto p-4 pt-20">
         <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 text-white mb-6">

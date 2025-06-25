@@ -1,4 +1,7 @@
 
+import { WeatherLocation } from '@/types/weather';
+import { loadFromStorage, saveToStorage } from '@/utils/storage.utils';
+
 export interface WeatherData {
   location: string;
   current: {
@@ -25,14 +28,31 @@ export interface WeatherData {
 }
 
 export class WeatherService {
-  private static readonly GAUSTABLIKK_LAT = 59.8726;
-  private static readonly GAUSTABLIKK_LON = 8.6475;
-  private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
+  private static readonly DEFAULT_LOCATION: WeatherLocation = {
+    name: 'Gaustablikk, Tinn',
+    lat: 59.8726,
+    lon: 8.6475,
+  };
+  private static readonly STORAGE_KEY = 'weatherLocation';
+  private static readonly YR_API_BASE =
+    'https://api.met.no/weatherapi/locationforecast/2.0/compact';
+
+  static savePreferredLocation(location: WeatherLocation) {
+    saveToStorage(this.STORAGE_KEY, location);
+  }
+
+  static getPreferredLocation(): WeatherLocation {
+    return loadFromStorage<WeatherLocation>(
+      this.STORAGE_KEY,
+      this.DEFAULT_LOCATION
+    );
+  }
 
   static async getWeatherData(): Promise<WeatherData | null> {
     try {
+      const location = this.getPreferredLocation();
       const response = await fetch(
-        `${this.YR_API_BASE}?lat=${this.GAUSTABLIKK_LAT}&lon=${this.GAUSTABLIKK_LON}`,
+        `${this.YR_API_BASE}?lat=${location.lat}&lon=${location.lon}`,
         {
           headers: {
             'User-Agent': 'Gaustablikk-Hytte-App/1.0 (contact@example.com)',
@@ -46,14 +66,17 @@ export class WeatherService {
       }
 
       const data = await response.json();
-      return this.transformWeatherData(data);
+      return this.transformWeatherData(data, location.name);
     } catch (error) {
       console.error('Error fetching weather data:', error);
       return null;
     }
   }
 
-  private static transformWeatherData(data: any): WeatherData {
+  private static transformWeatherData(
+    data: any,
+    locationName: string
+  ): WeatherData {
     const now = new Date();
     const currentData = data.properties.timeseries[0];
     
@@ -83,7 +106,7 @@ export class WeatherService {
     }
 
     return {
-      location: 'Gaustablikk, Tinn',
+      location: locationName,
       current: {
         temperature: Math.round(currentData.data.instant.details.air_temperature),
         condition: this.getConditionFromSymbol(currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),

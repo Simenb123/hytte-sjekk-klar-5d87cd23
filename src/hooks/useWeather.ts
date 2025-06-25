@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { WeatherData, WeatherService } from '@/services/weather.service';
+import { WeatherLocation } from '@/types/weather';
 
-export function useWeather() {
+export function useWeather(location?: WeatherLocation) {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,12 +24,12 @@ export function useWeather() {
 
   useEffect(() => {
     fetchWeather();
-    
+
     // Oppdater værdata hver 30. minutt
     const interval = setInterval(fetchWeather, 30 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
-  }, []);
+  }, [location]);
 
   return {
     weatherData,
