@@ -28,8 +28,13 @@ export class WeatherService {
   private static readonly GAUSTABLIKK_LAT = 59.8726;
   private static readonly GAUSTABLIKK_LON = 8.6475;
   private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
+  private static cache: { data: WeatherData; timestamp: number } | null = null;
+  private static readonly CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
   static async getWeatherData(): Promise<WeatherData | null> {
+    if (this.cache && Date.now() - this.cache.timestamp < this.CACHE_DURATION) {
+      return this.cache.data;
+    }
     try {
       const response = await fetch(
         `${this.YR_API_BASE}?lat=${this.GAUSTABLIKK_LAT}&lon=${this.GAUSTABLIKK_LON}`,
@@ -46,7 +51,9 @@ export class WeatherService {
       }
 
       const data = await response.json();
-      return this.transformWeatherData(data);
+      const transformed = this.transformWeatherData(data);
+      this.cache = { data: transformed, timestamp: Date.now() };
+      return transformed;
     } catch (error) {
       console.error('Error fetching weather data:', error);
       return null;
