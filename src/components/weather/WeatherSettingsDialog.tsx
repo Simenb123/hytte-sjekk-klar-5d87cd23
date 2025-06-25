@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { WeatherLocation } from '@/types/weather';
-import { saveToStorage } from '@/utils/storage.utils';
 
 interface WeatherSettingsDialogProps {
   open: boolean;
@@ -38,7 +37,6 @@ export const WeatherSettingsDialog: React.FC<WeatherSettingsDialogProps> = ({ op
     } else {
       loc = { name: selected || 'Custom', lat: parseFloat(lat), lon: parseFloat(lon) };
     }
-    saveToStorage('weatherLocation', loc);
     onSave(loc);
     onOpenChange(false);
   };
