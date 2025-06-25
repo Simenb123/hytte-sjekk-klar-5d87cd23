@@ -34,6 +34,9 @@ export function useWeather() {
     weatherData,
     loading,
     error,
-    refetch: fetchWeather,
+    refresh: async () => {
+      WeatherService.clearCache();
+      await fetchWeather();
+    },
   };
 }

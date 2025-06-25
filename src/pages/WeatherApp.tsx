@@ -7,7 +7,7 @@ import { useWeather } from '@/hooks/useWeather';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const WeatherApp: React.FC = () => {
-  const { weatherData, loading, error, refetch } = useWeather();
+  const { weatherData, loading, error, refresh } = useWeather();
 
   const getWeatherIcon = (condition: string) => {
     if (condition.includes('Sol')) return Sun;
@@ -41,7 +41,7 @@ const WeatherApp: React.FC = () => {
           <Card>
             <CardContent className="p-6 text-center">
               <p className="text-red-600 mb-4">{error || 'Kunne ikke laste værdata'}</p>
-              <Button onClick={refetch}>Prøv igjen</Button>
+              <Button onClick={refresh}>Prøv igjen</Button>
             </CardContent>
           </Card>
         </div>
@@ -81,7 +81,7 @@ const WeatherApp: React.FC = () => {
         <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg">5-dagers prognose</CardTitle>
-            <Button variant="outline" size="sm" onClick={refetch} disabled={loading}>
+            <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </CardHeader>
