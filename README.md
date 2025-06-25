@@ -62,7 +62,7 @@ This project is built with:
 
 ## Weather data caching
 
-The app stores the last successful weather forecast in `localStorage` for 30 minutes.
+The app stores the last successful weather forecast in `localStorage` for 10 minutes.
 Use the refresh icon in the weather view to clear this cache and fetch new data from YR.
 
 ## How can I deploy this project?
