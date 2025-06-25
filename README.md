@@ -76,3 +76,47 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Lokal Supabase-utvikling
+
+For å utvikle og teste Edge Functions lokalt brukes [Supabase CLI](https://supabase.com/docs/guides/cli). Installer den globalt med npm:
+
+```sh
+npm install -g supabase
+```
+
+Når CLI-en er installert logger du inn og kobler den mot prosjektet ditt:
+
+```sh
+supabase login
+supabase link --project-ref <PROJECT_ID>
+```
+
+Deretter kan du starte den lokale instansen (database og Edge Runtime) med:
+
+```sh
+supabase start
+```
+
+### Miljøvariabler
+
+Edge Functions forventer flere hemmeligheter. Disse lagres i Supabase med `supabase secrets set`:
+
+```sh
+supabase secrets set OPENAI_API_KEY=<din-openai-nøkkel> \
+  SUPABASE_SERVICE_ROLE_KEY=<service-role-nøkkel> \
+  SUPABASE_URL=http://localhost:54321 \
+  SUPABASE_ANON_KEY=<anon-nøkkel> \
+  GOOGLE_CLIENT_ID=<google-klient-id> \
+  GOOGLE_CLIENT_SECRET=<google-klient-secret>
+```
+
+### Kjøre Edge Functions lokalt
+
+Med `supabase start` kjørende kan du teste en funksjon slik:
+
+```sh
+supabase functions serve ai-helper
+```
+
+Dette bygger funksjonen og gjør den tilgjengelig på `http://localhost:54321/functions/v1/ai-helper`.
