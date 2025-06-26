@@ -11,7 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 const WeatherApp: React.FC = () => {
   const [showTenDays, setShowTenDays] = useState(false);
   const forecastDays = showTenDays ? 10 : 5;
-  const { weatherData, loading, error, refresh } = useWeather(forecastDays);
+  const lat = WEATHER_LAT;
+  const lon = WEATHER_LON;
+  const { weatherData, loading, error, refresh } = useWeather(
+    forecastDays,
+    lat,
+    lon,
+  );
 
   const getWeatherIcon = (condition: string) => {
     if (condition.includes('Sol')) return Sun;
@@ -20,8 +26,9 @@ const WeatherApp: React.FC = () => {
     return Cloud;
   };
 
-  const openYrWebsite = () => {
-    const url = `https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell?lat=${WEATHER_LAT}&lon=${WEATHER_LON}`;
+  const openYrWebsite = (latitude: number, longitude: number) => {
+    const url =
+      `https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell?lat=${latitude}&lon=${longitude}`;
     window.open(url, '_blank');
   };
 
@@ -149,8 +156,8 @@ const WeatherApp: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Button 
-          onClick={openYrWebsite}
+        <Button
+          onClick={() => openYrWebsite(lat, lon)}
           className="w-full mb-4 bg-blue-600 hover:bg-blue-700"
         >
           Se detaljert værmelding på YR.no
