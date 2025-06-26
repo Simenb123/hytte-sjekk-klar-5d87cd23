@@ -37,7 +37,11 @@ export class WeatherService {
     }
   }
 
-  static async getWeatherData(maxDays = 5): Promise<WeatherData | null> {
+  static async getWeatherData(
+    maxDays = 5,
+    lat: number = WEATHER_LAT,
+    lon: number = WEATHER_LON,
+  ): Promise<WeatherData | null> {
     try {
       if (typeof window !== 'undefined') {
         const cached = localStorage.getItem(this.CACHE_KEY);
@@ -55,7 +59,7 @@ export class WeatherService {
       }
 
       const response = await fetch(
-        `${this.YR_API_BASE}?lat=${WEATHER_LAT}&lon=${WEATHER_LON}`,
+        `${this.YR_API_BASE}?lat=${lat}&lon=${lon}`,
         {
           headers: {
             'User-Agent': `Gaustablikk-Hytte-App/1.0 (${CONTACT_EMAIL})`,
