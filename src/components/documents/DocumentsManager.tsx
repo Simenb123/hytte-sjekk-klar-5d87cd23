@@ -18,6 +18,7 @@ const DocumentsManager: React.FC = () => {
     title: '',
     category: '',
     content: '',
+    summary: '',
     tags: '',
   });
 
@@ -49,7 +50,7 @@ const DocumentsManager: React.FC = () => {
         await addDocument(docData);
       }
 
-      setFormData({ title: '', category: '', content: '', tags: '' });
+      setFormData({ title: '', category: '', content: '', summary: '', tags: '' });
       setShowAddForm(false);
     } catch (error) {
       console.error('Error saving document:', error);
@@ -62,6 +63,7 @@ const DocumentsManager: React.FC = () => {
       title: doc.title,
       category: doc.category,
       content: doc.content,
+      summary: doc.summary || '',
       tags: doc.tags.join(', '),
     });
     setShowAddForm(true);
@@ -69,7 +71,7 @@ const DocumentsManager: React.FC = () => {
 
   const cancelEdit = () => {
     setEditingDoc(null);
-    setFormData({ title: '', category: '', content: '', tags: '' });
+    setFormData({ title: '', category: '', content: '', summary: '', tags: '' });
     setShowAddForm(false);
   };
 
@@ -112,7 +114,7 @@ const DocumentsManager: React.FC = () => {
                     <Badge>{result.category}</Badge>
                   </div>
                   <p className="text-sm text-gray-600 mt-1">
-                    {result.content.substring(0, 150)}...
+                    {(result.summary || result.content).substring(0, 150)}...
                   </p>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-xs text-gray-500">
@@ -147,6 +149,12 @@ const DocumentsManager: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 placeholder="Kategori (manual, guide, info)"
                 required
+              />
+              <Textarea
+                value={formData.summary}
+                onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                placeholder="Kort sammendrag av dokumentet"
+                rows={3}
               />
               <Textarea
                 value={formData.content}
@@ -190,7 +198,7 @@ const DocumentsManager: React.FC = () => {
                         <Badge variant="secondary">{doc.category}</Badge>
                       </div>
                       <p className="text-sm text-gray-600 mb-2">
-                        {doc.content.substring(0, 200)}...
+                        {(doc.summary || doc.content).substring(0, 200)}...
                       </p>
                       <div className="flex gap-1">
                         {doc.tags.map((tag) => (
