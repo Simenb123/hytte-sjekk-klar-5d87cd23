@@ -5,6 +5,7 @@ import { Cloud, CloudRain, Sun, Wind, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useWeather } from '@/hooks/useWeather';
+import { WEATHER_LAT, WEATHER_LON } from '@/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const WeatherApp: React.FC = () => {
@@ -20,7 +21,8 @@ const WeatherApp: React.FC = () => {
   };
 
   const openYrWebsite = () => {
-    window.open('https://www.yr.no/nb/værvarsel/daglig-tabell/1-68536/Norge/Telemark/Tinn/Gaustablikk%20Fjellresort', '_blank');
+    const url = `https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell?lat=${WEATHER_LAT}&lon=${WEATHER_LON}`;
+    window.open(url, '_blank');
   };
 
   if (loading && !weatherData) {
@@ -53,6 +55,7 @@ const WeatherApp: React.FC = () => {
   }
 
   const CurrentIcon = getWeatherIcon(weatherData.current.condition);
+  const currentIconClass = CurrentIcon === Sun ? 'text-yellow-300' : '';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -66,7 +69,7 @@ const WeatherApp: React.FC = () => {
               <p className="text-lg">{weatherData.current.condition}</p>
               <p className="text-sm opacity-80">{weatherData.location}</p>
             </div>
-            <CurrentIcon size={64} />
+            <CurrentIcon className={currentIconClass} size={64} />
           </div>
           
           <div className="mt-4 grid grid-cols-2 gap-3">
@@ -94,6 +97,7 @@ const WeatherApp: React.FC = () => {
           <CardContent>
             {weatherData.forecast.map((day, index) => {
               const DayIcon = getWeatherIcon(day.condition);
+              const dayIconClass = DayIcon === Sun ? 'text-yellow-500' : 'text-blue-600';
               const forecastDate = new Date(day.date);
               const today = new Date();
               today.setHours(0, 0, 0, 0);
@@ -126,7 +130,7 @@ const WeatherApp: React.FC = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <DayIcon className="text-blue-600" size={24} />
+                    <DayIcon className={dayIconClass} size={24} />
                     <div className="text-right">
                       <p className="text-gray-700">{day.condition}</p>
                       <p className="font-semibold">
