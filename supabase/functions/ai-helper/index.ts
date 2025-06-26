@@ -244,7 +244,7 @@ ${weatherData.forecast.map(day => `
 **Relevante hytte-dokumenter:**
 ${relevantDocs.map(doc => `
 **${doc.title}** (${doc.category})
-${doc.content}
+${doc.summary || ''}${doc.file_url ? ` [Se dokumentet](${doc.file_url})` : ''}
 ---
 `).join('')}
         `.trim();

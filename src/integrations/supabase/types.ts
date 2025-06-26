@@ -138,6 +138,7 @@ export type Database = {
         Row: {
           category: string
           content: string
+          summary: string | null
           created_at: string
           file_url: string | null
           id: string
@@ -148,6 +149,7 @@ export type Database = {
         Insert: {
           category: string
           content: string
+          summary?: string | null
           created_at?: string
           file_url?: string | null
           id?: string
@@ -158,6 +160,7 @@ export type Database = {
         Update: {
           category?: string
           content?: string
+          summary?: string | null
           created_at?: string
           file_url?: string | null
           id?: string
@@ -630,6 +633,8 @@ export type Database = {
           id: string
           title: string
           category: string
+          summary: string | null
+          file_url: string | null
           content: string
           tags: string[]
           relevance: number
