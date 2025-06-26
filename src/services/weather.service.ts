@@ -4,15 +4,21 @@ import {
   WeatherData,
   transformWeatherData,
 } from '@/lib/weather-utils';
+import type { LocationForecast } from '@/types/weather.types';
 
 export class WeatherService {
   private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
-  private static readonly CACHE_KEY = 'weatherData';
+  private static readonly CACHE_KEY_PREFIX = 'weatherData';
   private static readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
-  static clearCache() {
+  private static getCacheKey(lat: number, lon: number): string {
+    return `${this.CACHE_KEY_PREFIX}-${lat}-${lon}`;
+  }
+
+  static clearCache(lat: number = WEATHER_LAT, lon: number = WEATHER_LON) {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(this.CACHE_KEY);
+      const key = this.getCacheKey(lat, lon);
+      localStorage.removeItem(key);
     }
   }
 
@@ -22,8 +28,10 @@ export class WeatherService {
     lon: number = WEATHER_LON,
   ): Promise<WeatherData | null> {
     try {
+      const cacheKey = this.getCacheKey(lat, lon);
+
       if (typeof window !== 'undefined') {
-        const cached = localStorage.getItem(this.CACHE_KEY);
+        const cached = localStorage.getItem(cacheKey);
         if (cached) {
           try {
             const parsed: WeatherData = JSON.parse(cached);
@@ -51,12 +59,12 @@ export class WeatherService {
         return null;
       }
 
-      const data = await response.json();
+      const data: LocationForecast = await response.json();
       const transformed = transformWeatherData(data, maxDays, LOCATION_NAME);
 
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem(this.CACHE_KEY, JSON.stringify(transformed));
+          localStorage.setItem(cacheKey, JSON.stringify(transformed));
         } catch (e) {
           console.warn('[WeatherService] Failed to cache weather data', e);
         }

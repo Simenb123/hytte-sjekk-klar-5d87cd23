@@ -40,7 +40,7 @@ export function useWeather(
     loading,
     error,
     refresh: async () => {
-      WeatherService.clearCache();
+      WeatherService.clearCache(lat, lon);
       await fetchWeather();
     },
   };
