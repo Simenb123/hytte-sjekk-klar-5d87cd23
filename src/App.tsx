@@ -37,7 +37,7 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/checklist" element={<ChecklistHome />} />
-              <Route path="/checklist/:area" element={<ChecklistPage />} />
+              <Route path="/checklist/:category" element={<ChecklistPage />} />
               <Route path="/checklist-admin" element={<ChecklistAdminPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
               <Route path="/family" element={<FamilyPage />} />

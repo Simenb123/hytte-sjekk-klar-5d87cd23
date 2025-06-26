@@ -36,7 +36,7 @@ const ChecklistHome: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => navigate('/checklists/admin')}
+            onClick={() => navigate('/checklist-admin')}
             className="flex items-center gap-2"
           >
             <Settings className="h-4 w-4" />
@@ -83,7 +83,7 @@ const ChecklistHome: React.FC = () => {
                   </>
                 )}
                 <Button
-                  onClick={() => navigate(`/checklists/${categoryKey}`)}
+                  onClick={() => navigate(`/checklist/${categoryKey}`)}
                   className="mt-4 w-full"
                   disabled={isLoading}
                 >
