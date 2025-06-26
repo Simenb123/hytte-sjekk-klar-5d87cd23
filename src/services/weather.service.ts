@@ -24,9 +24,9 @@ export interface WeatherData {
   lastUpdated: string;
 }
 
+import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME, CONTACT_EMAIL } from '@/config';
+
 export class WeatherService {
-  private static readonly GAUSTABLIKK_LAT = 59.8726;
-  private static readonly GAUSTABLIKK_LON = 8.6475;
   private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
   private static readonly CACHE_KEY = 'weatherData';
   private static readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
@@ -55,10 +55,10 @@ export class WeatherService {
       }
 
       const response = await fetch(
-        `${this.YR_API_BASE}?lat=${this.GAUSTABLIKK_LAT}&lon=${this.GAUSTABLIKK_LON}`,
+        `${this.YR_API_BASE}?lat=${WEATHER_LAT}&lon=${WEATHER_LON}`,
         {
           headers: {
-            'User-Agent': 'Gaustablikk-Hytte-App/1.0 (contact@example.com)',
+            'User-Agent': `Gaustablikk-Hytte-App/1.0 (${CONTACT_EMAIL})`,
           },
         }
       );
@@ -116,7 +116,7 @@ export class WeatherService {
     }
 
     return {
-      location: 'Gaustablikk, Tinn',
+      location: LOCATION_NAME,
       current: {
         temperature: Math.round(currentData.data.instant.details.air_temperature),
         condition: this.getConditionFromSymbol(currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),

@@ -4,6 +4,11 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import OpenAI from 'npm:openai';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const WEATHER_LAT = parseFloat(Deno.env.get('WEATHER_LAT') ?? '59.8726')
+const WEATHER_LON = parseFloat(Deno.env.get('WEATHER_LON') ?? '8.6475')
+const LOCATION_NAME = Deno.env.get('LOCATION_NAME') ?? 'Gaustablikk, Tinn'
+const CONTACT_EMAIL = Deno.env.get('CONTACT_EMAIL') ?? 'contact@gaustablikk.no'
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -31,15 +36,13 @@ interface WeatherData {
 
 async function fetchWeatherData(): Promise<WeatherData | null> {
   try {
-    const GAUSTABLIKK_LAT = 59.8726;
-    const GAUSTABLIKK_LON = 8.6475;
     const YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
 
     const response = await fetch(
-      `${YR_API_BASE}?lat=${GAUSTABLIKK_LAT}&lon=${GAUSTABLIKK_LON}`,
+      `${YR_API_BASE}?lat=${WEATHER_LAT}&lon=${WEATHER_LON}`,
       {
         headers: {
-          'User-Agent': 'Gaustablikk-Hytte-App/1.0 (contact@gaustablikk.no)',
+          'User-Agent': `Gaustablikk-Hytte-App/1.0 (${CONTACT_EMAIL})`,
         },
       }
     );
@@ -86,7 +89,7 @@ function transformWeatherData(data: any, maxDays = 5): WeatherData {
   }
 
   return {
-    location: 'Gaustablikk, Tinn',
+    location: LOCATION_NAME,
     current: {
       temperature: Math.round(currentData.data.instant.details.air_temperature),
       condition: getConditionFromSymbol(currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),
