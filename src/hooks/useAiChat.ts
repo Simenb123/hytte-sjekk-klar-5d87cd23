@@ -17,14 +17,16 @@ export function useAiChat() {
     setLoading(true);
     setError(null);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const { data, error: functionError } = await supabase.functions.invoke('ai-helper', {
-        body: { 
+        body: {
           history: messageHistory.map(msg => ({
             role: msg.role,
             content: msg.content
           })),
-          image 
+          image
         },
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined
       });
 
       if (functionError) throw functionError;
