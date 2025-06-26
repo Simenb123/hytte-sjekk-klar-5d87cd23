@@ -40,7 +40,12 @@ const formSchema = z.object({
 
 interface EditItemDialogProps {
   item: InventoryItem;
-  children: React.ReactNode;
+  /**
+   * The trigger element used to open the dialog. Must be a single
+   * React element as required by Radix `DialogTrigger` when using
+   * the `asChild` prop.
+   */
+  children: React.ReactElement;
 }
 
 export function EditItemDialog({ item, children }: EditItemDialogProps) {
@@ -80,6 +85,11 @@ export function EditItemDialog({ item, children }: EditItemDialogProps) {
       toast.error(`Noe gikk galt: ${error.message}`);
     }
   };
+
+  if (!React.isValidElement(children)) {
+    console.error("[EditItemDialog] children must be a single React element");
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
