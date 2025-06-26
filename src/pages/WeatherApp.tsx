@@ -94,19 +94,48 @@ const WeatherApp: React.FC = () => {
           <CardContent>
             {weatherData.forecast.map((day, index) => {
               const DayIcon = getWeatherIcon(day.condition);
+              const forecastDate = new Date(day.date);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              forecastDate.setHours(0, 0, 0, 0);
+              const diffDays = Math.floor(
+                (forecastDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+              );
+              const isToday = diffDays === 0;
+              const labelPrefix = isToday
+                ? 'I dag '
+                : diffDays === 1
+                ? 'I morgen '
+                : '';
+
               return (
-                <div key={index} className={`flex items-center justify-between p-4 ${index < weatherData.forecast.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                <div
+                  key={index}
+                  className={`flex items-center justify-between p-4 ${
+                    index < weatherData.forecast.length - 1
+                      ? 'border-b border-gray-100'
+                      : ''
+                  } ${isToday ? 'bg-blue-50' : ''}`}
+                >
                   <div className="flex-1">
-                    <p className="font-medium">{day.day}</p>
-                    <p className="text-sm text-gray-500">{new Date(day.date).toLocaleDateString('no-NO')}</p>
+                    <p className={`font-medium ${isToday ? 'text-blue-600' : ''}`}>{
+                      labelPrefix + day.day
+                    }</p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(day.date).toLocaleDateString('no-NO')}
+                    </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <DayIcon className="text-blue-600" size={24} />
                     <div className="text-right">
                       <p className="text-gray-700">{day.condition}</p>
-                      <p className="font-semibold">{day.temperature.min}° - {day.temperature.max}°</p>
+                      <p className="font-semibold">
+                        {day.temperature.min}° - {day.temperature.max}°
+                      </p>
                       {day.precipitation > 0 && (
-                        <p className="text-xs text-blue-600">{day.precipitation}mm nedbør</p>
+                        <p className="text-xs text-blue-600">
+                          {day.precipitation}mm nedbør
+                        </p>
                       )}
                     </div>
                   </div>
