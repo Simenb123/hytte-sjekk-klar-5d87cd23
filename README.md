@@ -133,3 +133,9 @@ Følg disse stegene for å sikre at AI-hjelperen kan lese fra hyttedokumentene:
 
 Se også [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) for en mer detaljert
 steg-for-steg-guide til Supabase-oppsettet.
+
+### Værdata-cache i AI-hjelperen
+
+AI-hjelperens edge-funksjon lagrer det sist hentede værvarselet i **Deno KV** i 30 minutter.
+Hvis du spør om været innenfor denne perioden brukes den lagrede verdien i stedet
+for å kontakte YR på nytt. Etter 30 minutter hentes et nytt varsel automatisk.

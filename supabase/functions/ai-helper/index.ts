@@ -1,7 +1,7 @@
 
 import 'https://deno.land/x/xhr@0.1.0/mod.ts'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import OpenAI from 'npm:openai';
+import OpenAI from 'npm:openai'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const WEATHER_LAT = parseFloat(Deno.env.get('WEATHER_LAT') ?? '59.8726')
@@ -34,9 +34,9 @@ interface WeatherData {
   lastUpdated: string;
 }
 
-async function fetchWeatherData(): Promise<WeatherData | null> {
+async function fetchWeatherDataFromApi(): Promise<WeatherData | null> {
   try {
-    const YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
+    const YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact'
 
     const response = await fetch(
       `${YR_API_BASE}?lat=${WEATHER_LAT}&lon=${WEATHER_LON}`,
@@ -45,19 +45,44 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
           'User-Agent': `Gaustablikk-Hytte-App/1.0 (${CONTACT_EMAIL})`,
         },
       }
-    );
+    )
 
     if (!response.ok) {
-      console.error('Failed to fetch weather data:', response.status);
-      return null;
+      console.error('Failed to fetch weather data:', response.status)
+      return null
     }
 
-    const data = await response.json();
-    return transformWeatherData(data);
+    const data = await response.json()
+    return transformWeatherData(data)
   } catch (error) {
-    console.error('Error fetching weather data:', error);
-    return null;
+    console.error('Error fetching weather data:', error)
+    return null
   }
+}
+
+async function fetchWeatherData(): Promise<WeatherData | null> {
+  const kv = await Deno.openKv()
+
+  try {
+    const cached = await kv.get<WeatherData>(['weather', 'latest'])
+    if (cached?.value) {
+      return cached.value
+    }
+  } catch (error) {
+    console.error('Error reading weather cache:', error)
+  }
+
+  const fresh = await fetchWeatherDataFromApi()
+
+  if (fresh) {
+    try {
+      await kv.set(['weather', 'latest'], fresh, { expireIn: 30 * 60 * 1000 })
+    } catch (error) {
+      console.error('Error caching weather data:', error)
+    }
+  }
+
+  return fresh
 }
 
 function transformWeatherData(data: any, maxDays = 5): WeatherData {
