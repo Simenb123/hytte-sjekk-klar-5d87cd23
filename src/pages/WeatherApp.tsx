@@ -1,13 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../components/Header';
 import { Cloud, CloudRain, Sun, Wind, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { useWeather } from '@/hooks/useWeather';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const WeatherApp: React.FC = () => {
-  const { weatherData, loading, error, refresh } = useWeather();
+  const [showTenDays, setShowTenDays] = useState(false);
+  const forecastDays = showTenDays ? 10 : 5;
+  const { weatherData, loading, error, refresh } = useWeather(forecastDays);
 
   const getWeatherIcon = (condition: string) => {
     if (condition.includes('Sol')) return Sun;
@@ -80,10 +83,13 @@ const WeatherApp: React.FC = () => {
         
         <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-lg">5-dagers prognose</CardTitle>
-            <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
+            <CardTitle className="text-lg">{forecastDays}-dagers prognose</CardTitle>
+            <div className="flex items-center gap-2">
+              <Switch id="forecast-toggle" checked={showTenDays} onCheckedChange={setShowTenDays} />
+              <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {weatherData.forecast.map((day, index) => {

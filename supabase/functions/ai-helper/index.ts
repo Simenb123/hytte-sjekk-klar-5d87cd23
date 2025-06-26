@@ -57,11 +57,11 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
   }
 }
 
-function transformWeatherData(data: any): WeatherData {
+function transformWeatherData(data: any, maxDays = 5): WeatherData {
   const now = new Date();
   const currentData = data.properties.timeseries[0];
   
-  // Get forecast for next 5 days
+  // Get forecast for the next "maxDays" days
   const forecast = [];
   const seenDates = new Set();
   
@@ -69,7 +69,7 @@ function transformWeatherData(data: any): WeatherData {
     const itemDate = new Date(item.time);
     const dateStr = itemDate.toISOString().split('T')[0];
     
-    if (seenDates.has(dateStr) || forecast.length >= 5) continue;
+    if (seenDates.has(dateStr) || forecast.length >= maxDays) continue;
     
     seenDates.add(dateStr);
     forecast.push({

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { WeatherData, WeatherService } from '@/services/weather.service';
 
-export function useWeather() {
+export function useWeather(days: number = 5) {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -11,7 +11,7 @@ export function useWeather() {
     setLoading(true);
     setError(null);
     try {
-      const data = await WeatherService.getWeatherData();
+      const data = await WeatherService.getWeatherData(days);
       setWeatherData(data);
     } catch (err: any) {
       console.error('Error fetching weather:', err);
@@ -23,12 +23,12 @@ export function useWeather() {
 
   useEffect(() => {
     fetchWeather();
-    
+
     // Oppdater værdata hver 30. minutt
     const interval = setInterval(fetchWeather, 30 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
-  }, []);
+  }, [days]);
 
   return {
     weatherData,
