@@ -3,6 +3,7 @@ import 'https://deno.land/x/xhr@0.1.0/mod.ts'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import OpenAI from 'npm:openai';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import type { LocationForecast } from './types.ts';
 
 const WEATHER_LAT = parseFloat(Deno.env.get('WEATHER_LAT') ?? '59.8726')
 const WEATHER_LON = parseFloat(Deno.env.get('WEATHER_LON') ?? '8.6475')
@@ -52,7 +53,7 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
       return null;
     }
 
-    const data = await response.json();
+    const data: LocationForecast = await response.json();
     return transformWeatherData(data);
   } catch (error) {
     console.error('Error fetching weather data:', error);
@@ -60,7 +61,7 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
   }
 }
 
-function transformWeatherData(data: any, maxDays = 5): WeatherData {
+function transformWeatherData(data: LocationForecast, maxDays = 5): WeatherData {
   const now = new Date();
   const currentData = data.properties.timeseries[0];
   
