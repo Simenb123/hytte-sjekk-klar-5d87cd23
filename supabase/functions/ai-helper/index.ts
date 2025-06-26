@@ -66,25 +66,38 @@ function transformWeatherData(data: any, maxDays = 5): WeatherData {
   
   // Get forecast for the next "maxDays" days
   const forecast = [];
-  const seenDates = new Set();
-  
-  for (const item of data.properties.timeseries) {
-    const itemDate = new Date(item.time);
-    const dateStr = itemDate.toISOString().split('T')[0];
-    
-    if (seenDates.has(dateStr) || forecast.length >= maxDays) continue;
-    
-    seenDates.add(dateStr);
+  const dailyMap: Record<string, any[]> = {};
+  const orderedDates: string[] = [];
+
+  for (const entry of data.properties.timeseries) {
+    const dateStr = entry.time.split('T')[0];
+    if (!dailyMap[dateStr]) {
+      dailyMap[dateStr] = [];
+      orderedDates.push(dateStr);
+    }
+    dailyMap[dateStr].push(entry);
+  }
+
+  for (const dateStr of orderedDates) {
+    if (forecast.length >= maxDays) break;
+
+    const dayEntries = dailyMap[dateStr];
+    const temps = dayEntries.map((e) => e.data.instant.details.air_temperature);
+    const minTemp = Math.round(Math.min(...temps));
+    const maxTemp = Math.round(Math.max(...temps));
+    const firstItem = dayEntries[0];
+    const itemDate = new Date(firstItem.time);
+
     forecast.push({
       date: dateStr,
       day: itemDate.toLocaleDateString('no-NO', { weekday: 'long' }),
       temperature: {
-        min: Math.round(item.data.instant.details.air_temperature - 2),
-        max: Math.round(item.data.instant.details.air_temperature + 2),
+        min: minTemp,
+        max: maxTemp,
       },
-      condition: getConditionFromSymbol(item.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),
-      precipitation: item.data?.next_1_hours?.details?.precipitation_amount || 0,
-      windSpeed: Math.round(item.data.instant.details.wind_speed || 0),
+      condition: getConditionFromSymbol(firstItem.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),
+      precipitation: firstItem.data?.next_1_hours?.details?.precipitation_amount || 0,
+      windSpeed: Math.round(firstItem.data.instant.details.wind_speed || 0),
     });
   }
 
