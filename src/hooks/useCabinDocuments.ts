@@ -8,6 +8,7 @@ export interface CabinDocument {
   title: string;
   category: string;
   content: string;
+  summary?: string | null;
   file_url?: string;
   tags: string[];
   created_at: string;
