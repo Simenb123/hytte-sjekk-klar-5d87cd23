@@ -1,4 +1,13 @@
 
+export interface HourlyForecast {
+  time: string;
+  temperature: number;
+  condition: string;
+  icon: string;
+  precipitation: number;
+  windSpeed: number;
+}
+
 export interface WeatherData {
   location: string;
   current: {
@@ -20,6 +29,7 @@ export interface WeatherData {
     icon: string;
     precipitation: number;
     windSpeed: number;
+    hourly: HourlyForecast[];
   }>;
   lastUpdated: string;
 }
@@ -90,28 +100,45 @@ export class WeatherService {
     const now = new Date();
     const currentData = data.properties.timeseries[0];
     
-    // Get forecast for next 5 days
-    const forecast = [];
-    const seenDates = new Set();
-    
+    // Build hourly map grouped by date
+    const hourlyMap: Record<string, HourlyForecast[]> = {};
+
     for (const item of data.properties.timeseries) {
       const itemDate = new Date(item.time);
       const dateStr = itemDate.toISOString().split('T')[0];
-      
-      if (seenDates.has(dateStr) || forecast.length >= 5) continue;
-      
-      seenDates.add(dateStr);
-      forecast.push({
-        date: dateStr,
-        day: itemDate.toLocaleDateString('no-NO', { weekday: 'long' }),
-        temperature: {
-          min: Math.round(item.data.instant.details.air_temperature - 2),
-          max: Math.round(item.data.instant.details.air_temperature + 2),
-        },
+
+      if (!hourlyMap[dateStr]) {
+        hourlyMap[dateStr] = [];
+      }
+
+      hourlyMap[dateStr].push({
+        time: item.time,
+        temperature: Math.round(item.data.instant.details.air_temperature),
         condition: this.getConditionFromSymbol(item.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),
         icon: item.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
         precipitation: item.data?.next_1_hours?.details?.precipitation_amount || 0,
         windSpeed: Math.round(item.data.instant.details.wind_speed || 0),
+      });
+    }
+
+    // Get forecast for next 5 days
+    const forecast = [];
+    for (const [dateStr, hours] of Object.entries(hourlyMap)) {
+      if (forecast.length >= 5) break;
+      const first = hours[0];
+      const temps = hours.map((h) => h.temperature);
+      forecast.push({
+        date: dateStr,
+        day: new Date(dateStr).toLocaleDateString('no-NO', { weekday: 'long' }),
+        temperature: {
+          min: Math.min(...temps),
+          max: Math.max(...temps),
+        },
+        condition: first.condition,
+        icon: first.icon,
+        precipitation: first.precipitation,
+        windSpeed: first.windSpeed,
+        hourly: hours,
       });
     }
 
