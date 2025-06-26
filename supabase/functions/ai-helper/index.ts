@@ -204,13 +204,17 @@ ${weatherData.forecast.map(day => `
     // Get the latest user message to search for relevant documents
     const latestUserMessage = history[history.length - 1];
     const userQuery = latestUserMessage?.content || '';
+    const embeddingResponse = await openai.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: userQuery,
+    });
+    const queryEmbedding = embeddingResponse.data[0].embedding;
 
     // Search for relevant cabin documents
     let documentContext = "Ingen relevante dokumenter funnet.";
     try {
       const { data: relevantDocs, error: docsError } = await supabaseClient
-        .rpc('search_cabin_documents', { search_query: userQuery })
-        .limit(3);
+        .rpc('search_cabin_documents', { query_embedding: queryEmbedding, match_count: 3 });
 
       if (docsError) {
         console.error('Error searching cabin documents:', docsError);
@@ -228,10 +232,9 @@ ${doc.content}
       console.error('Error in document search:', error);
     }
 
-    // Fetch user's inventory
+    // Fetch relevant inventory items using embeddings
     const { data: inventoryItems, error: inventoryError } = await supabaseClient
-      .from('inventory_items')
-      .select('name, description, brand, color, size, location, shelf, owner, notes, category');
+      .rpc('search_inventory_items', { query_embedding: queryEmbedding, match_count: 5 });
       
     if (inventoryError) {
         console.error('Error fetching inventory for AI helper:', inventoryError);
