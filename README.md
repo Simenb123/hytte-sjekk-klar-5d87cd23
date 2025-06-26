@@ -133,3 +133,14 @@ Følg disse stegene for å sikre at AI-hjelperen kan lese fra hyttedokumentene:
 
 Se også [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) for en mer detaljert
 steg-for-steg-guide til Supabase-oppsettet.
+
+## Kjør tester
+
+Prosjektet bruker [Vitest](https://vitest.dev/) for enhets­t­ester. Installer avhengigheter og kjør:
+
+```sh
+npm install
+npm test
+```
+
+Dette vil kjøre alle testfilene under `src` og `supabase`.
