@@ -18,13 +18,15 @@ This guide explains how to configure Supabase so the AI helper can read uploaded
 
 3. **Set secrets for edge functions**
    ```sh
-   supabase secrets set OPENAI_API_KEY=<your-openai-key> \
-     SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
-     SUPABASE_URL=http://localhost:54321 \
-     SUPABASE_ANON_KEY=<anon-key> \
-     GOOGLE_CLIENT_ID=<google-client-id> \
-     GOOGLE_CLIENT_SECRET=<google-client-secret>
-   ```
+  supabase secrets set OPENAI_API_KEY=<your-openai-key> \
+    SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
+    SUPABASE_URL=http://localhost:54321 \
+    SUPABASE_ANON_KEY=<anon-key> \
+    GOOGLE_CLIENT_ID=<google-client-id> \
+    GOOGLE_CLIENT_SECRET=<google-client-secret> \
+    SEARCH_API_KEY=<your-search-key> \
+    SEARCH_API_URL=https://api.bing.microsoft.com/v7.0/search
+  ```
 
 4. **Start local Supabase and test**
    ```sh

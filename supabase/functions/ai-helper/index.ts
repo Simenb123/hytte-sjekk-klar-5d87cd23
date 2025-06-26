@@ -10,6 +10,8 @@ const WEATHER_LAT = parseFloat(Deno.env.get('WEATHER_LAT') ?? '59.8726')
 const WEATHER_LON = parseFloat(Deno.env.get('WEATHER_LON') ?? '8.6475')
 const LOCATION_NAME = Deno.env.get('LOCATION_NAME') ?? 'Gaustablikk, Tinn'
 const CONTACT_EMAIL = Deno.env.get('CONTACT_EMAIL') ?? 'contact@gaustablikk.no'
+const SEARCH_API_KEY = Deno.env.get('SEARCH_API_KEY')
+const SEARCH_API_URL = Deno.env.get('SEARCH_API_URL') ?? 'https://api.bing.microsoft.com/v7.0/search'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -114,6 +116,32 @@ function getWindDirection(degrees: number): string {
   return directions[index];
 }
 
+async function fetchWebResults(query: string) {
+  if (!SEARCH_API_KEY) {
+    console.log('SEARCH_API_KEY not set, skipping web search');
+    return [];
+  }
+  try {
+    const url = `${SEARCH_API_URL}?q=${encodeURIComponent(query)}&count=3`;
+    const res = await fetch(url, {
+      headers: { 'Ocp-Apim-Subscription-Key': SEARCH_API_KEY }
+    });
+    if (!res.ok) {
+      console.error('Web search error', await res.text());
+      return [];
+    }
+    const data = await res.json();
+    return data.webPages?.value?.map((item: any) => ({
+      title: item.name,
+      url: item.url,
+      snippet: item.snippet
+    })) ?? [];
+  } catch (err) {
+    console.error('Error performing web search:', err);
+    return [];
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -191,6 +219,17 @@ ${weatherData.forecast.map(day => `
     const latestUserMessage = history[history.length - 1];
     const userQuery = latestUserMessage?.content || '';
 
+    // Optional web search for additional context
+    let searchContext = '';
+    try {
+      const results = await fetchWebResults(userQuery);
+      if (results.length > 0) {
+        searchContext = `\n**Nettresultater:**\n${results.map(r => `- ${r.title} (${r.url})\n  ${r.snippet}`).join('\n')}`;
+      }
+    } catch (error) {
+      console.error('Error fetching web results:', error);
+    }
+
     // Search for relevant cabin documents
     let documentContext = "Ingen relevante dokumenter funnet.";
     try {
@@ -256,6 +295,8 @@ ${weatherContext}
 ${documentContext}
 
 ${inventoryContext}
+
+${searchContext}
 
 **Generell kunnskapsbase:**
 - **Sted:** Vatnedalsvegen 27, Gaustablikk (1200 moh). Området er kjent for fantastisk utsikt mot Gaustatoppen og gode ski- og turmuligheter.
