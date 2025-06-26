@@ -3,6 +3,10 @@ import 'https://deno.land/x/xhr@0.1.0/mod.ts'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import OpenAI from 'npm:openai';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import {
+  WeatherData,
+  transformWeatherData,
+} from '../../../src/lib/weather-utils.ts'
 
 const WEATHER_LAT = parseFloat(Deno.env.get('WEATHER_LAT') ?? '59.8726')
 const WEATHER_LON = parseFloat(Deno.env.get('WEATHER_LON') ?? '8.6475')
@@ -14,25 +18,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface WeatherData {
-  location: string;
-  current: {
-    temperature: number;
-    condition: string;
-    humidity: number;
-    windSpeed: number;
-    windDirection: string;
-  };
-  forecast: Array<{
-    date: string;
-    day: string;
-    temperature: { min: number; max: number };
-    condition: string;
-    precipitation: number;
-    windSpeed: number;
-  }>;
-  lastUpdated: string;
-}
 
 async function fetchWeatherData(): Promise<WeatherData | null> {
   try {
@@ -53,80 +38,12 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
     }
 
     const data = await response.json();
-    return transformWeatherData(data);
+    return transformWeatherData(data, 5, LOCATION_NAME);
   } catch (error) {
     console.error('Error fetching weather data:', error);
     return null;
   }
-}
 
-function transformWeatherData(data: any, maxDays = 5): WeatherData {
-  const now = new Date();
-  const currentData = data.properties.timeseries[0];
-  
-  // Get forecast for the next "maxDays" days
-  const forecast = [];
-  const seenDates = new Set();
-  
-  for (const item of data.properties.timeseries) {
-    const itemDate = new Date(item.time);
-    const dateStr = itemDate.toISOString().split('T')[0];
-    
-    if (seenDates.has(dateStr) || forecast.length >= maxDays) continue;
-    
-    seenDates.add(dateStr);
-    forecast.push({
-      date: dateStr,
-      day: itemDate.toLocaleDateString('no-NO', { weekday: 'long' }),
-      temperature: {
-        min: Math.round(item.data.instant.details.air_temperature - 2),
-        max: Math.round(item.data.instant.details.air_temperature + 2),
-      },
-      condition: getConditionFromSymbol(item.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),
-      precipitation: item.data?.next_1_hours?.details?.precipitation_amount || 0,
-      windSpeed: Math.round(item.data.instant.details.wind_speed || 0),
-    });
-  }
-
-  return {
-    location: LOCATION_NAME,
-    current: {
-      temperature: Math.round(currentData.data.instant.details.air_temperature),
-      condition: getConditionFromSymbol(currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),
-      humidity: Math.round(currentData.data.instant.details.relative_humidity),
-      windSpeed: Math.round(currentData.data.instant.details.wind_speed),
-      windDirection: getWindDirection(currentData.data.instant.details.wind_from_direction),
-    },
-    forecast,
-    lastUpdated: now.toISOString(),
-  };
-}
-
-function getConditionFromSymbol(symbol: string): string {
-  const conditionMap: Record<string, string> = {
-    'clearsky_day': 'Sol',
-    'clearsky_night': 'Klar natt',
-    'partlycloudy_day': 'Delvis skyet',
-    'partlycloudy_night': 'Delvis skyet natt',
-    'cloudy': 'Overskyet',
-    'rain': 'Regn',
-    'lightrain': 'Lett regn',
-    'heavyrain': 'Kraftig regn',
-    'snow': 'Snø',
-    'lightsnow': 'Lett snø',
-    'heavysnow': 'Kraftig snø',
-    'sleet': 'Sludd',
-    'fog': 'Tåke',
-  };
-  
-  return conditionMap[symbol] || 'Ukjent';
-}
-
-function getWindDirection(degrees: number): string {
-  const directions = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'];
-  const index = Math.round(degrees / 45) % 8;
-  return directions[index];
-}
 
 serve(async (req) => {
   // Handle CORS preflight requests
