@@ -130,3 +130,6 @@ Følg disse stegene for å sikre at AI-hjelperen kan lese fra hyttedokumentene:
 3. Logg inn i appen og åpne **Dokumenter** for å laste opp eller redigere manualer og guider.
 4. Når du bruker AI-hjelperen, sendes innlogget brukers token automatisk til edge-funksjonen. Sørg derfor for at du er innlogget.
 5. Test ved å spørre AI-hjelperen om et dokument, f.eks. _"Hvordan bruker jeg boblebadet?"_
+
+Se også [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md) for en mer detaljert
+steg-for-steg-guide til Supabase-oppsettet.
