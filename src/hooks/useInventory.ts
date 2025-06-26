@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { InventoryItem } from '@/types/inventory';
 import { useAuth } from '@/context/AuthContext';
 
-const fetchInventory = async (userId?: string): Promise<InventoryItem[]> => {
+export const fetchInventory = async (userId?: string): Promise<InventoryItem[]> => {
   console.log('[useInventory] Fetching inventory for user:', userId);
   
   if (!userId) {
