@@ -37,7 +37,7 @@ export class WeatherService {
     }
   }
 
-  static async getWeatherData(): Promise<WeatherData | null> {
+  static async getWeatherData(maxDays = 5): Promise<WeatherData | null> {
     try {
       if (typeof window !== 'undefined') {
         const cached = localStorage.getItem(this.CACHE_KEY);
@@ -69,7 +69,7 @@ export class WeatherService {
       }
 
       const data = await response.json();
-      const transformed = this.transformWeatherData(data);
+      const transformed = this.transformWeatherData(data, maxDays);
 
       if (typeof window !== 'undefined') {
         try {
@@ -86,11 +86,11 @@ export class WeatherService {
     }
   }
 
-  private static transformWeatherData(data: any): WeatherData {
+  private static transformWeatherData(data: any, maxDays = 5): WeatherData {
     const now = new Date();
     const currentData = data.properties.timeseries[0];
     
-    // Get forecast for next 5 days
+    // Get forecast for the next "maxDays" days
     const forecast = [];
     const seenDates = new Set();
     
@@ -98,7 +98,7 @@ export class WeatherService {
       const itemDate = new Date(item.time);
       const dateStr = itemDate.toISOString().split('T')[0];
       
-      if (seenDates.has(dateStr) || forecast.length >= 5) continue;
+      if (seenDates.has(dateStr) || forecast.length >= maxDays) continue;
       
       seenDates.add(dateStr);
       forecast.push({
