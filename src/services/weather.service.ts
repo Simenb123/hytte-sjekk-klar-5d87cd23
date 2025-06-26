@@ -26,6 +26,7 @@ export interface WeatherData {
 
 import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME, CONTACT_EMAIL } from '@/config';
 import type { LocationForecast } from '@/types/weather.types';
+import { weatherConditions } from '@/shared/weatherConditions';
 
 export class WeatherService {
   private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
@@ -143,47 +144,7 @@ export class WeatherService {
   }
 
   private static getConditionFromSymbol(symbol: string): string {
-    const conditionMap: Record<string, string> = {
-      'clearsky_day': 'Sol',
-      'clearsky_night': 'Klar natt',
-      'fair_day': 'Lettskyet',
-      'fair_night': 'Lettskyet natt',
-      'partlycloudy_day': 'Delvis skyet',
-      'partlycloudy_night': 'Delvis skyet natt',
-      'cloudy': 'Overskyet',
-      'rain': 'Regn',
-      'lightrainshowers_day': 'Lette regnbyger',
-      'lightrainshowers_night': 'Lette regnbyger natt',
-      'rainshowers_day': 'Regnbyger',
-      'rainshowers_night': 'Regnbyger natt',
-      'heavyrainshowers_day': 'Kraftige regnbyger',
-      'heavyrainshowers_night': 'Kraftige regnbyger natt',
-      'lightrain': 'Lett regn',
-      'lightrainandthunder': 'Lett regn og torden',
-      'heavyrain': 'Kraftig regn',
-      'heavyrainandthunder': 'Kraftig regn og torden',
-      'snow': 'Snø',
-      'lightsnowshowers_day': 'Lette snøbyger',
-      'lightsnowshowers_night': 'Lette snøbyger natt',
-      'snowshowers_day': 'Snøbyger',
-      'snowshowers_night': 'Snøbyger natt',
-      'heavysnowshowers_day': 'Kraftige snøbyger',
-      'heavysnowshowers_night': 'Kraftige snøbyger natt',
-      'lightsnow': 'Lett snø',
-      'lightsnowandthunder': 'Lett snø og torden',
-      'heavysnow': 'Kraftig snø',
-      'heavysnowandthunder': 'Kraftig snø og torden',
-      'sleet': 'Sludd',
-      'sleetshowers_day': 'Sluddbyger',
-      'sleetshowers_night': 'Sluddbyger natt',
-      'lightsleetshowers_day': 'Lette sluddbyger',
-      'lightsleetshowers_night': 'Lette sluddbyger natt',
-      'heavysleetshowers_day': 'Kraftige sluddbyger',
-      'heavysleetshowers_night': 'Kraftige sluddbyger natt',
-      'fog': 'Tåke',
-    };
-    
-    return conditionMap[symbol] || 'Ukjent';
+    return weatherConditions[symbol] || 'Ukjent';
   }
 
   private static getWindDirection(degrees: number): string {
