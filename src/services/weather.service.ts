@@ -25,6 +25,7 @@ export interface WeatherData {
 }
 
 import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME, CONTACT_EMAIL } from '@/config';
+import type { LocationForecast } from '@/types/weather.types';
 
 export class WeatherService {
   private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
@@ -72,7 +73,7 @@ export class WeatherService {
         return null;
       }
 
-      const data = await response.json();
+      const data: LocationForecast = await response.json();
       const transformed = this.transformWeatherData(data, maxDays);
 
       if (typeof window !== 'undefined') {
@@ -90,7 +91,7 @@ export class WeatherService {
     }
   }
 
-  private static transformWeatherData(data: any, maxDays = 5): WeatherData {
+  private static transformWeatherData(data: LocationForecast, maxDays = 5): WeatherData {
     const now = new Date();
     const currentData = data.properties.timeseries[0];
     
