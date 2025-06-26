@@ -64,11 +64,19 @@ const AiChat: React.FC = () => {
     setInput("");
     setPendingImage(null);
 
-    const aiResponse = await sendMessage(newMessages, imageToSend || undefined);
-    
-    if (aiResponse) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: aiResponse }]);
-    }
+    const { reply, analysis } = await sendMessage(newMessages, imageToSend || undefined);
+
+    setMessages((prev) => {
+      const updated = [...prev];
+      if (analysis) {
+        const lastIndex = updated.length - 1;
+        updated[lastIndex] = { ...updated[lastIndex], analysis };
+      }
+      if (reply) {
+        updated.push({ role: 'assistant', content: reply });
+      }
+      return updated;
+    });
   };
 
   const handleVoiceTranscription = (transcribedText: string) => {
@@ -116,12 +124,13 @@ const AiChat: React.FC = () => {
       
       <div className="flex-1 space-y-4 overflow-y-auto p-4 bg-gray-50">
         {messages.map((msg, index) => (
-          <ChatMessage 
-            key={index} 
-            role={msg.role} 
-            content={msg.content} 
+          <ChatMessage
+            key={index}
+            role={msg.role}
+            content={msg.content}
             image={msg.image}
             isVoice={msg.isVoice}
+            analysis={msg.analysis}
           />
         ))}
         {loading && <ChatMessage role="assistant" content="" isLoading={true} />}

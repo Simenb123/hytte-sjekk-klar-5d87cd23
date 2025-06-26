@@ -9,14 +9,16 @@ interface ChatMessageProps {
   image?: string;
   isVoice?: boolean;
   isLoading?: boolean;
+  analysis?: string;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({ 
-  role, 
-  content, 
-  image, 
-  isVoice = false, 
-  isLoading = false 
+const ChatMessage: React.FC<ChatMessageProps> = ({
+  role,
+  content,
+  image,
+  isVoice = false,
+  isLoading = false,
+  analysis
 }) => {
   const isUser = role === 'user';
   
@@ -45,9 +47,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           <div className="space-y-2">
             {image && (
               <div className="relative">
-                <img 
-                  src={image} 
-                  alt="Sendt bilde" 
+                <img
+                  src={image}
+                  alt="Sendt bilde"
                   className="max-w-full h-auto rounded border"
                 />
                 {isUser && (
@@ -56,6 +58,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                   </div>
                 )}
               </div>
+            )}
+
+            {analysis && (
+              <p className="text-xs text-gray-500 whitespace-pre-wrap italic">
+                {analysis}
+              </p>
             )}
             
             <div className="flex items-start gap-2">
