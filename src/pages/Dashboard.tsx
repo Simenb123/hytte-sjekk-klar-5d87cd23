@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/DashboardCard';
 import Header from '@/components/Header';
-import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen } from 'lucide-react';
+import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen } from 'lucide-react';
 
 export default function Dashboard() {
   return (
@@ -86,6 +86,15 @@ export default function Dashboard() {
                 description="Administrer hytte-manualer og guider"
                 icon={<BookOpen className="h-8 w-8" />}
                 color="bg-gradient-to-br from-teal-500 to-teal-600"
+              />
+            </Link>
+
+            <Link to="/hyttebok">
+              <DashboardCard
+                title="Hytteboka"
+                description="Skriv og les hytteinnlegg"
+                icon={<NotebookPen className="h-8 w-8" />}
+                color="bg-gradient-to-br from-yellow-500 to-yellow-600"
               />
             </Link>
             
