@@ -1,8 +1,7 @@
 
 import React from 'react';
 import Header from '../components/Header';
-// import CompletionLogList from "../components/logs/CompletionLogList";
-// import LogsDebug from "../components/logs/LogsDebug";
+import CompletionLogList from '../components/checklistLogs/CompletionLogList';
 import { FileText } from 'lucide-react';
 
 const LogsPage = () => {
@@ -18,9 +17,9 @@ const LogsPage = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center gap-2 mb-6">
             <FileText className="h-6 w-6 text-purple-500" />
-            <h2 className="text-2xl font-semibold">Loggsiden er midlertidig deaktivert</h2>
+            <h2 className="text-2xl font-semibold">Fullførte sjekkpunkter</h2>
           </div>
-          <p>Vi aktiverer den igjen etter at basis-bygg er grønt.</p>
+          <CompletionLogList />
         </div>
       </div>
     </div>
