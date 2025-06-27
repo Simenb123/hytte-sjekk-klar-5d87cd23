@@ -19,6 +19,7 @@ import CalendarApp from './pages/CalendarApp';
 import WeatherApp from './pages/WeatherApp';
 import AiHelperPage from './pages/AiHelperPage';
 import DocumentsPage from './pages/DocumentsPage';
+import HyttebokPage from './pages/HyttebokPage';
 import OtherApps from './pages/OtherApps';
 import LogsPage from './pages/LogsPage';
 import ProfilePage from './pages/ProfilePage';
@@ -46,6 +47,7 @@ function App() {
               <Route path="/weather" element={<WeatherApp />} />
               <Route path="/ai-helper" element={<AiHelperPage />} />
               <Route path="/documents" element={<DocumentsPage />} />
+              <Route path="/hyttebok" element={<HyttebokPage />} />
               <Route path="/other-apps" element={<OtherApps />} />
               <Route path="/logs" element={<LogsPage />} />
               <Route path="/profile" element={<ProfilePage />} />

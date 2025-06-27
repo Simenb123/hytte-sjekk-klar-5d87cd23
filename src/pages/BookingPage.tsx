@@ -14,6 +14,7 @@ import { BookingsList } from '@/components/calendar/BookingsList';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BookingFamilyMembers from '@/components/booking/BookingFamilyMembers';
+import { Link } from 'react-router-dom';
 
 const BookingPage = () => {
   const [showNewBooking, setShowNewBooking] = useState(false);
@@ -40,6 +41,13 @@ const BookingPage = () => {
     if (isPast(endDate)) return 'completed';
     if (startDate <= now && now <= endDate) return 'active';
     return 'upcoming';
+  };
+
+  const getChecklistCategory = (startDate: Date, endDate: Date) => {
+    const now = new Date();
+    if (now < startDate) return 'før_ankomst';
+    if (now > endDate) return 'avreise';
+    return 'opphold';
   };
 
   const getStatusBadge = (status: string) => {
@@ -181,6 +189,16 @@ const BookingPage = () => {
                           </div>
                         </div>
                         <BookingFamilyMembers familyMembers={booking.familyMembers || []} />
+                        <div className="mt-3 flex gap-2">
+                          <Link to={`/checklist/${getChecklistCategory(booking.from, booking.to)}`} className="text-sm text-blue-600 underline">
+                            Gå til sjekkliste
+                          </Link>
+                          {status === 'completed' && (
+                            <Link to="/hyttebok" className="text-sm text-purple-600 underline">
+                              Skriv i hytteboka
+                            </Link>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   );
