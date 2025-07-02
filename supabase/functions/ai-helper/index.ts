@@ -168,12 +168,16 @@ serve(async (req) => {
       });
     }
 
-    // Create supabase client with user's auth context
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    )
+    // Create Supabase client with user token when provided, otherwise fall back
+    // to service role for internal lookups
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const authHeader = req.headers.get('Authorization')
+
+    const supabaseClient = authHeader
+      ? createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } })
+      : createClient(supabaseUrl, serviceKey!)
 
     // Get current date and time information
     const now = new Date();
