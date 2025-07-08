@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/state/auth';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import './App.css';
 
 // Import pages
@@ -37,20 +38,69 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/checklist" element={<ChecklistHome />} />
-              <Route path="/checklist/:category" element={<ChecklistPage />} />
+              <Route
+                path="/checklist"
+                element={
+                  <ProtectedRoute>
+                    <ChecklistHome />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/checklist/:category"
+                element={
+                  <ProtectedRoute>
+                    <ChecklistPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/checklist-admin" element={<ChecklistAdminPage />} />
-              <Route path="/inventory" element={<InventoryPage />} />
-              <Route path="/family" element={<FamilyPage />} />
-              <Route path="/booking" element={<BookingPage />} />
+              <Route
+                path="/inventory"
+                element={
+                  <ProtectedRoute>
+                    <InventoryPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/family"
+                element={
+                  <ProtectedRoute>
+                    <FamilyPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/booking"
+                element={
+                  <ProtectedRoute>
+                    <BookingPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/calendar" element={<CalendarApp />} />
               <Route path="/weather" element={<WeatherApp />} />
-              <Route path="/ai-helper" element={<AiHelperPage />} />
+              <Route
+                path="/ai-helper"
+                element={
+                  <ProtectedRoute>
+                    <AiHelperPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/documents" element={<DocumentsPage />} />
               <Route path="/hyttebok" element={<HyttebokPage />} />
               <Route path="/other-apps" element={<OtherApps />} />
               <Route path="/logs" element={<LogsPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
