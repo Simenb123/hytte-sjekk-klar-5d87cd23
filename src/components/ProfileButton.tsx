@@ -35,7 +35,7 @@ const ProfileButton = () => {
     try {
       console.log('[ProfileButton] Starting logout process');
       await signOut();
-      console.log('[ProfileButton] Logout successful, navigating to auth');
+      console.log('[ProfileButton] Logout successful, navigating to /auth');
       navigate('/auth');
     } catch (error) {
       console.error('[ProfileButton] Logout error:', error);
