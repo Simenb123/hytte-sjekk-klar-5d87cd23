@@ -1,40 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAiChat } from '@/hooks/useAiChat';
-// Simple ID generator since uuid package may not be available
-const generateId = () => Math.random().toString(36).substring(2, 10);
-
-interface Entry {
-  id: string;
-  text: string;
-  date: string;
-}
-
+import { useHyttebokEntries, useAddHyttebokEntry } from '@/hooks/useHyttebok';
 export default function HyttebokPage() {
-  const [entries, setEntries] = useState<Entry[]>([]);
   const [text, setText] = useState('');
   const { sendMessage, loading } = useAiChat();
-
-  useEffect(() => {
-    const stored = localStorage.getItem('hyttebokEntries');
-    if (stored) {
-      setEntries(JSON.parse(stored));
-    }
-  }, []);
-
-  const saveEntries = (updated: Entry[]) => {
-    setEntries(updated);
-    localStorage.setItem('hyttebokEntries', JSON.stringify(updated));
-  };
+  const { data: entries = [], isLoading } = useHyttebokEntries();
+  const addEntry = useAddHyttebokEntry();
 
   const handleSave = () => {
     if (!text.trim()) return;
-    const newEntry = { id: generateId(), text: text.trim(), date: new Date().toISOString() };
-    const updated = [newEntry, ...entries];
-    saveEntries(updated);
-    setText('');
+    addEntry.mutate({ text: text.trim() }, { onSuccess: () => setText('') });
   };
 
   const handleSuggest = async () => {
@@ -66,10 +44,13 @@ export default function HyttebokPage() {
           </div>
         </div>
         <div className="space-y-4">
-          {entries.map(entry => (
+          {isLoading && (
+            <p className="text-center text-gray-500">Laster...</p>
+          )}
+      {entries.map(entry => (
             <div key={entry.id} className="bg-white p-4 rounded-lg shadow">
               <div className="text-xs text-gray-500 mb-2">
-                {new Date(entry.date).toLocaleString('no-NO')}
+                {new Date(entry.created_at).toLocaleString('no-NO')}
               </div>
               <p className="whitespace-pre-wrap">{entry.text}</p>
             </div>

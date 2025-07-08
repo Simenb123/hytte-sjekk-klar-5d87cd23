@@ -21,6 +21,13 @@ export interface DbCompletionLog {
   is_completed: boolean;
 }
 
+export interface DbHyttebokEntry {
+  id: string;
+  user_id: string;
+  text: string;
+  created_at: string;
+}
+
 export interface ChecklistItemWithStatus extends DbChecklistItem {
   isCompleted: boolean;
 }
