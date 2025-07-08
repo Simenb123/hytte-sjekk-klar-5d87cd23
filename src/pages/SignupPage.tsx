@@ -1,17 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate, Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import Logo from '../components/Logo';
 
-export default function SignupPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { user, signup } = useAuth();
+const SignupPage: React.FC = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [firstName, setFirstName] = useState<string>('');
+  const [lastName, setLastName] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const { user, signUp } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
@@ -21,7 +21,7 @@ export default function SignupPage() {
     }
   }, [user, navigate]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !firstName || !lastName) {
       toast.error('Vennligst fyll ut alle felt');
@@ -31,14 +31,9 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const { success, error } = await signup(email, password, firstName, lastName);
-      
-      if (success) {
-        toast.success('Konto opprettet! Du kan nå logge inn.');
-        navigate('/login');
-      } else {
-        toast.error(`Feil ved registrering: ${error.message}`);
-      }
+      await signUp(email, password, { first_name: firstName, last_name: lastName });
+      toast.success('Konto opprettet! Du kan nå logge inn.');
+      navigate('/login');
     } catch (error) {
       toast.error('En uventet feil oppstod');
       console.error(error);
@@ -135,4 +130,6 @@ export default function SignupPage() {
       </div>
     </div>
   );
-}
+};
+
+export default SignupPage;
