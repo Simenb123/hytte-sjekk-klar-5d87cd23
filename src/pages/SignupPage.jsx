@@ -47,7 +47,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
+    <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50">
       <div className="mb-8">
         <Logo />
       </div>
@@ -135,6 +135,6 @@ export default function SignupPage() {
           </div>
         </form>
       </div>
-    </div>
+    </main>
   );
 }

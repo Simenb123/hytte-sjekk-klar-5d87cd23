@@ -70,8 +70,8 @@ const BookingPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header 
+      <main className="min-h-screen bg-gray-50">
+        <Header
           title="Bookinger"
           showBackButton={true}
           showHomeButton={true}
@@ -85,14 +85,14 @@ const BookingPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header 
+      <main className="min-h-screen bg-gray-50">
+        <Header
           title="Bookinger"
           showBackButton={true}
           showHomeButton={true}
@@ -105,13 +105,13 @@ const BookingPage = () => {
             </AlertDescription>
           </Alert>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
+    <main className="min-h-screen bg-gray-50">
+      <Header
         title="Bookinger"
         showBackButton={true}
         showHomeButton={true}
@@ -263,7 +263,7 @@ const BookingPage = () => {
           googleIntegration={isGoogleConnected}
         />
       </div>
-    </div>
+    </main>
   );
 };
 

@@ -46,7 +46,7 @@ export default function HyttebokPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50">
       <Header title="Hytteboka" showBackButton={true} />
       <div className="max-w-2xl mx-auto p-4 pt-20 space-y-6">
         <div className="bg-white p-4 rounded-lg shadow">
@@ -79,7 +79,7 @@ export default function HyttebokPage() {
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 

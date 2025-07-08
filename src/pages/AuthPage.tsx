@@ -68,7 +68,7 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="mb-8">
         <Logo />
       </div>
@@ -191,7 +191,7 @@ const AuthPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </main>
   );
 };
 
