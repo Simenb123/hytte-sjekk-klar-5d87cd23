@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FamilyMember, NewFamilyMemberData, UpdateFamilyMemberData } from '@/types/family';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/state/auth';
 
 const fetchFamilyMembers = async (userId?: string): Promise<FamilyMember[]> => {
   console.log('[useFamilyMembers] Fetching family members for user:', userId);

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { InventoryItem } from '@/types/inventory';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/state/auth';
 
 export const fetchInventory = async (userId?: string): Promise<InventoryItem[]> => {
   console.log('[useInventory] Fetching inventory for user:', userId);

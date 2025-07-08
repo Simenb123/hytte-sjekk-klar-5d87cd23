@@ -15,7 +15,7 @@ import ChecklistLoading from '../ChecklistLoading';
 import { EditChecklistItemDialog } from './EditChecklistItemDialog';
 import { ChecklistSearch } from './ChecklistSearch';
 import { useChecklistAdmin } from '@/hooks/useChecklistAdmin';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/state/toast';
 
 interface ChecklistItem {
   id: string;

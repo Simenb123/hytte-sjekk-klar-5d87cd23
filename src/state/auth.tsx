@@ -1,4 +1,8 @@
 
+/**
+ * Authentication state slice. Handles user session and exposes
+ * sign-in, sign-up and sign-out helpers.
+ */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,8 +25,10 @@ interface AuthContextType {
   isLoading: boolean;
 }
 
+// React context used to provide authentication state throughout the app
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/** Context provider wrapping the application with auth state. */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -90,6 +96,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setupAuth();
   }, []);
 
+  /**
+   * Sign in existing user with email and password.
+   */
   const signIn = async (email: string, password: string) => {
     try {
       console.log('[AuthContext] Attempting to sign in user:', email);
@@ -109,6 +118,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Register a new user account.
+   */
   const signUp = async (
     email: string, 
     password: string, 
@@ -146,6 +158,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Sign the current user out.
+   */
   const signOut = async () => {
     try {
       console.log('[AuthContext] Attempting to sign out user:', user?.id);
@@ -189,6 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
+/** Hook for convenient access to auth context. */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

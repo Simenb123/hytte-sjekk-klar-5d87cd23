@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/state/auth';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from 'sonner';
 
