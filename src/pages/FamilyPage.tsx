@@ -65,7 +65,8 @@ export default function FamilyPage() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Ikke logget inn</AlertTitle>
             <AlertDescription>
-              Du må logge inn for å administrere familie. <a href="/login" className="underline">Logg inn her</a>.
+              Du må logge inn for å administrere familie.{' '}
+              <a href="/auth" className="underline">Logg inn her</a>.
             </AlertDescription>
           </Alert>
         </main>

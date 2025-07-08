@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/state/auth';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import Logo from '../components/Logo';
@@ -11,7 +11,7 @@ export default function SignupPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user, signup } = useAuth();
+  const { user, signUp } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
@@ -31,14 +31,13 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const { success, error } = await signup(email, password, firstName, lastName);
-      
-      if (success) {
-        toast.success('Konto opprettet! Du kan nå logge inn.');
-        navigate('/login');
-      } else {
-        toast.error(`Feil ved registrering: ${error.message}`);
-      }
+      await signUp(email, password, {
+        first_name: firstName,
+        last_name: lastName
+      });
+
+      toast.success('Konto opprettet! Du kan nå logge inn.');
+      navigate('/auth');
     } catch (error) {
       toast.error('En uventet feil oppstod');
       console.error(error);
@@ -129,7 +128,10 @@ export default function SignupPage() {
           </button>
 
           <div className="text-center mt-4">
-            <p>Har du allerede en konto? <Link to="/login" className="text-blue-600 hover:underline">Logg inn her</Link></p>
+            <p>
+              Har du allerede en konto?{' '}
+              <Link to="/auth" className="text-blue-600 hover:underline">Logg inn her</Link>
+            </p>
           </div>
         </form>
       </div>
