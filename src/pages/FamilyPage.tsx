@@ -58,9 +58,9 @@ export default function FamilyPage() {
   // Check auth status
   if (!user) {
     return (
-      <div className="flex flex-col h-screen bg-hytte-snow">
+      <main className="flex flex-col h-screen bg-hytte-snow">
         <Header title="Familie" showBackButton={true} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 pt-20">
+        <section className="flex-1 overflow-y-auto p-4 md:p-6 pt-20">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Ikke logget inn</AlertTitle>
@@ -68,20 +68,20 @@ export default function FamilyPage() {
               Du må logge inn for å administrere familie. <a href="/login" className="underline">Logg inn her</a>.
             </AlertDescription>
           </Alert>
-        </main>
-      </div>
+        </section>
+      </main>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-hytte-snow">
-      <Header 
-        title="Familie" 
-        showBackButton={true} 
+    <main className="flex flex-col h-screen bg-hytte-snow">
+      <Header
+        title="Familie"
+        showBackButton={true}
         rightContent={<FamilyMemberDialog />}
       />
-      
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 pt-20">
+
+      <section className="flex-1 overflow-y-auto p-4 md:p-6 pt-20">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Familieadministrasjon</h1>
@@ -202,7 +202,7 @@ export default function FamilyPage() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }

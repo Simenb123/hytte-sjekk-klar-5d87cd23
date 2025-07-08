@@ -193,7 +193,7 @@ const CalendarApp: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50">
       <Header title="Kalender og booking" showBackButton />
       
       <div className="max-w-lg mx-auto p-4 pt-20">
@@ -255,7 +255,7 @@ const CalendarApp: React.FC = () => {
         <CalendarInfo isGoogleConnected={isGoogleConnected} />
       </div>
 
-      <NewBookingDialog 
+      <NewBookingDialog
         open={showNewBookingDialog}
         onOpenChange={setShowNewBookingDialog}
         onSuccess={handleBookingSuccess}
@@ -271,7 +271,7 @@ const CalendarApp: React.FC = () => {
         googleIntegration={isGoogleConnected}
         sharedCalendarExists={sharedCalendarExists}
       />
-    </div>
+    </main>
   );
 };
 

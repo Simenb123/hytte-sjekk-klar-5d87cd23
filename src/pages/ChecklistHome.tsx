@@ -28,9 +28,9 @@ const ChecklistHome: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        title="Sjekklister" 
+    <main className="min-h-screen bg-gray-50">
+      <Header
+        title="Sjekklister"
         showBackButton={true}
         rightContent={
           <Button 
@@ -94,7 +94,7 @@ const ChecklistHome: React.FC = () => {
           ))}
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

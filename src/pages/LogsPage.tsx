@@ -6,8 +6,8 @@ import { FileText } from 'lucide-react';
 
 const LogsPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
+    <main className="min-h-screen bg-gray-50">
+      <Header
         title="Sjekkliste-logger"
         showBackButton={true}
         showHomeButton={true}
@@ -22,7 +22,7 @@ const LogsPage = () => {
           <CompletionLogList />
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

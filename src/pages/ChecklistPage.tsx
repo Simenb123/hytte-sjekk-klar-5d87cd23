@@ -45,24 +45,26 @@ export default function ChecklistPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <main className="flex justify-center items-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         <p className="ml-4 text-lg">Laster sjekkliste...</p>
-      </div>
+      </main>
     );
   }
 
   if (error) {
-    return <div className="p-6 text-center text-red-600">Feil: {error.message}</div>;
+    return (
+      <main className="p-6 text-center text-red-600">Feil: {error.message}</main>
+    );
   }
 
   const pageTitle = category ? checklistCategories[category] : "Sjekkliste";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        title={pageTitle} 
-        showBackButton={true} 
+    <main className="min-h-screen bg-gray-50">
+      <Header
+        title={pageTitle}
+        showBackButton={true}
         rightContent={
           areas && areas.length > 0 && totalItems > 0 && (
             <div className="flex items-center gap-2 w-24">
@@ -72,7 +74,7 @@ export default function ChecklistPage() {
           )
         }
       />
-      <main className="p-4 sm:p-6 max-w-lg mx-auto pt-20">
+      <section className="p-4 sm:p-6 max-w-lg mx-auto pt-20">
         {areas && areas.length > 0 ? (
           <Accordion type="multiple" defaultValue={areas.map(area => area.id)} className="w-full space-y-3">
             {areas.map((area) => (
@@ -104,7 +106,7 @@ export default function ChecklistPage() {
             <p>Ingen punkter funnet for denne sjekklisten.</p>
           </div>
         )}
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }

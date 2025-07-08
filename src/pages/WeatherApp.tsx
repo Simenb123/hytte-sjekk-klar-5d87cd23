@@ -34,20 +34,20 @@ const WeatherApp: React.FC = () => {
 
   if (loading && !weatherData) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <main className="min-h-screen bg-gray-50">
         <Header title="Værmelding" showBackButton />
         <div className="max-w-lg mx-auto p-4 pt-20">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (error || !weatherData) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <main className="min-h-screen bg-gray-50">
         <Header title="Værmelding" showBackButton />
         <div className="max-w-lg mx-auto p-4 pt-20">
           <Card>
@@ -57,15 +57,14 @@ const WeatherApp: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </main>
     );
   }
 
   const CurrentIcon = getWeatherIcon(weatherData.current.condition);
   const currentIconClass = CurrentIcon === Sun ? 'text-yellow-300' : '';
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50">
       <Header title="Værmelding" showBackButton />
       
       <div className="max-w-lg mx-auto p-4 pt-20">
@@ -168,7 +167,7 @@ const WeatherApp: React.FC = () => {
           <p>Sist oppdatert: {new Date(weatherData.lastUpdated).toLocaleString('no-NO')}</p>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

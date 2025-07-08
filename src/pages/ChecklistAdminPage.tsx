@@ -9,7 +9,7 @@ import { Settings, MapPin, CheckSquare } from 'lucide-react';
 
 const ChecklistAdminPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50">
       <Header title="Administrasjon" showBackButton={true} />
       
       <div className="container mx-auto p-6 max-w-6xl pt-24">
@@ -59,7 +59,7 @@ const ChecklistAdminPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </main>
   );
 };
 

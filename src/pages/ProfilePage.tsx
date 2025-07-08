@@ -24,9 +24,9 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        title="Min profil" 
+    <main className="min-h-screen bg-gray-50">
+      <Header
+        title="Min profil"
         showBackButton={true}
         onBackClick={handleBackClick}
         rightContent={
@@ -76,7 +76,7 @@ const ProfilePage: React.FC = () => {
           </Card>
         )}
       </div>
-    </div>
+    </main>
   );
 };
 

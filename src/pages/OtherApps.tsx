@@ -5,7 +5,7 @@ import { otherApps } from '@/data/other-apps';
 
 const OtherApps: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50">
       <Header title="Andre apper" showBackButton />
       <div className="max-w-lg mx-auto p-4 pt-20">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
@@ -17,7 +17,7 @@ const OtherApps: React.FC = () => {
           <p>Klikk p\u00e5 app-ikonene for mer informasjon</p>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
