@@ -48,7 +48,8 @@ export interface CompletionLogWithDetails {
   checklist_items?: {
     id: string;
     text: string;
-    type: string;
+    category: string | null;
+    season: string | null;
   } | null;
   profiles?: {
     first_name: string | null;
