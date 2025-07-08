@@ -35,7 +35,7 @@ export default function SignupPage() {
       
       if (success) {
         toast.success('Konto opprettet! Du kan nå logge inn.');
-        navigate('/login');
+        navigate('/auth');
       } else {
         toast.error(`Feil ved registrering: ${error.message}`);
       }
@@ -129,7 +129,7 @@ export default function SignupPage() {
           </button>
 
           <div className="text-center mt-4">
-            <p>Har du allerede en konto? <Link to="/login" className="text-blue-600 hover:underline">Logg inn her</Link></p>
+            <p>Har du allerede en konto? <Link to="/auth" className="text-blue-600 hover:underline">Logg inn her</Link></p>
           </div>
         </form>
       </div>

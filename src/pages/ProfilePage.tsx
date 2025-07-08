@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/state/auth';
 import Header from '@/components/Header';
@@ -12,11 +12,14 @@ import { useProfile } from '@/hooks/useProfile';
 const ProfilePage: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) navigate('/auth');
+  }, [user, navigate]);
   const { profile, isLoading, isSaving, error, updateProfile } = useProfile(user);
 
-  if (!user) {
-    navigate('/auth');
-    return null;
+  if (user === undefined) {
+    return <p className="p-4">Laster…</p>;
   }
 
   const handleBackClick = () => {
