@@ -3,7 +3,7 @@ import React from 'react';
 import { ArrowLeft, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfileButton from './ProfileButton';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/state/auth';
 
 interface HeaderProps {
   title: string;

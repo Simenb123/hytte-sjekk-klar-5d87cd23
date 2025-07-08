@@ -1,3 +1,6 @@
+/**
+ * Global toast notification state handled outside of React.
+ */
 import * as React from "react"
 
 import type {
@@ -139,6 +142,9 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
+/**
+ * Push a new toast to the queue.
+ */
 function toast({ ...props }: Toast) {
   const id = genId()
 
@@ -168,6 +174,9 @@ function toast({ ...props }: Toast) {
   }
 }
 
+/**
+ * Hook giving components access to the toast state.
+ */
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 

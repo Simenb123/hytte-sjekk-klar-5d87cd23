@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getChecklistForCategory } from "@/services/checklist.service";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from '@/state/auth';
 import { ChecklistCategory, checklistCategories } from "@/models/checklist";
 import ChecklistItem from "@/components/ChecklistItem";
 import { logItemCompletion } from "@/services/checklist.service";

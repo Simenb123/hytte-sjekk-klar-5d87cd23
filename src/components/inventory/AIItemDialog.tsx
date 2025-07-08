@@ -10,7 +10,7 @@ import { Camera, Loader2, Sparkles, CheckCircle, AlertCircle } from 'lucide-reac
 import { useInventoryAI } from '@/hooks/useInventoryAI';
 import { useAddInventoryItem } from '@/hooks/useInventory';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/state/toast';
 import ImageCaptureButton from '@/components/ImageCaptureButton';
 
 export function AIItemDialog() {

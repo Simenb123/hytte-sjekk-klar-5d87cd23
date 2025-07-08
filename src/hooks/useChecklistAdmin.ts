@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/state/toast';
 
 export function useChecklistAdmin() {
   const [loading, setLoading] = useState(false);
