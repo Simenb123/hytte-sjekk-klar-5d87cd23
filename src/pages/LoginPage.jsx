@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/state/auth';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import Logo from '../components/Logo';
@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user, login } = useAuth();
+  const { user, signIn } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
@@ -29,14 +29,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { success, error } = await login(email, password);
-      
-      if (success) {
-        // Successful login will redirect through the auth state change
-        toast.success('Innlogging vellykket!');
-      } else {
-        toast.error(`Feil ved innlogging: ${error.message}`);
-      }
+      await signIn(email, password);
+      toast.success('Innlogging vellykket!');
     } catch (error) {
       toast.error('En uventet feil oppstod');
       console.error(error);
@@ -95,7 +89,10 @@ export default function LoginPage() {
           </button>
 
           <div className="text-center mt-4">
-            <p>Har du ikke en konto? <Link to="/signup" className="text-blue-600 hover:underline">Registrer deg her</Link></p>
+            <p>
+              Har du ikke en konto?{' '}
+              <Link to="/auth" className="text-blue-600 hover:underline">Registrer deg her</Link>
+            </p>
           </div>
         </form>
       </div>
