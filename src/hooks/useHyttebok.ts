@@ -30,13 +30,13 @@ export const useAddHyttebokEntry = () => {
   const { user } = useAuth();
 
   return useMutation<void, Error, { content: string }>(
-    mutationFn: async ({ text }) => {
+    async ({ content }) => {
       if (!user) {
         throw new Error('Bruker ikke autentisert');
       }
 
       const { error } = await supabase.from('hyttebok_entries').insert({
-      content,
+        content,
         user_id: user.id,
       });
 
@@ -45,8 +45,10 @@ export const useAddHyttebokEntry = () => {
         throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['hyttebok_entries'] });
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['hyttebok_entries'] });
+      },
     },
-  });
+  );
 };
