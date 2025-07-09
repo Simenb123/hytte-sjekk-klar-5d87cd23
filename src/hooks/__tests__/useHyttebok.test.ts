@@ -20,9 +20,9 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 describe('useAddHyttebokEntry', () => {
-  it('inserts entry with content and user_id', async () => {
+  it('inserts entry with text and user_id', async () => {
     const { result } = renderHook(() => useAddHyttebokEntry(), { wrapper });
-    await result.current.mutateAsync({ content: 'test' });
-    expect(insertMock).toHaveBeenCalledWith({ content: 'test', user_id: 'uid' });
+    await result.current.mutateAsync({ text: 'test' });
+    expect(insertMock).toHaveBeenCalledWith({ text: 'test', user_id: 'uid' });
   });
 });
