@@ -7,6 +7,9 @@ export interface WeatherData {
     humidity: number;
     windSpeed: number;
     windDirection: string;
+    airPressure?: number;
+    cloudCover?: number;
+    windGust?: number;
     icon: string;
     pressure?: number;
     windGust?: number;
@@ -23,13 +26,19 @@ export interface WeatherData {
     icon: string;
     precipitation: number;
     windSpeed: number;
+    airPressure?: number;
+    cloudCover?: number;
+    windGust?: number;
   }>;
+  sunrise?: string;
+  sunset?: string;
   lastUpdated: string;
 }
 
-import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME, CONTACT_EMAIL } from '@/config';
+import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME, CONTACT_EMAIL, YR_API_BASE } from '@/config';
 import type { LocationForecast } from '@/types/weather.types';
 import { weatherConditions } from '@/shared/weatherConditions';
+import { fetchSunTimes } from './sunrise.util';
 
 export class WeatherService {
   private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/complete';
@@ -71,7 +80,7 @@ export class WeatherService {
       }
 
       const response = await fetch(
-        `${this.YR_API_BASE}?lat=${lat}&lon=${lon}`,
+        `${YR_API_BASE}?lat=${lat}&lon=${lon}`,
         {
           headers: {
             'User-Agent': `Gaustablikk-Hytte-App/1.0 (${CONTACT_EMAIL})`,
@@ -86,6 +95,12 @@ export class WeatherService {
 
       const data: LocationForecast = await response.json();
       const transformed = this.transformWeatherData(data, maxDays);
+
+      const sunTimes = await fetchSunTimes(lat, lon);
+      if (sunTimes) {
+        transformed.sunrise = sunTimes.sunrise;
+        transformed.sunset = sunTimes.sunset;
+      }
 
       if (typeof window !== 'undefined') {
         try {
@@ -128,6 +143,9 @@ export class WeatherService {
         icon: item.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
         precipitation: item.data?.next_1_hours?.details?.precipitation_amount || 0,
         windSpeed: Math.round(item.data.instant.details.wind_speed || 0),
+        airPressure: item.data.instant.details.air_pressure_at_sea_level,
+        cloudCover: item.data.instant.details.cloud_area_fraction,
+        windGust: item.data.instant.details.wind_speed_of_gust,
       });
     }
 
@@ -139,12 +157,17 @@ export class WeatherService {
         humidity: Math.round(currentData.data.instant.details.relative_humidity),
         windSpeed: Math.round(currentData.data.instant.details.wind_speed),
         windDirection: this.getWindDirection(currentData.data.instant.details.wind_from_direction),
+        airPressure: currentData.data.instant.details.air_pressure_at_sea_level,
+        cloudCover: currentData.data.instant.details.cloud_area_fraction,
+        windGust: currentData.data.instant.details.wind_speed_of_gust,
         icon: currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
         pressure: Math.round(currentData.data.instant.details.air_pressure_at_sea_level || 0),
         windGust: Math.round(currentData.data.instant.details.wind_speed_of_gust || 0),
         uvIndex: Math.round(currentData.data.instant.details.ultraviolet_index_clear_sky ?? 0),
       },
       forecast,
+      sunrise: undefined,
+      sunset: undefined,
       lastUpdated: now.toISOString(),
     };
   }

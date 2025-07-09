@@ -17,11 +17,23 @@ export interface NextHourData {
   };
 }
 
+export interface NextHoursData {
+  summary?: {
+    symbol_code: string;
+  };
+  details?: {
+    precipitation_amount: number;
+    probability_of_precipitation: number;
+  };
+}
+
 export interface TimeseriesEntry {
   time: string;
   data: {
     instant: { details: InstantDetails };
     next_1_hours?: NextHourData;
+    next_6_hours?: NextHoursData;
+    next_12_hours?: NextHoursData;
   };
 }
 

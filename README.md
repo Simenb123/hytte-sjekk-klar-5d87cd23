@@ -110,7 +110,8 @@ supabase secrets set OPENAI_API_KEY=<din-openai-nøkkel> \
   GOOGLE_CLIENT_ID=<google-klient-id> \
   GOOGLE_CLIENT_SECRET=<google-klient-secret> \
   SEARCH_API_KEY=<din-sok-nokkel> \
-  SEARCH_API_URL=https://api.bing.microsoft.com/v7.0/search
+  SEARCH_API_URL=https://api.bing.microsoft.com/v7.0/search \
+  WEATHER_DATASET=compact
 ```
 
 ### Kjøre Edge Functions lokalt
