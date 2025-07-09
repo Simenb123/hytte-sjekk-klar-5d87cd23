@@ -3,7 +3,7 @@ import 'https://deno.land/x/xhr@0.1.0/mod.ts'
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import OpenAI from 'npm:openai';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import type { LocationForecast } from './types.ts';
+import type { LocationForecast } from '../../../src/types/weather.types';
 import { weatherConditions } from '../../../src/shared/weatherConditions.ts';
 
 const WEATHER_LAT = parseFloat(Deno.env.get('WEATHER_LAT') ?? '59.8726')
