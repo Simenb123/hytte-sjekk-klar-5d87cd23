@@ -3,7 +3,7 @@ import Header from '../components/Header';
 import NewBookingDialog from '../components/booking/NewBookingDialog';
 import EditBookingDialog from '../components/booking/EditBookingDialog';
 import { useBookings, Booking } from '@/hooks/useBookings';
-import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
+import { useGoogleCalendar } from '@/hooks/google-calendar';
 import { toast } from 'sonner';
 import { CalendarSection } from '../components/calendar/CalendarSection';
 import { GoogleCalendarSection } from '../components/calendar/GoogleCalendarSection';
