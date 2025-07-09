@@ -84,6 +84,18 @@ const WeatherApp: React.FC = () => {
               <p className="text-sm opacity-70">Fuktighet</p>
               <p className="text-lg font-semibold">{weatherData.current.humidity}%</p>
             </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <p className="text-sm opacity-70">Lufttrykk</p>
+              <p className="text-lg font-semibold">{weatherData.current.airPressure} hPa</p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <p className="text-sm opacity-70">Skydekke</p>
+              <p className="text-lg font-semibold">{weatherData.current.cloudCover}%</p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg col-span-2">
+              <p className="text-sm opacity-70">Vindkast</p>
+              <p className="text-lg font-semibold">{weatherData.current.windGust} m/s</p>
+            </div>
           </div>
         </div>
         
@@ -142,6 +154,21 @@ const WeatherApp: React.FC = () => {
                       {day.precipitation > 0 && (
                         <p className="text-xs text-blue-600">
                           {day.precipitation}mm nedbør
+                        </p>
+                      )}
+                      {day.airPressure && (
+                        <p className="text-xs text-blue-600">
+                          {day.airPressure} hPa
+                        </p>
+                      )}
+                      {day.cloudCover && (
+                        <p className="text-xs text-blue-600">
+                          {day.cloudCover}% skydekke
+                        </p>
+                      )}
+                      {day.windGust && (
+                        <p className="text-xs text-blue-600">
+                          {day.windGust} m/s kast
                         </p>
                       )}
                     </div>
