@@ -15,6 +15,9 @@ const sampleForecast: LocationForecast = {
               relative_humidity: 80,
               wind_speed: 5,
               wind_from_direction: 90,
+              air_pressure_at_sea_level: 1000,
+              cloud_area_fraction: 50,
+              wind_speed_of_gust: 7,
             },
           },
           next_1_hours: {
@@ -32,6 +35,9 @@ const sampleForecast: LocationForecast = {
               relative_humidity: 70,
               wind_speed: 4,
               wind_from_direction: 180,
+              air_pressure_at_sea_level: 1005,
+              cloud_area_fraction: 60,
+              wind_speed_of_gust: 6,
             },
           },
           next_1_hours: {

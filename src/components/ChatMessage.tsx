@@ -1,6 +1,7 @@
 
-import React from 'react';
-import { Bot, User, Loader2, Mic, Camera } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Bot, User, Loader2, Mic, Camera, Volume2, Square } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from "@/lib/utils";
 
 interface ChatMessageProps {
@@ -21,6 +22,21 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   analysis
 }) => {
   const isUser = role === 'user';
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const toggleSpeak = () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    } else {
+      const utterance = new SpeechSynthesisUtterance(content);
+      utterance.onend = () => setIsSpeaking(false);
+      utteranceRef.current = utterance;
+      setIsSpeaking(true);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
   
   return (
     <div className={cn("flex items-start gap-3", isUser ? "justify-end" : "justify-start")}>
@@ -71,6 +87,24 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 <Mic className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-70" />
               )}
               <p className="whitespace-pre-wrap m-0 text-sm">{content}</p>
+              {!isUser && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleSpeak}
+                  className="w-6 h-6 p-0 text-gray-500 hover:text-gray-700"
+                >
+                  {isSpeaking ? (
+                    <Square className="h-4 w-4" />
+                  ) : (
+                    <Volume2 className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">
+                    {isSpeaking ? 'Stopp opplesning' : 'Les opp melding'}
+                  </span>
+                </Button>
+              )}
             </div>
           </div>
         )}
