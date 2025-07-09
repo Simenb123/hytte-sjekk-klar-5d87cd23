@@ -84,6 +84,22 @@ const WeatherApp: React.FC = () => {
               <p className="text-sm opacity-70">Fuktighet</p>
               <p className="text-lg font-semibold">{weatherData.current.humidity}%</p>
             </div>
+            {weatherData.sunrise && (
+              <div className="bg-white/20 p-3 rounded-lg">
+                <p className="text-sm opacity-70">Soloppgang</p>
+                <p className="text-lg font-semibold">
+                  {new Date(weatherData.sunrise).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            )}
+            {weatherData.sunset && (
+              <div className="bg-white/20 p-3 rounded-lg">
+                <p className="text-sm opacity-70">Solnedgang</p>
+                <p className="text-lg font-semibold">
+                  {new Date(weatherData.sunset).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            )}
           </div>
         </div>
         

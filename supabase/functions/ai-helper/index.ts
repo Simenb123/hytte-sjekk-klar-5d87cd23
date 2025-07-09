@@ -32,7 +32,31 @@ interface WeatherData {
     precipitation: number;
     windSpeed: number;
   }>;
+  sunrise?: string;
+  sunset?: string;
   lastUpdated: string;
+}
+
+async function fetchSunTimes(date: string): Promise<{ sunrise: string; sunset: string } | null> {
+  try {
+    const url = `https://api.met.no/weatherapi/sunrise/3.0/sun?lat=${WEATHER_LAT}&lon=${WEATHER_LON}&date=${date}&offset=+00:00`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': `Gaustablikk-Hytte-App/1.0 (${CONTACT_EMAIL})` },
+    });
+    if (!res.ok) {
+      console.error('Failed to fetch sun times', res.status);
+      return null;
+    }
+    const data = await res.json();
+    const first = data?.location?.time?.[0];
+    const sunrise = first?.sunrise?.time;
+    const sunset = first?.sunset?.time;
+    if (!sunrise || !sunset) return null;
+    return { sunrise, sunset };
+  } catch (e) {
+    console.error('Error fetching sun times:', e);
+    return null;
+  }
 }
 
 async function fetchWeatherData(): Promise<WeatherData | null> {
@@ -54,7 +78,15 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
     }
 
     const data: LocationForecast = await response.json();
-    return transformWeatherData(data);
+    const transformed = transformWeatherData(data);
+
+    const sunTimes = await fetchSunTimes(transformed.lastUpdated.split('T')[0]);
+    if (sunTimes) {
+      transformed.sunrise = sunTimes.sunrise;
+      transformed.sunset = sunTimes.sunset;
+    }
+
+    return transformed;
   } catch (error) {
     console.error('Error fetching weather data:', error);
     return null;
@@ -99,6 +131,8 @@ function transformWeatherData(data: LocationForecast, maxDays = 5): WeatherData 
       windDirection: getWindDirection(currentData.data.instant.details.wind_from_direction),
     },
     forecast,
+    sunrise: undefined,
+    sunset: undefined,
     lastUpdated: now.toISOString(),
   };
 }
@@ -202,6 +236,8 @@ serve(async (req) => {
 - Forhold: ${weatherData.current.condition}
 - Fuktighet: ${weatherData.current.humidity}%
 - Vind: ${weatherData.current.windSpeed} m/s fra ${weatherData.current.windDirection}
+- Soloppgang: ${weatherData.sunrise ? new Date(weatherData.sunrise).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' }) : 'Ukjent'}
+- Solnedgang: ${weatherData.sunset ? new Date(weatherData.sunset).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' }) : 'Ukjent'}
 
 **Værprognose for de neste dagene:**
 ${weatherData.forecast.map(day => `

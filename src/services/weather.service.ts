@@ -21,12 +21,15 @@ export interface WeatherData {
     precipitation: number;
     windSpeed: number;
   }>;
+  sunrise?: string;
+  sunset?: string;
   lastUpdated: string;
 }
 
 import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME, CONTACT_EMAIL } from '@/config';
 import type { LocationForecast } from '@/types/weather.types';
 import { weatherConditions } from '@/shared/weatherConditions';
+import { fetchSunTimes } from './sunrise.util';
 
 export class WeatherService {
   private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
@@ -84,6 +87,12 @@ export class WeatherService {
       const data: LocationForecast = await response.json();
       const transformed = this.transformWeatherData(data, maxDays);
 
+      const sunTimes = await fetchSunTimes(lat, lon);
+      if (sunTimes) {
+        transformed.sunrise = sunTimes.sunrise;
+        transformed.sunset = sunTimes.sunset;
+      }
+
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem(cacheKey, JSON.stringify(transformed));
@@ -139,6 +148,8 @@ export class WeatherService {
         icon: currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
       },
       forecast,
+      sunrise: undefined,
+      sunset: undefined,
       lastUpdated: now.toISOString(),
     };
   }
