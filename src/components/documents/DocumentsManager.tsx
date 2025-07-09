@@ -21,6 +21,7 @@ const DocumentsManager: React.FC = () => {
     summary: '',
     tags: '',
   });
+  const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchDocuments();
@@ -44,13 +45,14 @@ const DocumentsManager: React.FC = () => {
       };
 
       if (editingDoc) {
-        await updateDocument(editingDoc.id, docData);
+        await updateDocument(editingDoc.id, docData, file ?? undefined);
         setEditingDoc(null);
       } else {
-        await addDocument(docData);
+        await addDocument(docData, file ?? undefined);
       }
 
       setFormData({ title: '', category: '', content: '', summary: '', tags: '' });
+      setFile(null);
       setShowAddForm(false);
     } catch (error) {
       console.error('Error saving document:', error);
@@ -66,12 +68,14 @@ const DocumentsManager: React.FC = () => {
       summary: doc.summary || '',
       tags: doc.tags.join(', '),
     });
+    setFile(null);
     setShowAddForm(true);
   };
 
   const cancelEdit = () => {
     setEditingDoc(null);
     setFormData({ title: '', category: '', content: '', summary: '', tags: '' });
+    setFile(null);
     setShowAddForm(false);
   };
 
@@ -163,6 +167,22 @@ const DocumentsManager: React.FC = () => {
                 rows={10}
                 required
               />
+              {editingDoc && editingDoc.file_url && (
+                <a
+                  href={editingDoc.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 underline"
+                >
+                  Last ned eksisterende fil
+                </a>
+              )}
+              <Input
+                type="file"
+                accept=".pdf,.xlsx"
+                onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+              />
+              {file && <p className="text-sm">Valgt fil: {file.name}</p>}
               <Input
                 value={formData.tags}
                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
@@ -207,6 +227,16 @@ const DocumentsManager: React.FC = () => {
                           </Badge>
                         ))}
                       </div>
+                      {doc.file_url && (
+                        <a
+                          href={doc.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 underline mt-2 block"
+                        >
+                          Last ned fil
+                        </a>
+                      )}
                     </div>
                     <div className="flex gap-2 ml-4">
                       <Button 
