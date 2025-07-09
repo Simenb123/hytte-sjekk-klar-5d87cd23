@@ -14,7 +14,11 @@ export const fetchHyttebokEntries = async (): Promise<DbHyttebokEntry[]> => {
     throw error;
   }
 
-  return (data || []) as DbHyttebokEntry[];
+  // Map database 'text' column to 'content' used in the app
+  return (data || []).map((row) => ({
+    ...row,
+    content: (row as any).text,
+  })) as DbHyttebokEntry[];
 };
 
 export const useHyttebokEntries = () => {
@@ -35,8 +39,9 @@ export const useAddHyttebokEntry = () => {
         throw new Error('Bruker ikke autentisert');
       }
 
+      // Database column is named 'text', convert before insert
       const { error } = await supabase.from('hyttebok_entries').insert({
-        content,
+        text: content,
         user_id: user.id,
       });
 
