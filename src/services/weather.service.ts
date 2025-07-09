@@ -8,6 +8,9 @@ export interface WeatherData {
     windSpeed: number;
     windDirection: string;
     icon: string;
+    pressure?: number;
+    windGust?: number;
+    uvIndex?: number;
   };
   forecast: Array<{
     date: string;
@@ -29,7 +32,7 @@ import type { LocationForecast } from '@/types/weather.types';
 import { weatherConditions } from '@/shared/weatherConditions';
 
 export class WeatherService {
-  private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
+  private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/complete';
   private static readonly CACHE_KEY_PREFIX = 'weatherData';
   private static readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
@@ -137,6 +140,9 @@ export class WeatherService {
         windSpeed: Math.round(currentData.data.instant.details.wind_speed),
         windDirection: this.getWindDirection(currentData.data.instant.details.wind_from_direction),
         icon: currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
+        pressure: Math.round(currentData.data.instant.details.air_pressure_at_sea_level || 0),
+        windGust: Math.round(currentData.data.instant.details.wind_speed_of_gust || 0),
+        uvIndex: Math.round(currentData.data.instant.details.ultraviolet_index_clear_sky ?? 0),
       },
       forecast,
       lastUpdated: now.toISOString(),
