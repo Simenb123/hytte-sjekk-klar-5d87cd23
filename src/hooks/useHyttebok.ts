@@ -29,14 +29,14 @@ export const useAddHyttebokEntry = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  return useMutation<void, Error, { text: string }>({
+  return useMutation<void, Error, { content: string }>(
     mutationFn: async ({ text }) => {
       if (!user) {
         throw new Error('Bruker ikke autentisert');
       }
 
       const { error } = await supabase.from('hyttebok_entries').insert({
-        text,
+      content,
         user_id: user.id,
       });
 
