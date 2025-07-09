@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/state/auth';
 import { toast } from 'sonner';
 
 export interface CabinDocument {
@@ -22,6 +23,25 @@ export interface SearchResult extends CabinDocument {
 export function useCabinDocuments() {
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState<CabinDocument[]>([]);
+  const { user } = useAuth();
+
+  const uploadFile = async (file: File): Promise<string> => {
+    if (!user) {
+      throw new Error('Bruker ikke autentisert');
+    }
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage
+      .from('document_files')
+      .upload(fileName, file);
+    if (uploadError) {
+      throw uploadError;
+    }
+    const { data: { publicUrl } } = supabase.storage
+      .from('document_files')
+      .getPublicUrl(fileName);
+    return publicUrl;
+  };
 
   const fetchDocuments = async () => {
     setLoading(true);
@@ -78,11 +98,18 @@ export function useCabinDocuments() {
     }
   };
 
-  const addDocument = async (document: Omit<CabinDocument, 'id' | 'created_at' | 'updated_at'>) => {
+  const addDocument = async (
+    document: Omit<CabinDocument, 'id' | 'created_at' | 'updated_at'>,
+    file?: File
+  ) => {
     try {
+      let fileUrl: string | undefined;
+      if (file) {
+        fileUrl = await uploadFile(file);
+      }
       const { data, error } = await supabase
         .from('cabin_documents')
-        .insert([document])
+        .insert([{ ...document, ...(fileUrl ? { file_url: fileUrl } : {}) }])
         .select()
         .single();
 
@@ -98,11 +125,19 @@ export function useCabinDocuments() {
     }
   };
 
-  const updateDocument = async (id: string, updates: Partial<CabinDocument>) => {
+  const updateDocument = async (
+    id: string,
+    updates: Partial<CabinDocument>,
+    file?: File
+  ) => {
     try {
+      let fileUrl: string | undefined;
+      if (file) {
+        fileUrl = await uploadFile(file);
+      }
       const { data, error } = await supabase
         .from('cabin_documents')
-        .update(updates)
+        .update({ ...updates, ...(fileUrl ? { file_url: fileUrl } : {}) })
         .eq('id', id)
         .select()
         .single();
