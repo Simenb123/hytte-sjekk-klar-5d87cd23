@@ -7,6 +7,9 @@ export interface WeatherData {
     humidity: number;
     windSpeed: number;
     windDirection: string;
+    airPressure?: number;
+    cloudCover?: number;
+    windGust?: number;
     icon: string;
   };
   forecast: Array<{
@@ -20,6 +23,9 @@ export interface WeatherData {
     icon: string;
     precipitation: number;
     windSpeed: number;
+    airPressure?: number;
+    cloudCover?: number;
+    windGust?: number;
   }>;
   lastUpdated: string;
 }
@@ -125,6 +131,9 @@ export class WeatherService {
         icon: item.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
         precipitation: item.data?.next_1_hours?.details?.precipitation_amount || 0,
         windSpeed: Math.round(item.data.instant.details.wind_speed || 0),
+        airPressure: item.data.instant.details.air_pressure_at_sea_level,
+        cloudCover: item.data.instant.details.cloud_area_fraction,
+        windGust: item.data.instant.details.wind_speed_of_gust,
       });
     }
 
@@ -136,6 +145,9 @@ export class WeatherService {
         humidity: Math.round(currentData.data.instant.details.relative_humidity),
         windSpeed: Math.round(currentData.data.instant.details.wind_speed),
         windDirection: this.getWindDirection(currentData.data.instant.details.wind_from_direction),
+        airPressure: currentData.data.instant.details.air_pressure_at_sea_level,
+        cloudCover: currentData.data.instant.details.cloud_area_fraction,
+        windGust: currentData.data.instant.details.wind_speed_of_gust,
         icon: currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
       },
       forecast,
