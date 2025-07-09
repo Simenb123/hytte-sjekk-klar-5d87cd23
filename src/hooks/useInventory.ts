@@ -132,6 +132,25 @@ export type UpdateInventoryItemData = NewInventoryItemData & {
   id: string;
 };
 
+export const mapItemToRecord = (
+  item: Partial<NewInventoryItemData>,
+  userId?: string,
+  defaultCategory: string | null = 'Annet'
+) => ({
+  name: item.name || null,
+  description: item.description || null,
+  brand: item.brand || null,
+  color: item.color || null,
+  location: item.location || null,
+  shelf: item.shelf || null,
+  size: item.size || null,
+  owner: item.owner || null,
+  notes: item.notes || null,
+  category: item.category ?? defaultCategory,
+  family_member_id: item.family_member_id || null,
+  ...(userId ? { user_id: userId } : {})
+});
+
 export const useAddInventoryItem = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -148,20 +167,7 @@ export const useAddInventoryItem = () => {
       // 1. Insert item details
       const { data: itemData, error: itemError } = await supabase
         .from('inventory_items')
-        .insert({ 
-            name: newItem.name, 
-            description: newItem.description, 
-            user_id: user.id,
-            brand: newItem.brand || null,
-            color: newItem.color || null,
-            location: newItem.location || null,
-            shelf: newItem.shelf || null,
-            size: newItem.size || null,
-            owner: newItem.owner || null,
-            notes: newItem.notes || null,
-            category: newItem.category || 'Annet',
-            family_member_id: newItem.family_member_id || null,
-        })
+        .insert(mapItemToRecord(newItem, user.id))
         .select()
         .single();
 
@@ -229,19 +235,7 @@ export const useUpdateInventoryItem = () => {
       // 1. Update item details
       const { error: itemError } = await supabase
         .from('inventory_items')
-        .update({
-            name: itemDetails.name || null,
-            description: itemDetails.description || null,
-            brand: itemDetails.brand || null,
-            color: itemDetails.color || null,
-            location: itemDetails.location || null,
-            shelf: itemDetails.shelf || null,
-            size: itemDetails.size || null,
-            owner: itemDetails.owner || null,
-            notes: itemDetails.notes || null,
-            category: itemDetails.category || null,
-            family_member_id: itemDetails.family_member_id || null,
-        })
+        .update(mapItemToRecord(itemDetails, undefined, null))
         .eq('id', id)
         .eq('user_id', user.id);
 
@@ -345,20 +339,7 @@ export const useBulkAddInventoryItems = () => {
 
       const itemsToInsert = newItems
         .filter(item => Object.values(item).some(val => val)) // Filter out completely empty rows
-        .map(item => ({
-          name: item.name || null,
-          description: item.description || null,
-          brand: item.brand || null,
-          color: item.color || null,
-          location: item.location || null,
-          shelf: item.shelf || null,
-          size: item.size || null,
-          owner: item.owner || null,
-          notes: item.notes || null,
-          category: item.category || 'Annet',
-          family_member_id: item.family_member_id || null,
-          user_id: user.id,
-        }));
+        .map(item => mapItemToRecord(item, user.id));
 
       if (itemsToInsert.length === 0) {
         console.log('[useBulkAddInventoryItems] No valid items to insert');
