@@ -33,8 +33,8 @@ export const useAddHyttebokEntry = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  return useMutation<void, Error, { content: string }>(
-    async ({ content }) => {
+  return useMutation<void, Error, { content: string }>({
+    mutationFn: async ({ content }) => {
       if (!user) {
         throw new Error('Bruker ikke autentisert');
       }
@@ -50,10 +50,8 @@ export const useAddHyttebokEntry = () => {
         throw error;
       }
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['hyttebok_entries'] });
-      },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hyttebok_entries'] });
     },
-  );
+  });
 };
