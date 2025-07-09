@@ -1,5 +1,5 @@
 import React from 'react';
-import Header from '@/components/Header';
+import Layout from '@/layout/Layout';
 import AppHeader from '@/components/AppHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,9 +58,8 @@ export default function FamilyPage() {
   // Check auth status
   if (!user) {
     return (
-      <main className="flex flex-col h-screen bg-hytte-snow">
-        <Header title="Familie" showBackButton={true} />
-        <section className="flex-1 overflow-y-auto p-4 md:p-6 pt-20">
+      <Layout title="Familie" showBackButton>
+        <section className="flex-1 overflow-y-auto p-4 md:p-6">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Ikke logget inn</AlertTitle>
@@ -70,19 +69,14 @@ export default function FamilyPage() {
             </AlertDescription>
           </Alert>
         </section>
-      </main>
+      </Layout>
     );
   }
 
   return (
-    <main className="flex flex-col h-screen bg-hytte-snow">
-      <Header
-        title="Familie"
-        showBackButton={true}
-        rightContent={<FamilyMemberDialog />}
-      />
+    <Layout title="Familie" showBackButton rightContent={<FamilyMemberDialog />}>
 
-      <section className="flex-1 overflow-y-auto p-4 md:p-6 pt-20">
+      <section className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Familieadministrasjon</h1>
@@ -204,6 +198,6 @@ export default function FamilyPage() {
           )}
         </div>
       </section>
-    </main>
+    </Layout>
   );
 }

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import Header from '../components/Header';
+import Layout from '@/layout/Layout';
 import { Cloud, CloudRain, Sun, Wind, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -34,22 +34,20 @@ const WeatherApp: React.FC = () => {
 
   if (loading && !weatherData) {
     return (
-      <main className="min-h-screen bg-gray-50">
-        <Header title="Værmelding" showBackButton />
-        <div className="max-w-lg mx-auto p-4 pt-20">
+      <Layout title="Værmelding" showBackButton>
+        <div className="max-w-lg mx-auto p-4">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         </div>
-      </main>
+      </Layout>
     );
   }
 
   if (error || !weatherData) {
     return (
-      <main className="min-h-screen bg-gray-50">
-        <Header title="Værmelding" showBackButton />
-        <div className="max-w-lg mx-auto p-4 pt-20">
+      <Layout title="Værmelding" showBackButton>
+        <div className="max-w-lg mx-auto p-4">
           <Card>
             <CardContent className="p-6 text-center">
               <p className="text-red-600 mb-4">{error || 'Kunne ikke laste værdata'}</p>
@@ -57,17 +55,16 @@ const WeatherApp: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </main>
+      </Layout>
     );
   }
 
   const CurrentIcon = getWeatherIcon(weatherData.current.condition);
   const currentIconClass = CurrentIcon === Sun ? 'text-yellow-300' : '';
   return (
-    <main className="min-h-screen bg-gray-50">
-      <Header title="Værmelding" showBackButton />
-      
-      <div className="max-w-lg mx-auto p-4 pt-20">
+    <Layout title="Værmelding" showBackButton>
+
+      <div className="max-w-lg mx-auto p-4">
         <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 text-white mb-6">
           <div className="flex justify-between items-center">
             <div>
@@ -167,7 +164,7 @@ const WeatherApp: React.FC = () => {
           <p>Sist oppdatert: {new Date(weatherData.lastUpdated).toLocaleString('no-NO')}</p>
         </div>
       </div>
-    </main>
+    </Layout>
   );
 };
 

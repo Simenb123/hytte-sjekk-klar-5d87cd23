@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { checklistCategories } from '@/models/checklist';
-import Header from '@/components/Header';
+import Layout from '@/layout/Layout';
 import { Settings } from 'lucide-react';
 
 const ChecklistHome: React.FC = () => {
@@ -28,24 +28,23 @@ const ChecklistHome: React.FC = () => {
   });
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <Header
-        title="Sjekklister"
-        showBackButton={true}
-        rightContent={
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate('/checklist-admin')}
-            className="flex items-center gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            Admin
-          </Button>
-        }
-      />
-      
-      <div className="container mx-auto p-6 max-w-4xl pt-24">
+    <Layout
+      title="Sjekklister"
+      showBackButton
+      rightContent={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/checklist-admin')}
+          className="flex items-center gap-2"
+        >
+          <Settings className="h-4 w-4" />
+          Admin
+        </Button>
+      }
+    >
+
+      <div className="container mx-auto p-6 max-w-4xl">
         <div className="mb-6">
           <p className="text-gray-600">Hold oversikt over alle oppgaver for hytta</p>
         </div>
@@ -94,7 +93,7 @@ const ChecklistHome: React.FC = () => {
           ))}
         </div>
       </div>
-    </main>
+    </Layout>
   );
 };
 

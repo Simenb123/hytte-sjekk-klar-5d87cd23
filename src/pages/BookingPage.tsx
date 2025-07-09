@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useBookings } from '@/hooks/useBookings';
 import { useGoogleCalendar } from '@/hooks/google-calendar';
-import Header from '../components/Header';
+import Layout from '@/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -70,14 +70,9 @@ const BookingPage = () => {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-gray-50">
-        <Header
-          title="Bookinger"
-          showBackButton={true}
-          showHomeButton={true}
-        />
-        
-        <div className="max-w-4xl mx-auto p-4 pt-28">
+      <Layout title="Bookinger" showBackButton showHomeButton>
+
+        <div className="max-w-4xl mx-auto p-4">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
@@ -85,39 +80,29 @@ const BookingPage = () => {
             </div>
           </div>
         </div>
-      </main>
+      </Layout>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50">
-        <Header
-          title="Bookinger"
-          showBackButton={true}
-          showHomeButton={true}
-        />
-        
-        <div className="max-w-4xl mx-auto p-4 pt-28">
+      <Layout title="Bookinger" showBackButton showHomeButton>
+
+        <div className="max-w-4xl mx-auto p-4">
           <Alert variant="destructive">
             <AlertDescription>
               Kunne ikke laste bookinger: {error}
             </AlertDescription>
           </Alert>
         </div>
-      </main>
+      </Layout>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <Header
-        title="Bookinger"
-        showBackButton={true}
-        showHomeButton={true}
-      />
-      
-      <div className="max-w-4xl mx-auto p-4 pt-28">
+    <Layout title="Bookinger" showBackButton showHomeButton>
+
+      <div className="max-w-4xl mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900">Mine Bookinger</h2>
@@ -263,7 +248,7 @@ const BookingPage = () => {
           googleIntegration={isGoogleConnected}
         />
       </div>
-    </main>
+    </Layout>
   );
 };
 
