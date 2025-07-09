@@ -30,12 +30,11 @@ export interface WeatherData {
   lastUpdated: string;
 }
 
-import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME, CONTACT_EMAIL } from '@/config';
+import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME, CONTACT_EMAIL, YR_API_BASE } from '@/config';
 import type { LocationForecast } from '@/types/weather.types';
 import { weatherConditions } from '@/shared/weatherConditions';
 
 export class WeatherService {
-  private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
   private static readonly CACHE_KEY_PREFIX = 'weatherData';
   private static readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
@@ -74,7 +73,7 @@ export class WeatherService {
       }
 
       const response = await fetch(
-        `${this.YR_API_BASE}?lat=${lat}&lon=${lon}`,
+        `${YR_API_BASE}?lat=${lat}&lon=${lon}`,
         {
           headers: {
             'User-Agent': `Gaustablikk-Hytte-App/1.0 (${CONTACT_EMAIL})`,
