@@ -90,7 +90,14 @@ function App() {
                 }
               />
               <Route path="/documents" element={<DocumentsPage />} />
-              <Route path="/hyttebok" element={<HyttebokPage />} />
+              <Route
+                path="/hyttebok"
+                element={
+                  <ProtectedRoute>
+                    <HyttebokPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/other-apps" element={<OtherApps />} />
               <Route path="/logs" element={<LogsPage />} />
               <Route
