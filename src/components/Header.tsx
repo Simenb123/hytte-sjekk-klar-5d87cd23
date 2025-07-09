@@ -15,7 +15,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({
   title,
-  showBackButton = false,
+  showBackButton = true,
   showHomeButton = false,
   onBackClick,
   rightContent
@@ -27,8 +27,10 @@ const Header: React.FC<HeaderProps> = ({
     console.log('[Header] Back button clicked, onBackClick handler exists:', !!onBackClick);
     if (onBackClick) {
       onBackClick();
-    } else {
+    } else if (window.history.length > 2) {
       navigate(-1);
+    } else {
+      navigate('/');
     }
   };
 

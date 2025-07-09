@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import Layout from '@/layout/Layout';
 
 const AuthPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -68,10 +69,11 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
-      <div className="mb-8">
-        <Logo />
-      </div>
+    <Layout title="Innlogging">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+        <div className="mb-8">
+          <Logo />
+        </div>
       
       <div className="w-full max-w-md">
         <Tabs defaultValue="login" className="w-full">
@@ -191,7 +193,7 @@ const AuthPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </main>
+    </Layout>
   );
 };
 
