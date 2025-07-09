@@ -12,7 +12,7 @@ export default function HyttebokPage() {
 
   const handleSave = () => {
     if (!text.trim()) return;
-    addEntry.mutate({ text: text.trim() }, { onSuccess: () => setText('') });
+    addEntry.mutate({ content: text.trim() }, { onSuccess: () => setText('') });
   };
 
   const handleSuggest = async () => {
@@ -47,12 +47,12 @@ export default function HyttebokPage() {
           {isLoading && (
             <p className="text-center text-gray-500">Laster...</p>
           )}
-      {entries.map(entry => (
+          {entries.map(entry => (
             <div key={entry.id} className="bg-white p-4 rounded-lg shadow">
               <div className="text-xs text-gray-500 mb-2">
                 {new Date(entry.created_at).toLocaleString('no-NO')}
               </div>
-              <p className="whitespace-pre-wrap">{entry.text}</p>
+              <p className="whitespace-pre-wrap">{entry.content}</p>
             </div>
           ))}
           {entries.length === 0 && (
