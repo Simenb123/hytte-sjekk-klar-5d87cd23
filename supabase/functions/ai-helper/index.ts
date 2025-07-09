@@ -24,6 +24,9 @@ interface WeatherData {
     humidity: number;
     windSpeed: number;
     windDirection: string;
+    pressure?: number;
+    windGust?: number;
+    uvIndex?: number;
   };
   forecast: Array<{
     date: string;
@@ -62,7 +65,8 @@ async function fetchSunTimes(date: string): Promise<{ sunrise: string; sunset: s
 
 async function fetchWeatherData(): Promise<WeatherData | null> {
   try {
-    const YR_API_BASE = `https://api.met.no/weatherapi/locationforecast/2.0/${WEATHER_DATASET}`;
+    const YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/complete';
+
 
     const response = await fetch(
       `${YR_API_BASE}?lat=${WEATHER_LAT}&lon=${WEATHER_LON}`,
@@ -130,6 +134,9 @@ function transformWeatherData(data: LocationForecast, maxDays = 5): WeatherData 
       humidity: Math.round(currentData.data.instant.details.relative_humidity),
       windSpeed: Math.round(currentData.data.instant.details.wind_speed),
       windDirection: getWindDirection(currentData.data.instant.details.wind_from_direction),
+      pressure: Math.round(currentData.data.instant.details.air_pressure_at_sea_level || 0),
+      windGust: Math.round(currentData.data.instant.details.wind_speed_of_gust || 0),
+      uvIndex: Math.round(currentData.data.instant.details.ultraviolet_index_clear_sky ?? 0),
     },
     forecast,
     sunrise: undefined,

@@ -4,8 +4,8 @@ export interface InstantDetails {
   wind_speed: number;
   wind_from_direction: number;
   air_pressure_at_sea_level?: number;
-  cloud_area_fraction?: number;
   wind_speed_of_gust?: number;
+  ultraviolet_index_clear_sky?: number;
 }
 
 export interface NextHourData {

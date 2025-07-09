@@ -15,9 +15,9 @@ const sampleForecast: LocationForecast = {
               relative_humidity: 80,
               wind_speed: 5,
               wind_from_direction: 90,
-              air_pressure_at_sea_level: 1000,
-              cloud_area_fraction: 50,
+              air_pressure_at_sea_level: 1012,
               wind_speed_of_gust: 7,
+              ultraviolet_index_clear_sky: 3,
             },
           },
           next_1_hours: {
@@ -35,9 +35,9 @@ const sampleForecast: LocationForecast = {
               relative_humidity: 70,
               wind_speed: 4,
               wind_from_direction: 180,
-              air_pressure_at_sea_level: 1005,
-              cloud_area_fraction: 60,
+              air_pressure_at_sea_level: 1010,
               wind_speed_of_gust: 6,
+              ultraviolet_index_clear_sky: 4,
             },
           },
           next_1_hours: {
@@ -137,7 +137,9 @@ describe('WeatherService', () => {
   it('handles complete dataset structure', () => {
     const result = (WeatherService as any).transformWeatherData(completeForecast, 2);
     expect(result.current.temperature).toBe(10);
-    expect(result.forecast.length).toBe(2);
+    expect(result.current.pressure).toBe(1012);
+    expect(result.current.windGust).toBe(7);
+    expect(result.current.uvIndex).toBe(3);
   });
 
   it('caches results and uses cache with complete data', async () => {

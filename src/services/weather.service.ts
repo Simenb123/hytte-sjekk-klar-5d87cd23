@@ -11,6 +11,9 @@ export interface WeatherData {
     cloudCover?: number;
     windGust?: number;
     icon: string;
+    pressure?: number;
+    windGust?: number;
+    uvIndex?: number;
   };
   forecast: Array<{
     date: string;
@@ -38,6 +41,7 @@ import { weatherConditions } from '@/shared/weatherConditions';
 import { fetchSunTimes } from './sunrise.util';
 
 export class WeatherService {
+  private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/complete';
   private static readonly CACHE_KEY_PREFIX = 'weatherData';
   private static readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
@@ -157,6 +161,9 @@ export class WeatherService {
         cloudCover: currentData.data.instant.details.cloud_area_fraction,
         windGust: currentData.data.instant.details.wind_speed_of_gust,
         icon: currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
+        pressure: Math.round(currentData.data.instant.details.air_pressure_at_sea_level || 0),
+        windGust: Math.round(currentData.data.instant.details.wind_speed_of_gust || 0),
+        uvIndex: Math.round(currentData.data.instant.details.ultraviolet_index_clear_sky ?? 0),
       },
       forecast,
       sunrise: undefined,
