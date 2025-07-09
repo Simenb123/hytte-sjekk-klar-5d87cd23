@@ -33,7 +33,12 @@ export const useCompletionLogs = () => {
             user_id,
             completed_at,
             is_completed,
-            checklist_items:item_id(id, text, type),
+            checklist_items:item_id(
+              id,
+              text,
+              category,
+              season
+            ),
             profiles:user_id(first_name, last_name)
           `)
           .order('completed_at', { ascending: false });
