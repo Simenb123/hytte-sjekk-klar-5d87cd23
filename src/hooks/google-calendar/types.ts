@@ -1,17 +1,8 @@
 
 import { GoogleEvent, GoogleCalendar } from '@/types/googleCalendar.types';
+import type { GoogleCalendarState } from '@/types/googleCalendar.types';
 
-export interface GoogleCalendarState {
-  isGoogleConnected: boolean;
-  googleTokens: any;
-  isLoadingEvents: boolean;
-  googleEvents: GoogleEvent[];
-  isConnecting: boolean;
-  googleCalendars: GoogleCalendar[];
-  connectionError: string | null;
-  fetchError: string | null;
-  lastRefresh: Date | null;
-}
+export type { GoogleCalendarState } from '@/types/googleCalendar.types';
 
 export const initialState: GoogleCalendarState = {
   isGoogleConnected: false,
