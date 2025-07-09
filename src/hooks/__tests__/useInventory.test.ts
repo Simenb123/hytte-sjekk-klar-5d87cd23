@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useInventory } from '../useInventory';
+import { useInventory, mapItemToRecord } from '../useInventory';
 
 vi.mock('@/state/auth', () => ({
   useAuth: () => ({ user: { id: '1' }, session: {} }),
@@ -31,5 +31,25 @@ describe('useInventory', () => {
     const { result } = renderHook(() => useInventory(), { wrapper });
     await waitFor(() => result.current.isSuccess);
     expect(result.current.data?.[0].name).toBe('Hammer');
+  });
+});
+
+describe('mapItemToRecord', () => {
+  it('maps item fields correctly', () => {
+    const record = mapItemToRecord({ name: 'Hammer', color: 'red' }, '1');
+    expect(record).toEqual({
+      name: 'Hammer',
+      description: null,
+      brand: null,
+      color: 'red',
+      location: null,
+      shelf: null,
+      size: null,
+      owner: null,
+      notes: null,
+      category: 'Annet',
+      family_member_id: null,
+      user_id: '1'
+    });
   });
 });
