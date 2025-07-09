@@ -24,7 +24,7 @@ export interface DbCompletionLog {
 export interface DbHyttebokEntry {
   id: string;
   user_id: string;
-  text: string;
+  content: string;
   created_at: string;
 }
 

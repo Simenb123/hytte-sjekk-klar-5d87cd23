@@ -1,0 +1,28 @@
+import { describe, it, expect, vi } from 'vitest';
+import { renderHook } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useAddHyttebokEntry } from '../useHyttebok';
+
+vi.mock('@/state/auth', () => ({
+  useAuth: () => ({ user: { id: 'uid' } }),
+}));
+
+const insertMock = vi.fn().mockResolvedValue({ error: null });
+const fromMock = vi.fn(() => ({ insert: insertMock }));
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: { from: fromMock },
+}));
+
+const wrapper = ({ children }: { children: React.ReactNode }) => {
+  const client = new QueryClient();
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+};
+
+describe('useAddHyttebokEntry', () => {
+  it('inserts entry with content and user_id', async () => {
+    const { result } = renderHook(() => useAddHyttebokEntry(), { wrapper });
+    await result.current.mutateAsync({ content: 'test' });
+    expect(insertMock).toHaveBeenCalledWith({ content: 'test', user_id: 'uid' });
+  });
+});
