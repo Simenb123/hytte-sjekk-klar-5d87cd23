@@ -5,6 +5,7 @@ import OpenAI from 'npm:openai';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import type { LocationForecast } from '../../../src/types/weather.types';
 import { weatherConditions } from '../../../src/shared/weatherConditions.ts';
+import { corsHeaders } from '../common/cors.ts';
 
 const WEATHER_LAT = parseFloat(Deno.env.get('WEATHER_LAT') ?? '59.8726')
 const WEATHER_LON = parseFloat(Deno.env.get('WEATHER_LON') ?? '8.6475')
@@ -13,11 +14,6 @@ const CONTACT_EMAIL = Deno.env.get('CONTACT_EMAIL') ?? 'contact@gaustablikk.no'
 const SEARCH_API_KEY = Deno.env.get('SEARCH_API_KEY')
 const SEARCH_API_URL = Deno.env.get('SEARCH_API_URL') ?? 'https://api.bing.microsoft.com/v7.0/search'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-}
 
 interface WeatherData {
   location: string;
