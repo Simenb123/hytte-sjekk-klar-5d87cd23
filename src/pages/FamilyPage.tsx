@@ -1,6 +1,5 @@
 import React from 'react';
 import Header from '@/components/Header';
-import AppHeader from '@/components/AppHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
