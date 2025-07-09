@@ -64,13 +64,16 @@ describe('WeatherService', () => {
   });
 
   it('caches results and uses cache', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(sampleForecast) });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(sampleForecast) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ location: { time: [{ sunrise: { time: '2024-01-01T08:00:00Z' }, sunset: { time: '2024-01-01T16:00:00Z' } }] } }) });
     vi.stubGlobal('fetch', fetchMock);
 
     const first = await WeatherService.getWeatherData(1, 1, 2);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     const second = await WeatherService.getWeatherData(1, 1, 2);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(second).toEqual(first);
   });
 });

@@ -27,12 +27,15 @@ export interface WeatherData {
     cloudCover?: number;
     windGust?: number;
   }>;
+  sunrise?: string;
+  sunset?: string;
   lastUpdated: string;
 }
 
 import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME, CONTACT_EMAIL, YR_API_BASE } from '@/config';
 import type { LocationForecast } from '@/types/weather.types';
 import { weatherConditions } from '@/shared/weatherConditions';
+import { fetchSunTimes } from './sunrise.util';
 
 export class WeatherService {
   private static readonly CACHE_KEY_PREFIX = 'weatherData';
@@ -88,6 +91,12 @@ export class WeatherService {
 
       const data: LocationForecast = await response.json();
       const transformed = this.transformWeatherData(data, maxDays);
+
+      const sunTimes = await fetchSunTimes(lat, lon);
+      if (sunTimes) {
+        transformed.sunrise = sunTimes.sunrise;
+        transformed.sunset = sunTimes.sunset;
+      }
 
       if (typeof window !== 'undefined') {
         try {
@@ -150,6 +159,8 @@ export class WeatherService {
         icon: currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
       },
       forecast,
+      sunrise: undefined,
+      sunset: undefined,
       lastUpdated: now.toISOString(),
     };
   }

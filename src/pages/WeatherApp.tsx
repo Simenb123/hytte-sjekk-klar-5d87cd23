@@ -84,18 +84,22 @@ const WeatherApp: React.FC = () => {
               <p className="text-sm opacity-70">Fuktighet</p>
               <p className="text-lg font-semibold">{weatherData.current.humidity}%</p>
             </div>
-            <div className="bg-white/20 p-3 rounded-lg">
-              <p className="text-sm opacity-70">Lufttrykk</p>
-              <p className="text-lg font-semibold">{weatherData.current.airPressure} hPa</p>
-            </div>
-            <div className="bg-white/20 p-3 rounded-lg">
-              <p className="text-sm opacity-70">Skydekke</p>
-              <p className="text-lg font-semibold">{weatherData.current.cloudCover}%</p>
-            </div>
-            <div className="bg-white/20 p-3 rounded-lg col-span-2">
-              <p className="text-sm opacity-70">Vindkast</p>
-              <p className="text-lg font-semibold">{weatherData.current.windGust} m/s</p>
-            </div>
+            {weatherData.sunrise && (
+              <div className="bg-white/20 p-3 rounded-lg">
+                <p className="text-sm opacity-70">Soloppgang</p>
+                <p className="text-lg font-semibold">
+                  {new Date(weatherData.sunrise).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            )}
+            {weatherData.sunset && (
+              <div className="bg-white/20 p-3 rounded-lg">
+                <p className="text-sm opacity-70">Solnedgang</p>
+                <p className="text-lg font-semibold">
+                  {new Date(weatherData.sunset).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            )}
           </div>
         </div>
         
