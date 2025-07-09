@@ -50,8 +50,9 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
-    
+
     --hytte-background: 215 100% 96.1%;
+    --header-h: 4rem;
   }
 
   .dark {
@@ -187,5 +188,9 @@
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
+
+  .app-header {
+    height: var(--header-h);
   }
 }

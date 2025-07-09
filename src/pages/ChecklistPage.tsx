@@ -8,7 +8,7 @@ import { logItemCompletion } from "@/services/checklist.service";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle, Loader2 } from "lucide-react";
-import Header from "@/components/Header";
+import Layout from "@/layout/Layout";
 import { Progress } from "@/components/ui/progress";
 
 export default function ChecklistPage() {
@@ -61,20 +61,19 @@ export default function ChecklistPage() {
   const pageTitle = category ? checklistCategories[category] : "Sjekkliste";
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <Header
-        title={pageTitle}
-        showBackButton={true}
-        rightContent={
-          areas && areas.length > 0 && totalItems > 0 && (
-            <div className="flex items-center gap-2 w-24">
-              <Progress value={progress} className="h-2 w-full" />
-              <span className="text-xs font-semibold text-gray-600">{progress}%</span>
-            </div>
-          )
-        }
-      />
-      <section className="p-4 sm:p-6 max-w-lg mx-auto pt-20">
+    <Layout
+      title={pageTitle}
+      showBackButton
+      rightContent={
+        areas && areas.length > 0 && totalItems > 0 && (
+          <div className="flex items-center gap-2 w-24">
+            <Progress value={progress} className="h-2 w-full" />
+            <span className="text-xs font-semibold text-gray-600">{progress}%</span>
+          </div>
+        )
+      }
+    >
+      <section className="p-4 sm:p-6 max-w-lg mx-auto">
         {areas && areas.length > 0 ? (
           <Accordion type="multiple" defaultValue={areas.map(area => area.id)} className="w-full space-y-3">
             {areas.map((area) => (
@@ -107,6 +106,6 @@ export default function ChecklistPage() {
           </div>
         )}
       </section>
-    </main>
+    </Layout>
   );
 }

@@ -1,5 +1,5 @@
 
-import Header from "@/components/Header";
+import Layout from "@/layout/Layout";
 import InventoryList from "@/components/inventory/InventoryList";
 import InventoryErrorBoundary from "@/components/inventory/InventoryErrorBoundary";
 import InventoryViewToggle from "@/components/inventory/InventoryViewToggle";
@@ -34,17 +34,20 @@ export default function InventoryPage() {
   });
 
   return (
-    <main className="flex flex-col h-screen bg-hytte-snow">
-      <Header title="Inventar" showBackButton={true} rightContent={
+    <Layout
+      title="Inventar"
+      showBackButton
+      rightContent={
         <div className="flex items-center gap-2">
           <AIItemDialog />
           <SkiImportButton />
           <BulkImportButton />
           <NewItemDialog />
         </div>
-      } />
-      
-      <div className="p-4 md:p-6 border-b bg-white space-y-4 mt-16">
+      }
+    >
+
+      <div className="p-4 md:p-6 border-b bg-white space-y-4">
         <InventorySearch
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -74,6 +77,6 @@ export default function InventoryPage() {
           />
         </InventoryErrorBoundary>
       </section>
-    </main>
+    </Layout>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import Header from '../components/Header';
+import Layout from '@/layout/Layout';
 import NewBookingDialog from '../components/booking/NewBookingDialog';
 import EditBookingDialog from '../components/booking/EditBookingDialog';
 import { useBookings, Booking } from '@/hooks/useBookings';
@@ -193,10 +193,9 @@ const CalendarApp: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <Header title="Kalender og booking" showBackButton />
-      
-      <div className="max-w-lg mx-auto p-4 pt-20">
+    <Layout title="Kalender og booking" showBackButton>
+
+      <div className="max-w-lg mx-auto p-4">
         <CalendarSection 
           date={date} 
           onDateSelect={handleDateSelect} 
@@ -271,7 +270,7 @@ const CalendarApp: React.FC = () => {
         googleIntegration={isGoogleConnected}
         sharedCalendarExists={sharedCalendarExists}
       />
-    </main>
+    </Layout>
   );
 };
 

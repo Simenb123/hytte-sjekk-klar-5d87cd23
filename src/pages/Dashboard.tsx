@@ -2,16 +2,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/DashboardCard';
-import Header from '@/components/Header';
+import Layout from '@/layout/Layout';
 import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen } from 'lucide-react';
 
 export default function Dashboard() {
   return (
-    <main className="flex flex-col h-screen bg-hytte-snow">
-      <Header title="Gaustablikk" />
-      
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 pt-20">
-        <div className="max-w-6xl mx-auto">
+    <Layout title="Gaustablikk">
+      <div className="max-w-6xl mx-auto p-4 md:p-6">
           <h1 className="text-3xl font-bold text-hytte-darkblue mb-8 text-center">
             Velkommen til Gaustablikk
           </h1>
@@ -127,7 +124,7 @@ export default function Dashboard() {
             </Link>
           </div>
         </div>
-      </main>
-    </main>
+      </div>
+    </Layout>
   );
 }

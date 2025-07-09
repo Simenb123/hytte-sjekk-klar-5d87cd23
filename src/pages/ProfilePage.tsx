@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/state/auth';
-import Header from '@/components/Header';
+import Layout from '@/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogOut, User, Loader2 } from 'lucide-react';
@@ -27,25 +27,24 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <Header
-        title="Min profil"
-        showBackButton={true}
-        onBackClick={handleBackClick}
-        rightContent={
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={signOut} 
-            className="text-gray-500"
-            title="Logg ut"
-          >
-            <LogOut size={20} />
-          </Button>
-        }
-      />
-      
-      <div className="max-w-md mx-auto p-4 pt-28">
+    <Layout
+      title="Min profil"
+      showBackButton
+      onBackClick={handleBackClick}
+      rightContent={
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={signOut}
+          className="text-gray-500"
+          title="Logg ut"
+        >
+          <LogOut size={20} />
+        </Button>
+      }
+    >
+
+      <div className="max-w-md mx-auto p-4">
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4 text-red-800">
             {error}
@@ -79,7 +78,7 @@ const ProfilePage: React.FC = () => {
           </Card>
         )}
       </div>
-    </main>
+    </Layout>
   );
 };
 
