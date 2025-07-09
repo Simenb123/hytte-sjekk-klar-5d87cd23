@@ -151,3 +151,8 @@ Dette vil kjøre alle testfilene under `src` og `supabase`.
 ## Layout med sticky header
 
 Se [docs/GLOBAL_LAYOUT.md](docs/GLOBAL_LAYOUT.md) for hvordan alle sider bruker en felles `Layout`-komponent med sticky header.
+
+## Integrasjoner
+
+### Skisporet
+Henter løypestatus fra `api.skisporet.no/track_status/:areaId` via Supabase Edge Function.

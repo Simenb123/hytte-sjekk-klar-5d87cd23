@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/DashboardCard';
+import SkisporetCard from '@/components/SkisporetCard';
 import Layout from '@/layout/Layout';
 import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen } from 'lucide-react';
 
@@ -67,6 +68,8 @@ export default function Dashboard() {
                 color="bg-gradient-to-br from-cyan-500 to-cyan-600"
               />
             </Link>
+
+            <SkisporetCard />
             
             <Link to="/ai-helper">
               <DashboardCard
