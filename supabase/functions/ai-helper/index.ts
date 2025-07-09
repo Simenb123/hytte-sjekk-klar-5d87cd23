@@ -9,6 +9,7 @@ import { corsHeaders } from '../common/cors.ts';
 
 const WEATHER_LAT = parseFloat(Deno.env.get('WEATHER_LAT') ?? '59.8726')
 const WEATHER_LON = parseFloat(Deno.env.get('WEATHER_LON') ?? '8.6475')
+const WEATHER_DATASET = Deno.env.get('WEATHER_DATASET') ?? 'compact'
 const LOCATION_NAME = Deno.env.get('LOCATION_NAME') ?? 'Gaustablikk, Tinn'
 const CONTACT_EMAIL = Deno.env.get('CONTACT_EMAIL') ?? 'contact@gaustablikk.no'
 const SEARCH_API_KEY = Deno.env.get('SEARCH_API_KEY')
@@ -61,7 +62,7 @@ async function fetchSunTimes(date: string): Promise<{ sunrise: string; sunset: s
 
 async function fetchWeatherData(): Promise<WeatherData | null> {
   try {
-    const YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/compact';
+    const YR_API_BASE = `https://api.met.no/weatherapi/locationforecast/2.0/${WEATHER_DATASET}`;
 
     const response = await fetch(
       `${YR_API_BASE}?lat=${WEATHER_LAT}&lon=${WEATHER_LON}`,

@@ -160,6 +160,21 @@ const WeatherApp: React.FC = () => {
                           {day.precipitation}mm nedbør
                         </p>
                       )}
+                      {day.airPressure && (
+                        <p className="text-xs text-blue-600">
+                          {day.airPressure} hPa
+                        </p>
+                      )}
+                      {day.cloudCover && (
+                        <p className="text-xs text-blue-600">
+                          {day.cloudCover}% skydekke
+                        </p>
+                      )}
+                      {day.windGust && (
+                        <p className="text-xs text-blue-600">
+                          {day.windGust} m/s kast
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
