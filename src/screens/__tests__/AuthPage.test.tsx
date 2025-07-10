@@ -1,4 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const toast = {
+  success: vi.fn(),
+  error: vi.fn()
+};
+vi.mock('sonner', () => ({ toast }));
+
 import { render, fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AuthPage from '../AuthPage';
@@ -13,12 +20,6 @@ vi.mock('@/state/auth', () => ({
     user: null
   })
 }));
-
-const toast = {
-  success: vi.fn(),
-  error: vi.fn()
-};
-vi.mock('sonner', () => ({ toast }));
 
 const setup = () => render(
   <MemoryRouter>
