@@ -101,9 +101,10 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
         toast.success('Booking oppdatert!');
         onOpenChange(false);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating booking:', error);
-      toast.error(`Kunne ikke oppdatere booking: ${error.message || 'Ukjent feil'}`);
+      const message = error instanceof Error ? error.message : 'Ukjent feil';
+      toast.error(`Kunne ikke oppdatere booking: ${message}`);
     } finally {
       setIsSubmitting(false);
     }
