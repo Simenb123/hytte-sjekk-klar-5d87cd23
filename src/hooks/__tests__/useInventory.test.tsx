@@ -29,8 +29,9 @@ const wrapper = ({ children }: { children: React.ReactNode }) => {
 describe('useInventory', () => {
   it('fetches inventory items', async () => {
     const { result } = renderHook(() => useInventory(), { wrapper });
-    await waitFor(() => result.current.isSuccess);
-    expect(result.current.data?.[0].name).toBe('Hammer');
+    await waitFor(() =>
+      expect(result.current.data?.[0].name).toBe('Hammer')
+    );
   });
 });
 
