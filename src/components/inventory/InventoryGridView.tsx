@@ -29,11 +29,14 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
           <CardContent className="p-4">
             <div className="flex justify-between items-start mb-3">
               <h3 className="font-semibold text-sm line-clamp-2">{item.name}</h3>
-              <EditItemDialog item={item}>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <Edit2 className="h-3 w-3" />
-                </Button>
-              </EditItemDialog>
+              <EditItemDialog
+                item={item}
+                trigger={
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                }
+              />
             </div>
             
             {item.description && (
