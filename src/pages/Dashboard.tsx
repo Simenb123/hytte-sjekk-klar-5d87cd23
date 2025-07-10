@@ -117,15 +117,6 @@ export default function Dashboard() {
             </Link>
           </div>
           
-          <div className="mt-8 text-center">
-            <Link 
-              to="/profile" 
-              className="inline-flex items-center gap-2 px-4 py-2 text-hytte-darkblue hover:text-hytte-darkblue/80 transition-colors"
-            >
-              <User className="h-4 w-4" />
-              Min profil
-            </Link>
-          </div>
         </div>
     </Layout>
   );
