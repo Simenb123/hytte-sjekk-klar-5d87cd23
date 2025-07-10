@@ -4,7 +4,7 @@ const toast = {
   success: vi.fn(),
   error: vi.fn()
 };
-vi.mock('sonner', () => ({ toast }));
+vi.doMock('sonner', () => ({ toast }));
 
 import { render, fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
