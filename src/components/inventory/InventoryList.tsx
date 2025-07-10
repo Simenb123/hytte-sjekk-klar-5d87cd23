@@ -1,6 +1,6 @@
 
 import React, { useMemo } from "react";
-import { useInventory } from "@/hooks/useInventory";
+import { useInventory } from "@/hooks/useInventory/index";
 import { useFamilyMembers } from "@/hooks/useFamilyMembers";
 import InventoryLoading from "./InventoryLoading";
 import InventoryError from "./InventoryError";

@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { useBulkAddInventoryItems } from '@/hooks/useInventory';
+import { useBulkAddInventoryItems } from '@/hooks/useInventory/index';
 import { inventoryDataToImport } from '@/lib/inventoryData';
 import { toast } from 'sonner';
 import { Loader2, FileUp } from 'lucide-react';

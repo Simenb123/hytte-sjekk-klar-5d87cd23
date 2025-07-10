@@ -1,5 +1,5 @@
 
-import { NewInventoryItemData } from '@/hooks/useInventory';
+import { NewInventoryItemData } from '@/hooks/useInventory/index';
 
 export const inventoryDataToImport: NewInventoryItemData[] = [
   { name: 'Hettegenser', brand: 'Finstad skole', color: 'Mørkeblå', location: 'Venstre hylle', shelf: '1', description: 'JERZEES / 50% bomull / 50% polyester', size: 'L', owner: 'EB', notes: '' },

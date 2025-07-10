@@ -1,5 +1,5 @@
 
-import { NewInventoryItemData } from "@/hooks/useInventory";
+import { NewInventoryItemData } from "@/hooks/useInventory/index";
 
 export const skiData: NewInventoryItemData[] = [
     // Langrennski

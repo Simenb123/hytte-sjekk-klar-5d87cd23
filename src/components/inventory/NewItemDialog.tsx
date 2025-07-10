@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useAddInventoryItem, NewInventoryItemData } from '@/hooks/useInventory';
+import { useAddInventoryItem, NewInventoryItemData } from '@/hooks/useInventory/index';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 import { toast } from 'sonner';
 import { Loader2, Plus } from 'lucide-react';
