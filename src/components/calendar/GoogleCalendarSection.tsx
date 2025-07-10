@@ -5,6 +5,8 @@ import { BookingsTab } from './BookingsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { isEdgeFunctionError, isAuthError, formatErrorMessage } from './google/utils';
+import type { GoogleOAuthTokens, GoogleEvent } from '@/types/googleCalendar.types';
+import type { Booking } from '@/hooks/useBookings';
 import { Button } from '@/components/ui/button';
 import { useConnectionRetry } from '@/hooks/google-calendar/useConnectionRetry';
 import { AlertCircle, RefreshCw, InfoIcon } from 'lucide-react';
@@ -13,10 +15,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 interface GoogleCalendarSectionProps {
   isGoogleConnected: boolean;
   isLoadingEvents: boolean;
-  googleEvents: any[];
+  googleEvents: GoogleEvent[];
   fetchGoogleEvents: () => void;
-  googleTokens: any;
-  bookings: any[];
+  googleTokens: GoogleOAuthTokens | null;
+  bookings: Booking[];
   onNewBooking: () => void;
   connectGoogleCalendar: () => void;
   disconnectGoogleCalendar: () => void;

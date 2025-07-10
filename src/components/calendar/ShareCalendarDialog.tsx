@@ -17,11 +17,12 @@ import { CopyIcon, CalendarIcon, Share2, PlusCircle, CheckIcon, InfoIcon, Smartp
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import type { GoogleOAuthTokens } from '@/types/googleCalendar.types';
 
 type ShareCalendarDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  googleTokens: any;
+  googleTokens: GoogleOAuthTokens;
   onSuccess?: () => void;
 };
 
