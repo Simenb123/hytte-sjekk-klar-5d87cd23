@@ -1,15 +1,22 @@
 
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/state/auth';
 import Layout from '@/layout/Layout';
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    // Redirect to dashboard
-    navigate('/dashboard', { replace: true });
-  }, [navigate]);
+    if (isLoading) return;
+
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    } else {
+      navigate('/auth', { replace: true });
+    }
+  }, [navigate, user, isLoading]);
 
   // Show a simple loading state while redirecting
   return (
