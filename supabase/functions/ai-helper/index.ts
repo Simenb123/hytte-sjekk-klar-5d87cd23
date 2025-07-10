@@ -98,7 +98,10 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
   }
 }
 
-function transformWeatherData(data: LocationForecast, maxDays = 5): WeatherData {
+export function transformWeatherData(
+  data: LocationForecast,
+  maxDays = 5,
+): WeatherData {
   const now = new Date();
   const currentData = data.properties.timeseries[0];
   
@@ -145,11 +148,11 @@ function transformWeatherData(data: LocationForecast, maxDays = 5): WeatherData 
   };
 }
 
-function getConditionFromSymbol(symbol: string): string {
+export function getConditionFromSymbol(symbol: string): string {
   return weatherConditions[symbol] || 'Ukjent';
 }
 
-function getWindDirection(degrees: number): string {
+export function getWindDirection(degrees: number): string {
   const directions = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'];
   const index = Math.round(degrees / 45) % 8;
   return directions[index];
@@ -404,7 +407,7 @@ Når du svarer, hold deg til din rolle som hyttehjelper. Hvis du ikke vet svaret
   }
 });
 
-function getÅrstid(måned: number): string {
+export function getÅrstid(måned: number): string {
   if (måned >= 2 && måned <= 4) return 'Vår';
   if (måned >= 5 && måned <= 7) return 'Sommer';
   if (måned >= 8 && måned <= 10) return 'Høst';
