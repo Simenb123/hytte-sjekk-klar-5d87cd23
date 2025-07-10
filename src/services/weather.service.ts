@@ -157,7 +157,6 @@ export class WeatherService {
         windDirection: this.getWindDirection(currentData.data.instant.details.wind_from_direction),
         airPressure: currentData.data.instant.details.air_pressure_at_sea_level,
         cloudCover: currentData.data.instant.details.cloud_area_fraction,
-        windGust: currentData.data.instant.details.wind_speed_of_gust,
         icon: currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
         pressure: Math.round(currentData.data.instant.details.air_pressure_at_sea_level || 0),
         windGust: Math.round(currentData.data.instant.details.wind_speed_of_gust || 0),
