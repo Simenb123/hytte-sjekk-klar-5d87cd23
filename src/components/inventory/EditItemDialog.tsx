@@ -49,17 +49,17 @@ export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
   const updateItemMutation = useUpdateInventoryItem();
   const { data: familyMembers, isLoading: familyMembersLoading } = useFamilyMembers();
 
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {},
+  });
+
   if (!trigger || !React.isValidElement(trigger)) {
     console.error(
       "EditItemDialog: 'trigger' prop must be a single React element"
     );
     return null;
   }
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {},
-  });
 
   useEffect(() => {
     if (item) {
