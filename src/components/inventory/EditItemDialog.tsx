@@ -40,6 +40,7 @@ const formSchema = z.object({
 
 interface EditItemDialogProps {
   item: InventoryItem;
+  /** A single React element used to open the dialog */
   trigger: React.ReactElement;
 }
 
@@ -47,6 +48,13 @@ export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
   const [open, setOpen] = useState(false);
   const updateItemMutation = useUpdateInventoryItem();
   const { data: familyMembers, isLoading: familyMembersLoading } = useFamilyMembers();
+
+  if (!trigger || !React.isValidElement(trigger)) {
+    console.error(
+      "EditItemDialog: 'trigger' prop must be a single React element"
+    );
+    return null;
+  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
