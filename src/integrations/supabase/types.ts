@@ -221,6 +221,7 @@ export type Database = {
           id: string
           is_completed: boolean
           item_id: string
+          booking_id: string | null
           user_id: string
         }
         Insert: {
@@ -228,6 +229,7 @@ export type Database = {
           id?: string
           is_completed?: boolean
           item_id: string
+          booking_id?: string | null
           user_id: string
         }
         Update: {
@@ -235,6 +237,7 @@ export type Database = {
           id?: string
           is_completed?: boolean
           item_id?: string
+          booking_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -250,6 +253,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "completion_logs_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]

@@ -41,12 +41,18 @@ export const fetchChecklistItems = async (category: string, season?: 'winter' | 
 };
 
 // Fetch completion logs for a user, ordered to get the latest status first.
-export const fetchCompletionLogs = async (userId: string): Promise<DbCompletionLog[]> => {
-  const { data, error } = await supabase
+export const fetchCompletionLogs = async (userId: string, bookingId?: string): Promise<DbCompletionLog[]> => {
+  let query = supabase
     .from('completion_logs')
     .select('*')
     .eq('user_id', userId)
     .order('completed_at', { ascending: false });
+
+  if (bookingId) {
+    query = query.eq('booking_id', bookingId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('[fetchCompletionLogs] Error fetching completion logs:', error);
@@ -57,7 +63,12 @@ export const fetchCompletionLogs = async (userId: string): Promise<DbCompletionL
 };
 
 // Log completion of a checklist item
-export const logItemCompletion = async (userId: string, itemId: string, isCompleted: boolean) => {
+export const logItemCompletion = async (
+  userId: string,
+  itemId: string,
+  isCompleted: boolean,
+  bookingId?: string
+) => {
   console.log(`[checklist.service] Logging completion - userId: ${userId}, itemId: ${itemId}, isCompleted: ${isCompleted}`);
   
   try {
@@ -70,6 +81,7 @@ export const logItemCompletion = async (userId: string, itemId: string, isComple
           user_id: userId,
           item_id: itemId,
           is_completed: isCompleted,
+          booking_id: bookingId,
         }
       ]);
       
@@ -87,7 +99,11 @@ export const logItemCompletion = async (userId: string, itemId: string, isComple
 };
 
 // This function is a replacement for getArrivalItemsWithStatus and getDepartureAreasWithItems.
-export const getChecklistForCategory = async (userId: string, category: string): Promise<AreaWithItems[]> => {
+export const getChecklistForCategory = async (
+  userId: string,
+  category: string,
+  bookingId?: string
+): Promise<AreaWithItems[]> => {
   try {
     console.log(`[getChecklistForCategory] Fetching for user: ${userId}, category: ${category}`);
 
@@ -98,7 +114,7 @@ export const getChecklistForCategory = async (userId: string, category: string):
     // Fetch all areas and items for the category, filtered by season
     const areas = await fetchAreas();
     const items = await fetchChecklistItems(category, season);
-    const logs = await fetchCompletionLogs(userId);
+    const logs = await fetchCompletionLogs(userId, bookingId);
 
     console.log(`[getChecklistForCategory] Areas: ${areas.length}, Items: ${items.length}, Logs: ${logs.length}, Season: ${season}`);
 
@@ -166,14 +182,17 @@ export type CategorySummary = {
 };
 
 // New function to get summary for all categories
-export const getCategoriesSummary = async (userId: string): Promise<Record<string, CategorySummary>> => {
+export const getCategoriesSummary = async (
+  userId: string,
+  bookingId?: string
+): Promise<Record<string, CategorySummary>> => {
   try {
     const month = new Date().getMonth();
     const season = (month >= 9 || month <= 2) ? 'winter' : 'summer';
 
     const [allItems, logs] = await Promise.all([
       fetchAllChecklistItemsForSeason(season),
-      fetchCompletionLogs(userId)
+      fetchCompletionLogs(userId, bookingId)
     ]);
 
     const completionMap = new Map<string, boolean>();
