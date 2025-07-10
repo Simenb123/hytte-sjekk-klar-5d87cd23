@@ -192,5 +192,6 @@
 
   .app-header {
     height: var(--header-h);
+    margin: 0;
   }
 }
