@@ -67,11 +67,9 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
+      <DialogTrigger asChild><Button variant="ghost" size="sm">
           <Edit2 className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
+        </Button></DialogTrigger>
       
       <DialogContent className="max-w-md">
         <DialogHeader>
@@ -155,11 +153,9 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
             </Button>
             
             <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={loading || deleteLoading}>
+              <AlertDialogTrigger asChild><Button variant="destructive" disabled={loading || deleteLoading}>
                   <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
+                </Button></AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Slett oppgave</AlertDialogTitle>

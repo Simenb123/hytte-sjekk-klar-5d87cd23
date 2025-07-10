@@ -40,10 +40,10 @@ const formSchema = z.object({
 
 interface EditItemDialogProps {
   item: InventoryItem;
-  children: React.ReactNode;
+  trigger: React.ReactElement;
 }
 
-export function EditItemDialog({ item, children }: EditItemDialogProps) {
+export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
   const [open, setOpen] = useState(false);
   const updateItemMutation = useUpdateInventoryItem();
   const { data: familyMembers, isLoading: familyMembersLoading } = useFamilyMembers();
@@ -83,7 +83,7 @@ export function EditItemDialog({ item, children }: EditItemDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Rediger gjenstand</DialogTitle>

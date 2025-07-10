@@ -37,12 +37,10 @@ export const BulkImportButton = () => {
 
     return (
         <AlertDialog open={open} onOpenChange={setOpen}>
-            <AlertDialogTrigger asChild>
-                <Button variant="outline">
+            <AlertDialogTrigger asChild><Button variant="outline">
                     <FileUp className="mr-2 h-4 w-4" />
                     Importer liste
-                </Button>
-            </AlertDialogTrigger>
+                </Button></AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Er du sikker?</AlertDialogTitle>

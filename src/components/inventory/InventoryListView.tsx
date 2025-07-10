@@ -107,12 +107,15 @@ const InventoryListView: React.FC<InventoryListViewProps> = ({ items }) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <EditItemDialog item={item}>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        <span>Rediger</span>
-                      </DropdownMenuItem>
-                    </EditItemDialog>
+                    <EditItemDialog
+                      item={item}
+                      trigger={
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          <span>Rediger</span>
+                        </DropdownMenuItem>
+                      }
+                    />
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

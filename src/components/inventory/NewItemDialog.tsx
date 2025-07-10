@@ -72,11 +72,9 @@ export function NewItemDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
+      <DialogTrigger asChild><Button>
           <Plus className="mr-2 h-4 w-4" /> Legg til gjenstand
-        </Button>
-      </DialogTrigger>
+        </Button></DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Legg til ny gjenstand</DialogTitle>
