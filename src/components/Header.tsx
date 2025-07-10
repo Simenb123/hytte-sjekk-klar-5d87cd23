@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="app-header sticky top-0 left-0 right-0 bg-primary text-primary-foreground shadow-sm z-30">
-      <div className="max-w-lg mx-auto flex items-center justify-between p-4">
+      <div className="max-w-lg mx-auto flex items-center p-4">
         <div className="flex items-center">
           {showBackButton && (
             <button
@@ -67,8 +67,8 @@ const Header: React.FC<HeaderProps> = ({
 
           <h1 className="text-xl font-semibold text-primary-foreground">{title}</h1>
         </div>
-        
-        <div className="flex items-center gap-2">
+
+        <div className="ml-auto flex items-center gap-2">
           {rightContent}
           {user && <ProfileButton />}
         </div>
