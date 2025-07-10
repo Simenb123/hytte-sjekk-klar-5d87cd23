@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Camera, Loader2, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 import { useInventoryAI } from '@/hooks/useInventoryAI';
-import { useAddInventoryItem } from '@/hooks/useInventory';
+import { useAddInventoryItem } from '@/hooks/useInventory/index';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 import { useToast } from '@/state/toast';
 import ImageCaptureButton from '@/components/chat/ImageCaptureButton';
