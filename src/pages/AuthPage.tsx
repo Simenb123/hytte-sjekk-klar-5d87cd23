@@ -193,7 +193,8 @@ const AuthPage: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </div>
+  </Layout>
   );
 };
 
