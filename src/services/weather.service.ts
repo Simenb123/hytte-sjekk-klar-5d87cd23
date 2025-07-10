@@ -9,7 +9,6 @@ export interface WeatherData {
     windDirection: string;
     airPressure?: number;
     cloudCover?: number;
-    windGust?: number;
     icon: string;
     pressure?: number;
     windGust?: number;
@@ -41,7 +40,6 @@ import { weatherConditions } from '@/shared/weatherConditions';
 import { fetchSunTimes } from './sunrise.util';
 
 export class WeatherService {
-  private static readonly YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/complete';
   private static readonly CACHE_KEY_PREFIX = 'weatherData';
   private static readonly CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
