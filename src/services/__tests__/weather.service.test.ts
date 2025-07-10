@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { WeatherService } from '../weather.service';
+import * as sunriseUtil from '../sunrise.util';
 import type { LocationForecast } from '@/types/weather.types';
 import { LOCATION_NAME } from '@/config';
 
@@ -63,6 +64,9 @@ const completeForecast = {
               relative_humidity: 80,
               wind_speed: 5,
               wind_from_direction: 90,
+              air_pressure_at_sea_level: 1012,
+              wind_speed_of_gust: 7,
+              ultraviolet_index_clear_sky: 3,
             },
           },
           next_1_hours: {
@@ -87,6 +91,9 @@ const completeForecast = {
               relative_humidity: 70,
               wind_speed: 4,
               wind_from_direction: 180,
+              air_pressure_at_sea_level: 1010,
+              wind_speed_of_gust: 6,
+              ultraviolet_index_clear_sky: 4,
             },
           },
           next_1_hours: {
@@ -145,6 +152,7 @@ describe('WeatherService', () => {
   it('caches results and uses cache with complete data', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(completeForecast) });
     vi.stubGlobal('fetch', fetchMock);
+    vi.spyOn(sunriseUtil, 'fetchSunTimes').mockResolvedValue({ sunrise: '', sunset: '' });
 
     const first = await WeatherService.getWeatherData(2, 1, 2);
     expect(fetchMock).toHaveBeenCalledTimes(1);
