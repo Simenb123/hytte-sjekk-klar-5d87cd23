@@ -5,19 +5,21 @@ import { BookingsList } from './BookingsList';
 import { Badge } from '@/components/ui/badge';
 import { isEdgeFunctionError } from './google/utils';
 import { Button } from '@/components/ui/button';
+import type { Booking } from '@/hooks/useBookings';
+import type { GoogleOAuthTokens } from '@/types/googleCalendar.types';
 import { RefreshCw, Calendar, Share2, Smartphone } from 'lucide-react';
 import { ShareCalendarDialog } from './ShareCalendarDialog';
 import { CalendarExportDialog } from './CalendarExportDialog';
 
 interface BookingsTabProps {
-  bookings: any[];
+  bookings: Booking[];
   isGoogleConnected: boolean;
   onNewBooking: () => void;
   onConnectGoogle: () => void;
   onDisconnectGoogle: () => void;
   isConnecting: boolean;
   connectionError: string | null;
-  googleTokens?: any;
+  googleTokens?: GoogleOAuthTokens;
   sharedCalendarExists?: boolean;
   onShareCalendarSuccess?: () => void;
 }

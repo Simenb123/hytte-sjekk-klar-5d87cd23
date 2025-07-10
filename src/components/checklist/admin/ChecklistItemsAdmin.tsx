@@ -89,7 +89,7 @@ export function ChecklistItemsAdmin() {
         description: "Ny oppgave er opprettet.",
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: "Feil",
         description: "Kunne ikke legge til oppgaven.",
@@ -98,7 +98,7 @@ export function ChecklistItemsAdmin() {
     }
   });
 
-  const handleUpdateItem = async (itemId: string, updates: any) => {
+  const handleUpdateItem = async (itemId: string, updates: Partial<ChecklistItem>) => {
     await updateChecklistItem(itemId, updates);
     queryClient.invalidateQueries({ queryKey: ['checklist-items'] });
   };

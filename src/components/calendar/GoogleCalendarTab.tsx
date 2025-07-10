@@ -6,10 +6,11 @@ import { ConnectionErrorView } from './google/ConnectionErrorView';
 import { GoogleAuthErrorView } from './google/GoogleAuthErrorView';
 import { isEdgeFunctionError, isAuthError } from './google/utils';
 import { useConnectionRetry } from '@/hooks/google-calendar/useConnectionRetry';
+import type { GoogleEvent } from '@/types/googleCalendar.types';
 
 interface GoogleCalendarTabProps {
   isLoadingEvents: boolean;
-  googleEvents: any[];
+  googleEvents: GoogleEvent[];
   fetchGoogleEvents: () => void;
   connectGoogleCalendar: () => void;
   fetchError: string | null;

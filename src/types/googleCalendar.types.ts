@@ -22,9 +22,17 @@ export interface GoogleCalendar {
   accessRole: string;
 }
 
+export interface GoogleOAuthTokens {
+  access_token: string;
+  refresh_token?: string;
+  token_type?: string;
+  scope?: string;
+  expiry_date?: number;
+}
+
 export interface GoogleCalendarState {
   isGoogleConnected: boolean;
-  googleTokens: any;
+  googleTokens: GoogleOAuthTokens | null;
   isLoadingEvents: boolean;
   googleEvents: GoogleEvent[];
   isConnecting: boolean;

@@ -13,11 +13,12 @@ import { MobileCalendarGuide } from './MobileCalendarGuide';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import type { GoogleOAuthTokens } from '@/types/googleCalendar.types';
 
 interface CalendarExportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  googleTokens: any;
+  googleTokens: GoogleOAuthTokens | null;
 }
 
 export const CalendarExportDialog: React.FC<CalendarExportDialogProps> = ({

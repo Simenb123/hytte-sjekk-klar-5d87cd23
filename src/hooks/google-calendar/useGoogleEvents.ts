@@ -2,12 +2,13 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { fetchCalendarEvents, fetchCalendarList } from '@/services/googleCalendar.service';
+import type { GoogleOAuthTokens } from '@/types/googleCalendar.types';
 
 export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => void) {
   // Make sure the function signature clearly requires a tokens parameter
-  const fetchGoogleEvents = useCallback(async (tokensToUse?: any) => {
+  const fetchGoogleEvents = useCallback(async (tokensToUse?: GoogleOAuthTokens) => {
     // Allow calling without tokens, but check internally if tokens are available
-    const tokens = tokensToUse || setState(prev => prev.googleTokens);
+    const tokens = tokensToUse || setState((prev: any) => prev.googleTokens);
     
     if (!tokens || !tokens.access_token) {
       console.warn('No valid tokens available for fetching events');
@@ -52,8 +53,8 @@ export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => v
     }
   }, [setState, disconnectGoogleCalendar]);
 
-  const fetchGoogleCalendars = useCallback(async (tokensToUse?: any) => {
-    const tokens = tokensToUse || setState(prev => prev.googleTokens);
+  const fetchGoogleCalendars = useCallback(async (tokensToUse?: GoogleOAuthTokens) => {
+    const tokens = tokensToUse || setState((prev: any) => prev.googleTokens);
     
     if (!tokens || !tokens.access_token) {
       console.warn('No valid tokens available for fetching calendars');

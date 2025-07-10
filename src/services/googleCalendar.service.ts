@@ -1,11 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
-import { GoogleEvent, GoogleCalendar } from '@/types/googleCalendar.types';
+import { GoogleEvent, GoogleCalendar, GoogleOAuthTokens } from '@/types/googleCalendar.types';
 import { toast } from 'sonner';
 
 /**
  * Henter kalender-hendelser fra Google Calendar via Edge Function
  */
-export const fetchCalendarEvents = async (tokens: any): Promise<GoogleEvent[]> => {
+export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<GoogleEvent[]> => {
   try {
     console.log('Fetching calendar events with tokens:', 
       tokens ? { access_token_exists: !!tokens.access_token } : 'No tokens'
@@ -44,7 +44,7 @@ export const fetchCalendarEvents = async (tokens: any): Promise<GoogleEvent[]> =
 /**
  * Henter kalenderliste fra Google via Edge Function
  */
-export const fetchCalendarList = async (tokens: any): Promise<GoogleCalendar[]> => {
+export const fetchCalendarList = async (tokens: GoogleOAuthTokens): Promise<GoogleCalendar[]> => {
   try {
     const { data, error } = await supabase.functions.invoke('google-calendar', {
       method: 'POST',
@@ -112,7 +112,7 @@ export const handleOAuthCallback = async (code: string) => {
 /**
  * Oppretter en ny kalenderhendelse i Google Calendar
  */
-export const createCalendarEvent = async (tokens: any, eventData: {
+export const createCalendarEvent = async (tokens: GoogleOAuthTokens, eventData: {
   title: string;
   description?: string;
   startDate: string;

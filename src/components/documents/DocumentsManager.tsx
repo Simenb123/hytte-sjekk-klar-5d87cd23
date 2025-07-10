@@ -6,12 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Search, Plus, Edit, Trash2 } from 'lucide-react';
-import { useCabinDocuments, CabinDocument } from '@/hooks/useCabinDocuments';
+import { useCabinDocuments, CabinDocument, SearchResult } from '@/hooks/useCabinDocuments';
 
 const DocumentsManager: React.FC = () => {
   const { documents, loading, fetchDocuments, searchDocuments, addDocument, updateDocument, deleteDocument } = useCabinDocuments();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingDoc, setEditingDoc] = useState<CabinDocument | null>(null);
   const [formData, setFormData] = useState({
