@@ -18,12 +18,12 @@ const ChecklistAdminPage: React.FC = () => {
         </div>
 
         <Tabs defaultValue="items" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="items" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 bg-hytte-cream rounded-md">
+            <TabsTrigger value="items" className="flex items-center gap-2 text-hytte-forest data-[state=active]:bg-hytte-forest data-[state=active]:text-hytte-cream">
               <CheckSquare className="h-4 w-4" />
               Sjekkliste-punkter
             </TabsTrigger>
-            <TabsTrigger value="areas" className="flex items-center gap-2">
+            <TabsTrigger value="areas" className="flex items-center gap-2 text-hytte-forest data-[state=active]:bg-hytte-forest data-[state=active]:text-hytte-cream">
               <MapPin className="h-4 w-4" />
               Områder
             </TabsTrigger>
