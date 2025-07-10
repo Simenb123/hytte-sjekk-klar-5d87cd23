@@ -24,7 +24,6 @@ const Header: React.FC<HeaderProps> = ({
   const { user } = useAuth();
 
   const handleBackClick = () => {
-    console.log('[Header] Back button clicked, onBackClick handler exists:', !!onBackClick);
     if (onBackClick) {
       onBackClick();
     } else if (window.history.length > 2) {
@@ -35,7 +34,6 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleHomeClick = () => {
-    console.log('[Header] Home button clicked');
     navigate('/');
   };
 
