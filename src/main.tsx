@@ -2,6 +2,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import AppErrorBoundary from '@/layout/AppErrorBoundary';
 import './index.css';
 
 // Wrap the app in a try-catch to capture any initialization errors
@@ -16,7 +17,9 @@ try {
   const root = createRoot(rootElement);
   root.render(
     // Temporarily remove StrictMode to eliminate double-mounting issues during debugging
-    <App />
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
   );
   
   console.log('[main] Application initialized successfully');
