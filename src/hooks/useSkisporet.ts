@@ -5,7 +5,8 @@ import type { TrackStatus } from '@/types/skisporet';
 export const fetchSkisporet = async (): Promise<TrackStatus> => {
   const { data, error } = await supabase.functions.invoke<TrackStatus>('skisporet-status');
   if (error) throw error;
-  return data as TrackStatus;
+  if (!data) throw new Error('No data returned from skisporet-status');
+  return data;
 };
 
 export const useSkisporet = () =>

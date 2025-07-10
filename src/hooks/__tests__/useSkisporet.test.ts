@@ -5,6 +5,7 @@ import { useSkisporet } from '../useSkisporet';
 import type { TrackStatus } from '@/types/skisporet';
 
 const mockData: TrackStatus = {
+  status: 'ok',
   updated: '2024-01-01T12:00:00Z',
   tracks: [{ id: 1, name: 'Testløype', groomed: '2024-01-01T10:00:00Z' }],
 };
