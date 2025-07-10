@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/state/auth';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import Logo from '@/components/Logo';
+import Logo from '@/components/layout/Logo';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';

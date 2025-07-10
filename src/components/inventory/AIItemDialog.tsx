@@ -11,7 +11,7 @@ import { useInventoryAI } from '@/hooks/useInventoryAI';
 import { useAddInventoryItem } from '@/hooks/useInventory';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 import { useToast } from '@/state/toast';
-import ImageCaptureButton from '@/components/ImageCaptureButton';
+import ImageCaptureButton from '@/components/chat/ImageCaptureButton';
 
 export function AIItemDialog() {
   const [open, setOpen] = useState(false);

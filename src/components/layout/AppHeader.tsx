@@ -5,8 +5,8 @@ import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Logo from './Logo';
-import ProfileButton from './ProfileButton';
-import NotificationBell from './NotificationBell';
+import ProfileButton from '../profile/ProfileButton';
+import NotificationBell from '../notifications/NotificationBell';
 
 const AppHeader = () => {
   const navItems = [

@@ -11,13 +11,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png",
+      "src": "/src/assets/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png",
+      "src": "/src/assets/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

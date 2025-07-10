@@ -1,6 +1,6 @@
 import React from 'react';
 import Layout from '@/layout/Layout';
-import OtherAppCard from '@/components/OtherAppCard';
+import OtherAppCard from '@/components/otherApps/OtherAppCard';
 import { otherApps } from '@/data/other-apps';
 
 const OtherApps: React.FC = () => {
