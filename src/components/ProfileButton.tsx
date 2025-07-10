@@ -47,8 +47,8 @@ const ProfileButton = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-          <Avatar className="h-12 w-12 bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-2 border-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <AvatarFallback className="font-bold text-lg">{getInitials()}</AvatarFallback>
+          <Avatar className="h-12 w-12 bg-gradient-to-r from-blue-500 to-blue-700 text-white border-2 border-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <AvatarFallback className="font-bold text-lg bg-blue-600 text-white">{getInitials()}</AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
