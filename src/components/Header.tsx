@@ -40,32 +40,32 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="app-header sticky top-0 left-0 right-0 bg-white shadow-sm z-30">
+    <header className="app-header sticky top-0 left-0 right-0 bg-primary text-primary-foreground shadow-sm z-30">
       <div className="max-w-lg mx-auto flex items-center justify-between p-4">
         <div className="flex items-center">
           {showBackButton && (
             <button
               onClick={handleBackClick}
-              className="mr-4 p-2 rounded-full hover:bg-gray-100"
+              className="mr-4 p-2 rounded-full hover:bg-primary/80"
               aria-label="Tilbake"
               type="button"
             >
-              <ArrowLeft size={20} className="text-gray-600" />
+              <ArrowLeft size={20} className="text-primary-foreground" />
             </button>
           )}
           
           {showHomeButton && !showBackButton && (
             <button
               onClick={handleHomeClick}
-              className="mr-4 p-2 rounded-full hover:bg-gray-100"
+              className="mr-4 p-2 rounded-full hover:bg-primary/80"
               aria-label="Hjem"
               type="button"
             >
-              <Home size={20} className="text-gray-600" />
+              <Home size={20} className="text-primary-foreground" />
             </button>
           )}
-          
-          <h1 className="text-xl font-semibold text-gray-800">{title}</h1>
+
+          <h1 className="text-xl font-semibold text-primary-foreground">{title}</h1>
         </div>
         
         <div className="flex items-center gap-2">
