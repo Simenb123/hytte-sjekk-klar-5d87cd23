@@ -33,10 +33,9 @@ const ChecklistHome: React.FC = () => {
       showBackButton
       rightContent={
         <Button
-          variant="outline"
           size="sm"
           onClick={() => navigate('/checklist-admin')}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-hytte-forest text-hytte-cream hover:bg-hytte-forest/90"
         >
           <Settings className="h-4 w-4" />
           Admin
