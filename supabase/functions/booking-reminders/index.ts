@@ -3,6 +3,19 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../common/cors.ts'
 
+export function getReminderDateRange(baseDate: Date = new Date()) {
+  const target = new Date(baseDate)
+  target.setDate(baseDate.getDate() + 3)
+
+  const start = new Date(target)
+  start.setHours(0, 0, 0, 0)
+
+  const end = new Date(target)
+  end.setHours(23, 59, 59, 999)
+
+  return { start, end }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -15,17 +28,9 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Get current date and calculate 3 days from now
+    // Get date range for reminders
     const now = new Date()
-    const threeDaysFromNow = new Date()
-    threeDaysFromNow.setDate(now.getDate() + 3)
-    
-    // Format dates for SQL comparison (start and end of the day)
-    const startOfTargetDay = new Date(threeDaysFromNow)
-    startOfTargetDay.setHours(0, 0, 0, 0)
-    
-    const endOfTargetDay = new Date(threeDaysFromNow)
-    endOfTargetDay.setHours(23, 59, 59, 999)
+    const { start: startOfTargetDay, end: endOfTargetDay } = getReminderDateRange(now)
 
     console.log('Checking for bookings starting on:', startOfTargetDay.toISOString())
 
