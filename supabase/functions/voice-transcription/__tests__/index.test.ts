@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { processBase64Chunks } from '../index';
+import { processBase64Chunks } from '../processBase64Chunks';
 
 const base64 = Buffer.from('hello').toString('base64');
 
