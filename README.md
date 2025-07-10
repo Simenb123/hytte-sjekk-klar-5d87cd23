@@ -148,6 +148,12 @@ npm test
 
 Dette vil kjøre alle testfilene under `src` og `supabase`.
 
+## Continuous Integration
+
+GitHub Actions kjører `npm ci`, `npm run lint` og `npm test` automatisk for
+hvert push og hver pull request. Se arbeidsflyten i
+`.github/workflows/ci.yml` for detaljer.
+
 ## Layout med sticky header
 
 Se [docs/GLOBAL_LAYOUT.md](docs/GLOBAL_LAYOUT.md) for hvordan alle sider bruker en felles `Layout`-komponent med sticky header.
