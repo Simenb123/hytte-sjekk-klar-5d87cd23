@@ -10,7 +10,7 @@ vi.mock('@/state/auth', () => ({
 const insertMock = vi.fn().mockResolvedValue({ error: null });
 const fromMock = vi.fn(() => ({ insert: insertMock }));
 
-vi.mock('@/integrations/supabase/client', () => ({
+vi.doMock('@/integrations/supabase/client', () => ({
   supabase: { from: fromMock },
 }));
 
