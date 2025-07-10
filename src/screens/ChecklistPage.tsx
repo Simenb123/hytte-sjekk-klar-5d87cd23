@@ -10,16 +10,25 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { CheckCircle, Loader2 } from "lucide-react";
 import Layout from "@/layout/Layout";
 import { Progress } from "@/components/ui/progress";
+import { useBookings } from "@/hooks/useBookings";
+import { useMemo } from "react";
 
 export default function ChecklistPage() {
   const { category } = useParams<{ category: ChecklistCategory }>();
   const { user } = useAuth();
+  const { bookings } = useBookings();
+
+  const activeBookingId = useMemo(() => {
+    const now = new Date();
+    const active = bookings.find(b => b.from <= now && now <= b.to);
+    return active?.id;
+  }, [bookings]);
 
   const { data: areas, isLoading, error, refetch } = useQuery({
-    queryKey: ['checklist', category, user?.id],
+    queryKey: ['checklist', category, user?.id, activeBookingId],
     queryFn: () => {
       if (!user?.id || !category) throw new Error("User or category not defined");
-      return getChecklistForCategory(user.id, category);
+      return getChecklistForCategory(user.id, category, activeBookingId);
     },
     enabled: !!user?.id && !!category,
   });
@@ -30,7 +39,7 @@ export default function ChecklistPage() {
       return;
     }
     try {
-      await logItemCompletion(user.id, itemId, !isCompleted);
+      await logItemCompletion(user.id, itemId, !isCompleted, activeBookingId);
       refetch();
       toast.success("Status oppdatert");
     } catch (error) {

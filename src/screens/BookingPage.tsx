@@ -15,10 +15,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BookingFamilyMembers from '@/components/booking/BookingFamilyMembers';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/state/auth';
+import { useQuery } from '@tanstack/react-query';
+import { getCategoriesSummary } from '@/services/checklist.service';
+import { Progress } from '@/components/ui/progress';
 
 const BookingPage = () => {
   const [showNewBooking, setShowNewBooking] = useState(false);
   const { bookings, isLoading, error, fetchBookings } = useBookings();
+  const { user } = useAuth();
   const { 
     isGoogleConnected, 
     googleEvents = [],
@@ -61,6 +66,26 @@ const BookingPage = () => {
       default:
         return null;
     }
+  };
+
+  const BookingProgress: React.FC<{ bookingId: string; category: string }> = ({ bookingId, category }) => {
+    const { data } = useQuery({
+      queryKey: ['bookingProgress', bookingId, category, user?.id],
+      queryFn: () => {
+        if (!user?.id) throw new Error('No user');
+        return getCategoriesSummary(user.id, bookingId);
+      },
+      enabled: !!user?.id,
+    });
+
+    const progress = data?.[category]?.progress ?? 0;
+
+    return (
+      <div className="flex items-center gap-2 mt-2">
+        <Progress value={progress} className="h-2 flex-1" />
+        <span className="text-xs text-gray-600">{progress}%</span>
+      </div>
+    );
   };
 
   const handleNewBookingSuccess = async (booking: any) => {
@@ -145,6 +170,7 @@ const BookingPage = () => {
               <div className="grid gap-4">
                 {bookings.map((booking) => {
                   const status = getBookingStatus(booking.from, booking.to);
+                  const checklistCategory = getChecklistCategory(booking.from, booking.to);
                   return (
                     <Card key={booking.id} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
@@ -174,6 +200,7 @@ const BookingPage = () => {
                           </div>
                         </div>
                         <BookingFamilyMembers familyMembers={booking.familyMembers || []} />
+                        <BookingProgress bookingId={booking.id} category={checklistCategory} />
                         <div className="mt-3 flex gap-2">
                           <Link to={`/checklist/${getChecklistCategory(booking.from, booking.to)}`} className="text-sm text-blue-600 underline">
                             Gå til sjekkliste
