@@ -15,6 +15,9 @@ const CONTACT_EMAIL = Deno.env.get('CONTACT_EMAIL') ?? 'contact@gaustablikk.no'
 const SEARCH_API_KEY = Deno.env.get('SEARCH_API_KEY')
 const SEARCH_API_URL = Deno.env.get('SEARCH_API_URL') ?? 'https://api.bing.microsoft.com/v7.0/search'
 
+let weatherCache: { data: WeatherData | null; timestamp: number } | null = null;
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
 
 interface WeatherData {
   location: string;
@@ -65,8 +68,13 @@ async function fetchSunTimes(date: string): Promise<{ sunrise: string; sunset: s
 
 async function fetchWeatherData(): Promise<WeatherData | null> {
   try {
-    const YR_API_BASE = 'https://api.met.no/weatherapi/locationforecast/2.0/complete';
+    const now = Date.now();
+    if (weatherCache && now - weatherCache.timestamp < CACHE_TTL_MS) {
+      return weatherCache.data;
+    }
 
+    const YR_API_BASE =
+      `https://api.met.no/weatherapi/locationforecast/2.0/${WEATHER_DATASET}`;
 
     const response = await fetch(
       `${YR_API_BASE}?lat=${WEATHER_LAT}&lon=${WEATHER_LON}`,
@@ -91,6 +99,7 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
       transformed.sunset = sunTimes.sunset;
     }
 
+    weatherCache = { data: transformed, timestamp: now };
     return transformed;
   } catch (error) {
     console.error('Error fetching weather data:', error);

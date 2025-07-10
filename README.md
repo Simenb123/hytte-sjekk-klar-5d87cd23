@@ -63,7 +63,8 @@ This project is built with:
 ## Weather data caching
 
 The app stores the last successful weather forecast in `localStorage` for 30 minutes.
-Use the refresh icon in the weather view to clear this cache and fetch new data from YR.
+The AI helper edge function also caches weather responses for about 30 minutes to reduce calls to YR.
+Use the refresh icon in the weather view to clear the client‑side cache and fetch new data from YR.
 
 ## How can I deploy this project?
 
