@@ -98,7 +98,7 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
   }
 }
 
-function transformWeatherData(data: LocationForecast, maxDays = 5): WeatherData {
+export function transformWeatherData(data: LocationForecast, maxDays = 5): WeatherData {
   const now = new Date();
   const currentData = data.properties.timeseries[0];
   
@@ -145,17 +145,17 @@ function transformWeatherData(data: LocationForecast, maxDays = 5): WeatherData 
   };
 }
 
-function getConditionFromSymbol(symbol: string): string {
+export function getConditionFromSymbol(symbol: string): string {
   return weatherConditions[symbol] || 'Ukjent';
 }
 
-function getWindDirection(degrees: number): string {
+export function getWindDirection(degrees: number): string {
   const directions = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'];
   const index = Math.round(degrees / 45) % 8;
   return directions[index];
 }
 
-async function fetchWebResults(query: string) {
+export async function fetchWebResults(query: string) {
   if (!SEARCH_API_KEY) {
     console.log('SEARCH_API_KEY not set, skipping web search');
     return [];
