@@ -4,28 +4,28 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/state/auth';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import './App.css';
 
 // Import pages
-import Index from './pages/Index';
-import Dashboard from './pages/Dashboard';
-import ChecklistPage from './pages/ChecklistPage';
-import ChecklistHome from './pages/ChecklistHome';
-import ChecklistAdminPage from './pages/ChecklistAdminPage';
-import InventoryPage from './pages/InventoryPage';
-import FamilyPage from './pages/FamilyPage';
-import BookingPage from './pages/BookingPage';
-import CalendarApp from './pages/CalendarApp';
-import WeatherApp from './pages/WeatherApp';
-import AiHelperPage from './pages/AiHelperPage';
-import DocumentsPage from './pages/DocumentsPage';
-import HyttebokPage from './pages/HyttebokPage';
-import OtherApps from './pages/OtherApps';
-import LogsPage from './pages/LogsPage';
-import ProfilePage from './pages/ProfilePage';
-import AuthPage from './pages/AuthPage';
-import NotFound from './pages/NotFound';
+import Index from './screens/Index';
+import Dashboard from './screens/Dashboard';
+import ChecklistPage from './screens/ChecklistPage';
+import ChecklistHome from './screens/ChecklistHome';
+import ChecklistAdminPage from './screens/ChecklistAdminPage';
+import InventoryPage from './screens/InventoryPage';
+import FamilyPage from './screens/FamilyPage';
+import BookingPage from './screens/BookingPage';
+import CalendarApp from './screens/CalendarApp';
+import WeatherApp from './screens/WeatherApp';
+import AiHelperPage from './screens/AiHelperPage';
+import DocumentsPage from './screens/DocumentsPage';
+import HyttebokPage from './screens/HyttebokPage';
+import OtherApps from './screens/OtherApps';
+import LogsPage from './screens/LogsPage';
+import ProfilePage from './screens/ProfilePage';
+import AuthPage from './screens/AuthPage';
+import NotFound from './screens/NotFound';
 
 const queryClient = new QueryClient();
 

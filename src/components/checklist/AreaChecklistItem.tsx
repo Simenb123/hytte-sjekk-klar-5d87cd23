@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import ChecklistItem from '../ChecklistItem';
+import ChecklistItem from './ChecklistItem';
 
 interface AreaChecklistItemProps {
   item: {

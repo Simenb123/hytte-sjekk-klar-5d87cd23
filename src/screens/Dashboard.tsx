@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import DashboardCard from '@/components/DashboardCard';
-import SkisporetCard from '@/components/SkisporetCard';
+import DashboardCard from '@/components/dashboard/DashboardCard';
+import SkisporetCard from '@/components/dashboard/SkisporetCard';
 import Layout from '@/layout/Layout';
 import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen } from 'lucide-react';
 

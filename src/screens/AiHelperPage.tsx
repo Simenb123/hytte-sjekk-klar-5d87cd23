@@ -1,6 +1,6 @@
 
 import Layout from "@/layout/Layout";
-import AiChat from "@/components/AiChat";
+import AiChat from "@/components/chat/AiChat";
 
 export default function AiHelperPage() {
   return (

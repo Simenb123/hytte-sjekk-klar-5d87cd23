@@ -1,6 +1,6 @@
 import React from 'react';
 import Layout from '@/layout/Layout';
-import AppHeader from '@/components/AppHeader';
+import AppHeader from '@/components/layout/AppHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

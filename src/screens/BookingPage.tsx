@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, Plus, Clock, Users, MapPin, Calendar } from 'lucide-react';
 import { format, isToday, isTomorrow, isThisWeek, isPast } from 'date-fns';
 import { nb } from 'date-fns/locale';
-import NewBookingDialog from '@/components/NewBookingDialog';
+import NewBookingDialog from '@/components/booking/NewBookingDialogFull';
 import { BookingsList } from '@/components/calendar/BookingsList';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

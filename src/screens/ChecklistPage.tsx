@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getChecklistForCategory } from "@/services/checklist.service";
 import { useAuth } from '@/state/auth';
 import { ChecklistCategory, checklistCategories } from "@/models/checklist";
-import ChecklistItem from "@/components/ChecklistItem";
+import ChecklistItem from "@/components/checklist/ChecklistItem";
 import { logItemCompletion } from "@/services/checklist.service";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
