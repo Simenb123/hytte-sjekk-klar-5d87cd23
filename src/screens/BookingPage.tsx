@@ -19,6 +19,9 @@ import { useAuth } from '@/state/auth';
 import { useQuery } from '@tanstack/react-query';
 import { getCategoriesSummary } from '@/services/checklist.service';
 import { Progress } from '@/components/ui/progress';
+import type { Database } from '@/integrations/supabase/types';
+
+type BookingRow = Database['public']['Tables']['bookings']['Row'];
 
 const BookingPage = () => {
   const [showNewBooking, setShowNewBooking] = useState(false);
@@ -88,7 +91,9 @@ const BookingPage = () => {
     );
   };
 
-  const handleNewBookingSuccess = async (booking: any) => {
+  const handleNewBookingSuccess = async (
+    _booking: BookingRow & { useSharedCalendar: boolean }
+  ) => {
     await fetchBookings();
     setShowNewBooking(false);
   };
