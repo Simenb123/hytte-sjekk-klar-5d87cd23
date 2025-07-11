@@ -44,6 +44,17 @@ interface WeatherData {
   lastUpdated: string;
 }
 
+interface WebSearchResult {
+  name: string;
+  url: string;
+  snippet: string;
+}
+
+interface HistoryMessage {
+  role: string;
+  content: string;
+}
+
 async function fetchSunTimes(date: string): Promise<{ sunrise: string; sunset: string } | null> {
   try {
     const url = `https://api.met.no/weatherapi/sunrise/3.0/sun?lat=${WEATHER_LAT}&lon=${WEATHER_LON}&date=${date}&offset=+00:00`;
@@ -182,7 +193,7 @@ async function fetchWebResults(query: string) {
       return [];
     }
     const data = await res.json();
-    return data.webPages?.value?.map((item: any) => ({
+    return data.webPages?.value?.map((item: WebSearchResult) => ({
       title: item.name,
       url: item.url,
       snippet: item.snippet
@@ -381,7 +392,7 @@ Når du svarer, hold deg til din rolle som hyttehjelper. Hvis du ikke vet svaret
     // Prepare messages with optional image
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...history.map((msg: any) => {
+      ...history.map((msg: HistoryMessage) => {
         if (msg.role === 'user' && image && msg === history[history.length - 1]) {
           // Add image to the last user message
           return {
