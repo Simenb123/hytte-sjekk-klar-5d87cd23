@@ -1,7 +1,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/state/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { addDays, isBefore, startOfDay } from 'date-fns';
 import { toast } from 'sonner';
 

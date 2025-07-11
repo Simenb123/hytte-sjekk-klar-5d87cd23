@@ -8,7 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FamilyMemberDialog } from '@/components/family/FamilyMemberDialog';
 import { useFamilyMembers, useDeleteFamilyMember } from '@/hooks/useFamilyMembers';
-import { useAuth } from '@/state/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { Users, Calendar, MoreVertical, Trash2, Edit, AlertTriangle, Info } from 'lucide-react';
 import {
   DropdownMenu,

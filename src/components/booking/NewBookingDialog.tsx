@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import BookingForm from './BookingForm';
 import { useBookingSubmit } from './useBookingSubmit';
-import { useAuth } from '@/state/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { BookingFormData } from './types';
 

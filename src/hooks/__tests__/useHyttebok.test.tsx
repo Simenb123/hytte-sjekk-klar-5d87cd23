@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAddHyttebokEntry } from '../useHyttebok';
 
-vi.mock('@/state/auth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: { id: 'uid' } }),
 }));
 

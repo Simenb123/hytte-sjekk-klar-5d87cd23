@@ -13,7 +13,7 @@ import AuthPage from '../AuthPage';
 const signInMock = vi.fn();
 const signUpMock = vi.fn();
 
-vi.mock('@/state/auth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
     signIn: signInMock,
     signUp: signUpMock,
