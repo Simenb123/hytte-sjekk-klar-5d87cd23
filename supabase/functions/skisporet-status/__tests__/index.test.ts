@@ -1,14 +1,19 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-let handler: (req: Request) => Promise<Response>
+let handler: ((req: Request) => Promise<Response>) | undefined
 
 beforeEach(async () => {
   vi.resetModules()
-  handler = undefined as any
+  handler = undefined
 
-  ;(globalThis as any).Deno = {
+  interface TestDeno {
+    env: { get: (key: string) => string | undefined }
+  }
+  ;(globalThis as unknown as { Deno: TestDeno }).Deno = {
     env: {
-      get: vi.fn((key: string) => (key === 'SKISPORET_AREA_ID' ? '42' : undefined)),
+      get: vi.fn((key: string) =>
+        key === 'SKISPORET_AREA_ID' ? '42' : undefined
+      ),
     },
   }
 
@@ -29,7 +34,7 @@ describe('skisporet-status function', () => {
       headers: { 'Content-Type': 'application/json' },
     })))
 
-    const res = await handler(new Request('http://localhost'))
+    const res = await handler!(new Request('http://localhost'))
     expect(res.headers.get('Cache-Control')).toBe('s-maxage=300')
     const json = await res.json()
     expect(json).toEqual({ status: 'ok', ...mockData })
