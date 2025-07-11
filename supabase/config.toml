@@ -1,5 +1,14 @@
 
 project_id = "oztvpaviseudhobxmzgi"
 
+[auth]
+enabled = true
+site_url = "https://effective-yodel-g46644wqwp74c9995.github.dev"
+additional_redirect_urls = [
+  "https://effective-yodel-g46644wqwp74c9995.github.dev/*",
+  "http://localhost:8080/*",
+  "https://hytte-sjekk-klar-5d87cd23.vercel.app/*"
+]
+
 [functions.google-calendar]
 verify_jwt = true
