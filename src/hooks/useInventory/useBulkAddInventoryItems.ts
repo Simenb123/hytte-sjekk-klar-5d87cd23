@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/state/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { mapItemToRecord, NewInventoryItemData } from './types';
 
 export const useBulkAddInventoryItems = () => {

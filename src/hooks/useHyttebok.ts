@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { DbHyttebokEntry } from '@/types/database.types';
-import { useAuth } from '@/state/auth';
+import { useAuth } from '@/hooks/useAuth';
 
 import type { Database } from '@/integrations/supabase/types';
 

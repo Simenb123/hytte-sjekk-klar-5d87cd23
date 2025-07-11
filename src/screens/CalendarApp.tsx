@@ -10,7 +10,7 @@ import { GoogleCalendarSection } from '../components/calendar/GoogleCalendarSect
 import { CalendarInfo } from '../components/calendar/CalendarInfo';
 import ReminderTestButton from '../components/calendar/ReminderTestButton';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/state/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from 'lucide-react';
 import BookingListItem from '../components/booking/BookingListItem';

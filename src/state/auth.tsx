@@ -26,7 +26,7 @@ interface AuthContextType {
 }
 
 // React context used to provide authentication state throughout the app
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /** Context provider wrapping the application with auth state. */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       console.log('[AuthContext] Sign in successful for user:', data.user?.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AuthContext] Sign in error:', error);
       throw error;
     }
@@ -152,7 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       console.log('[AuthContext] Sign up successful for user:', data.user?.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AuthContext] Sign up error:', error);
       throw error;
     }
@@ -180,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       console.log('[AuthContext] Sign out successful');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[AuthContext] Sign out error:', error);
       // Don't throw errors from signOut as it can break the UI
       // The user appears logged out locally anyway
@@ -204,11 +204,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-/** Hook for convenient access to auth context. */
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};

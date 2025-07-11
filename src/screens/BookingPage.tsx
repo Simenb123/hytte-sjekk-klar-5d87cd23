@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BookingFamilyMembers from '@/components/booking/BookingFamilyMembers';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/state/auth';
+import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { getCategoriesSummary } from '@/services/checklist.service';
 import { Progress } from '@/components/ui/progress';

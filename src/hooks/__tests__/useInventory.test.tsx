@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useInventory, mapItemToRecord } from '../useInventory';
 
-vi.mock('@/state/auth', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: { id: '1' }, session: {} }),
 }));
 
