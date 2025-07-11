@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Camera, Loader2, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
-import { useInventoryAI } from '@/hooks/useInventoryAI';
+import { useInventoryAI, InventoryAIResult } from '@/hooks/useInventoryAI';
 import { useAddInventoryItem } from '@/hooks/useInventory/index';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 import { useToast } from '@/state/toast';
@@ -17,7 +17,7 @@ export function AIItemDialog() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<'capture' | 'analyze' | 'edit'>('capture');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [analysisResult, setAnalysisResult] = useState<InventoryAIResult | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
