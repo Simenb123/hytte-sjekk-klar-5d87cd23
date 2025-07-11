@@ -16,11 +16,12 @@ export const useBookingNotifications = () => {
   const { user } = useAuth();
 
   const createNotification = useCallback(
-    title: string,
-    message: string,
-    type: 'info' | 'warning' | 'error' | 'success' = 'info',
-    relatedBookingId?: string
-  ) => {
+    async (
+      title: string,
+      message: string,
+      type: 'info' | 'warning' | 'error' | 'success' = 'info',
+      relatedBookingId?: string
+    ) => {
     if (!user) return;
 
     try {
