@@ -83,9 +83,10 @@ const CalendarApp: React.FC = () => {
             }
             
             window.location.href = '/calendar';
-          } catch (err: any) {
+          } catch (err: unknown) {
             console.error('Error processing OAuth callback:', err);
-            toast.error(`Feil ved behandling av Google Calendar-autentisering: ${err.message || 'Ukjent feil'}`);
+            const error = err as { message?: string };
+            toast.error(`Feil ved behandling av Google Calendar-autentisering: ${error.message || 'Ukjent feil'}`);
             window.location.href = '/calendar';
           }
         } else {
@@ -158,8 +159,9 @@ const CalendarApp: React.FC = () => {
           
           fetchGoogleEvents();
         }
-      } catch (error: any) {
-        console.error('Error creating Google Calendar event:', error);
+      } catch (err: unknown) {
+        console.error('Error creating Google Calendar event:', err);
+        const error = err as { message?: string };
         toast.error(`Kunne ikke opprette hendelse i Google Calendar: ${error.message || 'Ukjent feil'}`);
       }
     }
