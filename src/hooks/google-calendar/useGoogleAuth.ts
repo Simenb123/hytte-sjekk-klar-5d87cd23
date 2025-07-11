@@ -1,9 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { handleOAuthCallback as processOAuthCallback } from '@/services/googleCalendar.service';
+import type { GoogleCalendarState } from './types';
 
-export function useGoogleAuth(setState: any) {
+export function useGoogleAuth(
+  setState: Dispatch<SetStateAction<GoogleCalendarState>>
+) {
   const [isAutoRetrying, setIsAutoRetrying] = useState(false);
   
   const connectGoogleCalendar = useCallback(async () => {
@@ -67,52 +70,68 @@ export function useGoogleAuth(setState: any) {
         } else {
           throw new Error('Ingen autoriseringslenke mottatt fra serveren');
         }
-      } catch (fetchError: any) {
+      } catch (fetchError: unknown) {
         console.error('Error detail:', fetchError);
         
         try {
+          const nav = navigator as Navigator & {
+            connection?: NetworkInformation;
+          };
+          const connection = nav.connection;
           const networkState = {
             online: navigator.onLine,
-            connection: (navigator as any).connection 
-              ? { 
-                  type: (navigator as any).connection.type,
-                  effectiveType: (navigator as any).connection.effectiveType,
-                  downlink: (navigator as any).connection.downlink,
-                  rtt: (navigator as any).connection.rtt,
+            connection: connection
+              ? {
+                  type: connection.type,
+                  effectiveType: connection.effectiveType,
+                  downlink: connection.downlink,
+                  rtt: connection.rtt,
                 }
               : 'Not available',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           };
           console.log('Network state during error:', networkState);
         } catch (e) {
           console.log('Could not retrieve network state:', e);
         }
-        
-        if (fetchError.name === 'FunctionsFetchError' || 
-            fetchError.message?.includes('Failed to fetch') ||
-            fetchError.context?.value?.message?.includes('Failed to fetch')) {
+
+        const fe = fetchError as {
+          name?: string;
+          message?: string;
+          context?: { value?: { message?: string } };
+        };
+        if (
+          fe.name === 'FunctionsFetchError' ||
+          fe.message?.includes('Failed to fetch') ||
+          fe.context?.value?.message?.includes('Failed to fetch')
+        ) {
           throw new Error('Nettverksfeil ved tilkobling til Edge Function. Sjekk at Edge Function er aktiv og at alle miljøvariabler er riktig satt opp.');
         }
-        
-        throw fetchError;
+
+        throw fetchError as Error;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error connecting to Google Calendar:', error);
-      
+
       let errorMessage = 'Kunne ikke koble til Google Calendar.';
-      
-      if (error.message?.includes('Edge Function') || 
-          error.message?.includes('Nettverksfeil')) {
-        errorMessage = error.message;
-      } else if (error.name === 'FunctionsFetchError') {
+      const err = error as {
+        message?: string;
+        name?: string;
+        status?: number;
+      };
+
+      if (err.message?.includes('Edge Function') ||
+          err.message?.includes('Nettverksfeil')) {
+        errorMessage = err.message ?? errorMessage;
+      } else if (err.name === 'FunctionsFetchError') {
         errorMessage = 'Kunne ikke nå Edge Function. Sjekk at Supabase-funksjonen er aktiv.';
-      } else if (error.message?.includes('403') || error.status === 403) {
+      } else if (err.message?.includes('403') || err.status === 403) {
         errorMessage = 'Fikk 403 Forbidden fra Google. Sjekk at OAuth-konfigurasjonen er riktig oppsatt i Google Cloud Console.';
-      } else if (error.message?.includes('refused to connect') || 
-                error.message?.includes('avviste tilkoblingsforsøket')) {
+      } else if (err.message?.includes('refused to connect') ||
+                err.message?.includes('avviste tilkoblingsforsøket')) {
         errorMessage = 'Nettleseren kunne ikke koble til accounts.google.com. Dette skyldes sannsynligvis at tredjepartsinfokapsler er blokkert i nettleseren din. Prøv å:' +
           '\n1. Aktivere tredjepartsinfokapsler i nettleserinnstillingene' +
-          '\n2. Sjekke brannmur/VPN-innstillinger' + 
+          '\n2. Sjekke brannmur/VPN-innstillinger' +
           '\n3. Prøve en annen nettleser som Chrome eller Firefox';
       }
       
@@ -165,21 +184,27 @@ export function useGoogleAuth(setState: any) {
       }));
       toast.success('Koblet til Google Calendar!');
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error exchanging code for tokens:', error);
+
+      const err = error as {
+        message?: string;
+        status?: number;
+        details?: string;
+      };
+
+      let errorMessage = err.message || 'Kunne ikke fullføre Google Calendar-integrasjonen';
       
-      let errorMessage = error.message || 'Kunne ikke fullføre Google Calendar-integrasjonen';
-      
-      if (error.message?.includes('Edge Function') || 
-          error.message?.includes('Nettverksfeil')) {
+      if (err.message?.includes('Edge Function') ||
+          err.message?.includes('Nettverksfeil')) {
         errorMessage = 'Kunne ikke koble til serveren. Google Calendar-integrasjonen er midlertidig utilgjengelig.';
-      } else if (error.message?.includes('403') || error.status === 403) {
+      } else if (err.message?.includes('403') || err.status === 403) {
         errorMessage = 'Fikk 403 Forbidden fra Google. Sjekk at OAuth-konfigurasjonen er riktig oppsatt i Google Cloud Console.';
-        if (error.details) {
-          console.error('Error details:', error.details);
+        if (err.details) {
+          console.error('Error details:', err.details);
         }
-      } else if (error.message?.includes('refused to connect') || 
-                error.message?.includes('avviste tilkoblingsforsøket')) {
+      } else if (err.message?.includes('refused to connect') ||
+                err.message?.includes('avviste tilkoblingsforsøket')) {
         errorMessage = 'Nettleseren kunne ikke koble til accounts.google.com. Dette kan skyldes at tredjepartsinfokapsler er blokkert i nettleseren. Prøv å aktivere tredjepartsinfokapsler, sjekk brannmur/VPN-innstillinger, eller prøv en annen nettleser.';
       }
       
