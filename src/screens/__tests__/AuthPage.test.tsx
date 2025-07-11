@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Create the toast mock before calling vi.mock since the factory function is
-// hoisted and cannot reference variables declared later in the file.
-const toast = {
-  success: vi.fn(),
-  error: vi.fn()
-};
+let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
 
-vi.mock('sonner', () => ({ toast }));
+vi.mock('sonner', () => {
+  toast = {
+    success: vi.fn(),
+    error: vi.fn(),
+  };
+
+  return { toast };
+});
 
 import { render, fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
