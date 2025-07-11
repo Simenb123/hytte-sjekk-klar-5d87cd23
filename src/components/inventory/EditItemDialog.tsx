@@ -54,13 +54,6 @@ export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
     defaultValues: {},
   });
 
-  if (!trigger || !React.isValidElement(trigger)) {
-    console.error(
-      "EditItemDialog: 'trigger' prop must be a single React element"
-    );
-    return null;
-  }
-
   useEffect(() => {
     if (item) {
       form.reset({
@@ -79,13 +72,24 @@ export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
     }
   }, [item, form, open]);
 
+  if (!trigger || !React.isValidElement(trigger)) {
+    console.error(
+      "EditItemDialog: 'trigger' prop must be a single React element"
+    );
+    return null;
+  }
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       await updateItemMutation.mutateAsync({ ...values, id: item.id } as UpdateInventoryItemData);
       toast.success("Gjenstand oppdatert!");
       setOpen(false);
-    } catch (error: any) {
-      toast.error(`Noe gikk galt: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(`Noe gikk galt: ${error.message}`);
+      } else {
+        toast.error('Noe gikk galt');
+      }
     }
   };
 
