@@ -112,7 +112,7 @@ export const useBookingNotifications = () => {
     } catch (error) {
       console.error('Error checking upcoming bookings:', error);
     }
-  }, [user]);
+  }, [user, sendBookingReminder]);
 
   // Check for upcoming bookings on component mount and user change
   useEffect(() => {
