@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { endOfDay } from 'date-fns';
 
+import type { Database } from '@/integrations/supabase/types';
+
 export interface Booking {
   id: string;
   title: string;
@@ -17,6 +19,18 @@ export interface Booking {
     name: string;
     nickname?: string;
   }>;
+}
+
+type BookingRow = Database['public']['Tables']['bookings']['Row'];
+type FamilyMemberRow = Database['public']['Tables']['family_members']['Row'];
+type BookingFamilyMemberRow = Database['public']['Tables']['booking_family_members']['Row'];
+
+interface BookingQueryRow extends BookingRow {
+  booking_family_members: Array<
+    BookingFamilyMemberRow & {
+      family_members: Pick<FamilyMemberRow, 'id' | 'name' | 'nickname'>;
+    }
+  >;
 }
 
 export function useBookings() {
@@ -52,7 +66,7 @@ export function useBookings() {
       console.log('Fetched bookings:', data);
       
       if (data) {
-        const formattedBookings = data.map(booking => ({
+        const formattedBookings = (data as BookingQueryRow[]).map((booking) => ({
           id: booking.id,
           title: booking.title || 'Ingen tittel',
           description: booking.description,
@@ -60,21 +74,23 @@ export function useBookings() {
           to: new Date(booking.end_date),
           user: booking.user_id || 'Ukjent',
           googleEventId: booking.google_event_id,
-          familyMembers: booking.booking_family_members?.map((bfm: any) => ({
-            id: bfm.family_members.id,
-            name: bfm.family_members.name,
-            nickname: bfm.family_members.nickname
-          })) || []
+          familyMembers:
+            booking.booking_family_members?.map((bfm) => ({
+              id: bfm.family_members.id,
+              name: bfm.family_members.name,
+              nickname: bfm.family_members.nickname ?? undefined,
+            })) || []
         }));
         
         setBookings(formattedBookings);
       } else {
         setBookings([]);
       }
-    } catch (error: any) {
-      console.error('Error fetching bookings:', error);
-      setError(error.message || 'Kunne ikke hente bookinger');
-      toast.error(`Kunne ikke hente bookinger: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Error fetching bookings:', err);
+      setError(err.message || 'Kunne ikke hente bookinger');
+      toast.error(`Kunne ikke hente bookinger: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -96,9 +112,10 @@ export function useBookings() {
       toast.success('Booking slettet');
       setBookings(prev => prev.filter(booking => booking.id !== id));
       return true;
-    } catch (error: any) {
-      console.error('Error deleting booking:', error);
-      toast.error(`Kunne ikke slette booking: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Error deleting booking:', err);
+      toast.error(`Kunne ikke slette booking: ${err.message}`);
       return false;
     }
   };
@@ -106,7 +123,7 @@ export function useBookings() {
   const updateBooking = async (id: string, updates: Partial<Omit<Booking, 'id' | 'user' | 'googleEventId' | 'familyMembers'>>) => {
     try {
       // Map from our Booking interface to the database structure
-      const dbUpdates: any = {};
+      const dbUpdates: Database['public']['Tables']['bookings']['Update'] = {};
       
       if (updates.title !== undefined) dbUpdates.title = updates.title;
       if (updates.description !== undefined) dbUpdates.description = updates.description;
@@ -132,9 +149,10 @@ export function useBookings() {
       ));
       
       return true;
-    } catch (error: any) {
-      console.error('Error updating booking:', error);
-      toast.error(`Kunne ikke oppdatere booking: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error as Error;
+      console.error('Error updating booking:', err);
+      toast.error(`Kunne ikke oppdatere booking: ${err.message}`);
       return false;
     }
   };
