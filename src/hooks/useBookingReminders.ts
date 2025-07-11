@@ -30,9 +30,10 @@ export const useBookingReminders = () => {
       }
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error triggering reminder check:', error);
-      toast.error(`Feil ved sjekking av påminnelser: ${error.message}`);
+      const message = error instanceof Error ? error.message : 'Ukjent feil';
+      toast.error(`Feil ved sjekking av påminnelser: ${message}`);
       throw error;
     } finally {
       setIsProcessing(false);
