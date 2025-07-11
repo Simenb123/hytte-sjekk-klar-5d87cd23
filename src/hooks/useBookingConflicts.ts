@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/state/auth';
 
@@ -22,7 +22,7 @@ export const useBookingConflicts = ({ startDate, endDate, excludeBookingId }: Us
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
-  const checkConflicts = async () => {
+  const checkConflicts = useCallback(async () => {
     if (!user || !startDate || !endDate) {
       setConflicts([]);
       return;
@@ -84,11 +84,11 @@ export const useBookingConflicts = ({ startDate, endDate, excludeBookingId }: Us
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, startDate, endDate, excludeBookingId]);
 
   useEffect(() => {
     checkConflicts();
-  }, [startDate, endDate, excludeBookingId, user]);
+  }, [checkConflicts]);
 
   return {
     conflicts,
