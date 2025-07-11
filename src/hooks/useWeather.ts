@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { WeatherData, WeatherService } from '@/services/weather.service';
 import { WEATHER_LAT, WEATHER_LON } from '@/config';
 
@@ -12,19 +12,23 @@ export function useWeather(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchWeather = async () => {
+  const fetchWeather = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await WeatherService.getWeatherData(days, lat, lon);
       setWeatherData(data);
-    } catch (err: any) {
-      console.error('Error fetching weather:', err);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error('Error fetching weather:', err);
+      } else {
+        console.error('Unexpected error fetching weather:', err);
+      }
       setError('Kunne ikke hente værdata');
     } finally {
       setLoading(false);
     }
-  };
+  }, [days, lat, lon]);
 
   useEffect(() => {
     fetchWeather();
@@ -33,7 +37,7 @@ export function useWeather(
     const interval = setInterval(fetchWeather, 30 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [days, lat, lon]);
+  }, [fetchWeather]);
 
   return {
     weatherData,
