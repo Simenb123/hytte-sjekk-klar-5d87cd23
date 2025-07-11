@@ -7,12 +7,14 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: { id: 'uid' } }),
 }));
 
-const insertMock = vi.fn().mockResolvedValue({ error: null });
-const fromMock = vi.fn(() => ({ insert: insertMock }));
+let insertMock: ReturnType<typeof vi.fn>;
+let fromMock: ReturnType<typeof vi.fn>;
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: fromMock },
-}));
+vi.mock('@/integrations/supabase/client', () => {
+  insertMock = vi.fn().mockResolvedValue({ error: null });
+  fromMock = vi.fn(() => ({ insert: insertMock }));
+  return { supabase: { from: fromMock } };
+});
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
   const client = new QueryClient();
