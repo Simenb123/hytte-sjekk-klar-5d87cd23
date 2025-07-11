@@ -13,17 +13,17 @@ export function useConnectionRetry(
   const [retryCount, setRetryCount] = useState(0);
   const [retryTimeout, setRetryTimeout] = useState<number | null>(null);
   
-  const clearRetryTimeout = () => {
+  const clearRetryTimeout = useCallback(() => {
     if (retryTimeout) {
       window.clearTimeout(retryTimeout);
       setRetryTimeout(null);
     }
-  };
+  }, [retryTimeout]);
   
-  const resetRetry = () => {
+  const resetRetry = useCallback(() => {
     setRetryCount(0);
     clearRetryTimeout();
-  };
+  }, [clearRetryTimeout]);
 
   const handleRetry = useCallback(async () => {
     if (isRetrying) return;
@@ -66,14 +66,21 @@ export function useConnectionRetry(
     } finally {
       setIsRetrying(false);
     }
-  }, [isRetrying, retryCount, retryFunction, maxRetries, initialBackoff]);
+  }, [
+    isRetrying,
+    retryCount,
+    retryFunction,
+    maxRetries,
+    initialBackoff,
+    resetRetry
+  ]);
   
   // Clean up on unmount
   useEffect(() => {
     return () => {
       clearRetryTimeout();
     };
-  }, []);
+  }, [clearRetryTimeout]);
 
   return {
     isRetrying,
