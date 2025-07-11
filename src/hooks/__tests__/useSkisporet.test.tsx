@@ -10,15 +10,19 @@ const mockData: TrackStatus = {
   tracks: [{ id: 1, name: 'Testløype', groomed: '2024-01-01T10:00:00Z' }],
 };
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    functions: {
-      invoke: vi.fn().mockImplementation(() =>
-        Promise.resolve({ data: mockData, error: null })
-      ),
+let invokeMock: ReturnType<typeof vi.fn>;
+
+vi.mock('@/integrations/supabase/client', () => {
+  invokeMock = vi.fn().mockResolvedValue({ data: mockData, error: null });
+
+  return {
+    supabase: {
+      functions: {
+        invoke: invokeMock,
+      },
     },
-  },
-}));
+  };
+});
 
 const wrapper = ({ children }: { children: React.ReactNode }) => {
   const client = new QueryClient();
