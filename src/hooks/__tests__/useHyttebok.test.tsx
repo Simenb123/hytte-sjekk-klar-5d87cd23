@@ -3,18 +3,22 @@ import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock implementations must be defined before the modules that depend on them
-const insertMock = vi.fn().mockResolvedValue({ error: null });
-const fromMock = vi.fn(() => ({ insert: insertMock }));
+let insertMock: ReturnType<typeof vi.fn>;
+let fromMock: ReturnType<typeof vi.fn>;
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({ user: { id: 'uid' } }),
 }));
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: fromMock,
-  },
-}));
+vi.mock('@/integrations/supabase/client', () => {
+  insertMock = vi.fn().mockResolvedValue({ error: null });
+  fromMock = vi.fn(() => ({ insert: insertMock }));
+  return {
+    supabase: {
+      from: fromMock,
+    },
+  };
+});
 
 // Import the hook after mocks are set up
 import { useAddHyttebokEntry } from '../useHyttebok';
