@@ -3,6 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { DbHyttebokEntry } from '@/types/database.types';
 import { useAuth } from '@/state/auth';
 
+import type { Database } from '@/integrations/supabase/types';
+
+type HyttebokRow = Database['public']['Tables']['hyttebok_entries']['Row'];
+
 export const fetchHyttebokEntries = async (): Promise<DbHyttebokEntry[]> => {
   const { data, error } = await supabase
     .from('hyttebok_entries')
@@ -15,10 +19,13 @@ export const fetchHyttebokEntries = async (): Promise<DbHyttebokEntry[]> => {
   }
 
   // Map database 'text' column to 'content' used in the app
-  return (data || []).map((row) => ({
-    ...row,
-    content: (row as any).text,
-  })) as DbHyttebokEntry[];
+  return (data || []).map((row) => {
+    const { text, ...rest } = row as HyttebokRow;
+    return {
+      ...rest,
+      content: text,
+    };
+  }) as DbHyttebokEntry[];
 };
 
 export const useHyttebokEntries = () => {
