@@ -35,7 +35,7 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
     }
 
     return [];
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching calendar events:', error);
     throw error;
   }
@@ -143,7 +143,7 @@ export const createCalendarEvent = async (tokens: GoogleOAuthTokens, eventData: 
 
     console.log('Successfully created calendar event');
     return data;
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating calendar event:', error);
     throw error;
   }
