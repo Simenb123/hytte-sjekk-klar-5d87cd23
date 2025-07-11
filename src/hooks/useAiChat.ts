@@ -26,7 +26,7 @@ export function useAiChat() {
       } = await supabase.auth.getSession();
 
       let analysis: string | null = null;
-      let historyWithAnalysis = [...messageHistory];
+      const historyWithAnalysis = [...messageHistory];
       if (image) {
         try {
           const { data: aiData, error: aiError } = await supabase.functions.invoke(
@@ -71,7 +71,7 @@ export function useAiChat() {
       if (data.error) throw new Error(data.error);
 
       return { reply: data.reply, analysis };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error calling ai-helper function:', err);
       setError(
         'Beklager, noe gikk galt. Vennligst prøv igjen. Hvis problemet vedvarer, kan det hende API-nøkkelen for OpenAI mangler.'
