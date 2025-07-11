@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { WeatherService } from '../weather.service';
+import type { WeatherData } from '../weather.service';
 import * as sunriseUtil from '../sunrise.util';
 import type { LocationForecast } from '@/types/weather.types';
 import { LOCATION_NAME } from '@/config';
@@ -119,8 +120,12 @@ beforeEach(() => {
 });
 
 describe('WeatherService', () => {
+  const serviceWithPrivate = WeatherService as unknown as {
+    transformWeatherData: (data: LocationForecast, maxDays?: number) => WeatherData;
+  };
+
   it('transforms weather data correctly', () => {
-    const result = (WeatherService as any).transformWeatherData(sampleForecast, 2);
+    const result = serviceWithPrivate.transformWeatherData(sampleForecast, 2);
     expect(result.location).toBe(LOCATION_NAME);
     expect(result.forecast.length).toBe(2);
     expect(result.current).toMatchObject({
@@ -142,7 +147,7 @@ describe('WeatherService', () => {
   });
 
   it('handles complete dataset structure', () => {
-    const result = (WeatherService as any).transformWeatherData(completeForecast, 2);
+    const result = serviceWithPrivate.transformWeatherData(completeForecast, 2);
     expect(result.current.temperature).toBe(10);
     expect(result.current.pressure).toBe(1012);
     expect(result.current.windGust).toBe(7);
