@@ -57,9 +57,10 @@ describe('AuthPage login flow', () => {
 });
 
 describe('AuthPage signup flow', () => {
-  const fillSignUpForm = () => {
+  const fillSignUpForm = async () => {
     fireEvent.click(screen.getByRole('tab', { name: /registrer/i }));
-    fireEvent.change(screen.getByLabelText(/Fornavn/i), { target: { value: 'Ola' }});
+    const firstNameInput = await screen.findByLabelText(/Fornavn/i);
+    fireEvent.change(firstNameInput, { target: { value: 'Ola' }});
     fireEvent.change(screen.getByLabelText(/Etternavn/i), { target: { value: 'Nordmann' }});
     fireEvent.change(screen.getByLabelText(/Telefon/i), { target: { value: '12345678' }});
     fireEvent.change(screen.getAllByLabelText(/E-post/i)[1], { target: { value: 'test@example.com' }});
@@ -69,7 +70,7 @@ describe('AuthPage signup flow', () => {
   it('submits signup successfully', async () => {
     signUpMock.mockResolvedValueOnce(undefined);
     setup();
-    fillSignUpForm();
+    await fillSignUpForm();
 
     fireEvent.click(screen.getByRole('button', { name: /Registrer konto/i }));
 
@@ -84,7 +85,7 @@ describe('AuthPage signup flow', () => {
   it('shows error when signup fails', async () => {
     signUpMock.mockRejectedValueOnce(new Error('fail'));
     setup();
-    fillSignUpForm();
+    await fillSignUpForm();
 
     fireEvent.click(screen.getByRole('button', { name: /Registrer konto/i }));
 
