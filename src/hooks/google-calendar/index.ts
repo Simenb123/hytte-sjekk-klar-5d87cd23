@@ -8,7 +8,11 @@ export function useGoogleCalendar() {
   const [state, setState] = useState<GoogleCalendarState>(initialState);
   
   const { connectGoogleCalendar, disconnectGoogleCalendar, handleOAuthCallback } = useGoogleAuth(setState);
-  const { fetchGoogleEvents, fetchGoogleCalendars } = useGoogleEvents(setState, disconnectGoogleCalendar);
+  const { fetchGoogleEvents, fetchGoogleCalendars } = useGoogleEvents(
+    () => state.googleTokens,
+    setState,
+    disconnectGoogleCalendar
+  );
 
   // Load tokens from localStorage on component mount
   useEffect(() => {
