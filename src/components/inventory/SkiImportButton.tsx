@@ -22,8 +22,9 @@ export function SkiImportButton() {
             toast.success("Skiutstyr importert!");
             localStorage.setItem('ski_imported', 'true');
             setImported(true);
-        } catch (error: any) {
-            toast.error(`Feil ved import: ${error.message}`);
+        } catch (error) {
+            const err = error as Error;
+            toast.error(`Feil ved import: ${err.message}`);
         }
     };
 
