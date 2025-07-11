@@ -1,32 +1,12 @@
-
 /**
  * Authentication state slice. Handles user session and exposes
  * sign-in, sign-up and sign-out helpers.
  */
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
+import { AuthContext } from './auth-context';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (
-    email: string, 
-    password: string, 
-    metadata?: { 
-      first_name?: string, 
-      last_name?: string, 
-      phone?: string 
-    }
-  ) => Promise<void>;
-  signOut: () => Promise<void>;
-  isLoading: boolean;
-}
-
-// React context used to provide authentication state throughout the app
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /** Context provider wrapping the application with auth state. */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
