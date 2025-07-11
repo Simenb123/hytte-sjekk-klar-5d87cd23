@@ -13,7 +13,9 @@ const mockData: TrackStatus = {
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     functions: {
-      invoke: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+      invoke: vi.fn().mockImplementation(() =>
+        Promise.resolve({ data: mockData, error: null })
+      ),
     },
   },
 }));
