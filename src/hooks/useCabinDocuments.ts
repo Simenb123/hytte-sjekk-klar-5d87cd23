@@ -53,7 +53,7 @@ export function useCabinDocuments() {
 
       if (error) throw error;
       setDocuments(data || []);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching cabin documents:', error);
       toast.error('Kunne ikke hente dokumenter');
     } finally {
@@ -91,7 +91,7 @@ export function useCabinDocuments() {
       }
       
       return [];
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error searching cabin documents:', error);
       toast.error('Kunne ikke søke i dokumenter');
       return [];
@@ -118,7 +118,7 @@ export function useCabinDocuments() {
       toast.success('Dokument lagt til');
       await fetchDocuments();
       return data;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding cabin document:', error);
       toast.error('Kunne ikke legge til dokument');
       throw error;
@@ -147,7 +147,7 @@ export function useCabinDocuments() {
       toast.success('Dokument oppdatert');
       await fetchDocuments();
       return data;
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating cabin document:', error);
       toast.error('Kunne ikke oppdatere dokument');
       throw error;
@@ -165,7 +165,7 @@ export function useCabinDocuments() {
       
       toast.success('Dokument slettet');
       await fetchDocuments();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting cabin document:', error);
       toast.error('Kunne ikke slette dokument');
       throw error;
