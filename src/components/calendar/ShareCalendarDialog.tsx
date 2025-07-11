@@ -98,9 +98,10 @@ export const ShareCalendarDialog: React.FC<ShareCalendarDialogProps> = ({
           onSuccess();
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating shared calendar:', error);
-      toast.error(`Kunne ikke opprette felles kalender: ${error.message || 'Ukjent feil'}`);
+      const message = error instanceof Error ? error.message : 'Ukjent feil';
+      toast.error(`Kunne ikke opprette felles kalender: ${message}`);
     } finally {
       setIsSubmitting(false);
     }
