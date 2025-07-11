@@ -103,10 +103,14 @@ export function useProfile(user: User | null) {
         setError(null);
         setProfile(updatedProfile[0]);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[useProfile] Error:', error);
       toast.error('En feil oppstod ved oppdatering av profil');
-      setError('En feil oppstod ved oppdatering av profil: ' + error.message);
+      if (error instanceof Error) {
+        setError('En feil oppstod ved oppdatering av profil: ' + error.message);
+      } else {
+        setError('En feil oppstod ved oppdatering av profil');
+      }
     } finally {
       setIsSaving(false);
     }
