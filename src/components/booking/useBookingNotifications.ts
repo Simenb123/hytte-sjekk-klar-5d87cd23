@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/state/auth';
 import { addDays, isBefore, startOfDay } from 'date-fns';
@@ -71,7 +71,7 @@ export const useBookingNotifications = () => {
     );
   };
 
-  const checkUpcomingBookings = async () => {
+  const checkUpcomingBookings = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -112,14 +112,12 @@ export const useBookingNotifications = () => {
     } catch (error) {
       console.error('Error checking upcoming bookings:', error);
     }
-  };
+  }, [user]);
 
   // Check for upcoming bookings on component mount and user change
   useEffect(() => {
-    if (user) {
-      checkUpcomingBookings();
-    }
-  }, [user]);
+    checkUpcomingBookings();
+  }, [checkUpcomingBookings]);
 
   return {
     createNotification,
