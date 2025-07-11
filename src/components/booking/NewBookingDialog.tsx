@@ -11,31 +11,37 @@ import BookingForm from './BookingForm';
 import { useBookingSubmit } from './useBookingSubmit';
 import { useAuth } from '@/state/auth';
 import { toast } from 'sonner';
+import type { BookingFormData } from './types';
 
 type NewBookingDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (booking: any) => void;
+  onSuccess: (booking: BookingFormData) => void;
   googleIntegration?: boolean;
   sharedCalendarExists?: boolean;
 };
 
-const NewBookingDialog: React.FC<NewBookingDialogProps> = ({ 
-  open, 
+const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
+  open,
   onOpenChange,
   onSuccess,
   googleIntegration = false,
   sharedCalendarExists = false
 }) => {
   const { user } = useAuth();
+  const lastSubmittedData = React.useRef<BookingFormData | null>(null);
+
   const { submitBooking, isSubmitting } = useBookingSubmit({
     onSuccess: () => {
-      onSuccess({});
+      if (lastSubmittedData.current) {
+        onSuccess(lastSubmittedData.current);
+        lastSubmittedData.current = null;
+      }
       onOpenChange(false);
     }
   });
   
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = (data: BookingFormData) => {
     console.log("NewBookingDialog - Form submitted with data:", data);
     if (!user) {
       toast.error('Du må være logget inn for å lage en booking');
@@ -57,6 +63,7 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
       return;
     }
     
+    lastSubmittedData.current = data;
     submitBooking(data);
   };
 
