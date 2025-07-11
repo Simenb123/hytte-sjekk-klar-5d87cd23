@@ -2,12 +2,16 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/state/toast';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 
 export function useChecklistAdmin() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const updateChecklistItem = async (itemId: string, updates: any) => {
+  const updateChecklistItem = async (
+    itemId: string,
+    updates: TablesUpdate<'checklist_items'>
+  ) => {
     setLoading(true);
     try {
       const { error } = await supabase
@@ -21,7 +25,7 @@ export function useChecklistAdmin() {
         title: "Oppgave oppdatert",
         description: "Endringene er lagret.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating checklist item:', error);
       toast({
         title: "Feil",
@@ -48,7 +52,7 @@ export function useChecklistAdmin() {
         title: "Oppgave slettet",
         description: "Oppgaven er fjernet fra sjekklisten.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting checklist item:', error);
       toast({
         title: "Feil",
@@ -61,7 +65,10 @@ export function useChecklistAdmin() {
     }
   };
 
-  const updateArea = async (areaId: string, updates: any) => {
+  const updateArea = async (
+    areaId: string,
+    updates: TablesUpdate<'areas'>
+  ) => {
     setLoading(true);
     try {
       const { error } = await supabase
@@ -75,7 +82,7 @@ export function useChecklistAdmin() {
         title: "Område oppdatert",
         description: "Endringene er lagret.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating area:', error);
       toast({
         title: "Feil",
@@ -112,11 +119,15 @@ export function useChecklistAdmin() {
         title: "Område slettet",
         description: "Området er fjernet.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting area:', error);
+      const message =
+        typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message: unknown }).message)
+          : 'Kunne ikke slette området.';
       toast({
         title: "Feil",
-        description: error.message || "Kunne ikke slette området.",
+        description: message,
         variant: "destructive",
       });
       throw error;
