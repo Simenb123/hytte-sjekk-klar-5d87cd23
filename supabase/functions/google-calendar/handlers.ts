@@ -67,11 +67,12 @@ export const handleOAuthCodeExchange = async (requestData: RequestData, origin: 
       JSON.stringify(response),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error exchanging code for tokens:', error);
-    
-    const response: GoogleAuthResponse = { 
-      error: error.message
+
+    const message = error instanceof Error ? error.message : String(error);
+    const response: GoogleAuthResponse = {
+      error: message
     };
     
     return new Response(
@@ -189,12 +190,13 @@ export const handleCalendarOperations = async (requestData: RequestData): Promis
       default:
         throw new Error('Invalid action requested');
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error in calendar operation ${action}:`, error);
-    
+
+    const message = error instanceof Error ? error.message : String(error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
+      JSON.stringify({
+        error: message,
       }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
