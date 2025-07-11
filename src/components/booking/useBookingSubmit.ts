@@ -75,9 +75,9 @@ export const useBookingSubmit = ({ onSuccess, onBookingCreated }: UseBookingSubm
       toast.success('Booking opprettet!');
       onSuccess?.();
       onBookingCreated?.();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating booking:', error);
-      toast.error(error.message || 'Kunne ikke opprette booking');
+      toast.error((error as Error).message || 'Kunne ikke opprette booking');
     } finally {
       setIsSubmitting(false);
     }
@@ -141,9 +141,9 @@ export const useBookingSubmit = ({ onSuccess, onBookingCreated }: UseBookingSubm
 
       toast.success('Booking oppdatert!');
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating booking:', error);
-      toast.error(error.message || 'Kunne ikke oppdatere booking');
+      toast.error((error as Error).message || 'Kunne ikke oppdatere booking');
     } finally {
       setIsSubmitting(false);
     }
