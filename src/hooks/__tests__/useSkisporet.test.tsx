@@ -10,7 +10,7 @@ const mockData: TrackStatus = {
   tracks: [{ id: 1, name: 'Testløype', groomed: '2024-01-01T10:00:00Z' }],
 };
 
-vi.doMock('@/integrations/supabase/client', () => ({
+vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     functions: {
       invoke: vi.fn().mockResolvedValue({ data: mockData, error: null }),
