@@ -15,7 +15,7 @@ interface BookingNotificationData {
 export const useBookingNotifications = () => {
   const { user } = useAuth();
 
-  const createNotification = async (
+  const createNotification = useCallback(
     title: string,
     message: string,
     type: 'info' | 'warning' | 'error' | 'success' = 'info',
@@ -38,38 +38,47 @@ export const useBookingNotifications = () => {
     } catch (error) {
       console.error('Error creating notification:', error);
     }
-  };
+  }, [user]);
 
-  const sendBookingConfirmation = async (booking: BookingNotificationData) => {
-    await createNotification(
-      'Booking bekreftet',
-      `Din booking "${booking.title}" er bekreftet og lagret.`,
-      'success',
-      booking.bookingId
-    );
-  };
+  const sendBookingConfirmation = useCallback(
+    async (booking: BookingNotificationData) => {
+      await createNotification(
+        'Booking bekreftet',
+        `Din booking "${booking.title}" er bekreftet og lagret.`,
+        'success',
+        booking.bookingId
+      );
+    },
+    [createNotification]
+  );
 
-  const sendBookingReminder = async (booking: BookingNotificationData) => {
-    const daysUntil = Math.ceil(
-      (booking.startDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-    );
+  const sendBookingReminder = useCallback(
+    async (booking: BookingNotificationData) => {
+      const daysUntil = Math.ceil(
+        (booking.startDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+      );
 
-    await createNotification(
-      'Booking-påminnelse',
-      `Din booking "${booking.title}" starter om ${daysUntil} dag${daysUntil !== 1 ? 'er' : ''}.`,
-      'info',
-      booking.bookingId
-    );
-  };
+      await createNotification(
+        'Booking-påminnelse',
+        `Din booking "${booking.title}" starter om ${daysUntil} dag${daysUntil !== 1 ? 'er' : ''}.`,
+        'info',
+        booking.bookingId
+      );
+    },
+    [createNotification]
+  );
 
-  const sendBookingExpiry = async (booking: BookingNotificationData) => {
-    await createNotification(
-      'Booking utløpt',
-      `Din booking "${booking.title}" er nå avsluttet.`,
-      'info',
-      booking.bookingId
-    );
-  };
+  const sendBookingExpiry = useCallback(
+    async (booking: BookingNotificationData) => {
+      await createNotification(
+        'Booking utløpt',
+        `Din booking "${booking.title}" er nå avsluttet.`,
+        'info',
+        booking.bookingId
+      );
+    },
+    [createNotification]
+  );
 
   const checkUpcomingBookings = useCallback(async () => {
     if (!user) return;
