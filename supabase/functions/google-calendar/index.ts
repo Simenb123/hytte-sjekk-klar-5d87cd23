@@ -12,7 +12,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const origin = req.headers.get('origin') || 'https://hytte-sjekk-klar.lovable.app';
+    const defaultOrigin = Deno.env.get('APP_ORIGIN');
+    const origin = req.headers.get('origin') || defaultOrigin || '';
     console.log(`Request origin: ${origin}`);
 
     // Håndter GET-forespørsler for OAuth URL-generering
