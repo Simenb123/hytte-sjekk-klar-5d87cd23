@@ -1,9 +1,17 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getRequiredEnv, getRedirectURI } from '../utils';
 
+type DenoEnv = {
+  env: {
+    get: (key: string) => string | undefined;
+  };
+};
+
+type GlobalWithDeno = typeof globalThis & { Deno: DenoEnv };
+
 beforeEach(() => {
   // reset Deno env mock
-  (globalThis as any).Deno = { env: { get: () => undefined } };
+  (globalThis as GlobalWithDeno).Deno = { env: { get: () => undefined } };
 });
 
 describe('getRedirectURI', () => {
@@ -20,12 +28,12 @@ describe('getRedirectURI', () => {
 
 describe('getRequiredEnv', () => {
   it('returns value when present', () => {
-    (globalThis as any).Deno.env.get = () => 'val';
+    (globalThis as GlobalWithDeno).Deno.env.get = () => 'val';
     expect(getRequiredEnv('X')).toBe('val');
   });
 
   it('throws when missing', () => {
-    (globalThis as any).Deno.env.get = () => undefined;
+    (globalThis as GlobalWithDeno).Deno.env.get = () => undefined;
     expect(() => getRequiredEnv('Y')).toThrow();
   });
 });
