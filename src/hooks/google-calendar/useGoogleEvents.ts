@@ -2,13 +2,17 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { fetchCalendarEvents, fetchCalendarList } from '@/services/googleCalendar.service';
-import type { GoogleOAuthTokens } from '@/types/googleCalendar.types';
+import type { GoogleOAuthTokens, GoogleCalendarState } from '@/types/googleCalendar.types';
 
-export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => void) {
+export function useGoogleEvents(
+  getTokens: () => GoogleOAuthTokens | null,
+  setState: React.Dispatch<React.SetStateAction<GoogleCalendarState>>,
+  disconnectGoogleCalendar: () => void
+) {
   // Make sure the function signature clearly requires a tokens parameter
   const fetchGoogleEvents = useCallback(async (tokensToUse?: GoogleOAuthTokens) => {
     // Allow calling without tokens, but check internally if tokens are available
-    const tokens = tokensToUse || setState((prev: any) => prev.googleTokens);
+    const tokens = tokensToUse || getTokens();
     
     if (!tokens || !tokens.access_token) {
       console.warn('No valid tokens available for fetching events');
@@ -27,23 +31,24 @@ export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => v
       
       const events = await fetchCalendarEvents(tokens);
       setState(prev => ({ ...prev, googleEvents: events }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching Google Calendar events:', error);
+      const err = error as { message?: string };
       
       // Don't show toast for network errors since we handle them in the UI
-      if (!error.message?.includes('Edge Function') && 
-          !error.message?.includes('Failed to fetch') &&
-          !error.message?.includes('Kunne ikke koble til')) {
+      if (!err.message?.includes('Edge Function') &&
+          !err.message?.includes('Failed to fetch') &&
+          !err.message?.includes('Kunne ikke koble til')) {
         toast.error('Kunne ikke hente Google Calendar-hendelser');
       }
-      
-      const errorMessage = error.message || 'Ukjent feil ved henting av hendelser';
+
+      const errorMessage = err.message || 'Ukjent feil ved henting av hendelser';
       setState(prev => ({ ...prev, fetchError: errorMessage }));
       
-      if (error.message?.includes('invalid_grant') || 
-          error.message?.includes('invalid_token') ||
-          error.message?.includes('utløpt') ||
-          error.message?.includes('expired')) {
+      if (err.message?.includes('invalid_grant') ||
+          err.message?.includes('invalid_token') ||
+          err.message?.includes('utløpt') ||
+          err.message?.includes('expired')) {
         console.log('Authentication error detected, disconnecting Google Calendar');
         disconnectGoogleCalendar();
         toast.error('Google Calendar-tilgangen er utløpt. Vennligst koble til på nytt.');
@@ -51,10 +56,10 @@ export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => v
     } finally {
       setState(prev => ({ ...prev, isLoadingEvents: false }));
     }
-  }, [setState, disconnectGoogleCalendar]);
+  }, [getTokens, setState, disconnectGoogleCalendar]);
 
   const fetchGoogleCalendars = useCallback(async (tokensToUse?: GoogleOAuthTokens) => {
-    const tokens = tokensToUse || setState((prev: any) => prev.googleTokens);
+    const tokens = tokensToUse || getTokens();
     
     if (!tokens || !tokens.access_token) {
       console.warn('No valid tokens available for fetching calendars');
@@ -65,11 +70,11 @@ export function useGoogleEvents(setState: any, disconnectGoogleCalendar: () => v
       console.log('Fetching Google Calendar list with tokens');
       const calendars = await fetchCalendarList(tokens);
       setState(prev => ({ ...prev, googleCalendars: calendars }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching Google calendars:', error);
       // Don't show toast for network errors since we handle them in the UI
     }
-  }, [setState]);
+  }, [getTokens, setState]);
 
   return {
     fetchGoogleEvents,
