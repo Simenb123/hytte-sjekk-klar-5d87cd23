@@ -137,7 +137,9 @@ export class WeatherService {
           min: Math.round(item.data.instant.details.air_temperature - 2),
           max: Math.round(item.data.instant.details.air_temperature + 2),
         },
-        condition: this.getConditionFromSymbol(item.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),
+        condition: WeatherService.getConditionFromSymbol(
+          item.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
+        ),
         icon: item.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
         precipitation: item.data?.next_1_hours?.details?.precipitation_amount || 0,
         windSpeed: Math.round(item.data.instant.details.wind_speed || 0),
@@ -151,10 +153,14 @@ export class WeatherService {
       location: LOCATION_NAME,
       current: {
         temperature: Math.round(currentData.data.instant.details.air_temperature),
-        condition: this.getConditionFromSymbol(currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day'),
+        condition: WeatherService.getConditionFromSymbol(
+          currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
+        ),
         humidity: Math.round(currentData.data.instant.details.relative_humidity),
         windSpeed: Math.round(currentData.data.instant.details.wind_speed),
-        windDirection: this.getWindDirection(currentData.data.instant.details.wind_from_direction),
+        windDirection: WeatherService.getWindDirection(
+          currentData.data.instant.details.wind_from_direction,
+        ),
         airPressure: currentData.data.instant.details.air_pressure_at_sea_level,
         cloudCover: currentData.data.instant.details.cloud_area_fraction,
         icon: currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
