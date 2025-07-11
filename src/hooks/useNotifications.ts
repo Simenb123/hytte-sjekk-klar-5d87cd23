@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/state/auth';
 import { toast } from 'sonner';
@@ -20,7 +20,7 @@ export const useNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const { user } = useAuth();
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) {
       setNotifications([]);
       setUnreadCount(0);
@@ -51,13 +51,13 @@ export const useNotifications = () => {
         setNotifications(formattedNotifications);
         setUnreadCount(formattedNotifications.filter(n => !n.read).length);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching notifications:', error);
       toast.error('Kunne ikke hente notifikasjoner');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -76,7 +76,7 @@ export const useNotifications = () => {
         )
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error marking notification as read:', error);
       toast.error('Kunne ikke markere notifikasjon som lest');
     }
@@ -99,7 +99,7 @@ export const useNotifications = () => {
       );
       setUnreadCount(0);
       toast.success('Alle notifikasjoner markert som lest');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error marking all notifications as read:', error);
       toast.error('Kunne ikke markere alle notifikasjoner som lest');
     }
@@ -107,7 +107,7 @@ export const useNotifications = () => {
 
   useEffect(() => {
     fetchNotifications();
-  }, [user]);
+  }, [fetchNotifications]);
 
   // Set up real-time subscription
   useEffect(() => {
@@ -132,7 +132,7 @@ export const useNotifications = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, fetchNotifications]);
 
   return {
     notifications,
