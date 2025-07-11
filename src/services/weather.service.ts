@@ -1,34 +1,38 @@
 
+export interface CurrentWeather {
+  temperature: number;
+  condition: string;
+  humidity: number;
+  windSpeed: number;
+  windDirection: string;
+  airPressure?: number;
+  cloudCover?: number;
+  icon: string;
+  pressure?: number;
+  windGust?: number;
+  uvIndex?: number;
+}
+
+export interface ForecastEntry {
+  date: string;
+  day: string;
+  temperature: {
+    min: number;
+    max: number;
+  };
+  condition: string;
+  icon: string;
+  precipitation: number;
+  windSpeed: number;
+  airPressure?: number;
+  cloudCover?: number;
+  windGust?: number;
+}
+
 export interface WeatherData {
   location: string;
-  current: {
-    temperature: number;
-    condition: string;
-    humidity: number;
-    windSpeed: number;
-    windDirection: string;
-    airPressure?: number;
-    cloudCover?: number;
-    icon: string;
-    pressure?: number;
-    windGust?: number;
-    uvIndex?: number;
-  };
-  forecast: Array<{
-    date: string;
-    day: string;
-    temperature: {
-      min: number;
-      max: number;
-    };
-    condition: string;
-    icon: string;
-    precipitation: number;
-    windSpeed: number;
-    airPressure?: number;
-    cloudCover?: number;
-    windGust?: number;
-  }>;
+  current: CurrentWeather;
+  forecast: ForecastEntry[];
   sunrise?: string;
   sunset?: string;
   lastUpdated: string;
