@@ -3,16 +3,15 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSkisporet } from '../useSkisporet';
 import type { TrackStatus } from '@/types/skisporet';
-
-const mockData: TrackStatus = {
-  status: 'ok',
-  updated: '2024-01-01T12:00:00Z',
-  tracks: [{ id: 1, name: 'Testløype', groomed: '2024-01-01T10:00:00Z' }],
-};
-
+let mockData: TrackStatus;
 let invokeMock: ReturnType<typeof vi.fn>;
 
 vi.mock('@/integrations/supabase/client', () => {
+  mockData = {
+    status: 'ok',
+    updated: '2024-01-01T12:00:00Z',
+    tracks: [{ id: 1, name: 'Testløype', groomed: '2024-01-01T10:00:00Z' }],
+  };
   invokeMock = vi.fn().mockResolvedValue({ data: mockData, error: null });
 
   return {
