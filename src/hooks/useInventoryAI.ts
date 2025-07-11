@@ -29,7 +29,7 @@ export function useInventoryAI() {
       if (data.error) throw new Error(data.error);
 
       return data.result;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error analyzing item:', err);
       setError('Kunne ikke analysere gjenstanden. Prøv igjen.');
       return null;
@@ -51,7 +51,7 @@ export function useInventoryAI() {
 
       if (searchError) throw searchError;
       return data || [];
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error searching items:', err);
       setError('Kunne ikke søke i inventaret.');
       return [];
