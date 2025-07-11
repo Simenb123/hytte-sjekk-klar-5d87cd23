@@ -1,6 +1,7 @@
 
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import type { GoogleOAuthTokens } from '@/types/googleCalendar.types';
 
 export const formatGoogleEventDate = (dateString: string): string => {
   try {
@@ -113,8 +114,10 @@ export const getTechnicalErrorDetails = (error: string): string => {
 /**
  * Helper to check if a refreshed token is available and needs to be saved
  */
-export const handleRefreshedTokens = (data: any): boolean => {
-  if (data && data.refreshedTokens) {
+export const handleRefreshedTokens = (
+  data: { refreshedTokens?: GoogleOAuthTokens } | null | undefined
+): boolean => {
+  if (data?.refreshedTokens) {
     // Store the refreshed tokens
     localStorage.setItem('googleCalendarTokens', JSON.stringify(data.refreshedTokens));
     console.log('Saved refreshed tokens to localStorage');
