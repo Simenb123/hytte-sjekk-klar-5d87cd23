@@ -65,8 +65,9 @@ export function NewItemDialog() {
       toast.success("Gjenstand lagt til!");
       form.reset();
       setOpen(false);
-    } catch (error: any) {
-      toast.error(`Noe gikk galt: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Ukjent feil';
+      toast.error(`Noe gikk galt: ${message}`);
     }
   };
 
