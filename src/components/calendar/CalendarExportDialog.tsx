@@ -57,9 +57,10 @@ export const CalendarExportDialog: React.FC<CalendarExportDialogProps> = ({
         if (data.sharingLinks) {
           setCalendarLinks(data.sharingLinks);
         }
-      } catch (error: any) {
-        console.error('Error fetching calendar links:', error);
-        toast.error(`Kunne ikke hente kalenderlenker: ${error.message || 'Ukjent feil'}`);
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Error fetching calendar links:', err);
+        toast.error(`Kunne ikke hente kalenderlenker: ${err.message || 'Ukjent feil'}`);
       } finally {
         setIsLoading(false);
       }
