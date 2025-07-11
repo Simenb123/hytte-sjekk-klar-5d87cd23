@@ -25,7 +25,7 @@ const DocumentsManager: React.FC = () => {
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+  }, [fetchDocuments]);
 
   const handleSearch = async () => {
     if (searchQuery.trim()) {
