@@ -40,7 +40,7 @@ export function useVoiceRecording() {
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error starting recording:', err);
       setError('Kunne ikke starte opptak. Sjekk mikrofontilgang.');
     }
@@ -75,7 +75,7 @@ export function useVoiceRecording() {
 
               setIsTranscribing(false);
               resolve(data.text);
-            } catch (err: any) {
+            } catch (err: unknown) {
               console.error('Error transcribing audio:', err);
               setError('Kunne ikke transkribere lyd. Prøv igjen.');
               setIsTranscribing(false);
@@ -84,7 +84,7 @@ export function useVoiceRecording() {
           };
           
           reader.readAsDataURL(audioBlob);
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error('Error processing recording:', err);
           setError('Kunne ikke behandle opptak.');
           setIsTranscribing(false);
