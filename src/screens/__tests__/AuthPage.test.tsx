@@ -1,10 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const toast = {
-  success: vi.fn(),
-  error: vi.fn()
-};
-vi.mock('sonner', () => ({ toast }));
+let toast: { success: ReturnType<typeof vi.fn>; error: ReturnType<typeof vi.fn> };
+vi.mock('sonner', () => {
+  toast = {
+    success: vi.fn(),
+    error: vi.fn()
+  };
+  return { toast };
+});
 
 import { render, fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
