@@ -2,7 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// These will be assigned inside the mock factory to avoid hoisting issues
+// Mock implementations must be defined before the modules that depend on them
+
 let insertMock: ReturnType<typeof vi.fn>;
 let fromMock: ReturnType<typeof vi.fn>;
 
