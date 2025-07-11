@@ -29,12 +29,15 @@ export const loadFromStorage = <T>(key: string, fallback: T): T => {
 };
 
 // Save data to localStorage with improved error handling
-export const saveToStorage = (key: string, data: any): boolean => {
+export const saveToStorage = <T>(key: string, data: T): boolean => {
   try {
-    console.log(`[Storage] Saving to ${key} in localStorage:`, 
-      typeof data === 'object' ? 
-        (Array.isArray(data) ? `Array with ${data.length} items` : 'Object') : 
-        data
+    console.log(
+      `[Storage] Saving to ${key} in localStorage:`,
+      typeof data === 'object'
+        ? Array.isArray(data)
+          ? `Array with ${(data as unknown[]).length} items`
+          : 'Object'
+        : data,
     );
     
     const jsonString = JSON.stringify(data);
