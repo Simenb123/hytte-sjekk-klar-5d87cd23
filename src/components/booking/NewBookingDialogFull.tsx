@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -36,10 +37,12 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { createCalendarEvent } from '@/services/googleCalendar.service';
 
+type BookingRow = Database['public']['Tables']['bookings']['Row'];
+
 type NewBookingDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (booking: any) => void;
+  onSuccess: (booking: BookingRow & { useSharedCalendar: boolean }) => void;
   googleIntegration?: boolean;
   sharedCalendarExists?: boolean;
 };
