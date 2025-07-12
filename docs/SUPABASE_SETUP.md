@@ -10,7 +10,9 @@ This guide explains how to configure Supabase so the AI helper can read uploaded
    Replace `<PROJECT_ID>` with your project ID from the Supabase dashboard.
 
 2. **Apply migrations**
-   Run the SQL migrations located in `supabase/migrations`.
+   Run the SQL migrations located in `supabase/migrations`. Each file is named
+   using the pattern `YYYYMMDDHHMMSS_description.sql`, for example
+   `20250615132216_initial.sql`.
    ```sh
    supabase db push
    ```
