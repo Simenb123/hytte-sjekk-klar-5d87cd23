@@ -104,3 +104,5 @@ CREATE POLICY "Users can delete task assignments for their family"
       WHERE id = family_member_id AND user_id = auth.uid()
     )
   );
+
+
