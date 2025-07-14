@@ -129,7 +129,7 @@ Dette bygger funksjonen og gjør den tilgjengelig på `http://localhost:54321/fu
 
 Følg disse stegene for å sikre at AI-hjelperen kan lese fra hyttedokumentene:
 
-1. Kjør migrasjonene i `supabase/migrations` mot ditt Supabase-prosjekt.
+1. Kjør migrasjonene i `supabase/migrations` mot ditt Supabase-prosjekt (se [docs/MIGRATIONS_OVERVIEW.md](docs/MIGRATIONS_OVERVIEW.md)).
 2. RLS-policyene som tillater autentiserte brukere å lese `cabin_documents` aktiveres av migrasjonene.
 3. Logg inn i appen og åpne **Dokumenter** for å laste opp eller redigere manualer og guider.
 4. Når du bruker AI-hjelperen, sendes innlogget brukers token automatisk til edge-funksjonen. Sørg derfor for at du er innlogget.
