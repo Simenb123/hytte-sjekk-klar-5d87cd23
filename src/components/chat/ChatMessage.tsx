@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Bot, User, Loader2, Mic, Camera, Volume2, Square } from 'lucide-react';
+import { User, Loader2, Mic, Camera, Volume2, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from "@/lib/utils";
 
@@ -42,7 +42,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     <div className={cn("flex items-start gap-3", isUser ? "justify-end" : "justify-start")}>
       {!isUser && (
         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center">
-          <Bot size={20} />
+          <span role="img" aria-label="ape" className="text-lg">🙉</span>
         </div>
       )}
       
