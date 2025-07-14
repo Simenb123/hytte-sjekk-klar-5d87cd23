@@ -95,16 +95,17 @@ export default function ChecklistPage() {
                 </AccordionTrigger>
                 <AccordionContent className="pt-0">
                   <div className="divide-y divide-gray-100 border-t border-gray-100">
-                    {area.items.map((item) => (
-                      <ChecklistItem
-                        key={item.id}
-                        id={item.id}
-                        text={item.text}
-                        isCompleted={item.isCompleted}
-                        imageUrl={item.imageUrl}
-                        onToggle={() => handleToggleItem(item.id, item.isCompleted)}
-                      />
-                    ))}
+                     {area.items.map((item) => (
+                       <ChecklistItem
+                         key={item.id}
+                         id={item.id}
+                         text={item.text}
+                         isCompleted={item.isCompleted}
+                         imageUrl={item.imageUrl}
+                         onToggle={() => handleToggleItem(item.id, item.isCompleted)}
+                         onImageUpdate={refetch}
+                       />
+                     ))}
                   </div>
                 </AccordionContent>
               </AccordionItem>

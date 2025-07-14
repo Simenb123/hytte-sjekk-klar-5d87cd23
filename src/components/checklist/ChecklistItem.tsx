@@ -1,6 +1,9 @@
 
-import React, { useEffect } from 'react';
-import { CheckSquare, Square } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { CheckSquare, Square, Camera, Upload } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface ChecklistItemProps {
   id: string;
@@ -8,6 +11,7 @@ interface ChecklistItemProps {
   isCompleted: boolean;
   imageUrl?: string;
   onToggle: () => void;
+  onImageUpdate?: () => void;
 }
 
 const ChecklistItem: React.FC<ChecklistItemProps> = ({
@@ -15,16 +19,80 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
   text,
   isCompleted,
   imageUrl,
-  onToggle
+  onToggle,
+  onImageUpdate
 }) => {
+  const { user } = useAuth();
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Log when checkbox state changes to debug rendering
   useEffect(() => {
     console.log(`[ChecklistItem ${id}] isCompleted: ${isCompleted}`);
   }, [id, isCompleted]);
   
-  const handleToggle = () => {
+  const handleToggle = (e: React.MouseEvent) => {
+    // Don't toggle if clicking on camera button or image
+    if ((e.target as HTMLElement).closest('.image-upload-section')) {
+      return;
+    }
     console.log(`[ChecklistItem ${id}] Clicked, current state: ${isCompleted}, will toggle to: ${!isCompleted}`);
     onToggle();
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!user) {
+      toast.error('Du må være logget inn for å laste opp bilder');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Delete existing image if there is one
+      if (imageUrl) {
+        await supabase
+          .from('checklist_item_images')
+          .delete()
+          .eq('item_id', id)
+          .eq('user_id', user.id);
+      }
+
+      const ext = file.name.split('.').pop();
+      const fileName = `${user.id}/${id}-${Date.now()}.${ext}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('checklist_item_images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('checklist_item_images')
+        .getPublicUrl(fileName);
+
+      await supabase
+        .from('checklist_item_images')
+        .insert({ 
+          item_id: id, 
+          image_url: publicUrl, 
+          user_id: user.id 
+        });
+
+      toast.success('Bilde lastet opp');
+      onImageUpdate?.();
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Kunne ikke laste opp bilde');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
   };
   
   return (
@@ -33,20 +101,50 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
       onClick={handleToggle}
       data-state={isCompleted ? 'checked' : 'unchecked'}
     >
-      <div className="flex items-center">
-        <div className="mr-3 flex-shrink-0">
-          {isCompleted ? (
-            <CheckSquare size={24} className="text-green-600" strokeWidth={2.5} />
-          ) : (
-            <Square size={24} className="text-gray-400" strokeWidth={2.5} />
-          )}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center flex-1">
+          <div className="mr-3 flex-shrink-0">
+            {isCompleted ? (
+              <CheckSquare size={24} className="text-green-600" strokeWidth={2.5} />
+            ) : (
+              <Square size={24} className="text-gray-400" strokeWidth={2.5} />
+            )}
+          </div>
+          <span className={`${isCompleted ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
+            {text}
+          </span>
         </div>
-        <span className={`${isCompleted ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
-          {text}
-        </span>
+        
+        <div className="image-upload-section flex items-center gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            accept="image/*"
+            className="hidden"
+          />
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
+            disabled={uploading}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+            title="Last opp bilde"
+          >
+            {uploading ? (
+              <Upload size={18} className="animate-spin" />
+            ) : (
+              <Camera size={18} />
+            )}
+          </button>
+        </div>
       </div>
+      
       {imageUrl && (
-        <img src={imageUrl} alt="" className="mt-2 max-h-48 rounded" loading="lazy" />
+        <div className="image-upload-section mt-2">
+          <img src={imageUrl} alt="" className="max-h-48 rounded" loading="lazy" />
+        </div>
       )}
     </div>
   );
