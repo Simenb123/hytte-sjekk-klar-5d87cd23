@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { InventoryItem } from '@/types/inventory';
@@ -15,7 +15,9 @@ interface InventoryListViewProps {
 }
 
 const InventoryListView: React.FC<InventoryListViewProps> = ({ items }) => {
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   return (
+    <>
     <div className="rounded-md border">
       <Table>
         <TableHeader>
@@ -107,15 +109,13 @@ const InventoryListView: React.FC<InventoryListViewProps> = ({ items }) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <EditItemDialog
-                      item={item}
-                      trigger={
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          <span>Rediger</span>
-                        </DropdownMenuItem>
-                      }
-                    />
+                    <DropdownMenuItem onSelect={(e) => {
+                      e.preventDefault();
+                      setEditingItem(item);
+                    }}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      <span>Rediger</span>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
@@ -124,6 +124,16 @@ const InventoryListView: React.FC<InventoryListViewProps> = ({ items }) => {
         </TableBody>
       </Table>
     </div>
+    {editingItem && (
+      <EditItemDialog
+        item={editingItem}
+        open={true}
+        onOpenChange={(o) => {
+          if (!o) setEditingItem(null);
+        }}
+      />
+    )}
+    </>
   );
 };
 
