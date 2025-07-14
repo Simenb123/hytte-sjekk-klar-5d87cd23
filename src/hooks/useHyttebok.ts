@@ -3,9 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { DbHyttebokEntry } from '@/types/database.types';
 import { useAuth } from '@/hooks/useAuth';
 
-import type { Database } from '@/integrations/supabase/types';
-
-type HyttebokRow = Database['public']['Tables']['hyttebok_entries']['Row'];
 
 export const fetchHyttebokEntries = async (): Promise<DbHyttebokEntry[]> => {
   const { data, error } = await supabase
@@ -18,14 +15,7 @@ export const fetchHyttebokEntries = async (): Promise<DbHyttebokEntry[]> => {
     throw error;
   }
 
-  // Map database 'text' column to 'content' used in the app
-  return (data || []).map((row) => {
-    const { text, ...rest } = row as HyttebokRow;
-    return {
-      ...rest,
-      content: text,
-    };
-  }) as DbHyttebokEntry[];
+  return (data || []) as DbHyttebokEntry[];
 };
 
 export const useHyttebokEntries = () => {
@@ -46,9 +36,8 @@ export const useAddHyttebokEntry = () => {
         throw new Error('Bruker ikke autentisert');
       }
 
-      // Database column is named 'text', convert before insert
       const { error } = await supabase.from('hyttebok_entries').insert({
-        text: content,
+        content,
         user_id: user.id,
       });
 

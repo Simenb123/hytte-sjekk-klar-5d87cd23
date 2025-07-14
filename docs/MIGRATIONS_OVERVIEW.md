@@ -19,7 +19,7 @@ Denne filen oppsummerer hva hver SQL‑migrasjon i `supabase/migrations` gjør. 
 - **20250622133000_create_hyttebok_entries.sql** – Lager `hyttebok_entries` (digital gjestebok) med RLS-policyer.
 - **20250623120000_add_document_files_bucket.sql** – Oppretter lagringsbøtten `document_files` for vedlagte filer og policyer for tilgang.
 - **20250623121500_add_booking_id_to_completion_logs.sql** – Legger til `booking_id` på `completion_logs` for å koble sjekklister til bookinger.
-- **20250624100000_ensure_hyttebok_text_column.sql** – Sikrer at `hyttebok_entries` har kolonnen `text` (bruker `ADD COLUMN IF NOT EXISTS`).
+- **20250624100000_ensure_hyttebok_text_column.sql** – Sikrer at `hyttebok_entries` har kolonnen `content` (bruker `ADD COLUMN IF NOT EXISTS`).
 
 ## Vurdering av duplikater og overflødige filer
 
