@@ -11,9 +11,11 @@ import {
 interface AppDescriptionDialogProps {
   title: string;
   description: string;
+
   /**
    * A single React element used to open the dialog. Fragments are not supported.
    */
+
   trigger: React.ReactElement;
 }
 
@@ -27,9 +29,11 @@ const AppDescriptionDialog: React.FC<AppDescriptionDialogProps> = ({
   description,
   trigger,
 }) => {
+
   if (!React.isValidElement(trigger) || trigger.type === React.Fragment) {
     console.error(
       "AppDescriptionDialog: 'trigger' prop must be a single React element and not a React.Fragment"
+
     );
     return null;
   }
