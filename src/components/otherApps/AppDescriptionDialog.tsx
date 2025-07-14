@@ -11,23 +11,33 @@ import {
 interface AppDescriptionDialogProps {
   title: string;
   description: string;
-  trigger: React.ReactNode;
+  /** A single React element used to open the dialog */
+  trigger: React.ReactElement;
 }
 
 const AppDescriptionDialog: React.FC<AppDescriptionDialogProps> = ({
   title,
   description,
   trigger,
-}) => (
-  <Dialog>
-    <DialogTrigger asChild>{trigger}</DialogTrigger>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
-      </DialogHeader>
-    </DialogContent>
-  </Dialog>
-);
+}) => {
+  if (!React.isValidElement(trigger)) {
+    console.error(
+      "AppDescriptionDialog: 'trigger' prop must be a single React element"
+    );
+    return null;
+  }
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default AppDescriptionDialog;
