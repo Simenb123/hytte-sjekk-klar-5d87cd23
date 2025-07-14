@@ -95,13 +95,6 @@ export function EditItemDialog({
     }
   }, [item, form, open]);
 
-  if (trigger && (!React.isValidElement(trigger) || trigger.type === React.Fragment)) {
-    console.error(
-      "EditItemDialog: 'trigger' prop must be a single React element and not a React.Fragment"
-    );
-    return null;
-  }
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       await updateItemMutation.mutateAsync({ ...values, id: item.id } as UpdateInventoryItemData);
@@ -118,7 +111,11 @@ export function EditItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      {trigger && (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Rediger gjenstand</DialogTitle>
