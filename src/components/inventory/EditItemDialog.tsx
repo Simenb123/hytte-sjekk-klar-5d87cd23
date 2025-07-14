@@ -40,9 +40,16 @@ const formSchema = z.object({
 
 interface EditItemDialogProps {
   item: InventoryItem;
-  /** A single React element used to open the dialog */
+  /**
+   * A single React element used to open the dialog. Fragments are not supported.
+   */
   trigger: React.ReactElement;
 }
+/**
+ * Dialog for editing an inventory item.
+ *
+ * @param props.trigger - A single React element that opens the dialog. Must not be a React.Fragment.
+ */
 
 export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
   const [open, setOpen] = useState(false);
@@ -72,9 +79,9 @@ export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
     }
   }, [item, form, open]);
 
-  if (!trigger || !React.isValidElement(trigger)) {
+  if (!trigger || !React.isValidElement(trigger) || trigger.type === React.Fragment) {
     console.error(
-      "EditItemDialog: 'trigger' prop must be a single React element"
+      "EditItemDialog: 'trigger' prop must be a single React element and not a React.Fragment"
     );
     return null;
   }
