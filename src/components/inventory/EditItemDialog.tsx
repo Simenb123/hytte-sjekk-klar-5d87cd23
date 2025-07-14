@@ -111,11 +111,9 @@ export function EditItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {trigger && (
-        <DialogTrigger asChild>
-          {trigger}
-        </DialogTrigger>
-      )}
+      <DialogTrigger asChild>
+        {trigger || <Button variant="outline">Rediger</Button>}
+      </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Rediger gjenstand</DialogTitle>
