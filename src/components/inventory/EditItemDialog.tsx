@@ -42,17 +42,33 @@ interface EditItemDialogProps {
   item: InventoryItem;
   /**
    * A single React element used to open the dialog. Fragments are not supported.
+   * Optional if the dialog is controlled via the `open` prop.
    */
-  trigger: React.ReactElement;
+  trigger?: React.ReactElement;
+
+  /**
+   * Control the open state externally. If provided, the dialog becomes a
+   * controlled component and `onOpenChange` must be supplied as well.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 /**
  * Dialog for editing an inventory item.
  *
  * @param props.trigger - A single React element that opens the dialog. Must not be a React.Fragment.
+ *                       Optional when using the controlled `open` prop.
  */
 
-export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
-  const [open, setOpen] = useState(false);
+export function EditItemDialog({
+  item,
+  trigger,
+  open: controlledOpen,
+  onOpenChange,
+}: EditItemDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const updateItemMutation = useUpdateInventoryItem();
   const { data: familyMembers, isLoading: familyMembersLoading } = useFamilyMembers();
 
@@ -79,7 +95,7 @@ export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
     }
   }, [item, form, open]);
 
-  if (!trigger || !React.isValidElement(trigger) || trigger.type === React.Fragment) {
+  if (trigger && (!React.isValidElement(trigger) || trigger.type === React.Fragment)) {
     console.error(
       "EditItemDialog: 'trigger' prop must be a single React element and not a React.Fragment"
     );
@@ -102,7 +118,7 @@ export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Rediger gjenstand</DialogTitle>
