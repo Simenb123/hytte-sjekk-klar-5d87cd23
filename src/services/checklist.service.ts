@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DbArea, DbChecklistItem, DbCompletionLog, ChecklistItemWithStatus, AreaWithItems } from "@/types/database.types";
 import { toast } from "sonner";
 import { ChecklistCategory, checklistCategories } from "@/models/checklist";
+import type { Season } from "@/models/seasons";
 
 // Fetch all areas from the database
 export const fetchAreas = async (): Promise<DbArea[]> => {
@@ -19,7 +20,10 @@ export const fetchAreas = async (): Promise<DbArea[]> => {
 };
 
 // This function now fetches items by category and optionally filters by season.
-export const fetchChecklistItems = async (category: string, season?: 'winter' | 'summer' | 'all'): Promise<DbChecklistItem[]> => {
+export const fetchChecklistItems = async (
+  category: string,
+  season?: Season
+): Promise<DbChecklistItem[]> => {
   let query = supabase
     .from('checklist_items')
     .select(`*, checklist_item_images ( image_url )`)
@@ -162,7 +166,9 @@ export const getChecklistForCategory = async (
 };
 
 // New function to fetch all checklist items for a given season
-export const fetchAllChecklistItemsForSeason = async (season: 'winter' | 'summer'): Promise<DbChecklistItem[]> => {
+export const fetchAllChecklistItemsForSeason = async (
+  season: Exclude<Season, 'all'>
+): Promise<DbChecklistItem[]> => {
   const { data, error } = await supabase
     .from('checklist_items')
     .select('*')

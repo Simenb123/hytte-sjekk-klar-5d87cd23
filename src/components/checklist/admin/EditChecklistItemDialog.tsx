@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Edit2, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { Season, seasonLabels } from '@/models/seasons';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface ChecklistItem {
@@ -14,7 +15,7 @@ interface ChecklistItem {
   text: string;
   area_id: string;
   category?: string;
-  season?: string;
+  season?: Season;
   checklist_item_images?: { image_url: string }[];
 }
 
@@ -35,7 +36,7 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
     text: item.text,
     area_id: item.area_id,
     category: item.category || '',
-    season: item.season || ''
+    season: (item.season as Season) || 'all'
   });
 
   const handleSave = async () => {
@@ -47,7 +48,7 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
         text: formData.text,
         area_id: formData.area_id,
         category: formData.category || null,
-        season: formData.season || null
+        season: formData.season
       });
 
       if (imageFile && user) {
@@ -171,23 +172,18 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
           <div>
             <Label htmlFor="season">Sesong</Label>
             <Select
-              value={formData.season || "none"}
+              value={formData.season}
               onValueChange={(value) =>
-                setFormData(prev => ({
-                  ...prev,
-                  season: value === "none" ? "" : value,
-                }))
+                setFormData(prev => ({ ...prev, season: value as Season }))
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Velg sesong (valgfritt)" />
+                <SelectValue placeholder="Velg sesong" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Ingen sesong</SelectItem>
-                <SelectItem value="vinter">Vinter</SelectItem>
-                <SelectItem value="sommer">Sommer</SelectItem>
-                <SelectItem value="høst">Høst</SelectItem>
-                <SelectItem value="vår">Vår</SelectItem>
+                <SelectItem value="all">{seasonLabels.all}</SelectItem>
+                <SelectItem value="winter">{seasonLabels.winter}</SelectItem>
+                <SelectItem value="summer">{seasonLabels.summer}</SelectItem>
               </SelectContent>
             </Select>
           </div>
