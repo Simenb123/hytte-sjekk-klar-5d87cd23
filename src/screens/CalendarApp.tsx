@@ -197,7 +197,7 @@ const CalendarApp: React.FC = () => {
   return (
     <Layout title="Kalender og booking" showBackButton>
 
-      <div className="max-w-lg mx-auto p-4">
+      <div className="w-full p-4">
         <CalendarSection 
           date={date} 
           onDateSelect={handleDateSelect} 

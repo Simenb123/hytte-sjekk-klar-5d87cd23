@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="app-header w-full sticky top-0 left-0 right-0 bg-primary text-primary-foreground shadow-sm z-30">
-      <div className="header-inner flex justify-between items-center px-4 py-2 w-full">
+      <div className="header-inner flex justify-between items-center px-0 py-2 w-full">
         <div className="flex items-center">
           {showBackButton && (
             <button
