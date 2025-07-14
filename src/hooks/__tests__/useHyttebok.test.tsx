@@ -33,6 +33,6 @@ describe('useAddHyttebokEntry', () => {
   it('inserts entry with content and user_id', async () => {
     const { result } = renderHook(() => useAddHyttebokEntry(), { wrapper });
     await result.current.mutateAsync({ content: 'test' });
-    expect(insertMock).toHaveBeenCalledWith({ text: 'test', user_id: 'uid' });
+    expect(insertMock).toHaveBeenCalledWith({ content: 'test', user_id: 'uid' });
   });
 });
