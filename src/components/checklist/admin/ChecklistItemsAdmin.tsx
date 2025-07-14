@@ -17,13 +17,14 @@ import { EditChecklistItemDialog } from './EditChecklistItemDialog';
 import { ChecklistSearch } from './ChecklistSearch';
 import { useChecklistAdmin } from '@/hooks/useChecklistAdmin';
 import { useToast } from '@/state/toast';
+import { Season, seasonLabels } from '@/models/seasons';
 
 interface ChecklistItem {
   id: string;
   text: string;
   area_id: string;
   category?: string;
-  season?: string;
+  season?: Season;
   areas?: { name: string };
   checklist_item_images?: { image_url: string }[];
 }
@@ -33,7 +34,7 @@ export function ChecklistItemsAdmin() {
     text: '',
     area_id: '',
     category: '',
-    season: '',
+    season: 'all' as Season,
     image: null as File | null
   });
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,11 +76,11 @@ export function ChecklistItemsAdmin() {
     mutationFn: async (item: typeof newItem) => {
       const { data, error } = await supabase
         .from('checklist_items')
-        .insert([{
+        .insert([{ 
           text: item.text,
           area_id: item.area_id,
           category: item.category || null,
-          season: item.season || null
+          season: item.season
         }])
         .select()
         .single();
@@ -103,7 +104,7 @@ export function ChecklistItemsAdmin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['checklist-items'] });
-      setNewItem({ text: '', area_id: '', category: '', season: '', image: null });
+      setNewItem({ text: '', area_id: '', category: '', season: 'all', image: null });
       toast({
         title: "Oppgave lagt til",
         description: "Ny oppgave er opprettet.",
@@ -193,15 +194,19 @@ export function ChecklistItemsAdmin() {
 
           <div>
             <Label htmlFor="season">Sesong</Label>
-            <Select value={newItem.season} onValueChange={(value) => setNewItem(prev => ({ ...prev, season: value }))}>
+            <Select
+              value={newItem.season}
+              onValueChange={(value) =>
+                setNewItem(prev => ({ ...prev, season: value as Season }))
+              }
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Velg sesong (valgfritt)" />
+                <SelectValue placeholder="Velg sesong" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="vinter">Vinter</SelectItem>
-                <SelectItem value="sommer">Sommer</SelectItem>
-                <SelectItem value="høst">Høst</SelectItem>
-                <SelectItem value="vår">Vår</SelectItem>
+                <SelectItem value="all">{seasonLabels.all}</SelectItem>
+                <SelectItem value="winter">{seasonLabels.winter}</SelectItem>
+                <SelectItem value="summer">{seasonLabels.summer}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -257,7 +262,9 @@ export function ChecklistItemsAdmin() {
                   <div className="flex gap-2 text-xs text-gray-500">
                     <span>Område: {item.areas?.name}</span>
                     {item.category && <span>• Kategori: {item.category}</span>}
-                    {item.season && <span>• Sesong: {item.season}</span>}
+                    {item.season && (
+                      <span>• Sesong: {seasonLabels[item.season as Season]}</span>
+                    )}
                   </div>
                 </div>
                 
