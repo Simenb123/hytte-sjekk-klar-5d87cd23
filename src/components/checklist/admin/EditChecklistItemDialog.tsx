@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { NO_SELECTION } from '@/constants';
 import { Edit2, Loader2, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
@@ -42,8 +43,8 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
       await onUpdate(item.id, {
         text: formData.text,
         area_id: formData.area_id,
-        category: formData.category || null,
-        season: formData.season || null
+        category: formData.category === NO_SELECTION ? null : formData.category || null,
+        season: formData.season === NO_SELECTION ? null : formData.season || null
       });
       setOpen(false);
     } catch (error) {
@@ -105,12 +106,20 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
 
           <div>
             <Label htmlFor="category">Kategori</Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+            <Select
+              value={formData.category || NO_SELECTION}
+              onValueChange={(value) =>
+                setFormData(prev => ({
+                  ...prev,
+                  category: value === NO_SELECTION ? '' : value,
+                }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Velg kategori (valgfritt)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Ingen kategori</SelectItem>
+                <SelectItem value={NO_SELECTION}>Ingen kategori</SelectItem>
                 <SelectItem value="før_ankomst">Før ankomst</SelectItem>
                 <SelectItem value="ankomst">Ankomst</SelectItem>
                 <SelectItem value="opphold">Under oppholdet</SelectItem>
@@ -122,12 +131,20 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
 
           <div>
             <Label htmlFor="season">Sesong</Label>
-            <Select value={formData.season} onValueChange={(value) => setFormData(prev => ({ ...prev, season: value }))}>
+            <Select
+              value={formData.season || NO_SELECTION}
+              onValueChange={(value) =>
+                setFormData(prev => ({
+                  ...prev,
+                  season: value === NO_SELECTION ? '' : value,
+                }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Velg sesong (valgfritt)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Ingen sesong</SelectItem>
+                <SelectItem value={NO_SELECTION}>Ingen sesong</SelectItem>
                 <SelectItem value="vinter">Vinter</SelectItem>
                 <SelectItem value="sommer">Sommer</SelectItem>
                 <SelectItem value="høst">Høst</SelectItem>

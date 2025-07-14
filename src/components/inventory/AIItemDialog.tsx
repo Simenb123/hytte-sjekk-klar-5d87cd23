@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { NO_SELECTION } from '@/constants';
 import { Camera, Loader2, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 import { useInventoryAI, InventoryAIResult } from '@/hooks/useInventoryAI';
 import { useAddInventoryItem } from '@/hooks/useInventory/index';
@@ -290,12 +291,20 @@ export function AIItemDialog() {
 
               <div>
                 <Label htmlFor="owner">Eier</Label>
-                <Select value={formData.family_member_id} onValueChange={(value) => setFormData(prev => ({ ...prev, family_member_id: value }))}>
+                <Select
+                  value={formData.family_member_id || NO_SELECTION}
+                  onValueChange={(value) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      family_member_id: value === NO_SELECTION ? '' : value,
+                    }))
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Velg eier" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Ingen spesifikk eier</SelectItem>
+                    <SelectItem value={NO_SELECTION}>Ingen spesifikk eier</SelectItem>
                     {familyMembers.map((member) => (
                       <SelectItem key={member.id} value={member.id}>
                         {member.name} {member.nickname ? `(${member.nickname})` : ''}
