@@ -22,7 +22,7 @@ export const fetchAreas = async (): Promise<DbArea[]> => {
 export const fetchChecklistItems = async (category: string, season?: 'winter' | 'summer' | 'all'): Promise<DbChecklistItem[]> => {
   let query = supabase
     .from('checklist_items')
-    .select('*')
+    .select(`*, checklist_item_images ( image_url )`)
     .eq('category', category);
 
   if (season && season !== 'all') {
@@ -136,7 +136,8 @@ export const getChecklistForCategory = async (
       }
       acc[areaId].push({
         ...item,
-        isCompleted: completionMap.get(item.id) ?? false
+        isCompleted: completionMap.get(item.id) ?? false,
+        imageUrl: item.checklist_item_images?.[0]?.image_url
       });
       return acc;
     }, {} as Record<string, ChecklistItemWithStatus[]>);

@@ -7,6 +7,7 @@ interface AreaChecklistItemProps {
     id: string;
     text: string;
     isCompleted: boolean;
+    imageUrl?: string;
   };
   onToggle: (id: string) => void;
 }
@@ -27,6 +28,7 @@ const AreaChecklistItem: React.FC<AreaChecklistItemProps> = ({ item, onToggle })
       id={item.id}
       text={item.text}
       isCompleted={item.isCompleted}
+      imageUrl={item.imageUrl}
       onToggle={handleToggle}
     />
   );

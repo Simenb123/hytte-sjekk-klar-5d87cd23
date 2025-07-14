@@ -101,6 +101,7 @@ export default function ChecklistPage() {
                         id={item.id}
                         text={item.text}
                         isCompleted={item.isCompleted}
+                        imageUrl={item.imageUrl}
                         onToggle={() => handleToggleItem(item.id, item.isCompleted)}
                       />
                     ))}

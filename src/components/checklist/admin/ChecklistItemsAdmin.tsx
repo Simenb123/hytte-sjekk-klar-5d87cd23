@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import ChecklistError from '../ChecklistError';
@@ -24,6 +25,7 @@ interface ChecklistItem {
   category?: string;
   season?: string;
   areas?: { name: string };
+  checklist_item_images?: { image_url: string }[];
 }
 
 export function ChecklistItemsAdmin() {
@@ -31,12 +33,14 @@ export function ChecklistItemsAdmin() {
     text: '',
     area_id: '',
     category: '',
-    season: ''
+    season: '',
+    image: null as File | null
   });
   const [searchTerm, setSearchTerm] = useState('');
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { updateChecklistItem, deleteChecklistItem } = useChecklistAdmin();
 
   const { data: areas = [], isLoading: areasLoading } = useQuery({
@@ -58,7 +62,8 @@ export function ChecklistItemsAdmin() {
         .from('checklist_items')
         .select(`
           *,
-          areas (name)
+          areas (name),
+          checklist_item_images ( image_url )
         `)
         .order('text');
       if (error) throw error;
@@ -79,11 +84,26 @@ export function ChecklistItemsAdmin() {
         .select()
         .single();
       if (error) throw error;
+      if (item.image && user) {
+        const ext = item.image.name.split(".").pop();
+        const fileName = `${user.id}/${data.id}-${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('checklist_item_images')
+          .upload(fileName, item.image);
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('checklist_item_images')
+            .getPublicUrl(fileName);
+          await supabase
+            .from('checklist_item_images')
+            .insert({ item_id: data.id, image_url: publicUrl, user_id: user.id });
+        }
+      }
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['checklist-items'] });
-      setNewItem({ text: '', area_id: '', category: '', season: '' });
+      setNewItem({ text: '', area_id: '', category: '', season: '', image: null });
       toast({
         title: "Oppgave lagt til",
         description: "Ny oppgave er opprettet.",
@@ -184,6 +204,16 @@ export function ChecklistItemsAdmin() {
                 <SelectItem value="vår">Vår</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="image">Bilde</Label>
+            <Input
+              id="image"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setNewItem(prev => ({ ...prev, image: e.target.files?.[0] || null }))}
+            />
           </div>
           
           <Button 

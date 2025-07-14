@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Edit2, Loader2, Trash2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface ChecklistItem {
@@ -14,6 +15,7 @@ interface ChecklistItem {
   area_id: string;
   category?: string;
   season?: string;
+  checklist_item_images?: { image_url: string }[];
 }
 
 interface EditChecklistItemDialogProps {
@@ -27,6 +29,8 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     text: item.text,
     area_id: item.area_id,
@@ -36,7 +40,7 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
 
   const handleSave = async () => {
     if (!formData.text.trim()) return;
-    
+
     setLoading(true);
     try {
       await onUpdate(item.id, {
@@ -45,6 +49,42 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
         category: formData.category || null,
         season: formData.season || null
       });
+
+      if (imageFile && user) {
+        const { data: oldImages } = await supabase
+          .from('checklist_item_images')
+          .select('image_url')
+          .eq('item_id', item.id)
+          .eq('user_id', user.id);
+
+        if (oldImages && oldImages.length > 0) {
+          const oldPaths = oldImages.map(img => {
+            const parts = img.image_url.split('/');
+            return parts.slice(parts.indexOf('checklist_item_images') + 1).join('/');
+          });
+          await supabase.storage.from('checklist_item_images').remove(oldPaths);
+          await supabase
+            .from('checklist_item_images')
+            .delete()
+            .eq('item_id', item.id)
+            .eq('user_id', user.id);
+        }
+
+        const ext = imageFile.name.split('.').pop();
+        const fileName = `${user.id}/${item.id}-${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('checklist_item_images')
+          .upload(fileName, imageFile);
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('checklist_item_images')
+            .getPublicUrl(fileName);
+          await supabase
+            .from('checklist_item_images')
+            .insert({ item_id: item.id, image_url: publicUrl, user_id: user.id });
+        }
+      }
+
       setOpen(false);
     } catch (error) {
       console.error('Error updating item:', error);
@@ -150,6 +190,23 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
                 <SelectItem value="vår">Vår</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="image">Bilde</Label>
+            <Input
+              id="image"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            />
+            {item.checklist_item_images && item.checklist_item_images.length > 0 && (
+              <img
+                src={item.checklist_item_images[0].image_url}
+                alt=""
+                className="mt-2 max-h-48 rounded"
+              />
+            )}
           </div>
           
           <div className="flex gap-2 pt-4">
