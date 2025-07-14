@@ -120,7 +120,10 @@ export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Kategori</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    value={field.value || "none"}
+                    onValueChange={(val) => field.onChange(val === "none" ? "" : val)}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Velg en kategori" />
@@ -145,14 +148,17 @@ export function EditItemDialog({ item, trigger }: EditItemDialogProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Eier (familiemedlem)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    value={field.value || "none"}
+                    onValueChange={(val) => field.onChange(val === "none" ? "" : val)}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Velg familiemedlem" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Ingen spesifikk eier</SelectItem>
+                      <SelectItem value="none">Ingen spesifikk eier</SelectItem>
                       {familyMembers?.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.name} {member.nickname ? `(${member.nickname})` : ''}

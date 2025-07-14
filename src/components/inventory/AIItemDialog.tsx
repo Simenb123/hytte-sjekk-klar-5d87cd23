@@ -290,12 +290,20 @@ export function AIItemDialog() {
 
               <div>
                 <Label htmlFor="owner">Eier</Label>
-                <Select value={formData.family_member_id} onValueChange={(value) => setFormData(prev => ({ ...prev, family_member_id: value }))}>
+                <Select
+                  value={formData.family_member_id || "none"}
+                  onValueChange={(value) =>
+                    setFormData(prev => ({
+                      ...prev,
+                      family_member_id: value === "none" ? "" : value,
+                    }))
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Velg eier" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Ingen spesifikk eier</SelectItem>
+                    <SelectItem value="none">Ingen spesifikk eier</SelectItem>
                     {familyMembers.map((member) => (
                       <SelectItem key={member.id} value={member.id}>
                         {member.name} {member.nickname ? `(${member.nickname})` : ''}

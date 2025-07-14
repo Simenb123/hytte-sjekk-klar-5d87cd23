@@ -105,12 +105,20 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
 
           <div>
             <Label htmlFor="category">Kategori</Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+            <Select
+              value={formData.category || "none"}
+              onValueChange={(value) =>
+                setFormData(prev => ({
+                  ...prev,
+                  category: value === "none" ? "" : value,
+                }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Velg kategori (valgfritt)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Ingen kategori</SelectItem>
+                <SelectItem value="none">Ingen kategori</SelectItem>
                 <SelectItem value="før_ankomst">Før ankomst</SelectItem>
                 <SelectItem value="ankomst">Ankomst</SelectItem>
                 <SelectItem value="opphold">Under oppholdet</SelectItem>
@@ -122,12 +130,20 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
 
           <div>
             <Label htmlFor="season">Sesong</Label>
-            <Select value={formData.season} onValueChange={(value) => setFormData(prev => ({ ...prev, season: value }))}>
+            <Select
+              value={formData.season || "none"}
+              onValueChange={(value) =>
+                setFormData(prev => ({
+                  ...prev,
+                  season: value === "none" ? "" : value,
+                }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Velg sesong (valgfritt)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Ingen sesong</SelectItem>
+                <SelectItem value="none">Ingen sesong</SelectItem>
                 <SelectItem value="vinter">Vinter</SelectItem>
                 <SelectItem value="sommer">Sommer</SelectItem>
                 <SelectItem value="høst">Høst</SelectItem>
