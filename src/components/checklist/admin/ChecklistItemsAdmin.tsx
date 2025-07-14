@@ -269,7 +269,7 @@ export function ChecklistItemsAdmin() {
                 </div>
                 
                 <EditChecklistItemDialog
-                  item={item}
+                  item={{...item, season: item.season as Season}}
                   areas={areas}
                   onUpdate={handleUpdateItem}
                   onDelete={handleDeleteItem}

@@ -75,7 +75,7 @@ export function useGoogleAuth(
         
         try {
           const nav = navigator as Navigator & {
-            connection?: NetworkInformation;
+            connection?: any;
           };
           const connection = nav.connection;
           const networkState = {

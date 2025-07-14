@@ -41,7 +41,7 @@ export function useAiChat() {
             const result = aiData.result;
             analysis = `${result.name}. ${result.description}`.trim();
             historyWithAnalysis.push({
-              role: 'system',
+              role: 'assistant',
               content: `Bildet viser: ${analysis}`,
             });
           }

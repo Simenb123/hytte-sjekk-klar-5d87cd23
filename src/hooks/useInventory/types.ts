@@ -19,10 +19,10 @@ export type UpdateInventoryItemData = NewInventoryItemData & {
 
 export const mapItemToRecord = (
   item: Partial<NewInventoryItemData>,
-  userId?: string,
+  userId: string,
   defaultCategory: string | null = 'Annet'
 ) => ({
-  name: item.name || null,
+  name: item.name || '',
   description: item.description || null,
   brand: item.brand || null,
   color: item.color || null,
@@ -33,5 +33,5 @@ export const mapItemToRecord = (
   notes: item.notes || null,
   category: item.category ?? defaultCategory,
   family_member_id: item.family_member_id || null,
-  ...(userId ? { user_id: userId } : {})
+  user_id: userId
 });

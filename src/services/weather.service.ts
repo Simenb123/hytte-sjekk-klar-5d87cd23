@@ -148,7 +148,7 @@ export class WeatherService {
         precipitation: item.data?.next_1_hours?.details?.precipitation_amount || 0,
         windSpeed: Math.round(item.data.instant.details.wind_speed || 0),
         airPressure: item.data.instant.details.air_pressure_at_sea_level,
-        cloudCover: item.data.instant.details.cloud_area_fraction,
+        cloudCover: 0, // Not available in current API
         windGust: item.data.instant.details.wind_speed_of_gust,
       });
     }
@@ -166,7 +166,7 @@ export class WeatherService {
           currentData.data.instant.details.wind_from_direction,
         ),
         airPressure: currentData.data.instant.details.air_pressure_at_sea_level,
-        cloudCover: currentData.data.instant.details.cloud_area_fraction,
+        cloudCover: 0, // Not available in current API
         icon: currentData.data?.next_1_hours?.summary?.symbol_code || 'clearsky_day',
         pressure: Math.round(currentData.data.instant.details.air_pressure_at_sea_level || 0),
         windGust: Math.round(currentData.data.instant.details.wind_speed_of_gust || 0),

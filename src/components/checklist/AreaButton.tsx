@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CheckCircle, Circle } from 'lucide-react';
-import { ChecklistArea } from '../models/checklist';
+import { ChecklistArea } from '@/models/checklist';
 
 interface AreaButtonProps {
   area: ChecklistArea;
