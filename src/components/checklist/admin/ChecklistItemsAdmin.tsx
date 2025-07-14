@@ -16,6 +16,7 @@ import { EditChecklistItemDialog } from './EditChecklistItemDialog';
 import { ChecklistSearch } from './ChecklistSearch';
 import { useChecklistAdmin } from '@/hooks/useChecklistAdmin';
 import { useToast } from '@/state/toast';
+import { seasonOptions, Season } from '@/models/seasons';
 
 interface ChecklistItem {
   id: string;
@@ -31,7 +32,7 @@ export function ChecklistItemsAdmin() {
     text: '',
     area_id: '',
     category: '',
-    season: ''
+    season: 'all' as Season
   });
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -83,7 +84,7 @@ export function ChecklistItemsAdmin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['checklist-items'] });
-      setNewItem({ text: '', area_id: '', category: '', season: '' });
+      setNewItem({ text: '', area_id: '', category: '', season: 'all' as Season });
       toast({
         title: "Oppgave lagt til",
         description: "Ny oppgave er opprettet.",
@@ -173,15 +174,14 @@ export function ChecklistItemsAdmin() {
 
           <div>
             <Label htmlFor="season">Sesong</Label>
-            <Select value={newItem.season} onValueChange={(value) => setNewItem(prev => ({ ...prev, season: value }))}>
+            <Select value={newItem.season} onValueChange={(value) => setNewItem(prev => ({ ...prev, season: value as Season }))}>
               <SelectTrigger>
-                <SelectValue placeholder="Velg sesong (valgfritt)" />
+                <SelectValue placeholder="Velg sesong" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="vinter">Vinter</SelectItem>
-                <SelectItem value="sommer">Sommer</SelectItem>
-                <SelectItem value="høst">Høst</SelectItem>
-                <SelectItem value="vår">Vår</SelectItem>
+                {seasonOptions.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
