@@ -7,6 +7,7 @@ interface AreaChecklistContainerProps {
     id: string;
     text: string;
     isCompleted: boolean;
+    imageUrl?: string;
   }>;
   onToggleItem: (id: string) => void;
 }

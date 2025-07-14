@@ -3,6 +3,7 @@ export type ChecklistItem = {
   id: string;
   text: string;
   isCompleted: boolean;
+  imageUrl?: string;
 };
 
 export type ChecklistArea = {
