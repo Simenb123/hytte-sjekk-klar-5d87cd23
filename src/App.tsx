@@ -89,7 +89,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/documents" element={<DocumentsPage />} />
+              <Route
+                path="/documents"
+                element={
+                  <ProtectedRoute>
+                    <DocumentsPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/hyttebok"
                 element={
