@@ -21,6 +21,7 @@ import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 import { toast } from 'sonner';
 import { Loader2, Plus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { NO_SELECTION } from '@/constants';
 
 const formSchema = z.object({
   name: z.string().optional(),
@@ -55,13 +56,19 @@ export function NewItemDialog() {
       owner: "",
       notes: "",
       category: "Annet",
-      family_member_id: "",
+      family_member_id: NO_SELECTION,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await addItemMutation.mutateAsync(values as NewInventoryItemData);
+      await addItemMutation.mutateAsync({
+        ...values,
+        family_member_id:
+          values.family_member_id === NO_SELECTION
+            ? undefined
+            : values.family_member_id,
+      } as NewInventoryItemData);
       toast.success("Gjenstand lagt til!");
       form.reset();
       setOpen(false);
@@ -93,7 +100,12 @@ export function NewItemDialog() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Kategori</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    value={field.value || NO_SELECTION}
+                    onValueChange={(value) =>
+                      field.onChange(value === NO_SELECTION ? '' : value)
+                    }
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Velg en kategori" />
@@ -118,14 +130,19 @@ export function NewItemDialog() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Eier (familiemedlem)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    value={field.value || NO_SELECTION}
+                    onValueChange={(value) =>
+                      field.onChange(value === NO_SELECTION ? '' : value)
+                    }
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Velg familiemedlem" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Ingen spesifikk eier</SelectItem>
+                      <SelectItem value={NO_SELECTION}>Ingen spesifikk eier</SelectItem>
                       {familyMembers?.map((member) => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.name} {member.nickname ? `(${member.nickname})` : ''}
