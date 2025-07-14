@@ -81,40 +81,55 @@ export class WeatherService {
         }
       }
 
-      const response = await fetch(
-        `${YR_API_BASE}?lat=${lat}&lon=${lon}`,
-        {
-          headers: {
-            'User-Agent': `Gaustablikk-Hytte-App/1.0 (${CONTACT_EMAIL})`,
-          },
-        }
-      );
+      console.log('Fetching weather data via edge function');
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { data, error } = await supabase.functions.invoke('weather-proxy', {
+        body: { lat, lon, days: maxDays }
+      });
 
-      if (!response.ok) {
-        console.error('Failed to fetch weather data:', response.status);
-        return null;
+      if (error) {
+        console.error('Weather edge function error:', error);
+        throw new Error(error.message || 'Failed to fetch weather data');
       }
 
-      const data: LocationForecast = await response.json();
-      const transformed = this.transformWeatherData(data, maxDays);
+      if (!data) {
+        throw new Error('No weather data received');
+      }
 
+      // Add sun times
       const sunTimes = await fetchSunTimes(lat, lon);
       if (sunTimes) {
-        transformed.sunrise = sunTimes.sunrise;
-        transformed.sunset = sunTimes.sunset;
+        data.sunrise = sunTimes.sunrise;
+        data.sunset = sunTimes.sunset;
       }
 
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem(cacheKey, JSON.stringify(transformed));
+          localStorage.setItem(cacheKey, JSON.stringify(data));
         } catch (e) {
           console.warn('[WeatherService] Failed to cache weather data', e);
         }
       }
 
-      return transformed;
+      return data;
     } catch (error) {
       console.error('Error fetching weather data:', error);
+      
+      // Try to return cached data even if expired
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem(this.getCacheKey(lat, lon));
+        if (cached) {
+          try {
+            const parsed: WeatherData = JSON.parse(cached);
+            console.log('Using expired cached data as fallback');
+            return parsed;
+          } catch (e) {
+            console.warn('[WeatherService] Failed to parse fallback cached data', e);
+          }
+        }
+      }
+      
       return null;
     }
   }
