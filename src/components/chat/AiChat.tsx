@@ -111,7 +111,10 @@ const AiChat: React.FC = () => {
   return (
     <div className="flex flex-col h-full max-w-lg mx-auto bg-white">
       <div className="flex items-center justify-between p-4 border-b bg-gray-50">
-        <h2 className="text-lg font-semibold text-gray-800">AI Hyttehjelper</h2>
+        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
+          <span role="img" aria-label="ape">🙉</span>
+          AI Hyttehjelper
+        </h2>
         <Button
           variant="outline"
           size="sm"
