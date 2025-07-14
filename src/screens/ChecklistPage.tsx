@@ -82,7 +82,7 @@ export default function ChecklistPage() {
         )
       }
     >
-      <section className="p-4 sm:p-6 max-w-lg mx-auto">
+      <section className="p-4 sm:p-6 w-full">
         {areas && areas.length > 0 ? (
           <Accordion type="multiple" defaultValue={areas.map(area => area.id)} className="w-full space-y-3">
             {areas.map((area) => (

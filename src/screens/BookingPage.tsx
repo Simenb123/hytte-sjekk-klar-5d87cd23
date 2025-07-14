@@ -102,7 +102,7 @@ const BookingPage = () => {
     return (
       <Layout title="Bookinger" showBackButton showHomeButton>
 
-        <div className="max-w-4xl mx-auto p-4">
+        <div className="w-full p-4">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
               <Clock className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
@@ -118,7 +118,7 @@ const BookingPage = () => {
     return (
       <Layout title="Bookinger" showBackButton showHomeButton>
 
-        <div className="max-w-4xl mx-auto p-4">
+        <div className="w-full p-4">
           <Alert variant="destructive">
             <AlertDescription>
               Kunne ikke laste bookinger: {error}
@@ -132,7 +132,7 @@ const BookingPage = () => {
   return (
     <Layout title="Bookinger" showBackButton showHomeButton>
 
-      <div className="max-w-4xl mx-auto p-4">
+      <div className="w-full p-4">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900">Mine Bookinger</h2>

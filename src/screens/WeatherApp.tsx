@@ -35,7 +35,7 @@ const WeatherApp: React.FC = () => {
   if (loading && !weatherData) {
     return (
       <Layout title="Værmelding" showBackButton>
-        <div className="max-w-lg mx-auto p-4">
+        <div className="w-full p-4">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
@@ -47,7 +47,7 @@ const WeatherApp: React.FC = () => {
   if (error || !weatherData) {
     return (
       <Layout title="Værmelding" showBackButton>
-        <div className="max-w-lg mx-auto p-4">
+        <div className="w-full p-4">
           <Card>
             <CardContent className="p-6 text-center">
               <p className="text-red-600 mb-4">{error || 'Kunne ikke laste værdata'}</p>
@@ -64,7 +64,7 @@ const WeatherApp: React.FC = () => {
   return (
     <Layout title="Værmelding" showBackButton>
 
-      <div className="max-w-lg mx-auto p-4">
+      <div className="w-full p-4">
         <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 text-white mb-6">
           <div className="flex justify-between items-center">
             <div>

@@ -11,7 +11,7 @@ const ChecklistAdminPage: React.FC = () => {
   return (
     <Layout title="Administrasjon" showBackButton>
 
-      <div className="container mx-auto p-6 max-w-6xl">
+      <div className="w-full p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Sjekkliste-administrasjon</h1>
           <p className="text-gray-600">Administrer områder og sjekkliste-punkter</p>

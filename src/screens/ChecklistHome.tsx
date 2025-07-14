@@ -43,7 +43,7 @@ const ChecklistHome: React.FC = () => {
       }
     >
 
-      <div className="container mx-auto p-6 max-w-4xl">
+      <div className="w-full p-6">
         <div className="mb-6">
           <p className="text-gray-600">Hold oversikt over alle oppgaver for hytta</p>
         </div>

@@ -6,7 +6,7 @@ import { otherApps } from '@/data/other-apps';
 const OtherApps: React.FC = () => {
   return (
     <Layout title="Andre apper" showBackButton>
-      <div className="max-w-lg mx-auto p-4">
+      <div className="w-full p-4">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {otherApps.map((app) => (
             <OtherAppCard key={app.id} app={app} />
