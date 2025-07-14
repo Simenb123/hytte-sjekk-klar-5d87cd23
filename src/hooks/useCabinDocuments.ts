@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -25,7 +25,7 @@ export function useCabinDocuments() {
   const [documents, setDocuments] = useState<CabinDocument[]>([]);
   const { user } = useAuth();
 
-  const uploadFile = async (file: File): Promise<string> => {
+  const uploadFile = useCallback(async (file: File): Promise<string> => {
     if (!user) {
       throw new Error('Bruker ikke autentisert');
     }
@@ -41,9 +41,9 @@ export function useCabinDocuments() {
       .from('document_files')
       .getPublicUrl(fileName);
     return publicUrl;
-  };
+  }, [user]);
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -59,9 +59,9 @@ export function useCabinDocuments() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const searchDocuments = async (query: string): Promise<SearchResult[]> => {
+  const searchDocuments = useCallback(async (query: string): Promise<SearchResult[]> => {
     try {
       const { data, error } = await supabase
         .rpc('search_cabin_documents', { search_query: query });
@@ -96,9 +96,9 @@ export function useCabinDocuments() {
       toast.error('Kunne ikke søke i dokumenter');
       return [];
     }
-  };
+  }, []);
 
-  const addDocument = async (
+  const addDocument = useCallback(async (
     document: Omit<CabinDocument, 'id' | 'created_at' | 'updated_at'>,
     file?: File
   ) => {
@@ -123,9 +123,9 @@ export function useCabinDocuments() {
       toast.error('Kunne ikke legge til dokument');
       throw error;
     }
-  };
+  }, [uploadFile, fetchDocuments]);
 
-  const updateDocument = async (
+  const updateDocument = useCallback(async (
     id: string,
     updates: Partial<CabinDocument>,
     file?: File
@@ -152,9 +152,9 @@ export function useCabinDocuments() {
       toast.error('Kunne ikke oppdatere dokument');
       throw error;
     }
-  };
+  }, [uploadFile, fetchDocuments]);
 
-  const deleteDocument = async (id: string) => {
+  const deleteDocument = useCallback(async (id: string) => {
     try {
       const { error } = await supabase
         .from('cabin_documents')
@@ -170,7 +170,7 @@ export function useCabinDocuments() {
       toast.error('Kunne ikke slette dokument');
       throw error;
     }
-  };
+  }, [fetchDocuments]);
 
   return {
     documents,
