@@ -230,11 +230,23 @@ ${weatherData.forecast.map(day => `
       } else if (relevantDocs && relevantDocs.length > 0) {
         documentContext = `
 **Relevante hytte-dokumenter:**
-${relevantDocs.map(doc => `
-**${doc.title}** (${doc.category})
-${doc.summary || ''}${doc.file_url ? ` [Se dokumentet](${doc.file_url})` : ''}
----
-`).join('')}
+${relevantDocs.map(doc => {
+  let docText = `**${doc.title}** (${doc.category})\n`;
+  if (doc.summary) {
+    docText += `Sammendrag: ${doc.summary}\n`;
+  }
+  if (doc.content) {
+    // Limit content to first 2000 characters to avoid overwhelming the AI context
+    const contentPreview = doc.content.length > 2000 
+      ? doc.content.substring(0, 2000) + '...' 
+      : doc.content;
+    docText += `Innhold: ${contentPreview}\n`;
+  }
+  if (doc.file_url) {
+    docText += `[Se dokumentet](${doc.file_url})\n`;
+  }
+  return docText + '---';
+}).join('\n')}
         `.trim();
       }
     } catch (error) {

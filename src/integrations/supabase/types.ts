@@ -709,6 +709,7 @@ export type Database = {
           title: string
           category: string
           summary: string
+          content: string
           file_url: string
           tags: string[]
           relevance: number
