@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { transformWeatherData, getWindDirection, getConditionFromSymbol, getÅrstid } from '../index';
-import type { LocationForecast } from '@/types/weather.types';
+import {
+  transformWeatherData,
+  getWindDirection,
+  getConditionFromSymbol,
+  getÅrstid,
+} from '../utils';
+import type { LocationForecast } from '../../../src/types/weather.types';
 
 const sampleForecast: LocationForecast = {
   properties: {
