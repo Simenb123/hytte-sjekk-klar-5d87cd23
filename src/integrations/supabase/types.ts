@@ -697,6 +697,99 @@ export type Database = {
           },
         ]
       }
+      wine_cellar: {
+        Row: {
+          alcohol_percentage: number | null
+          bottle_count: number
+          consumed_date: string | null
+          consumed_with: string | null
+          country: string | null
+          created_at: string
+          current_price: number | null
+          description: string | null
+          grape_variety: string | null
+          id: string
+          image_url: string | null
+          is_consumed: boolean
+          location: string
+          name: string
+          producer: string | null
+          purchase_date: string | null
+          purchase_info: string | null
+          purchase_price: number | null
+          rating: number | null
+          region: string | null
+          serving_notes: string | null
+          tasting_notes: string | null
+          updated_at: string
+          user_id: string
+          vinmonopol_id: string | null
+          vinmonopol_url: string | null
+          vintage: string | null
+          wine_color: string | null
+        }
+        Insert: {
+          alcohol_percentage?: number | null
+          bottle_count?: number
+          consumed_date?: string | null
+          consumed_with?: string | null
+          country?: string | null
+          created_at?: string
+          current_price?: number | null
+          description?: string | null
+          grape_variety?: string | null
+          id?: string
+          image_url?: string | null
+          is_consumed?: boolean
+          location?: string
+          name: string
+          producer?: string | null
+          purchase_date?: string | null
+          purchase_info?: string | null
+          purchase_price?: number | null
+          rating?: number | null
+          region?: string | null
+          serving_notes?: string | null
+          tasting_notes?: string | null
+          updated_at?: string
+          user_id: string
+          vinmonopol_id?: string | null
+          vinmonopol_url?: string | null
+          vintage?: string | null
+          wine_color?: string | null
+        }
+        Update: {
+          alcohol_percentage?: number | null
+          bottle_count?: number
+          consumed_date?: string | null
+          consumed_with?: string | null
+          country?: string | null
+          created_at?: string
+          current_price?: number | null
+          description?: string | null
+          grape_variety?: string | null
+          id?: string
+          image_url?: string | null
+          is_consumed?: boolean
+          location?: string
+          name?: string
+          producer?: string | null
+          purchase_date?: string | null
+          purchase_info?: string | null
+          purchase_price?: number | null
+          rating?: number | null
+          region?: string | null
+          serving_notes?: string | null
+          tasting_notes?: string | null
+          updated_at?: string
+          user_id?: string
+          vinmonopol_id?: string | null
+          vinmonopol_url?: string | null
+          vintage?: string | null
+          wine_color?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

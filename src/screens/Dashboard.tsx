@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import SkisporetCard from '@/components/dashboard/SkisporetCard';
 import Layout from '@/layout/Layout';
-import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen } from 'lucide-react';
+import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen, Wine } from 'lucide-react';
 
 export default function Dashboard() {
   return (
@@ -30,6 +30,15 @@ export default function Dashboard() {
                 description="Oversikt over alle gjenstander på hytta"
                 icon={<Package className="h-8 w-8" />}
                 color="bg-gradient-to-br from-green-500 to-green-600"
+              />
+            </Link>
+
+            <Link to="/wine-cellar">
+              <DashboardCard
+                title="Vinlager"
+                description="Administrer ditt personlige vinlager"
+                icon={<Wine className="h-8 w-8" />}
+                color="bg-gradient-to-br from-purple-800 to-red-700"
               />
             </Link>
 

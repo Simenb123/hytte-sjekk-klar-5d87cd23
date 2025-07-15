@@ -20,6 +20,7 @@ import CalendarApp from './screens/CalendarApp';
 import WeatherApp from './screens/WeatherApp';
 import AiHelperPage from './screens/AiHelperPage';
 import DocumentsPage from './screens/DocumentsPage';
+import WineCellarPage from './screens/WineCellarPage';
 import HyttebokPage from './screens/HyttebokPage';
 import OtherApps from './screens/OtherApps';
 import LogsPage from './screens/LogsPage';
@@ -94,6 +95,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DocumentsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wine-cellar"
+                element={
+                  <ProtectedRoute>
+                    <WineCellarPage />
                   </ProtectedRoute>
                 }
               />
