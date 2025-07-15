@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { WineDialog } from './WineDialog';
+import { ConsumptionTracker } from './ConsumptionTracker';
 import { useWineCellar } from '@/hooks/useWineCellar';
 import type { WineCellarItem } from '@/types/wine';
 
@@ -137,15 +138,19 @@ export function WineList({ wines }: WineListProps) {
             
             <div className="flex justify-between items-center pt-2 border-t">
               <div className="flex gap-1">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleMarkAsConsumed(wine)}
-                  className="flex items-center gap-1"
-                >
-                  {wine.is_consumed ? <CheckCircle className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
-                  {wine.is_consumed ? 'Gjenstående' : 'Drukket'}
-                </Button>
+                <ConsumptionTracker 
+                  wine={wine}
+                  trigger={
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex items-center gap-1"
+                    >
+                      {wine.is_consumed ? <CheckCircle className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
+                      {wine.is_consumed ? 'Drukket' : 'Drikk'}
+                    </Button>
+                  }
+                />
               </div>
               
               <div className="flex gap-1">

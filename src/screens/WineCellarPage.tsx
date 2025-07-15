@@ -5,6 +5,8 @@ import { WineDialog } from '@/components/wine/WineDialog';
 import { WineList } from '@/components/wine/WineList';
 import { WineFilters } from '@/components/wine/WineFilters';
 import { WineStats } from '@/components/wine/WineStats';
+import { BulkLocationMove } from '@/components/wine/BulkLocationMove';
+import { WineImportExport } from '@/components/wine/WineImportExport';
 import { useWineCellar } from '@/hooks/useWineCellar';
 import { Button } from '@/components/ui/button';
 import type { WineFilters as WineFiltersType } from '@/types/wine';
@@ -138,14 +140,21 @@ export default function WineCellarPage() {
               </p>
             </div>
           </div>
-          <WineDialog 
-            trigger={
-              <Button className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Legg til vin
-              </Button>
-            }
-          />
+          <div className="flex gap-2">
+            <BulkLocationMove 
+              wines={filteredAndSortedWines} 
+              availableLocations={availableLocations} 
+            />
+            <WineImportExport wines={wines} />
+            <WineDialog 
+              trigger={
+                <Button className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Legg til vin
+                </Button>
+              }
+            />
+          </div>
         </div>
 
         <WineStats wines={wines} />
