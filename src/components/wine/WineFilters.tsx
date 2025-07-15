@@ -19,16 +19,16 @@ export function WineFilters({ filters, onFiltersChange, availableLocations }: Wi
   const clearFilters = () => {
     onFiltersChange({
       search: '',
-      location: '',
-      wine_color: '',
-      rating: '',
-      is_consumed: '',
+      location: 'all',
+      wine_color: 'all',
+      rating: 'all',
+      is_consumed: 'all',
       sort_by: 'created_at',
       sort_direction: 'desc',
     });
   };
 
-  const hasActiveFilters = filters.search || filters.location || filters.wine_color || filters.rating || filters.is_consumed !== '';
+  const hasActiveFilters = filters.search || (filters.location !== 'all' && filters.location !== '') || (filters.wine_color !== 'all' && filters.wine_color !== '') || (filters.rating !== 'all' && filters.rating !== '') || (filters.is_consumed !== 'all' && filters.is_consumed !== '');
 
   return (
     <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
@@ -70,7 +70,7 @@ export function WineFilters({ filters, onFiltersChange, availableLocations }: Wi
               <SelectValue placeholder="Alle lokasjoner" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Alle lokasjoner</SelectItem>
+              <SelectItem value="all">Alle lokasjoner</SelectItem>
               {availableLocations.map((location) => (
                 <SelectItem key={location} value={location}>
                   {location}
@@ -88,7 +88,7 @@ export function WineFilters({ filters, onFiltersChange, availableLocations }: Wi
               <SelectValue placeholder="Alle typer" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Alle typer</SelectItem>
+              <SelectItem value="all">Alle typer</SelectItem>
               <SelectItem value="red">Rødvin</SelectItem>
               <SelectItem value="white">Hvitvin</SelectItem>
               <SelectItem value="rosé">Rosévin</SelectItem>
@@ -107,7 +107,7 @@ export function WineFilters({ filters, onFiltersChange, availableLocations }: Wi
               <SelectValue placeholder="Alle ratings" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Alle ratings</SelectItem>
+              <SelectItem value="all">Alle ratings</SelectItem>
               <SelectItem value="6">6 - Enestående</SelectItem>
               <SelectItem value="5">5 - Meget bra</SelectItem>
               <SelectItem value="4">4 - Bra</SelectItem>
@@ -126,7 +126,7 @@ export function WineFilters({ filters, onFiltersChange, availableLocations }: Wi
               <SelectValue placeholder="Alle" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Alle</SelectItem>
+              <SelectItem value="all">Alle</SelectItem>
               <SelectItem value="false">På lager</SelectItem>
               <SelectItem value="true">Drukket</SelectItem>
             </SelectContent>

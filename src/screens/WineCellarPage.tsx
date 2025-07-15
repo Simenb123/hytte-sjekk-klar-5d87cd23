@@ -13,10 +13,10 @@ export default function WineCellarPage() {
   const { wines, isLoading, error } = useWineCellar();
   const [filters, setFilters] = useState<WineFiltersType>({
     search: '',
-    location: '',
-    wine_color: '',
-    rating: '',
-    is_consumed: '',
+    location: 'all',
+    wine_color: 'all',
+    rating: 'all',
+    is_consumed: 'all',
     sort_by: 'created_at',
     sort_direction: 'desc',
   });
@@ -40,22 +40,22 @@ export default function WineCellarPage() {
       }
 
       // Location filter
-      if (filters.location && wine.location !== filters.location) {
+      if (filters.location && filters.location !== 'all' && wine.location !== filters.location) {
         return false;
       }
 
       // Wine color filter
-      if (filters.wine_color && wine.wine_color !== filters.wine_color) {
+      if (filters.wine_color && filters.wine_color !== 'all' && wine.wine_color !== filters.wine_color) {
         return false;
       }
 
       // Rating filter
-      if (filters.rating && wine.rating?.toString() !== filters.rating) {
+      if (filters.rating && filters.rating !== 'all' && wine.rating?.toString() !== filters.rating) {
         return false;
       }
 
       // Consumed status filter
-      if (filters.is_consumed !== '') {
+      if (filters.is_consumed !== 'all' && filters.is_consumed !== '') {
         const isConsumed = filters.is_consumed === 'true';
         if (wine.is_consumed !== isConsumed) {
           return false;
