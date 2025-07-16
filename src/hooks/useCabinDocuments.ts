@@ -20,6 +20,15 @@ export interface SearchResult extends CabinDocument {
   relevance: number;
 }
 
+export interface DocumentImage {
+  id: string;
+  document_id: string;
+  image_url: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export function useCabinDocuments() {
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState<CabinDocument[]>([]);
@@ -172,6 +181,103 @@ export function useCabinDocuments() {
     }
   }, [fetchDocuments]);
 
+  // Image operations
+  const uploadDocumentImage = useCallback(async (file: File, documentId: string, description?: string): Promise<string> => {
+    if (!user) {
+      throw new Error('Bruker ikke autentisert');
+    }
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${documentId}/${Math.random()}.${fileExt}`;
+    const filePath = `document-images/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('document_files')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('document_files')
+      .getPublicUrl(filePath);
+
+    const { error: dbError } = await supabase
+      .from('document_images')
+      .insert({
+        document_id: documentId,
+        image_url: publicUrl,
+        description
+      });
+
+    if (dbError) throw dbError;
+    return publicUrl;
+  }, [user]);
+
+  const getDocumentImages = useCallback(async (documentId: string): Promise<DocumentImage[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('document_images')
+        .select('*')
+        .eq('document_id', documentId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching document images:', error);
+      toast.error('Kunne ikke hente bilder');
+      return [];
+    }
+  }, []);
+
+  const updateImageDescription = useCallback(async (imageId: string, description: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('document_images')
+        .update({ description })
+        .eq('id', imageId);
+
+      if (error) throw error;
+      toast.success('Bildebeskrivelse oppdatert');
+    } catch (error) {
+      console.error('Error updating image description:', error);
+      toast.error('Kunne ikke oppdatere bildebeskrivelse');
+      throw error;
+    }
+  }, []);
+
+  const deleteDocumentImage = useCallback(async (imageId: string): Promise<void> => {
+    try {
+      // First get the image URL to delete from storage
+      const { data: image } = await supabase
+        .from('document_images')
+        .select('image_url')
+        .eq('id', imageId)
+        .single();
+
+      if (image?.image_url) {
+        const path = image.image_url.split('/').pop(); // Get filename
+        if (path) {
+          await supabase.storage
+            .from('document_files')
+            .remove([`document-images/${path}`]);
+        }
+      }
+
+      const { error } = await supabase
+        .from('document_images')
+        .delete()
+        .eq('id', imageId);
+
+      if (error) throw error;
+      toast.success('Bilde slettet');
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      toast.error('Kunne ikke slette bilde');
+      throw error;
+    }
+  }, []);
+
   return {
     documents,
     loading,
@@ -180,5 +286,9 @@ export function useCabinDocuments() {
     addDocument,
     updateDocument,
     deleteDocument,
+    uploadDocumentImage,
+    getDocumentImages,
+    updateImageDescription,
+    deleteDocumentImage,
   };
 }

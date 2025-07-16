@@ -1,21 +1,41 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Edit, Trash2 } from 'lucide-react';
-import { useCabinDocuments, CabinDocument, SearchResult } from '@/hooks/useCabinDocuments';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Separator } from '@/components/ui/separator';
+import { Search, Plus, Edit, Trash2, FileText, Eye } from 'lucide-react';
+import { useCabinDocuments, CabinDocument, SearchResult, DocumentImage } from '@/hooks/useCabinDocuments';
+import DocumentImageGallery from './DocumentImageGallery';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { nb } from 'date-fns/locale';
 
 const DocumentsManager: React.FC = () => {
-  const { documents, loading, fetchDocuments, searchDocuments, addDocument, updateDocument, deleteDocument } = useCabinDocuments();
+  const { 
+    documents, 
+    loading, 
+    fetchDocuments, 
+    searchDocuments, 
+    addDocument, 
+    updateDocument, 
+    deleteDocument,
+    uploadDocumentImage,
+    getDocumentImages,
+    updateImageDescription,
+    deleteDocumentImage
+  } = useCabinDocuments();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingDoc, setEditingDoc] = useState<CabinDocument | null>(null);
+  const [viewingDoc, setViewingDoc] = useState<CabinDocument | null>(null);
+  const [documentImages, setDocumentImages] = useState<DocumentImage[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -80,9 +100,39 @@ const DocumentsManager: React.FC = () => {
 
   const cancelEdit = () => {
     setEditingDoc(null);
+    setViewingDoc(null);
     setFormData({ title: '', category: '', content: '', summary: '', tags: '' });
     setFile(null);
     setShowAddForm(false);
+  };
+
+  const viewDocument = async (doc: CabinDocument) => {
+    setViewingDoc(doc);
+    try {
+      const images = await getDocumentImages(doc.id);
+      setDocumentImages(images);
+    } catch (error) {
+      console.error('Feil ved henting av bilder:', error);
+    }
+  };
+
+  const refreshDocumentImages = async () => {
+    if (viewingDoc) {
+      try {
+        const images = await getDocumentImages(viewingDoc.id);
+        setDocumentImages(images);
+      } catch (error) {
+        console.error('Feil ved oppdatering av bilder:', error);
+      }
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDocument(id);
+    } catch (error) {
+      console.error('Error deleting document:', error);
+    }
   };
 
   return (
@@ -267,19 +317,44 @@ const DocumentsManager: React.FC = () => {
                         <Button 
                           size="sm" 
                           variant="outline"
+                          onClick={() => viewDocument(doc)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
                           onClick={() => startEdit(doc)}
                           className="h-8 w-8 p-0"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => deleteDocument(doc.id)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Er du sikker?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Dette vil permanent slette dokumentet "{doc.title}". Denne handlingen kan ikke angres.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(doc.id)}>
+                                Slett
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </div>
@@ -289,6 +364,82 @@ const DocumentsManager: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Document View Dialog */}
+      {viewingDoc && (
+        <Dialog open={!!viewingDoc} onOpenChange={() => setViewingDoc(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                {viewingDoc.title}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Kategori:</span> {viewingDoc.category}
+                </div>
+                <div>
+                  <span className="font-medium">Opprettet:</span> {format(new Date(viewingDoc.created_at), 'dd.MM.yyyy', { locale: nb })}
+                </div>
+              </div>
+
+              {viewingDoc.summary && (
+                <div>
+                  <h4 className="font-medium mb-2">Sammendrag</h4>
+                  <p className="text-muted-foreground bg-muted p-3 rounded-md">
+                    {viewingDoc.summary}
+                  </p>
+                </div>
+              )}
+
+              <div>
+                <h4 className="font-medium mb-2">Innhold</h4>
+                <div className="bg-muted p-4 rounded-md max-h-60 overflow-y-auto">
+                  <p className="whitespace-pre-wrap">{viewingDoc.content}</p>
+                </div>
+              </div>
+
+              {viewingDoc.tags && viewingDoc.tags.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Tags</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {viewingDoc.tags.map((tag: string, index: number) => (
+                      <Badge key={index} variant="outline">{tag}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {viewingDoc.file_url && (
+                <div>
+                  <h4 className="font-medium mb-2">Vedlagt fil</h4>
+                  <a 
+                    href={viewingDoc.file_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Last ned fil
+                  </a>
+                </div>
+              )}
+
+              <Separator />
+
+              <DocumentImageGallery
+                documentId={viewingDoc.id}
+                images={documentImages}
+                onImagesChange={refreshDocumentImages}
+                uploadImage={uploadDocumentImage}
+                updateImageDescription={updateImageDescription}
+                deleteImage={deleteDocumentImage}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

@@ -308,6 +308,41 @@ export type Database = {
           },
         ]
       }
+      document_images: {
+        Row: {
+          created_at: string
+          description: string | null
+          document_id: string
+          id: string
+          image_url: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          document_id: string
+          id?: string
+          image_url: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          document_id?: string
+          id?: string
+          image_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_images_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "cabin_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       family_members: {
         Row: {
           birth_date: string | null
