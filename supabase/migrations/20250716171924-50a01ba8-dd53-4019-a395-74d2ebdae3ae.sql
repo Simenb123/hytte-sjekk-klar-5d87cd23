@@ -1,0 +1,2 @@
+-- Add radix-ui/react-progress dependency for progress bars
+-- This requires adding @radix-ui/react-progress to package.json
