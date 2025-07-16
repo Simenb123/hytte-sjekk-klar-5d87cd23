@@ -433,6 +433,24 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
     image.image_url.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Generate smart title from description
+  const generateImageTitle = (description?: string): string => {
+    if (!description) return 'Dokumentbilde';
+    
+    // If description is short (under 40 characters), use as-is
+    if (description.length <= 40) return description;
+    
+    // Look for plant/species names (capitalize words that start sentences)
+    const sentences = description.split('.').filter(s => s.trim());
+    if (sentences.length > 0) {
+      const firstSentence = sentences[0].trim();
+      if (firstSentence.length <= 50) return firstSentence;
+    }
+    
+    // Use first 35 characters + ellipsis
+    return description.slice(0, 35).trim() + '...';
+  };
+
   const openImageModal = (image: DocumentImage, index: number) => {
     setSelectedImage(image);
     setSelectedImageIndex(index);
@@ -632,7 +650,7 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
           <DialogHeader className="px-4 pt-4">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-lg">
-                {selectedImage?.description || 'Dokumentbilde'}
+                {generateImageTitle(selectedImage?.description)}
               </DialogTitle>
               <Badge variant="outline">
                 {selectedImageIndex + 1} av {filteredImages.length}
@@ -675,22 +693,23 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                 )}
               </div>
               
-              {/* Image metadata */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="font-medium text-muted-foreground">Beskrivelse</p>
-                  <p className="mt-1">{selectedImage.description || 'Ingen beskrivelse'}</p>
+              {/* Image metadata - only show if description is longer than title */}
+              {selectedImage.description && selectedImage.description.length > 40 && (
+                <div className="text-sm">
+                  <p className="font-medium text-muted-foreground">Full beskrivelse</p>
+                  <p className="mt-1">{selectedImage.description}</p>
                 </div>
-                <div>
-                  <p className="font-medium text-muted-foreground">Opprettet</p>
-                  <p className="mt-1">{new Date(selectedImage.created_at).toLocaleDateString('no-NO', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</p>
-                </div>
+              )}
+              
+              <div className="text-sm">
+                <p className="font-medium text-muted-foreground">Opprettet</p>
+                <p className="mt-1">{new Date(selectedImage.created_at).toLocaleDateString('no-NO', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</p>
               </div>
               
               {/* Action buttons */}
