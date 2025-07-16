@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
-import { Search, Plus, Edit, Trash2, FileText, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, FileText, Eye, ImageIcon } from 'lucide-react';
 import { useCabinDocuments, CabinDocument, SearchResult, DocumentImage } from '@/hooks/useCabinDocuments';
 import DocumentImageGallery from './DocumentImageGallery';
 import { toast } from 'sonner';
@@ -36,6 +36,7 @@ const DocumentsManager: React.FC = () => {
   const [editingDoc, setEditingDoc] = useState<CabinDocument | null>(null);
   const [viewingDoc, setViewingDoc] = useState<CabinDocument | null>(null);
   const [documentImages, setDocumentImages] = useState<DocumentImage[]>([]);
+  const [frontPageImages, setFrontPageImages] = useState<{[key: string]: string}>({});
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -48,6 +49,28 @@ const DocumentsManager: React.FC = () => {
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
+
+  // Fetch front page images for each document
+  useEffect(() => {
+    const loadFrontPageImages = async () => {
+      const imageMap: {[key: string]: string} = {};
+      for (const doc of documents) {
+        try {
+          const images = await getDocumentImages(doc.id);
+          if (images.length > 0) {
+            imageMap[doc.id] = images[0].image_url;
+          }
+        } catch (error) {
+          console.error('Error loading front page image for document:', doc.id, error);
+        }
+      }
+      setFrontPageImages(imageMap);
+    };
+
+    if (documents.length > 0) {
+      loadFrontPageImages();
+    }
+  }, [documents, getDocumentImages]);
 
   const handleSearch = async () => {
     if (searchQuery.trim()) {
@@ -279,83 +302,62 @@ const DocumentsManager: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {documents.map((doc) => (
-              <Card key={doc.id}>
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                          <h4 className="font-medium truncate">{doc.title}</h4>
-                          <Badge variant="secondary" className="self-start">{doc.category}</Badge>
+              <Card 
+                key={doc.id} 
+                className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group"
+                onClick={() => viewDocument(doc)}
+              >
+                <CardContent className="p-0">
+                  <div className="flex h-32">
+                    {/* Content Section */}
+                    <div className="flex-1 p-4 min-w-0">
+                      <div className="h-full flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                              {doc.title}
+                            </h4>
+                          </div>
+                          <Badge variant="secondary" className="text-xs mb-2 self-start">
+                            {doc.category}
+                          </Badge>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {(doc.summary || doc.content).substring(0, 80)}...
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2 line-clamp-3">
-                          {(doc.summary || doc.content).substring(0, 200)}...
-                        </p>
                         {(doc.tags || []).length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {(doc.tags || []).map((tag) => (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {(doc.tags || []).slice(0, 2).map((tag) => (
                               <Badge key={tag} variant="outline" className="text-xs">
                                 {tag}
                               </Badge>
                             ))}
+                            {(doc.tags || []).length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{(doc.tags || []).length - 2}
+                              </Badge>
+                            )}
                           </div>
                         )}
-                        {doc.file_url && (
-                          <a
-                            href={doc.file_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-primary underline hover:no-underline"
-                          >
-                            Last ned fil
-                          </a>
-                        )}
                       </div>
-                      <div className="flex gap-2 self-start">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => viewDocument(doc)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => startEdit(doc)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="h-8 w-8 p-0"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Er du sikker?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Dette vil permanent slette dokumentet "{doc.title}". Denne handlingen kan ikke angres.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Avbryt</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(doc.id)}>
-                                Slett
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
+                    </div>
+                    
+                    {/* Image Section */}
+                    <div className="w-24 flex-shrink-0 bg-muted rounded-r-lg flex items-center justify-center overflow-hidden">
+                      {frontPageImages[doc.id] ? (
+                        <img 
+                          src={frontPageImages[doc.id]} 
+                          alt={`Forsidebilde for ${doc.title}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                          <ImageIcon className="h-6 w-6 mb-1" />
+                          <span className="text-xs">Ingen bilde</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -370,9 +372,48 @@ const DocumentsManager: React.FC = () => {
         <Dialog open={!!viewingDoc} onOpenChange={() => setViewingDoc(null)}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                {viewingDoc.title}
+              <DialogTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  {viewingDoc.title}
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => startEdit(viewingDoc)}
+                    className="flex items-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Rediger
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="flex items-center gap-2 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Slett
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Er du sikker?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Dette vil permanent slette dokumentet "{viewingDoc.title}". Denne handlingen kan ikke angres.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(viewingDoc.id)}>
+                          Slett
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
