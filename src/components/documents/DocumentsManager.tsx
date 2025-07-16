@@ -430,6 +430,8 @@ const DocumentsManager: React.FC = () => {
 
               <DocumentImageGallery
                 documentId={viewingDoc.id}
+                documentTitle={viewingDoc.title}
+                documentCategory={viewingDoc.category}
                 images={documentImages}
                 onImagesChange={refreshDocumentImages}
                 uploadImage={uploadDocumentImage}
