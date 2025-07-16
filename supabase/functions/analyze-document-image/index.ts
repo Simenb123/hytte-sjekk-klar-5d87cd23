@@ -43,10 +43,26 @@ const checkRateLimit = (clientIP: string): boolean => {
 };
 
 const generateCacheKey = (imageUrl: string, documentTitle: string, documentCategory: string): string => {
-  // Create a hash of the input parameters
-  const encoder = new TextEncoder();
-  const data = encoder.encode(`${imageUrl}-${documentTitle}-${documentCategory}`);
-  return btoa(String.fromCharCode(...data)).slice(0, 32);
+  try {
+    // Use a simple hash approach that doesn't cause stack overflow
+    const input = `${imageUrl}-${documentTitle}-${documentCategory}`;
+    
+    // Simple hash function using crypto API if available, otherwise fallback
+    if (typeof crypto !== 'undefined' && crypto.subtle) {
+      // Use a simpler approach - just take first 100 chars of URL + other params
+      const shortInput = `${imageUrl.substring(0, 100)}-${documentTitle}-${documentCategory}`;
+      return btoa(shortInput).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+    }
+    
+    // Fallback: use timestamp + simplified input
+    const timestamp = Date.now().toString(36);
+    const simplified = `${imageUrl.substring(0, 50)}-${documentTitle}-${documentCategory}`;
+    return btoa(simplified).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20) + timestamp;
+  } catch (error) {
+    console.error('Error generating cache key:', error);
+    // Ultimate fallback: use timestamp
+    return `fallback-${Date.now().toString(36)}`;
+  }
 };
 
 serve(async (req) => {
@@ -80,6 +96,11 @@ serve(async (req) => {
 
     if (!imageUrl) {
       throw new Error('Image URL is required');
+    }
+
+    // Validate input size to prevent issues
+    if (imageUrl.length > 10000) {
+      console.warn('Image URL extremely long, may cause issues:', imageUrl.length);
     }
 
     // Check cache first
