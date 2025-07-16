@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { X, Edit2, ZoomIn, Upload, Loader2, Sparkles, Pause, Play, Trash2 } from 'lucide-react';
+import { X, Edit2, ZoomIn, Upload, Loader2, Sparkles, Pause, Play, Trash2, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -58,8 +58,10 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
   const [uploading, setUploading] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [selectedImage, setSelectedImage] = useState<DocumentImage | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(-1);
   const [editingImage, setEditingImage] = useState<DocumentImage | null>(null);
   const [editDescription, setEditDescription] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const analyzeImageWithTimeout = async (file: File, timeoutMs = 30000): Promise<{ 
     suggestedName: string; 
@@ -425,14 +427,40 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
     }
   };
 
+  const filteredImages = images.filter(image => 
+    !searchTerm || 
+    image.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    image.image_url.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const openImageModal = (image: DocumentImage, index: number) => {
+    setSelectedImage(image);
+    setSelectedImageIndex(index);
+  };
+
+  const navigateImage = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && selectedImageIndex > 0) {
+      const newIndex = selectedImageIndex - 1;
+      setSelectedImage(filteredImages[newIndex]);
+      setSelectedImageIndex(newIndex);
+    } else if (direction === 'next' && selectedImageIndex < filteredImages.length - 1) {
+      const newIndex = selectedImageIndex + 1;
+      setSelectedImage(filteredImages[newIndex]);
+      setSelectedImageIndex(newIndex);
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="border-2 border-dashed border-border rounded-lg p-6">
-        <div className="text-center space-y-4">
-          <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-          <div>
+    <div className="space-y-6">
+      {/* Compact Upload Area */}
+      <div className="border border-border rounded-lg p-4">
+        <div className="flex items-center gap-4">
+          <Upload className="h-5 w-5 text-muted-foreground" />
+          <div className="flex-1">
             <Label htmlFor="image-upload" className="cursor-pointer">
-              <span className="text-sm font-medium">Velg bilder</span>
+              <Button variant="outline" size="sm" disabled={uploading}>
+                Velg bilder
+              </Button>
               <Input
                 id="image-upload"
                 type="file"
@@ -443,10 +471,10 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                 disabled={uploading}
               />
             </Label>
-            <p className="text-xs text-muted-foreground mt-1">
-              Støtter flere bildefiler samtidig • AI analyserer automatisk • Prosesserer i batches
-            </p>
           </div>
+          <p className="text-xs text-muted-foreground">
+            AI analyserer automatisk
+          </p>
         </div>
         
         {uploadQueue.length > 0 && (
@@ -550,65 +578,130 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
         )}
       </div>
 
-      {/* Images Grid */}
+      {/* Search and Filter */}
       {images.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {images.map((image) => (
-            <Card key={image.id} className="overflow-hidden group cursor-pointer transition-transform hover:scale-105" onClick={() => setSelectedImage(image)}>
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Søk i bilder..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Badge variant="outline">
+            {filteredImages.length} bilder
+          </Badge>
+        </div>
+      )}
+
+      {/* Images Masonry Grid */}
+      {filteredImages.length > 0 && (
+        <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
+          {filteredImages.map((image, index) => (
+            <Card 
+              key={image.id} 
+              className="break-inside-avoid overflow-hidden group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1" 
+              onClick={() => openImageModal(image, index)}
+            >
               <div className="relative">
                 <img
                   src={image.image_url}
                   alt={image.description || 'Dokumentbilde'}
-                  className="w-full h-48 object-contain bg-muted/20"
+                  className="w-full h-auto object-cover"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                  <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
                 </div>
-                {image.description && (
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2 transform translate-y-full group-hover:translate-y-0 transition-transform">
-                    <p className="text-xs truncate">{image.description}</p>
-                  </div>
-                )}
               </div>
+              {image.description && (
+                <div className="p-3">
+                  <p className="text-xs text-muted-foreground line-clamp-2">{image.description}</p>
+                </div>
+              )}
             </Card>
           ))}
         </div>
       )}
 
-      {/* Image Modal */}
-      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
-        <DialogContent className="max-w-5xl max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedImage?.description || 'Dokumentbilde'}
-            </DialogTitle>
+      {/* Enhanced Image Modal */}
+      <Dialog open={!!selectedImage} onOpenChange={() => {setSelectedImage(null); setSelectedImageIndex(-1);}}>
+        <DialogContent className="max-w-6xl max-h-[95vh] p-2">
+          <DialogHeader className="px-4 pt-4">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-lg">
+                {selectedImage?.description || 'Dokumentbilde'}
+              </DialogTitle>
+              <Badge variant="outline">
+                {selectedImageIndex + 1} av {filteredImages.length}
+              </Badge>
+            </div>
           </DialogHeader>
           {selectedImage && (
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <img
-                  src={selectedImage.image_url}
-                  alt={selectedImage.description || 'Dokumentbilde'}
-                  className="max-w-full max-h-[60vh] object-contain"
-                />
+            <div className="space-y-4 px-4 pb-4">
+              {/* Image Navigation */}
+              <div className="relative group">
+                <div className="flex justify-center">
+                  <img
+                    src={selectedImage.image_url}
+                    alt={selectedImage.description || 'Dokumentbilde'}
+                    className="max-w-full max-h-[65vh] object-contain rounded-lg"
+                  />
+                </div>
+                
+                {/* Navigation arrows */}
+                {selectedImageIndex > 0 && (
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 opacity-70 hover:opacity-100 transition-opacity"
+                    onClick={() => navigateImage('prev')}
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </Button>
+                )}
+                
+                {selectedImageIndex < filteredImages.length - 1 && (
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 opacity-70 hover:opacity-100 transition-opacity"
+                    onClick={() => navigateImage('next')}
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </Button>
+                )}
               </div>
               
-              {selectedImage.description && (
-                <div className="border-t pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    {selectedImage.description}
-                  </p>
+              {/* Image metadata */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-medium text-muted-foreground">Beskrivelse</p>
+                  <p className="mt-1">{selectedImage.description || 'Ingen beskrivelse'}</p>
                 </div>
-              )}
+                <div>
+                  <p className="font-medium text-muted-foreground">Opprettet</p>
+                  <p className="mt-1">{new Date(selectedImage.created_at).toLocaleDateString('no-NO', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}</p>
+                </div>
+              </div>
               
-              <div className="flex gap-2 pt-4 border-t">
+              {/* Action buttons */}
+              <div className="flex gap-3 pt-4 border-t">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setEditingImage(selectedImage);
                     setEditDescription(selectedImage.description || '');
                     setSelectedImage(null);
+                    setSelectedImageIndex(-1);
                   }}
                   className="flex-1"
                 >
@@ -635,12 +728,18 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                       <AlertDialogAction onClick={() => {
                         handleDeleteImage(selectedImage.id);
                         setSelectedImage(null);
+                        setSelectedImageIndex(-1);
                       }}>
                         Slett
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+              </div>
+
+              {/* Keyboard navigation hint */}
+              <div className="text-xs text-muted-foreground text-center pt-2 border-t">
+                Bruk piltastene for å navigere mellom bilder • ESC for å lukke
               </div>
             </div>
           )}
