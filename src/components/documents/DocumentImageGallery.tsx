@@ -34,11 +34,12 @@ interface DocumentImageGalleryProps {
 interface ImageUploadProgress {
   file: File;
   progress: number;
-  status: 'pending' | 'analyzing' | 'uploading' | 'completed' | 'error';
+  status: 'pending' | 'analyzing' | 'uploading' | 'completed' | 'error' | 'retrying';
   suggestedName?: string;
   description?: string;
   tags?: string[];
   error?: string;
+  retryCount?: number;
 }
 
 const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
@@ -58,7 +59,7 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
   const [editingImage, setEditingImage] = useState<DocumentImage | null>(null);
   const [editDescription, setEditDescription] = useState('');
 
-  const analyzeImage = async (file: File): Promise<{ suggestedName: string; description: string; tags: string[] }> => {
+  const analyzeImageWithTimeout = async (file: File, timeoutMs = 30000): Promise<{ suggestedName: string; description: string; tags: string[] }> => {
     try {
       // Convert file to base64 for API
       const base64 = await new Promise<string>((resolve) => {
@@ -70,13 +71,21 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
         reader.readAsDataURL(file);
       });
       
-      const { data, error } = await supabase.functions.invoke('analyze-document-image', {
+      // Create timeout promise
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Analyse tidsavbrudd')), timeoutMs);
+      });
+      
+      // Race between API call and timeout
+      const apiPromise = supabase.functions.invoke('analyze-document-image', {
         body: {
           imageUrl: base64,
           documentTitle,
           documentCategory
         }
       });
+      
+      const { data, error } = await Promise.race([apiPromise, timeoutPromise]);
 
       if (error) throw error;
       
@@ -87,11 +96,47 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
       };
     } catch (error) {
       console.error('Error analyzing image:', error);
+      // Return fallback analysis
       return {
         suggestedName: file.name,
-        description: '',
-        tags: []
+        description: 'Automatisk analyse feilet',
+        tags: ['dokument']
       };
+    }
+  };
+
+  const processImageWithRetry = async (file: File, retryCount = 0, maxRetries = 2): Promise<{ success: boolean; analysis?: any; error?: string }> => {
+    try {
+      const analysis = await analyzeImageWithTimeout(file);
+      await uploadImage(file, documentId, analysis.description);
+      return { success: true, analysis };
+    } catch (error) {
+      console.error(`Attempt ${retryCount + 1} failed for ${file.name}:`, error);
+      
+      if (retryCount < maxRetries) {
+        // Exponential backoff
+        const delay = Math.pow(2, retryCount) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return processImageWithRetry(file, retryCount + 1, maxRetries);
+      }
+      
+      // Final retry failed - try upload without AI analysis
+      try {
+        await uploadImage(file, documentId, `Opplastet ${new Date().toLocaleString()}`);
+        return { 
+          success: true, 
+          analysis: { 
+            suggestedName: file.name, 
+            description: 'Opplastet uten AI-analyse', 
+            tags: ['manuell'] 
+          }
+        };
+      } catch (uploadError) {
+        return { 
+          success: false, 
+          error: uploadError instanceof Error ? uploadError.message : 'Ukjent feil'
+        };
+      }
     }
   };
 
@@ -120,59 +165,117 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
     startUploadProcess(newQueueItems);
   };
 
-  const startUploadProcess = async (queueItems: ImageUploadProgress[]) => {
-    setUploading(true);
-    setIsPaused(false);
-
-    for (let i = 0; i < queueItems.length; i++) {
-      if (isPaused) break;
-
-      const item = queueItems[i];
+  const processBatch = async (batch: ImageUploadProgress[], batchIndex: number) => {
+    const batchPromises = batch.map(async (item, itemIndex) => {
+      const globalIndex = batchIndex * 3 + itemIndex;
       
       try {
         // Update status to analyzing
         setUploadQueue(prev => prev.map((q, idx) => 
-          idx === i ? { ...q, status: 'analyzing', progress: 10 } : q
+          idx === globalIndex ? { ...q, status: 'analyzing', progress: 10 } : q
         ));
 
-        // Analyze image with AI
-        const analysis = await analyzeImage(item.file);
+        const result = await processImageWithRetry(item.file);
         
-        setUploadQueue(prev => prev.map((q, idx) => 
-          idx === i ? { 
-            ...q, 
-            suggestedName: analysis.suggestedName,
-            description: analysis.description,
-            tags: analysis.tags,
-            status: 'uploading',
-            progress: 50 
-          } : q
-        ));
-
-        // Upload image
-        await uploadImage(item.file, documentId, analysis.description);
-        
-        setUploadQueue(prev => prev.map((q, idx) => 
-          idx === i ? { ...q, status: 'completed', progress: 100 } : q
-        ));
-
+        if (result.success && result.analysis) {
+          setUploadQueue(prev => prev.map((q, idx) => 
+            idx === globalIndex ? { 
+              ...q, 
+              suggestedName: result.analysis.suggestedName,
+              description: result.analysis.description,
+              tags: result.analysis.tags,
+              status: 'completed',
+              progress: 100 
+            } : q
+          ));
+        } else {
+          setUploadQueue(prev => prev.map((q, idx) => 
+            idx === globalIndex ? { 
+              ...q, 
+              status: 'error', 
+              error: result.error || 'Ukjent feil'
+            } : q
+          ));
+        }
       } catch (error) {
-        console.error('Error processing image:', error);
+        console.error('Error in batch processing:', error);
         setUploadQueue(prev => prev.map((q, idx) => 
-          idx === i ? { 
+          idx === globalIndex ? { 
             ...q, 
             status: 'error', 
-            error: error instanceof Error ? error.message : 'Ukjent feil' 
+            error: error instanceof Error ? error.message : 'Ukjent feil'
           } : q
         ));
       }
+    });
+
+    await Promise.all(batchPromises);
+  };
+
+  const startUploadProcess = async (queueItems: ImageUploadProgress[]) => {
+    setUploading(true);
+    setIsPaused(false);
+
+    // Process in batches of 3
+    const batchSize = 3;
+    const batches = [];
+    for (let i = 0; i < queueItems.length; i += batchSize) {
+      batches.push(queueItems.slice(i, i + batchSize));
     }
 
-    const completedCount = queueItems.filter(item => item.status === 'completed').length;
-    if (completedCount > 0) {
+    let completedCount = 0;
+    
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      if (isPaused) {
+        toast({
+          title: "Opplasting pauset",
+          description: "Du kan fortsette når som helst",
+        });
+        break;
+      }
+
+      const batch = batches[batchIndex];
+      
+      // Update batch progress
+      setUploadQueue(prev => prev.map((q, idx) => {
+        const batchStart = batchIndex * batchSize;
+        const batchEnd = batchStart + batchSize;
+        if (idx >= batchStart && idx < batchEnd) {
+          return { ...q, status: 'analyzing' as const, progress: 5 };
+        }
+        return q;
+      }));
+
+      await processBatch(batch, batchIndex);
+      
+      // Count completed items in this batch
+      const batchCompleted = batch.filter((_, idx) => {
+        const globalIdx = batchIndex * batchSize + idx;
+        const queueItem = queueItems[globalIdx];
+        return queueItem && (queueItem.status === 'completed' || queueItem.status === 'error');
+      }).length;
+      
+      completedCount += batchCompleted;
+
+      // Show progress for each batch
       toast({
-        title: "Suksess",
-        description: `${completedCount} bilde(r) lastet opp og analysert`,
+        title: "Batch ferdig",
+        description: `Batch ${batchIndex + 1}/${batches.length} ferdig. ${completedCount} bilder prosessert totalt.`,
+      });
+
+      // Short delay between batches
+      if (batchIndex < batches.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    const successCount = queueItems.filter(item => item.status === 'completed').length;
+    const errorCount = queueItems.filter(item => item.status === 'error').length;
+    
+    if (successCount > 0) {
+      toast({
+        title: "Opplasting fullført",
+        description: `${successCount} bilder lastet opp${errorCount > 0 ? `, ${errorCount} feilet` : ''}`,
       });
       onImagesChange();
     }
@@ -182,11 +285,22 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
     // Clear queue after a delay
     setTimeout(() => {
       setUploadQueue([]);
-    }, 3000);
+    }, 5000);
   };
 
   const togglePause = () => {
-    setIsPaused(!isPaused);
+    const newPauseState = !isPaused;
+    setIsPaused(newPauseState);
+    
+    if (!newPauseState && uploadQueue.length > 0) {
+      // Resume processing from where we left off
+      const pendingItems = uploadQueue.filter(item => 
+        item.status === 'pending' || item.status === 'error'
+      );
+      if (pendingItems.length > 0) {
+        startUploadProcess(uploadQueue);
+      }
+    }
   };
 
   const clearQueue = () => {
@@ -253,7 +367,7 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
               />
             </Label>
             <p className="text-xs text-muted-foreground mt-1">
-              Støtter flere bildefiler samtidig • AI analyserer automatisk
+              Støtter flere bildefiler samtidig • AI analyserer automatisk • Prosesserer i batches
             </p>
           </div>
         </div>
@@ -310,6 +424,14 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                         <Badge variant="secondary" className="bg-green-100 text-green-800">
                           Ferdig
                         </Badge>
+                      )}
+                      {item.status === 'retrying' && (
+                        <div className="flex items-center gap-1">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-xs text-muted-foreground">
+                            Prøver igjen... ({item.retryCount || 0}/2)
+                          </span>
+                        </div>
                       )}
                       {item.status === 'error' && (
                         <Badge variant="destructive">
