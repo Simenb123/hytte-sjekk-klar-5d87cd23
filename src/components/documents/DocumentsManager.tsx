@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
-import { Search, Plus, Edit, Trash2, FileText, Eye, ImageIcon } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, FileText, Eye, ImageIcon, MoreVertical, Download } from 'lucide-react';
 import { useCabinDocuments, CabinDocument, SearchResult, DocumentImage } from '@/hooks/useCabinDocuments';
 import DocumentImageGallery from './DocumentImageGallery';
 import { toast } from 'sonner';
@@ -377,43 +378,74 @@ const DocumentsManager: React.FC = () => {
                   <FileText className="h-5 w-5" />
                   {viewingDoc.title}
                 </div>
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => startEdit(viewingDoc)}
-                    className="flex items-center gap-2"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Rediger
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="flex items-center gap-2 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Slett
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Er du sikker?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Dette vil permanent slette dokumentet "{viewingDoc.title}". Denne handlingen kan ikke angres.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Avbryt</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(viewingDoc.id)}>
-                          Slett
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="h-8 w-8 p-0"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem 
+                      onClick={() => startEdit(viewingDoc)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Rediger dokument
+                    </DropdownMenuItem>
+                    {viewingDoc.file_url && (
+                      <DropdownMenuItem asChild>
+                        <a
+                          href={viewingDoc.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <Download className="h-4 w-4" />
+                          Last ned fil
+                        </a>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem 
+                          onSelect={(e) => e.preventDefault()}
+                          className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Slett dokument
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Er du sikker?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Dette vil permanent slette dokumentet "{viewingDoc.title}". Denne handlingen kan ikke angres.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => {
+                              handleDelete(viewingDoc.id);
+                              setViewingDoc(null);
+                              toast.success('Dokument slettet', {
+                                description: 'Dokumentet ble slettet permanent.',
+                              });
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Slett
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
