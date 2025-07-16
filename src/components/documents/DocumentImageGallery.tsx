@@ -57,6 +57,7 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
   const [uploadQueue, setUploadQueue] = useState<ImageUploadProgress[]>([]);
   const [uploading, setUploading] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<DocumentImage | null>(null);
   const [editingImage, setEditingImage] = useState<DocumentImage | null>(null);
   const [editDescription, setEditDescription] = useState('');
 
@@ -551,88 +552,100 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
 
       {/* Images Grid */}
       {images.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {images.map((image) => (
-            <Card key={image.id} className="overflow-hidden">
-              <div className="relative group">
+            <Card key={image.id} className="overflow-hidden group cursor-pointer transition-transform hover:scale-105" onClick={() => setSelectedImage(image)}>
+              <div className="relative">
                 <img
                   src={image.image_url}
                   alt={image.description || 'Dokumentbilde'}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-48 object-contain bg-muted/20"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button size="sm" variant="secondary">
-                        <ZoomIn className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
-                      <DialogHeader>
-                        <DialogTitle>Forstørret bilde</DialogTitle>
-                      </DialogHeader>
-                      <img
-                        src={image.image_url}
-                        alt={image.description || 'Dokumentbilde'}
-                        className="w-full h-auto max-h-[70vh] object-contain"
-                      />
-                      {image.description && (
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {image.description}
-                        </p>
-                      )}
-                    </DialogContent>
-                  </Dialog>
-                  
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      setEditingImage(image);
-                      setEditDescription(image.description || '');
-                    }}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        size="sm" 
-                        variant="destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Er du sikker?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Dette vil permanent slette bildet{image.description ? ` "${image.description}"` : ''}. Denne handlingen kan ikke angres.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Avbryt</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteImage(image.id)}>
-                          Slett
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                  <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
+                {image.description && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white p-2 transform translate-y-full group-hover:translate-y-0 transition-transform">
+                    <p className="text-xs truncate">{image.description}</p>
+                  </div>
+                )}
               </div>
-              {image.description && (
-                <CardContent className="p-3">
-                  <p className="text-sm text-muted-foreground">
-                    {image.description}
-                  </p>
-                </CardContent>
-              )}
             </Card>
           ))}
         </div>
       )}
+
+      {/* Image Modal */}
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-5xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedImage?.description || 'Dokumentbilde'}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedImage && (
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <img
+                  src={selectedImage.image_url}
+                  alt={selectedImage.description || 'Dokumentbilde'}
+                  className="max-w-full max-h-[60vh] object-contain"
+                />
+              </div>
+              
+              {selectedImage.description && (
+                <div className="border-t pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    {selectedImage.description}
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex gap-2 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingImage(selectedImage);
+                    setEditDescription(selectedImage.description || '');
+                    setSelectedImage(null);
+                  }}
+                  className="flex-1"
+                >
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Rediger beskrivelse
+                </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="flex-1">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Slett bilde
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Er du sikker?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Dette vil permanent slette bildet{selectedImage.description ? ` "${selectedImage.description}"` : ''}. Denne handlingen kan ikke angres.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => {
+                        handleDeleteImage(selectedImage.id);
+                        setSelectedImage(null);
+                      }}>
+                        Slett
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Description Dialog */}
       <Dialog open={!!editingImage} onOpenChange={() => setEditingImage(null)}>
