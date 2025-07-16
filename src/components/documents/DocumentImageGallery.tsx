@@ -60,21 +60,33 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
   const [editingImage, setEditingImage] = useState<DocumentImage | null>(null);
   const [editDescription, setEditDescription] = useState('');
 
-  const analyzeImageWithTimeout = async (file: File, timeoutMs = 30000): Promise<{ suggestedName: string; description: string; tags: string[] }> => {
+  const analyzeImageWithTimeout = async (file: File, timeoutMs = 30000): Promise<{ 
+    suggestedName: string; 
+    description: string; 
+    tags: string[];
+    status: 'success' | 'fallback' | 'error';
+    requestId?: string;
+    retryable?: boolean;
+  }> => {
+    console.log(`Starting AI analysis for file: ${file.name} (${file.size} bytes)`);
+    
     try {
       // Convert file to base64 for API
-      const base64 = await new Promise<string>((resolve) => {
+      const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
           const result = reader.result as string;
           resolve(result);
         };
+        reader.onerror = () => reject(new Error('Failed to read file'));
         reader.readAsDataURL(file);
       });
       
+      console.log(`File converted to base64, size: ${base64.length} characters`);
+      
       // Create timeout promise
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Analyse tidsavbrudd')), timeoutMs);
+        setTimeout(() => reject(new Error('Analyse tidsavbrudd - AI-tjenesten svarer ikke')), timeoutMs);
       });
       
       // Race between API call and timeout
@@ -88,54 +100,117 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
       
       const { data, error } = await Promise.race([apiPromise, timeoutPromise]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
+      console.log('AI analysis response:', data);
+      
+      // Check if response contains error but also fallback data
+      if (data.error && data.retryable) {
+        console.warn('AI analysis failed but is retryable:', data.userMessage);
+        return {
+          suggestedName: data.suggestedName || file.name,
+          description: data.description || 'AI-analyse feilet, kan prøves igjen',
+          tags: data.tags || ['dokument'],
+          status: 'fallback',
+          requestId: data.requestId,
+          retryable: true
+        };
+      } else if (data.error) {
+        console.error('AI analysis failed permanently:', data.userMessage);
+        throw new Error(data.userMessage || data.error);
+      }
       
       return {
         suggestedName: data.suggestedName || file.name,
         description: data.description || '',
-        tags: data.tags || []
+        tags: data.tags || [],
+        status: data.fromCache ? 'success' : 'success',
+        requestId: data.requestId,
+        retryable: false
       };
     } catch (error) {
-      console.error('Error analyzing image:', error);
-      // Return fallback analysis
+      console.error('Error in analyzeImageWithTimeout:', error);
+      
+      // Determine if this is a retryable error
+      const isRetryable = error.message.includes('tidsavbrudd') || 
+                         error.message.includes('network') || 
+                         error.message.includes('rate limit');
+      
       return {
         suggestedName: file.name,
-        description: 'Automatisk analyse feilet',
-        tags: ['dokument']
+        description: isRetryable ? 'AI-analyse feilet - kan prøves igjen' : 'Automatisk analyse feilet',
+        tags: ['dokument'],
+        status: 'error',
+        retryable: isRetryable
       };
     }
   };
 
-  const processImageWithRetry = async (file: File, retryCount = 0, maxRetries = 2): Promise<{ success: boolean; analysis?: any; error?: string }> => {
+  const processImageWithRetry = async (file: File, retryCount = 0, maxRetries = 2): Promise<{ 
+    success: boolean; 
+    analysis?: any; 
+    error?: string;
+    shouldRetry?: boolean;
+  }> => {
+    console.log(`Processing ${file.name}, attempt ${retryCount + 1}/${maxRetries + 1}`);
+    
     try {
       const analysis = await analyzeImageWithTimeout(file);
-      await uploadImage(file, documentId, analysis.description);
-      return { success: true, analysis };
+      
+      // If AI analysis failed but we got fallback data, still try to upload
+      const description = analysis.description;
+      await uploadImage(file, documentId, description);
+      
+      console.log(`Successfully processed ${file.name} with status: ${analysis.status}`);
+      
+      return { 
+        success: true, 
+        analysis: {
+          ...analysis,
+          aiStatus: analysis.status // Track AI analysis status separately
+        }
+      };
     } catch (error) {
       console.error(`Attempt ${retryCount + 1} failed for ${file.name}:`, error);
       
-      if (retryCount < maxRetries) {
+      // Check if this is a retryable error
+      const isRetryable = error.message.includes('tidsavbrudd') || 
+                         error.message.includes('network') || 
+                         error.message.includes('rate limit') ||
+                         error.message.includes('503') ||
+                         error.message.includes('429');
+      
+      if (retryCount < maxRetries && isRetryable) {
+        console.log(`Retrying ${file.name} in ${Math.pow(2, retryCount)} seconds...`);
         // Exponential backoff
         const delay = Math.pow(2, retryCount) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
         return processImageWithRetry(file, retryCount + 1, maxRetries);
       }
       
-      // Final retry failed - try upload without AI analysis
+      // Final retry failed or non-retryable error - try upload without AI analysis
+      console.log(`All retries exhausted for ${file.name}, uploading without AI analysis`);
       try {
-        await uploadImage(file, documentId, `Opplastet ${new Date().toLocaleString()}`);
+        const fallbackDescription = `Opplastet ${new Date().toLocaleString()} - AI-analyse utilgjengelig`;
+        await uploadImage(file, documentId, fallbackDescription);
         return { 
           success: true, 
           analysis: { 
             suggestedName: file.name, 
-            description: 'Opplastet uten AI-analyse', 
-            tags: ['manuell'] 
+            description: fallbackDescription, 
+            tags: ['manuell'],
+            aiStatus: 'failed'
           }
         };
       } catch (uploadError) {
+        console.error(`Upload failed for ${file.name}:`, uploadError);
         return { 
           success: false, 
-          error: uploadError instanceof Error ? uploadError.message : 'Ukjent feil'
+          error: uploadError instanceof Error ? uploadError.message : 'Ukjent opplastingsfeil',
+          shouldRetry: false
         };
       }
     }
