@@ -698,7 +698,9 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
           {filteredImages.map((image, index) => (
             <Card 
               key={image.id} 
-              className="break-inside-avoid overflow-hidden group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1" 
+              className={`break-inside-avoid overflow-hidden group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
+                frontPageImageId === image.id ? 'ring-2 ring-primary shadow-lg' : ''
+              }`}
               onClick={() => openImageModal(image, index)}
             >
               <div className="relative">
@@ -710,6 +712,37 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                   <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+                </div>
+                
+                {/* Front page indicator */}
+                {frontPageImageId === image.id && (
+                  <div className="absolute top-2 right-2">
+                    <Badge className="bg-primary text-primary-foreground shadow-lg">
+                      <Star className="h-3 w-3 mr-1 fill-current" />
+                      Forsidebilde
+                    </Badge>
+                  </div>
+                )}
+                
+                {/* Quick actions on hover */}
+                <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-7 w-7 p-0 shadow-lg bg-background/90 hover:bg-background"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSetFrontPageImage(image.id);
+                      }}
+                    >
+                      {frontPageImageId === image.id ? (
+                        <Star className="h-3 w-3 fill-current text-yellow-500" />
+                      ) : (
+                        <StarOff className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
               {image.description && (
@@ -725,14 +758,30 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
       {/* Enhanced Image Modal */}
       <Dialog open={!!selectedImage} onOpenChange={() => {setSelectedImage(null); setSelectedImageIndex(-1);}}>
         <DialogContent className="max-w-6xl max-h-[95vh] p-2">
-          <DialogHeader className="px-4 pt-4">
+          {/* Fixed close button */}
+          <button
+            onClick={() => {setSelectedImage(null); setSelectedImageIndex(-1);}}
+            className="absolute top-3 right-3 z-50 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors shadow-lg"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          
+          <DialogHeader className="px-4 pt-4 pr-16">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-lg">
                 {generateImageTitle(selectedImage?.description)}
               </DialogTitle>
-              <Badge variant="outline">
-                {selectedImageIndex + 1} av {filteredImages.length}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {selectedImage && frontPageImageId === selectedImage.id && (
+                  <Badge className="bg-primary text-primary-foreground">
+                    <Star className="h-3 w-3 mr-1 fill-current" />
+                    Forsidebilde
+                  </Badge>
+                )}
+                <Badge variant="outline">
+                  {selectedImageIndex + 1} av {filteredImages.length}
+                </Badge>
+              </div>
             </div>
           </DialogHeader>
           {selectedImage && (
@@ -752,12 +801,12 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                   />
                 </div>
                 
-                {/* Navigation arrows */}
+                {/* Elegant navigation arrows */}
                 {selectedImageIndex > 0 && (
                   <Button
                     variant="secondary"
                     size="icon"
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 opacity-70 hover:opacity-100 transition-opacity"
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background shadow-lg transition-all duration-200 hover:scale-105 opacity-80 hover:opacity-100"
                     onClick={() => navigateImage('prev')}
                   >
                     <ChevronLeft className="h-6 w-6" />
@@ -768,11 +817,31 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                   <Button
                     variant="secondary"
                     size="icon"
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 opacity-70 hover:opacity-100 transition-opacity"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background shadow-lg transition-all duration-200 hover:scale-105 opacity-80 hover:opacity-100"
                     onClick={() => navigateImage('next')}
                   >
                     <ChevronRight className="h-6 w-6" />
                   </Button>
+                )}
+                
+                {/* Progress dots */}
+                {filteredImages.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                    {filteredImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setSelectedImage(filteredImages[index]);
+                          setSelectedImageIndex(index);
+                        }}
+                        className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                          index === selectedImageIndex 
+                            ? 'bg-primary w-6' 
+                            : 'bg-muted-foreground/40 hover:bg-muted-foreground/60'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
               
@@ -852,13 +921,19 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                 </AlertDialog>
               </div>
 
-              {/* Keyboard and touch navigation hint */}
+              {/* Enhanced navigation hint */}
               <div className="text-xs text-muted-foreground text-center pt-2 border-t">
-                <div className="hidden sm:block">
-                  Bruk piltastene for å navigere mellom bilder • ESC for å lukke
+                <div className="hidden sm:block flex items-center justify-center gap-4">
+                  <span>Piltaster for navigering</span>
+                  <span>•</span>
+                  <span>ESC for å lukke</span>
+                  <span>•</span>
+                  <span>Klikk prikkene for å hoppe til bilde</span>
                 </div>
-                <div className="sm:hidden">
-                  Sveip for å navigere mellom bilder • Trykk utenfor for å lukke
+                <div className="sm:hidden flex items-center justify-center gap-4">
+                  <span>Sveip for navigering</span>
+                  <span>•</span>
+                  <span>Trykk prikkene for å hoppe</span>
                 </div>
               </div>
             </div>
