@@ -6,7 +6,7 @@ import DocumentsManager from '@/components/documents/DocumentsManager';
 export default function DocumentsPage() {
   return (
     <Layout title="Dokumenter" showBackButton>
-      <div className="container mx-auto flex-1 overflow-y-auto p-4 md:p-6">
+      <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
         <DocumentsManager />
       </div>
     </Layout>

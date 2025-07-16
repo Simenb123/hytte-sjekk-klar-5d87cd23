@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Search, Plus, Edit, Trash2 } from 'lucide-react';
 import { useCabinDocuments, CabinDocument, SearchResult } from '@/hooks/useCabinDocuments';
+import { toast } from 'sonner';
 
 const DocumentsManager: React.FC = () => {
   const { documents, loading, fetchDocuments, searchDocuments, addDocument, updateDocument, deleteDocument } = useCabinDocuments();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -38,6 +40,7 @@ const DocumentsManager: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const docData = {
         ...formData,
@@ -56,6 +59,9 @@ const DocumentsManager: React.FC = () => {
       setShowAddForm(false);
     } catch (error) {
       console.error('Error saving document:', error);
+      toast.error('Kunne ikke lagre dokument');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -66,7 +72,7 @@ const DocumentsManager: React.FC = () => {
       category: doc.category,
       content: doc.content,
       summary: doc.summary || '',
-      tags: doc.tags.join(', '),
+      tags: (doc.tags || []).join(', '),
     });
     setFile(null);
     setShowAddForm(true);
@@ -188,14 +194,14 @@ const DocumentsManager: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                 placeholder="Tags (kommaseparert)"
               />
-              <div className="flex gap-2">
-                <Button type="submit">
-                  {editingDoc ? 'Oppdater' : 'Legg til'}
-                </Button>
-                <Button type="button" variant="outline" onClick={cancelEdit}>
-                  Avbryt
-                </Button>
-              </div>
+               <div className="flex gap-2">
+                 <Button type="submit" disabled={isSubmitting}>
+                   {isSubmitting ? 'Lagrer...' : (editingDoc ? 'Oppdater' : 'Legg til')}
+                 </Button>
+                 <Button type="button" variant="outline" onClick={cancelEdit} disabled={isSubmitting}>
+                   Avbryt
+                 </Button>
+               </div>
             </form>
           </CardContent>
         </Card>
@@ -220,13 +226,13 @@ const DocumentsManager: React.FC = () => {
                       <p className="text-sm text-gray-600 mb-2">
                         {(doc.summary || doc.content).substring(0, 200)}...
                       </p>
-                      <div className="flex gap-1">
-                        {doc.tags.map((tag) => (
+                       <div className="flex gap-1">
+                        {(doc.tags || []).map((tag) => (
                           <Badge key={tag} variant="outline" className="text-xs">
                             {tag}
                           </Badge>
                         ))}
-                      </div>
+                       </div>
                       {doc.file_url && (
                         <a
                           href={doc.file_url}
