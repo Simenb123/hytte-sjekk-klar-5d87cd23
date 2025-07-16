@@ -27,7 +27,8 @@ const DocumentsManager: React.FC = () => {
     uploadDocumentImage,
     getDocumentImages,
     updateImageDescription,
-    deleteDocumentImage
+    deleteDocumentImage,
+    setFrontPageImage
   } = useCabinDocuments();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -506,10 +507,12 @@ const DocumentsManager: React.FC = () => {
                 documentTitle={viewingDoc.title}
                 documentCategory={viewingDoc.category}
                 images={documentImages}
+                frontPageImageId={viewingDoc.front_page_image_id}
                 onImagesChange={refreshDocumentImages}
                 uploadImage={uploadDocumentImage}
                 updateImageDescription={updateImageDescription}
                 deleteImage={deleteDocumentImage}
+                setFrontPageImage={setFrontPageImage}
               />
             </div>
           </DialogContent>

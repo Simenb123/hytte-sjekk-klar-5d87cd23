@@ -12,6 +12,7 @@ export interface CabinDocument {
   summary?: string | null;
   file_url?: string;
   tags: string[];
+  front_page_image_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -278,6 +279,23 @@ export function useCabinDocuments() {
     }
   }, []);
 
+  const setFrontPageImage = useCallback(async (documentId: string, imageId: string): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('cabin_documents')
+        .update({ front_page_image_id: imageId })
+        .eq('id', documentId);
+
+      if (error) throw error;
+      toast.success('Forsidebilde satt');
+      await fetchDocuments();
+    } catch (error) {
+      console.error('Error setting front page image:', error);
+      toast.error('Kunne ikke sette forsidebilde');
+      throw error;
+    }
+  }, [fetchDocuments]);
+
   return {
     documents,
     loading,
@@ -290,5 +308,6 @@ export function useCabinDocuments() {
     getDocumentImages,
     updateImageDescription,
     deleteDocumentImage,
+    setFrontPageImage,
   };
 }

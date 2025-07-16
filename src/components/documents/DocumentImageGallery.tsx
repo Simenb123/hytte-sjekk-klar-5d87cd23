@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { X, Edit2, ZoomIn, Upload, Loader2, Sparkles, Pause, Play, Trash2, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
+import { X, Edit2, ZoomIn, Upload, Loader2, Sparkles, Pause, Play, Trash2, ChevronLeft, ChevronRight, Search, Filter, Star, StarOff } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,10 +26,12 @@ interface DocumentImageGalleryProps {
   documentTitle: string;
   documentCategory: string;
   images: DocumentImage[];
+  frontPageImageId?: string;
   onImagesChange: () => void;
   uploadImage: (file: File, documentId: string, description?: string) => Promise<string>;
   updateImageDescription: (imageId: string, description: string) => Promise<void>;
   deleteImage: (imageId: string) => Promise<void>;
+  setFrontPageImage: (documentId: string, imageId: string) => Promise<void>;
 }
 
 interface ImageUploadProgress {
@@ -48,10 +50,12 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
   documentTitle,
   documentCategory,
   images,
+  frontPageImageId,
   onImagesChange,
   uploadImage,
   updateImageDescription,
   deleteImage,
+  setFrontPageImage,
 }) => {
   const { toast } = useToast();
   const [uploadQueue, setUploadQueue] = useState<ImageUploadProgress[]>([]);
@@ -468,6 +472,80 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
     }
   };
 
+  // Handle front page image setting
+  const handleSetFrontPageImage = async (imageId: string) => {
+    try {
+      await setFrontPageImage(documentId, imageId);
+      toast({
+        title: "Forsidebilde satt",
+        description: "Bildet er nå forsidebildet for dokumentet",
+      });
+    } catch (error) {
+      console.error('Error setting front page image:', error);
+      toast({
+        title: "Feil",
+        description: "Kunne ikke sette forsidebilde",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!selectedImage) return;
+      
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          navigateImage('prev');
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          navigateImage('next');
+          break;
+        case 'Escape':
+          event.preventDefault();
+          setSelectedImage(null);
+          setSelectedImageIndex(-1);
+          break;
+      }
+    };
+
+    if (selectedImage) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [selectedImage, selectedImageIndex]);
+
+  // Touch/swipe support
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && selectedImageIndex < filteredImages.length - 1) {
+      navigateImage('next');
+    }
+    if (isRightSwipe && selectedImageIndex > 0) {
+      navigateImage('prev');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Compact Upload Area */}
@@ -660,7 +738,12 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
           {selectedImage && (
             <div className="space-y-4 px-4 pb-4">
               {/* Image Navigation */}
-              <div className="relative group">
+              <div 
+                className="relative group"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
                 <div className="flex justify-center">
                   <img
                     src={selectedImage.image_url}
@@ -713,7 +796,7 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
               </div>
               
               {/* Action buttons */}
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="flex flex-wrap gap-2 pt-4 border-t">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -722,17 +805,30 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                     setSelectedImage(null);
                     setSelectedImageIndex(-1);
                   }}
-                  className="flex-1"
+                  className="flex-1 min-w-[140px]"
                 >
                   <Edit2 className="h-4 w-4 mr-2" />
-                  Rediger beskrivelse
+                  Rediger
+                </Button>
+
+                <Button
+                  variant={frontPageImageId === selectedImage.id ? "default" : "outline"}
+                  onClick={() => handleSetFrontPageImage(selectedImage.id)}
+                  className="flex-1 min-w-[140px]"
+                >
+                  {frontPageImageId === selectedImage.id ? (
+                    <Star className="h-4 w-4 mr-2 fill-current" />
+                  ) : (
+                    <StarOff className="h-4 w-4 mr-2" />
+                  )}
+                  {frontPageImageId === selectedImage.id ? 'Forsidebilde' : 'Sett som forsidebilde'}
                 </Button>
                 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="flex-1">
+                    <Button variant="destructive" className="flex-1 min-w-[100px]">
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Slett bilde
+                      Slett
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -756,9 +852,14 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                 </AlertDialog>
               </div>
 
-              {/* Keyboard navigation hint */}
+              {/* Keyboard and touch navigation hint */}
               <div className="text-xs text-muted-foreground text-center pt-2 border-t">
-                Bruk piltastene for å navigere mellom bilder • ESC for å lukke
+                <div className="hidden sm:block">
+                  Bruk piltastene for å navigere mellom bilder • ESC for å lukke
+                </div>
+                <div className="sm:hidden">
+                  Sveip for å navigere mellom bilder • Trykk utenfor for å lukke
+                </div>
               </div>
             </div>
           )}

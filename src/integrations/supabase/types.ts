@@ -145,6 +145,7 @@ export type Database = {
           content: string
           created_at: string
           file_url: string | null
+          front_page_image_id: string | null
           id: string
           summary: string | null
           tags: string[] | null
@@ -156,6 +157,7 @@ export type Database = {
           content: string
           created_at?: string
           file_url?: string | null
+          front_page_image_id?: string | null
           id?: string
           summary?: string | null
           tags?: string[] | null
@@ -167,13 +169,22 @@ export type Database = {
           content?: string
           created_at?: string
           file_url?: string | null
+          front_page_image_id?: string | null
           id?: string
           summary?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cabin_documents_front_page_image_id_fkey"
+            columns: ["front_page_image_id"]
+            isOneToOne: false
+            referencedRelation: "document_images"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       checklist_item_images: {
         Row: {
