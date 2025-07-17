@@ -28,6 +28,7 @@ export interface DbCompletionLog {
 export interface ChecklistItemWithStatus extends DbChecklistItem {
   isCompleted: boolean;
   imageUrl?: string;
+  completedBy?: string;
 }
 
 export interface AreaWithItems extends DbArea {

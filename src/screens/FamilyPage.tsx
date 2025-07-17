@@ -9,7 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { FamilyMemberDialog } from '@/components/family/FamilyMemberDialog';
 import { useFamilyMembers, useDeleteFamilyMember } from '@/hooks/useFamilyMembers';
 import { useAuth } from '@/hooks/useAuth';
-import { Users, Calendar, MoreVertical, Trash2, Edit, AlertTriangle, Info } from 'lucide-react';
+import { useUsers } from '@/hooks/useUsers';
+import { Users, Calendar, MoreVertical, Trash2, Edit, AlertTriangle, Info, User, Link } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +24,7 @@ import { nb } from 'date-fns/locale';
 export default function FamilyPage() {
   const { user } = useAuth();
   const { data: familyMembers, isLoading, error } = useFamilyMembers();
+  const { data: users } = useUsers();
   const deleteMutation = useDeleteFamilyMember();
 
   const handleDelete = async (memberId: string, memberName: string) => {
@@ -53,6 +55,11 @@ export default function FamilyPage() {
       case 'other': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const getUserEmail = (userId: string | null) => {
+    if (!userId || !users) return null;
+    return users.find(u => u.id === userId)?.email;
   };
 
   // Check auth status
@@ -167,16 +174,31 @@ export default function FamilyPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Badge className={getRoleColor(member.role)}>
                           {getRoleText(member.role)}
                         </Badge>
-                        {member.is_user && (
-                          <Badge variant="outline" className="text-xs">
-                            Har brukerkonto
+                        {member.linked_user_id ? (
+                          <Badge variant="secondary" className="text-xs">
+                            <Link className="h-3 w-3 mr-1" />
+                            Koblet bruker
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-muted-foreground">
+                            <User className="h-3 w-3 mr-1" />
+                            Ikke koblet
                           </Badge>
                         )}
                       </div>
+                      
+                      {member.linked_user_id && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <User className="h-4 w-4" />
+                          <span className="text-xs">
+                            {getUserEmail(member.linked_user_id) || 'Ukjent bruker'}
+                          </span>
+                        </div>
+                      )}
                       
                       {member.birth_date && (
                         <div className="flex items-center gap-2 text-sm text-gray-600">

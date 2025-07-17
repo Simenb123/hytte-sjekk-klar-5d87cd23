@@ -66,6 +66,27 @@ export const fetchCompletionLogs = async (userId: string, bookingId?: string): P
   return data || [];
 };
 
+// Fetch all completion logs for items with user details
+export const fetchAllCompletionLogs = async (bookingId?: string): Promise<any[]> => {
+  let query = supabase
+    .from('completion_logs')
+    .select('*')
+    .order('completed_at', { ascending: false });
+
+  if (bookingId) {
+    query = query.eq('booking_id', bookingId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('[fetchAllCompletionLogs] Error fetching completion logs:', error);
+    throw error;
+  }
+
+  return data || [];
+};
+
 // Log completion of a checklist item with enhanced logging
 export const logItemCompletion = async (
   userId: string,
@@ -127,15 +148,25 @@ export const getChecklistForCategory = async (
     const areas = await fetchAreas();
     const items = await fetchChecklistItems(category, season);
     const logs = await fetchCompletionLogs(userId, bookingId);
+    const allLogs = await fetchAllCompletionLogs(bookingId);
 
     console.log(`[getChecklistForCategory] Areas: ${areas.length}, Items: ${items.length}, Logs: ${logs.length}, Season: ${season}`);
 
     // Create a map of item IDs to their latest completed status
     const completionMap = new Map<string, boolean>();
+    const completedByMap = new Map<string, string>();
+    
     logs.forEach(log => {
       // Since logs are ordered by date descending, the first one we see is the latest.
       if (!completionMap.has(log.item_id)) {
         completionMap.set(log.item_id, log.is_completed);
+      }
+    });
+
+    // Map who completed each item from all logs
+    allLogs.forEach(log => {
+      if (log.is_completed && !completedByMap.has(log.item_id)) {
+        completedByMap.set(log.item_id, log.user_id);
       }
     });
 
@@ -149,7 +180,8 @@ export const getChecklistForCategory = async (
       acc[areaId].push({
         ...item,
         isCompleted: completionMap.get(item.id) ?? false,
-        imageUrl: item.checklist_item_images?.[0]?.image_url
+        imageUrl: item.checklist_item_images?.[0]?.image_url,
+        completedBy: completedByMap.get(item.id)
       });
       return acc;
     }, {} as Record<string, ChecklistItemWithStatus[]>);
@@ -246,4 +278,24 @@ export const getCategoriesSummary = async (
     console.error('[getCategoriesSummary] Error:', error);
     throw error;
   }
+};
+
+// Get completion history for a specific item with user and booking details
+export const getCompletionHistory = async (itemId: string): Promise<any[]> => {
+  const { data, error } = await supabase
+    .from('completion_logs')
+    .select(`
+      *,
+      profiles!completion_logs_user_id_fkey(first_name, last_name),
+      bookings!completion_logs_booking_id_fkey(title, start_date, end_date)
+    `)
+    .eq('item_id', itemId)
+    .order('completed_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching completion history:', error);
+    throw error;
+  }
+
+  return data || [];
 };

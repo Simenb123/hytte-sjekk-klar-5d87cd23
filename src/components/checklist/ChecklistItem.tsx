@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { CheckSquare, Square, Camera, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { FamilyMemberAssignment } from './FamilyMemberAssignment';
 import { toast } from 'sonner';
 
 interface ChecklistItemProps {
@@ -10,6 +11,8 @@ interface ChecklistItemProps {
   text: string;
   isCompleted: boolean;
   imageUrl?: string;
+  assignedTo?: string | null;
+  completedBy?: string | null;
   onToggle: () => void;
   onImageUpdate?: () => void;
 }
@@ -19,6 +22,8 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
   text,
   isCompleted,
   imageUrl,
+  assignedTo,
+  completedBy,
   onToggle,
   onImageUpdate
 }) => {
@@ -110,9 +115,18 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
               <Square size={24} className="text-gray-400" strokeWidth={2.5} />
             )}
           </div>
-          <span className={`${isCompleted ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
-            {text}
-          </span>
+          <div className="flex-1">
+            <span className={`${isCompleted ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
+              {text}
+            </span>
+            <div className="mt-1">
+              <FamilyMemberAssignment 
+                assignedTo={assignedTo}
+                completedBy={isCompleted ? completedBy : undefined}
+                showCompletedBy={isCompleted}
+              />
+            </div>
+          </div>
         </div>
         
         <div className="image-upload-section flex items-center gap-2">

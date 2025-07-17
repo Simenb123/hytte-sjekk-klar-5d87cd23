@@ -8,6 +8,8 @@ interface AreaChecklistContainerProps {
     text: string;
     isCompleted: boolean;
     imageUrl?: string;
+    assigned_to?: string | null;
+    completedBy?: string;
   }>;
   onToggleItem: (id: string) => void;
 }
@@ -27,6 +29,7 @@ const AreaChecklistContainer: React.FC<AreaChecklistContainerProps> = ({ items, 
         <AreaChecklistItem
           key={item.id}
           item={item}
+          completedBy={item.completedBy}
           onToggle={onToggleItem}
         />
       ))}

@@ -8,11 +8,13 @@ interface AreaChecklistItemProps {
     text: string;
     isCompleted: boolean;
     imageUrl?: string;
+    assigned_to?: string | null;
   };
   onToggle: (id: string) => void;
+  completedBy?: string | null;
 }
 
-const AreaChecklistItem: React.FC<AreaChecklistItemProps> = ({ item, onToggle }) => {
+const AreaChecklistItem: React.FC<AreaChecklistItemProps> = ({ item, onToggle, completedBy }) => {
   // Log when the component renders or when isCompleted changes
   useEffect(() => {
     console.log(`[AreaChecklistItem ${item.id}] Rendering with isCompleted: ${item.isCompleted}`);
@@ -29,6 +31,8 @@ const AreaChecklistItem: React.FC<AreaChecklistItemProps> = ({ item, onToggle })
       text={item.text}
       isCompleted={item.isCompleted}
       imageUrl={item.imageUrl}
+      assignedTo={item.assigned_to}
+      completedBy={completedBy}
       onToggle={handleToggle}
     />
   );

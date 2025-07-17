@@ -20,9 +20,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAddFamilyMember, useUpdateFamilyMember } from '@/hooks/useFamilyMembers';
+import { useUsers } from '@/hooks/useUsers';
 import { FamilyMember } from '@/types/family';
 import { toast } from 'sonner';
-import { Plus, Edit } from 'lucide-react';
+import { Plus, Edit, User } from 'lucide-react';
 
 interface FamilyMemberDialogProps {
   member?: FamilyMember;
@@ -35,9 +36,11 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
   const [nickname, setNickname] = useState(member?.nickname || '');
   const [birthDate, setBirthDate] = useState(member?.birth_date || '');
   const [role, setRole] = useState<'parent' | 'child' | 'other'>(member?.role || 'other');
+  const [linkedUserId, setLinkedUserId] = useState(member?.linked_user_id || '');
 
   const addMutation = useAddFamilyMember();
   const updateMutation = useUpdateFamilyMember();
+  const { data: users, isLoading: usersLoading } = useUsers();
 
   const isEdit = !!member;
 
@@ -55,6 +58,8 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
         nickname: nickname.trim() || undefined,
         birth_date: birthDate || undefined,
         role,
+        linked_user_id: linkedUserId || undefined,
+        is_user: !!linkedUserId,
       };
 
       if (isEdit) {
@@ -75,6 +80,7 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
         setNickname('');
         setBirthDate('');
         setRole('other');
+        setLinkedUserId('');
       }
     } catch (error) {
       console.error('Error saving family member:', error);
@@ -156,6 +162,25 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
                   <SelectItem value="parent">Forelder</SelectItem>
                   <SelectItem value="child">Barn</SelectItem>
                   <SelectItem value="other">Annet</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="linked_user" className="text-right">
+                <User className="h-4 w-4 inline mr-1" />
+                Bruker
+              </Label>
+              <Select value={linkedUserId} onValueChange={setLinkedUserId} disabled={usersLoading}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder={usersLoading ? "Laster..." : "Velg bruker (valgfritt)"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Ingen bruker</SelectItem>
+                  {users?.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.email}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
