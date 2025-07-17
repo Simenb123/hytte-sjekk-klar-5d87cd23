@@ -98,6 +98,61 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
 }
 
 
+// Helper function to generate multiple search queries
+function generateSearchQueries(originalQuery: string, currentTime: string): string[] {
+  const queries = [originalQuery];
+  
+  // Handle temporal references
+  const timeReferences = {
+    'i går': ['nylig', 'sist', 'forrige dag'],
+    'igår': ['nylig', 'sist', 'forrige dag'],
+    'yesterday': ['recent', 'latest', 'previous'],
+    'nylig': ['i dag', 'sist'],
+    'sist': ['forrige', 'nylig', 'igår'],
+    'i dag': ['nå', 'dagens'],
+    'idag': ['nå', 'dagens']
+  };
+
+  // Replace temporal references with alternatives
+  for (const [temporal, alternatives] of Object.entries(timeReferences)) {
+    if (originalQuery.toLowerCase().includes(temporal)) {
+      for (const alt of alternatives) {
+        const newQuery = originalQuery.toLowerCase().replace(temporal, alt);
+        queries.push(newQuery);
+      }
+      // Also try without the temporal reference
+      const withoutTemporal = originalQuery.toLowerCase().replace(temporal, '').trim();
+      if (withoutTemporal.length > 0) {
+        queries.push(withoutTemporal);
+      }
+    }
+  }
+
+  // Extract main topics and create focused queries
+  const mainTopics = extractSearchTerms(originalQuery);
+  for (const topic of mainTopics) {
+    if (topic.length > 3) {
+      queries.push(topic);
+    }
+  }
+
+  // Remove duplicates and empty strings
+  return [...new Set(queries.filter(q => q.trim().length > 0))];
+}
+
+// Helper function to extract key search terms
+function extractSearchTerms(query: string): string[] {
+  // Common Norwegian stop words to filter out
+  const stopWords = ['og', 'i', 'på', 'er', 'til', 'av', 'for', 'med', 'det', 'en', 'et', 'som', 'den', 'de', 'har', 'ikke', 'kan', 'skal', 'vil', 'å', 'om', 'fra', 'ved', 'var', 'blir', 'hvis', 'når', 'hvor', 'hvorfor', 'hvordan', 'hva', 'hvem'];
+  
+  const words = query.toLowerCase()
+    .replace(/[^\wæøå\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !stopWords.includes(word));
+  
+  return words;
+}
+
 async function fetchWebResults(query: string) {
   if (!SEARCH_API_KEY) {
     console.log('SEARCH_API_KEY not set, skipping web search');
@@ -218,19 +273,54 @@ ${weatherData.forecast.map(day => `
       console.error('Error fetching web results:', error);
     }
 
-    // Search for relevant cabin documents
+    // Enhanced document search with multiple strategies
     let documentContext = "Ingen relevante dokumenter funnet.";
     try {
-      const { data: relevantDocs, error: docsError } = await supabaseClient
-        .rpc('search_cabin_documents', { search_query: userQuery })
-        .limit(3);
+      // Generate multiple search queries for better results
+      const searchQueries = generateSearchQueries(userQuery, norskTid);
+      let allRelevantDocs = [];
 
-      if (docsError) {
-        console.error('Error searching cabin documents:', docsError);
-      } else if (relevantDocs && relevantDocs.length > 0) {
+      // Search with each query
+      for (const query of searchQueries) {
+        const { data: docs, error: docsError } = await supabaseClient
+          .rpc('search_cabin_documents', { search_query: query })
+          .limit(5);
+
+        if (!docsError && docs && docs.length > 0) {
+          // Add unique documents to our collection
+          for (const doc of docs) {
+            if (!allRelevantDocs.find(d => d.id === doc.id)) {
+              allRelevantDocs.push(doc);
+            }
+          }
+        }
+      }
+
+      // If still no results, try a more general search approach
+      if (allRelevantDocs.length === 0) {
+        const { data: generalDocs, error: generalError } = await supabaseClient
+          .from('cabin_documents')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (!generalError && generalDocs) {
+          // Filter by content relevance manually
+          allRelevantDocs = generalDocs.filter(doc => {
+            const searchTerms = extractSearchTerms(userQuery);
+            const docText = `${doc.title} ${doc.category} ${doc.content || ''} ${doc.summary || ''}`.toLowerCase();
+            return searchTerms.some(term => docText.includes(term.toLowerCase()));
+          });
+        }
+      }
+
+      if (allRelevantDocs.length > 0) {
+        // Sort by relevance and take top 4
+        const topDocs = allRelevantDocs.slice(0, 4);
+        
         documentContext = `
 **Relevante hytte-dokumenter:**
-${relevantDocs.map(doc => {
+${topDocs.map(doc => {
   let docText = `**${doc.title}** (${doc.category})\n`;
   if (doc.summary) {
     docText += `Sammendrag: ${doc.summary}\n`;
