@@ -36,7 +36,7 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
   const [nickname, setNickname] = useState(member?.nickname || '');
   const [birthDate, setBirthDate] = useState(member?.birth_date || '');
   const [role, setRole] = useState<'parent' | 'child' | 'other'>(member?.role || 'other');
-  const [linkedUserId, setLinkedUserId] = useState(member?.linked_user_id || '');
+  const [linkedUserId, setLinkedUserId] = useState(member?.linked_user_id || 'none');
 
   const addMutation = useAddFamilyMember();
   const updateMutation = useUpdateFamilyMember();
@@ -58,8 +58,8 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
         nickname: nickname.trim() || undefined,
         birth_date: birthDate || undefined,
         role,
-        linked_user_id: linkedUserId || undefined,
-        is_user: !!linkedUserId,
+        linked_user_id: linkedUserId === 'none' ? undefined : linkedUserId || undefined,
+        is_user: linkedUserId !== 'none' && !!linkedUserId,
       };
 
       if (isEdit) {
@@ -80,7 +80,7 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
         setNickname('');
         setBirthDate('');
         setRole('other');
-        setLinkedUserId('');
+        setLinkedUserId('none');
       }
     } catch (error) {
       console.error('Error saving family member:', error);
@@ -175,7 +175,7 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
                   <SelectValue placeholder={usersLoading ? "Laster..." : "Velg bruker (valgfritt)"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Ingen bruker</SelectItem>
+                  <SelectItem value="none">Ingen bruker</SelectItem>
                   {users?.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.email}
