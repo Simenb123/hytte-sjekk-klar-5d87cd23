@@ -3,9 +3,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../common/cors.ts'
 
-export function getReminderDateRange(baseDate: Date = new Date()) {
+export function getReminderDateRange(daysAhead: number, baseDate: Date = new Date()) {
   const target = new Date(baseDate)
-  target.setDate(baseDate.getDate() + 3)
+  target.setDate(baseDate.getDate() + daysAhead)
 
   const start = new Date(target)
   start.setHours(0, 0, 0, 0)
@@ -14,6 +14,11 @@ export function getReminderDateRange(baseDate: Date = new Date()) {
   end.setHours(23, 59, 59, 999)
 
   return { start, end }
+}
+
+// Specific function for 3-day reminders (backward compatibility)
+export function getThreeDayReminderDateRange(baseDate: Date = new Date()) {
+  return getReminderDateRange(3, baseDate)
 }
 
 serve(async (req) => {
@@ -30,7 +35,7 @@ serve(async (req) => {
 
     // Get date range for reminders
     const now = new Date()
-    const { start: startOfTargetDay, end: endOfTargetDay } = getReminderDateRange(now)
+    const { start: startOfTargetDay, end: endOfTargetDay } = getThreeDayReminderDateRange(now)
 
     console.log('Checking for bookings starting on:', startOfTargetDay.toISOString())
 
