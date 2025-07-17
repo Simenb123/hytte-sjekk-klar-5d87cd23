@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getChecklistForCategory } from "@/services/checklist.service";
 import { useAuth } from '@/hooks/useAuth';
@@ -7,22 +7,35 @@ import ChecklistItem from "@/components/checklist/ChecklistItem";
 import { logItemCompletion } from "@/services/checklist.service";
 import { toast } from "sonner";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2, Calendar, User } from "lucide-react";
 import Layout from "@/layout/Layout";
 import { Progress } from "@/components/ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useBookings } from "@/hooks/useBookings";
 import { useMemo } from "react";
 
 export default function ChecklistPage() {
   const { category } = useParams<{ category: ChecklistCategory }>();
+  const [searchParams] = useSearchParams();
+  const bookingIdFromUrl = searchParams.get('booking');
+  
   const { user } = useAuth();
   const { bookings } = useBookings();
 
+  // Use booking ID from URL if provided, otherwise calculate active booking
   const activeBookingId = useMemo(() => {
+    if (bookingIdFromUrl) return bookingIdFromUrl;
+    
     const now = new Date();
     const active = bookings.find(b => b.from <= now && now <= b.to);
     return active?.id;
-  }, [bookings]);
+  }, [bookingIdFromUrl, bookings]);
+
+  const selectedBooking = useMemo(() => {
+    if (!activeBookingId || !bookings) return null;
+    return bookings.find(b => b.id === activeBookingId) || null;
+  }, [activeBookingId, bookings]);
 
   const { data: areas, isLoading, error, refetch } = useQuery({
     queryKey: ['checklist', category, user?.id, activeBookingId],
@@ -82,7 +95,36 @@ export default function ChecklistPage() {
         )
       }
     >
-      <section className="p-4 sm:p-6 w-full">
+      <section className="p-4 sm:p-6 w-full max-w-4xl mx-auto">
+        {/* Booking Context */}
+        {selectedBooking && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">{selectedBooking.title}</CardTitle>
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  Booking
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  {selectedBooking.from.toLocaleDateString('nb-NO')} - {selectedBooking.to.toLocaleDateString('nb-NO')}
+                </div>
+                {selectedBooking.familyMembers && selectedBooking.familyMembers.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <User className="h-4 w-4" />
+                    {selectedBooking.familyMembers.length} personer
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {areas && areas.length > 0 ? (
           <Accordion type="multiple" defaultValue={areas.map(area => area.id)} className="w-full space-y-3">
             {areas.map((area) => (

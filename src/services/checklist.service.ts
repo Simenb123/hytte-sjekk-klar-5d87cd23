@@ -66,18 +66,16 @@ export const fetchCompletionLogs = async (userId: string, bookingId?: string): P
   return data || [];
 };
 
-// Log completion of a checklist item
+// Log completion of a checklist item with enhanced logging
 export const logItemCompletion = async (
   userId: string,
   itemId: string,
   isCompleted: boolean,
   bookingId?: string
 ) => {
-  console.log(`[checklist.service] Logging completion - userId: ${userId}, itemId: ${itemId}, isCompleted: ${isCompleted}`);
+  console.log(`[checklist.service] Logging completion - userId: ${userId}, itemId: ${itemId}, isCompleted: ${isCompleted}, bookingId: ${bookingId}`);
   
   try {
-    // We upsert to ensure we only have one log entry that matters per user per item, storing the latest state.
-    // Or we just insert and find the latest. Let's stick with insert, it's simpler.
     const { data, error } = await supabase
       .from('completion_logs')
       .insert([
@@ -86,6 +84,7 @@ export const logItemCompletion = async (
           item_id: itemId,
           is_completed: isCompleted,
           booking_id: bookingId,
+          completed_at: new Date().toISOString(),
         }
       ]);
       
@@ -95,9 +94,18 @@ export const logItemCompletion = async (
     }
     
     console.log('[checklist.service] Successfully logged completion:', data);
+    
+    // Show user feedback
+    if (isCompleted) {
+      toast.success('Oppgave markert som fullført');
+    } else {
+      toast.success('Oppgave markert som ikke fullført');
+    }
+    
     return data;
   } catch (error) {
     console.error('[checklist.service] Exception logging completion:', error);
+    toast.error('Kunne ikke oppdatere oppgave status');
     throw error;
   }
 };
