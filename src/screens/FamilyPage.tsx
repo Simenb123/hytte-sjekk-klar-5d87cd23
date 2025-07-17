@@ -81,7 +81,7 @@ export default function FamilyPage() {
   }
 
   return (
-    <Layout title="Familie" showBackButton rightContent={<FamilyMemberDialog />}>
+    <Layout title="Familie" showBackButton={true} rightContent={<FamilyMemberDialog />}>
 
       <section className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="w-full">
