@@ -70,8 +70,7 @@ async function processBookingsForReminder(
       title,
       start_date,
       end_date,
-      user_id,
-      profiles!inner(first_name, last_name)
+      user_id
     `)
     .gte('start_date', start.toISOString())
     .lt('start_date', end.toISOString())
@@ -106,7 +105,14 @@ async function processBookingsForReminder(
         continue
       }
 
-      const userName = booking.profiles?.first_name || 'Bruker'
+      // Get user profile separately
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', booking.user_id)
+        .maybeSingle()
+
+      const userName = profile?.first_name || 'Bruker'
       const startDate = new Date(booking.start_date)
       
       const dateFormatter = new Intl.DateTimeFormat('nb-NO', {
@@ -179,8 +185,7 @@ async function processDepartureReminders(supabase: any, baseDate: Date) {
       title,
       start_date,
       end_date,
-      user_id,
-      profiles!inner(first_name, last_name)
+      user_id
     `)
     .gte('end_date', start.toISOString())
     .lt('end_date', end.toISOString())
@@ -215,7 +220,14 @@ async function processDepartureReminders(supabase: any, baseDate: Date) {
         continue
       }
 
-      const userName = booking.profiles?.first_name || 'Bruker'
+      // Get user profile separately
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', booking.user_id)
+        .maybeSingle()
+
+      const userName = profile?.first_name || 'Bruker'
       const endDate = new Date(booking.end_date)
       
       const dateFormatter = new Intl.DateTimeFormat('nb-NO', {
