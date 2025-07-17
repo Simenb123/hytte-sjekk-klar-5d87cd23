@@ -3,6 +3,7 @@ import React from 'react';
 import { ArrowLeft, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfileButton from '../profile/ProfileButton';
+import NotificationBell from '../notifications/NotificationBell';
 import { useAuth } from '@/hooks/useAuth';
 
 interface HeaderProps {
@@ -68,7 +69,12 @@ const Header: React.FC<HeaderProps> = ({
 
         <div className="flex items-center gap-2">
           {rightContent}
-          {user && <ProfileButton />}
+          {user && (
+            <>
+              <NotificationBell />
+              <ProfileButton />
+            </>
+          )}
         </div>
       </div>
     </header>
