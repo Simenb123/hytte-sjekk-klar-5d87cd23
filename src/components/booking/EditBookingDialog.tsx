@@ -10,13 +10,14 @@ import {
 import BookingForm from './BookingForm';
 import { BookingFormData } from './types';
 import { Booking } from '@/hooks/useBookings';
+import { useBookingSubmit } from './useBookingSubmit';
 import { toast } from 'sonner';
 
 type EditBookingDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   booking: Booking | null;
-  onUpdate: (id: string, updates: Partial<Booking>) => Promise<boolean>;
+  onSuccess?: () => void;
   googleIntegration?: boolean;
   sharedCalendarExists?: boolean;
 };
@@ -25,12 +26,17 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
   open, 
   onOpenChange,
   booking,
-  onUpdate,
+  onSuccess,
   googleIntegration = false,
   sharedCalendarExists = false
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [defaultValues, setDefaultValues] = useState<BookingFormData | null>(null);
+  const { updateBooking, isSubmitting } = useBookingSubmit({
+    onSuccess: () => {
+      onOpenChange(false);
+      onSuccess?.();
+    }
+  });
   
   useEffect(() => {
     if (booking) {
@@ -51,7 +57,7 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
         endDate,
         addToGoogle: false,
         useSharedCalendar: false,
-        familyMemberIds: []
+        familyMemberIds: booking.familyMembers?.map(fm => fm.id) || []
       });
     }
   }, [booking]);
@@ -59,55 +65,26 @@ const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
   if (!booking || !defaultValues) return null;
 
   const handleSubmit = async (data: BookingFormData) => {
-    try {
-      setIsSubmitting(true);
-      console.log("Submitting update with data:", data);
-      
-      if (!data.title) {
-        toast.error('Booking må ha en tittel');
-        setIsSubmitting(false);
-        return;
-      }
-      
-      if (!data.startDate || !data.endDate) {
-        toast.error('Booking må ha start- og sluttdato');
-        setIsSubmitting(false);
-        return;
-      }
-      
-      if (data.endDate < data.startDate) {
-        toast.error('Sluttdato kan ikke være før startdato');
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Convert to proper Date objects if needed
-      const startDate = data.startDate instanceof Date ? 
-        data.startDate : new Date(data.startDate);
-      
-      const endDate = data.endDate instanceof Date ? 
-        data.endDate : new Date(data.endDate);
-      
-      const updates = {
-        title: data.title,
-        description: data.description || '',
-        from: startDate,
-        to: endDate
-      };
-      
-      const success = await onUpdate(booking.id, updates);
-      
-      if (success) {
-        toast.success('Booking oppdatert!');
-        onOpenChange(false);
-      }
-    } catch (error: unknown) {
-      console.error('Error updating booking:', error);
-      const message = error instanceof Error ? error.message : 'Ukjent feil';
-      toast.error(`Kunne ikke oppdatere booking: ${message}`);
-    } finally {
-      setIsSubmitting(false);
+    if (!booking) return;
+    
+    console.log("Submitting update with data:", data);
+    
+    if (!data.title) {
+      toast.error('Booking må ha en tittel');
+      return;
     }
+    
+    if (!data.startDate || !data.endDate) {
+      toast.error('Booking må ha start- og sluttdato');
+      return;
+    }
+    
+    if (data.endDate < data.startDate) {
+      toast.error('Sluttdato kan ikke være før startdato');
+      return;
+    }
+    
+    await updateBooking(booking.id, data);
   };
 
   return (

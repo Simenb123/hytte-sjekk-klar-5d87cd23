@@ -268,7 +268,11 @@ const CalendarApp: React.FC = () => {
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
         booking={bookingToEdit}
-        onUpdate={handleUpdateBooking}
+        onSuccess={() => {
+          setShowEditDialog(false);
+          setBookingToEdit(null);
+          fetchBookings();
+        }}
         googleIntegration={isGoogleConnected}
         sharedCalendarExists={sharedCalendarExists}
       />
