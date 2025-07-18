@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/state/auth';
@@ -16,7 +16,6 @@ import ChecklistAdminPage from './screens/ChecklistAdminPage';
 import InventoryPage from './screens/InventoryPage';
 import FamilyPage from './screens/FamilyPage';
 import BookingPage from './screens/BookingPage';
-import CalendarApp from './screens/CalendarApp';
 import WeatherApp from './screens/WeatherApp';
 import AiHelperPage from './screens/AiHelperPage';
 import DocumentsPage from './screens/DocumentsPage';
@@ -80,7 +79,9 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/calendar" element={<CalendarApp />} />
+              {/* Redirect /calendar to /booking to maintain compatibility */}
+              <Route path="/calendar" element={<Navigate to="/booking" replace />} />
+              <Route path="/auth/calendar" element={<Navigate to="/booking" replace />} />
               <Route path="/weather" element={<WeatherApp />} />
               <Route
                 path="/ai-helper"

@@ -13,7 +13,6 @@ const AppHeader = () => {
     { href: '/', label: 'Hjem' },
     { href: '/checklist', label: 'Sjekkliste' },
     { href: '/booking', label: 'Booking' },
-    { href: '/calendar', label: 'Kalender' },
     { href: '/inventory', label: 'Inventar' },
     { href: '/family', label: 'Familie' },
     { href: '/ai-helper', label: 'AI Hjelper' },
