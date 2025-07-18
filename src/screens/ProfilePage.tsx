@@ -5,8 +5,10 @@ import { useAuth } from '@/hooks/useAuth';
 import Layout from '@/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, User, Loader2 } from 'lucide-react';
 import { ProfileForm } from '@/components/profile/ProfileForm';
+import NotificationSettings from '@/components/notifications/NotificationSettings';
 import { useProfile } from '@/hooks/useProfile';
 
 const ProfilePage: React.FC = () => {
@@ -61,19 +63,34 @@ const ProfilePage: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <User className="mr-2" size={24} />
-                Brukerinformasjon
+                Innstillinger
               </CardTitle>
               <CardDescription>
-                Oppdater din profil og kontaktinformasjon
+                Administrer din profil og varselinnstillinger
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ProfileForm 
-                user={user}
-                profile={profile}
-                isSaving={isSaving}
-                onSubmit={updateProfile}
-              />
+              <Tabs defaultValue="profile" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="profile">Profil</TabsTrigger>
+                  <TabsTrigger value="notifications">Varsler</TabsTrigger>
+                </TabsList>
+                <TabsContent value="profile" className="space-y-6">
+                  <div className="pt-6">
+                    <ProfileForm 
+                      user={user}
+                      profile={profile}
+                      isSaving={isSaving}
+                      onSubmit={updateProfile}
+                    />
+                  </div>
+                </TabsContent>
+                <TabsContent value="notifications" className="space-y-6">
+                  <div className="pt-6">
+                    <NotificationSettings />
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         )}
