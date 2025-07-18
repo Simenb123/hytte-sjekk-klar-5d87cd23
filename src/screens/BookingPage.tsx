@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import type { Booking } from '@/hooks/useBookings';
+import type { BookingFormData } from '@/components/booking/types';
 
 type BookingRow = Database['public']['Tables']['bookings']['Row'];
 
@@ -197,7 +198,7 @@ const BookingPage = () => {
     setShowNewBooking(true);
   }, [user]);
 
-  const handleNewBookingSuccess = async (booking: BookingRow & { useSharedCalendar: boolean }) => {
+  const handleNewBookingSuccess = async (booking: BookingFormData) => {
     console.log('Booking success:', booking);
     fetchBookings();
     
