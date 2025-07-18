@@ -525,6 +525,7 @@ export type Database = {
           created_at: string
           email_enabled: boolean | null
           id: string
+          push_enabled: boolean | null
           seasonal_info: boolean | null
           sms_enabled: boolean | null
           updated_at: string
@@ -536,6 +537,7 @@ export type Database = {
           created_at?: string
           email_enabled?: boolean | null
           id?: string
+          push_enabled?: boolean | null
           seasonal_info?: boolean | null
           sms_enabled?: boolean | null
           updated_at?: string
@@ -547,6 +549,7 @@ export type Database = {
           created_at?: string
           email_enabled?: boolean | null
           id?: string
+          push_enabled?: boolean | null
           seasonal_info?: boolean | null
           sms_enabled?: boolean | null
           updated_at?: string
