@@ -51,11 +51,25 @@ export const usePushNotifications = () => {
     if (!user) return;
 
     try {
-      // For now, just log the token - we'll implement proper storage later
-      console.log('Push token received:', { token, platform, userId: user.id });
-      // TODO: Implement proper push token storage once DB types are updated
+      const { error } = await supabase
+        .from('push_tokens')
+        .upsert({ 
+          user_id: user.id,
+          token, 
+          platform 
+        }, {
+          onConflict: 'user_id,token'
+        });
+
+      if (error) {
+        console.error('Error saving push token:', error);
+        throw error;
+      }
+      
+      console.log('Push token saved successfully');
     } catch (error) {
-      console.error('Error saving push token:', error);
+      console.error('Failed to save push token:', error);
+      throw error;
     }
   };
 

@@ -69,22 +69,56 @@ const handler = async (req: Request): Promise<Response> => {
     // Send push notifications to all user's devices
     const sendPromises = tokens.map(async (tokenData) => {
       try {
-        // For now, we'll simulate sending push notifications
-        // In a real implementation, you would integrate with:
-        // - Firebase Cloud Messaging (FCM) for Android
-        // - Apple Push Notification service (APNs) for iOS
-        // - Web Push API for web browsers
+        // Send push notification via FCM
+        const FCM_SERVER_KEY = Deno.env.get("FCM_SERVER_KEY");
         
-        console.log(`Sending push to ${tokenData.platform} device with token: ${tokenData.token.substring(0, 20)}...`);
-        
-        // This is where you would make actual API calls to FCM/APNs
-        // For now, we'll just log and simulate success
-        return {
-          token: tokenData.token,
-          platform: tokenData.platform,
-          success: true,
-          messageId: `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        if (!FCM_SERVER_KEY) {
+          console.warn("FCM_SERVER_KEY not configured, simulating notification");
+          return {
+            token: tokenData.token,
+            platform: tokenData.platform,
+            success: true,
+            messageId: `sim_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+          };
+        }
+
+        const fcmPayload = {
+          to: tokenData.token,
+          notification: {
+            title,
+            body,
+            sound: "default",
+          },
+          data: data || {},
         };
+
+        const fcmResponse = await fetch("https://fcm.googleapis.com/fcm/send", {
+          method: "POST",
+          headers: {
+            "Authorization": `key=${FCM_SERVER_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(fcmPayload),
+        });
+
+        const fcmResult = await fcmResponse.json();
+        
+        if (fcmResponse.ok && fcmResult.success > 0) {
+          return {
+            token: tokenData.token,
+            platform: tokenData.platform,
+            success: true,
+            messageId: fcmResult.results[0]?.message_id || `fcm_${Date.now()}`,
+          };
+        } else {
+          console.error("FCM error:", fcmResult);
+          return {
+            token: tokenData.token,
+            platform: tokenData.platform,
+            success: false,
+            error: fcmResult.results?.[0]?.error || "Unknown FCM error",
+          };
+        }
       } catch (error) {
         console.error(`Failed to send push to ${tokenData.platform}:`, error);
         return {
