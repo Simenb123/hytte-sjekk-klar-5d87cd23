@@ -102,6 +102,25 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
 function generateSearchQueries(originalQuery: string, currentTime: string): string[] {
   const queries = [originalQuery];
   
+  // Synonym mapping for better search results
+  const synonyms = {
+    'gressklipper': ['kantklipper', 'gressklipping', 'plenklipper', 'hageutstyr', 'have', 'gress'],
+    'kantklipper': ['gressklipper', 'kantklipping', 'gressklipping', 'hageutstyr', 'have'],
+    'ryobi': ['batteri', 'elektrisk', 'klipper', 'verktøy'],
+    'hageutstyr': ['gressklipper', 'kantklipper', 'have', 'gress', 'verktøy'],
+    'gressklipping': ['gressklipper', 'kantklipper', 'klipping', 'have'],
+    'klippere': ['klipper', 'gressklipper', 'kantklipper'],
+    'slå gress': ['gressklipper', 'gressklipping', 'klipping', 'have'],
+    'plen': ['gress', 'gressklipper', 'gressklipping', 'have'],
+    'have': ['hageutstyr', 'gress', 'gressklipper', 'kantklipper'],
+    'verktøy': ['utstyr', 'redskap', 'maskin'],
+    'elektrisk': ['batteri', 'strøm', 'lading'],
+    'batteri': ['elektrisk', 'lading', 'strøm', 'ryobi'],
+    'oppbevaring': ['garasje', 'bod', 'lagring', 'plassering'],
+    'garasje': ['oppbevaring', 'bod', 'lagring'],
+    'vedlikehold': ['service', 'reparasjon', 'skjøtsel']
+  };
+  
   // Handle temporal references
   const timeReferences = {
     'i går': ['nylig', 'sist', 'forrige dag'],
@@ -112,6 +131,20 @@ function generateSearchQueries(originalQuery: string, currentTime: string): stri
     'i dag': ['nå', 'dagens'],
     'idag': ['nå', 'dagens']
   };
+
+  // Add synonym-based queries
+  const queryLower = originalQuery.toLowerCase();
+  for (const [term, relatedTerms] of Object.entries(synonyms)) {
+    if (queryLower.includes(term)) {
+      // Add queries with each related term
+      for (const related of relatedTerms) {
+        queries.push(related);
+        // Also try replacing the original term with the related term
+        const replacedQuery = queryLower.replace(term, related);
+        queries.push(replacedQuery);
+      }
+    }
+  }
 
   // Replace temporal references with alternatives
   for (const [temporal, alternatives] of Object.entries(timeReferences)) {
@@ -133,6 +166,10 @@ function generateSearchQueries(originalQuery: string, currentTime: string): stri
   for (const topic of mainTopics) {
     if (topic.length > 3) {
       queries.push(topic);
+      // Also add synonyms for individual terms
+      if (synonyms[topic]) {
+        queries.push(...synonyms[topic]);
+      }
     }
   }
 
@@ -371,14 +408,12 @@ ${inventoryItems.map(item => `
     }
 
     const systemPrompt = `
-Du er "Hyttehjelperen", en vennlig og hjelpsom AI-assistent for Gaustablikk familiehytte.
-Din kunnskap er basert på informasjon om hytta, dens omgivelser, generelle hytterutiner, inventarliste, værdata og interne dokumenter/manualer.
-Vær alltid hyggelig, konsis og hjelpsom.
+Du er "Hyttehjelperen", en intelligent og hjelpsom AI-assistent for Gaustablikk familiehytte.
+Du har kunnskap om hytta, utstyr, håndteringer, værforhold og praktiske råd.
+Vær alltid hyggelig, presis og bruk tilgjengelig informasjon effektivt.
 
 **NÅVÆRENDE DATO OG TID:**
-${norskTid}
-Årstid: ${årstid}
-Måned: ${månedsnavn}
+${norskTid} (Årstid: ${årstid}, Måned: ${månedsnavn})
 
 ${weatherContext}
 
@@ -388,38 +423,31 @@ ${inventoryContext}
 
 ${searchContext}
 
-**Generell kunnskapsbase:**
-- **Sted:** Vatnedalsvegen 27, Gaustablikk (1200 moh). Området er kjent for fantastisk utsikt mot Gaustatoppen og gode ski- og turmuligheter.
-- **Sjekklister:** Du kjenner til sjekklistene for ankomst, avreise, og vedlikehold.
-  - Ankomst: Slå på strøm og vann, sett varmepumpe til komfort.
-  - Avreise: Varmepumpe til økonomi, kraner lukket, vinduer/dører stengt, strøm av i anneks.
-- **Vær og aktiviteter:** Kombiner værdata med årstid for å gi relevante råd om aktiviteter og forberedelser.
-- **Smøretips:** Gi smøretips basert på nåværende og forventet temperatur.
+**SPESIALKUNNSKAP - Hytte på Gaustablikk:**
+- **Lokasjon:** Vatnedalsvegen 27, Gaustablikk (1200 moh) - fantastisk utsikt mot Gaustatoppen
+- **Rutiner:** 
+  - Ankomst: Strøm/vann på → varmepumpe komfort → sjekk alt fungerer
+  - Avreise: Varmepumpe økonomi → kraner lukket → vinduer/dører stengt → strøm av anneks
+- **Sesongråd:** Tilpass aktiviteter og forberedelser til vær og årstid
+- **Utstyr:** Bruk dokumenter og inventarliste for spesifikk informasjon
 
-${image ? '**Bildeanalyse:** Du kan se bildet brukeren har sendt. Analyser det og gi relevant hjelp basert på hva du ser.' : ''}
+${image ? '**BILDEANALYSE:** Analyser bildet og gi relevant, praktisk hjelp basert på hva du ser.' : ''}
 
-**VIKTIGE INSTRUKSJONER:**
-- Bruk ALLTID den nåværende datoen og tiden i dine svar når det er relevant.
-- Kombiner værdata med årstid og måned for å gi sesongprogramme råd.
-- Når du svarer på værrelaterte spørsmål, bruk de faktiske værdataene.
-- Gi spesifikke råd basert på nåværende og forventet vær (f.eks. "Med dagens temperatur på X°C og morgen regn...")
-- Når du svarer på spørsmål om utstyr, manualer eller prosedyrer, bruk informasjon fra de relevante dokumentene først.
-- Hvis du finner relevant informasjon i dokumentene, referer eksplisitt til dokumentet.
-- Kombiner informasjon fra dokumenter, vær og inventar for å gi omfattende svar.
-- Gi alltid praktiske, konkrete råd basert på hytta sine spesifikke forhold og nåværende situasjon.
+**SMART ASSISTANSEREGLER:**
+1. **Konneksjoner:** Forstå sammenhenger mellom begreper (gressklipper = kantklipper, hageutstyr, etc.)
+2. **Kontekst først:** Bruk ALLTID tilgjengelige dokumenter og inventar før generelle råd
+3. **Værbaserte råd:** Kombiner nåværende vær med aktivitetsforslag og forberedelser
+4. **Konkrete svar:** Gi spesifikke instruksjoner basert på faktisk tilgjengelig utstyr og informasjon
+5. **Referanser:** Nevn eksplisitt hvor informasjonen kommer fra (dokumenter, inventar, etc.)
 
-**VIKTIG OM TIDSREFERANSER:**
-- Når brukere sier "i går", "igår", "nylig", "sist" eller liknende, forstå at de refererer til nylige hendelser eller dokumenter.
-- Hvis du ikke finner spesifikke resultater for tidsbaserte søk, utvid søket til å inkludere relaterte emner.
-- Dokumentene kan inneholde relevant informasjon selv om de ikke er datert til spesifikke dager.
-- Prioriter nyere dokumenter (basert på created_at) når brukere spør om nylige ting.
+**FORBEDRET FORSTÅELSE:**
+- "Gressklipper" inkluderer kantklippere, plenklipper, Ryobi-utstyr
+- "Oppbevaring" = garasje, bod, lager, plassering av utstyr  
+- "Vedlikehold" = service, reparasjon, skjøtsel av utstyr
+- "Batteri/elektrisk" = lading, strøm, Ryobi-system
+- Tidsreferanser som "igår/nylig/sist" = søk bredere i dokumenter
 
-**SØKESTRATEGI:**
-- Hvis første søk ikke gir resultater, prøv alternative søkeord og bredere emner.
-- For dokumentspørsmål, se alltid gjennom alle tilgjengelige dokumenter hvis spesifikk søk feiler.
-- Kombiner informasjon fra flere kilder (dokumenter, vær, inventar) for fullstendige svar.
-
-Når du svarer, hold deg til din rolle som hyttehjelper. Hvis du ikke vet svaret, si det og foreslå hvor brukeren kan finne informasjonen.
+Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret basert på tilgjengelig informasjon.
     `;
 
     // Prepare messages with optional image
