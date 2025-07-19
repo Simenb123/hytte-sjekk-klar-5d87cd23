@@ -34,8 +34,10 @@ export function SkiImportButton() {
 
     return (
         <Button onClick={handleImport} disabled={bulkAddMutation.isPending} variant="outline">
-            {bulkAddMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            Importer skiutstyr
+            <>
+                {bulkAddMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                Importer skiutstyr
+            </>
         </Button>
     );
 }

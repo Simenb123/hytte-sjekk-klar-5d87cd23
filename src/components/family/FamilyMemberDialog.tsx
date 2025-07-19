@@ -95,8 +95,14 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
       <DialogTrigger asChild>{
         children || (
           <Button variant={isEdit ? "ghost" : "default"} size={isEdit ? "sm" : "default"}>
-            {isEdit ? <Edit className="h-4 w-4" /> : <Plus className="h-4 w-4 mr-2" />}
-            {isEdit ? '' : 'Legg til familiemedlem'}
+            {isEdit ? (
+              <Edit className="h-4 w-4" />
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-2" />
+                Legg til familiemedlem
+              </>
+            )}
           </Button>
         )
       }</DialogTrigger>
