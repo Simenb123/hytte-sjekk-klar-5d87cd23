@@ -118,7 +118,20 @@ function generateSearchQueries(originalQuery: string, currentTime: string): stri
     'batteri': ['elektrisk', 'lading', 'strøm', 'ryobi'],
     'oppbevaring': ['garasje', 'bod', 'lagring', 'plassering'],
     'garasje': ['oppbevaring', 'bod', 'lagring'],
-    'vedlikehold': ['service', 'reparasjon', 'skjøtsel']
+    'vedlikehold': ['service', 'reparasjon', 'skjøtsel'],
+    // Snø og vinterbegreper
+    'snømåking': ['snøfjerning', 'snøfreser', 'snøskuffe', 'snøplog', 'snørydding', 'brøyting', 'vinter', 'snø'],
+    'snøfjerning': ['snømåking', 'snøfreser', 'snøskuffe', 'snøplog', 'snørydding', 'brøyting', 'vinter', 'snø'],
+    'snøfreser': ['snømåking', 'snøfjerning', 'snøskuffe', 'brøyting', 'vintermaskiner', 'snøutstyr', 'snø'],
+    'snøskuffe': ['snømåking', 'snøfjerning', 'snøfreser', 'snørydding', 'snøutstyr', 'vinter', 'snø'],
+    'snøplog': ['snømåking', 'snøfjerning', 'snøfreser', 'brøyting', 'snørydding', 'snø'],
+    'snørydding': ['snømåking', 'snøfjerning', 'snøfreser', 'snøskuffe', 'brøyting', 'vinter', 'snø'],
+    'brøyting': ['snømåking', 'snøfjerning', 'snøfreser', 'snørydding', 'vinter', 'snø'],
+    'vintermaskiner': ['snøfreser', 'snøskuffe', 'snøutstyr', 'vinterutstyr', 'snømåking'],
+    'snøutstyr': ['snøfreser', 'snøskuffe', 'vintermaskiner', 'vinterutstyr', 'snømåking'],
+    'vinterutstyr': ['snøutstyr', 'vintermaskiner', 'snøfreser', 'snøskuffe', 'vinter'],
+    'vinter': ['snø', 'snøfjerning', 'snømåking', 'vinterutstyr', 'frost', 'kulde'],
+    'snø': ['snøfjerning', 'snømåking', 'snøfreser', 'snøskuffe', 'vinter', 'hvit', 'nedbør']
   };
   
   // Handle temporal references
@@ -333,6 +346,27 @@ ${weatherData.forecast.map(day => `
         }
       }
 
+      // If still no results, try broader searches with individual terms
+      if (allRelevantDocs.length === 0) {
+        // Try searching with just individual keywords
+        const keywords = extractSearchTerms(userQuery);
+        for (const keyword of keywords) {
+          const { data: keywordDocs, error: keywordError } = await supabaseClient
+            .from('cabin_documents')
+            .select('*')
+            .or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%,summary.ilike.%${keyword}%,tags.cs.{${keyword}}`)
+            .limit(3);
+
+          if (!keywordError && keywordDocs) {
+            for (const doc of keywordDocs) {
+              if (!allRelevantDocs.find(d => d.id === doc.id)) {
+                allRelevantDocs.push(doc);
+              }
+            }
+          }
+        }
+      }
+
       // If still no results, try a more general search approach
       if (allRelevantDocs.length === 0) {
         const { data: generalDocs, error: generalError } = await supabaseClient
@@ -345,7 +379,7 @@ ${weatherData.forecast.map(day => `
           // Filter by content relevance manually
           allRelevantDocs = generalDocs.filter(doc => {
             const searchTerms = extractSearchTerms(userQuery);
-            const docText = `${doc.title} ${doc.category} ${doc.content || ''} ${doc.summary || ''}`.toLowerCase();
+            const docText = `${doc.title} ${doc.category} ${doc.content || ''} ${doc.summary || ''} ${(doc.tags || []).join(' ')}`.toLowerCase();
             return searchTerms.some(term => docText.includes(term.toLowerCase()));
           });
         }
@@ -442,9 +476,11 @@ ${image ? '**BILDEANALYSE:** Analyser bildet og gi relevant, praktisk hjelp base
 
 **FORBEDRET FORSTÅELSE:**
 - "Gressklipper" inkluderer kantklippere, plenklipper, Ryobi-utstyr
+- "Snømåking/snøfjerning" inkluderer snøfreser, snøskuffe, snøplog, vintermaskiner
 - "Oppbevaring" = garasje, bod, lager, plassering av utstyr  
 - "Vedlikehold" = service, reparasjon, skjøtsel av utstyr
 - "Batteri/elektrisk" = lading, strøm, Ryobi-system
+- "Vinter/snø" = snøutstyr, vintermaskiner, snørydding, frostbeskyttelse
 - Tidsreferanser som "igår/nylig/sist" = søk bredere i dokumenter
 
 Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret basert på tilgjengelig informasjon.
