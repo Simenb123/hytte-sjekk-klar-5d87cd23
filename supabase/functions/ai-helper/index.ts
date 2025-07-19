@@ -385,6 +385,26 @@ ${weatherData.forecast.map(day => `
         }
       }
 
+      // Enrich documents with image descriptions
+      for (const doc of allRelevantDocs) {
+        const { data: images, error: imageError } = await supabaseClient
+          .from('document_images')
+          .select('description')
+          .eq('document_id', doc.id)
+          .not('description', 'is', null);
+
+        if (!imageError && images && images.length > 0) {
+          const imageDescriptions = images
+            .filter(img => img.description)
+            .map(img => img.description)
+            .join('. ');
+          
+          if (imageDescriptions) {
+            doc.image_descriptions = imageDescriptions;
+          }
+        }
+      }
+
       if (allRelevantDocs.length > 0) {
         // Sort by relevance and take top 4
         const topDocs = allRelevantDocs.slice(0, 4);
@@ -402,6 +422,9 @@ ${topDocs.map(doc => {
       ? doc.content.substring(0, 2000) + '...' 
       : doc.content;
     docText += `Innhold: ${contentPreview}\n`;
+  }
+  if (doc.image_descriptions) {
+    docText += `Bildebeskrivelser: ${doc.image_descriptions}\n`;
   }
   if (doc.file_url) {
     docText += `[Se dokumentet](${doc.file_url})\n`;
@@ -482,6 +505,8 @@ ${image ? '**BILDEANALYSE:** Analyser bildet og gi relevant, praktisk hjelp base
 - "Batteri/elektrisk" = lading, strøm, Ryobi-system
 - "Vinter/snø" = snøutstyr, vintermaskiner, snørydding, frostbeskyttelse
 - Tidsreferanser som "igår/nylig/sist" = søk bredere i dokumenter
+
+**BILDEBESKRIVELSER:** Du har tilgang til AI-genererte beskrivelser av bilder i dokumentene som gir ytterligere kontekst og detaljer om utstyr, instruksjoner og forhold.
 
 Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret basert på tilgjengelig informasjon.
     `;
