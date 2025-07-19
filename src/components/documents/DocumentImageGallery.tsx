@@ -66,6 +66,7 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
   const [editingImage, setEditingImage] = useState<DocumentImage | null>(null);
   const [editDescription, setEditDescription] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const analyzeImageWithTimeout = async (file: File, timeoutMs = 30000): Promise<{ 
     suggestedName: string; 
@@ -392,163 +393,7 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
     setIsPaused(false);
   };
 
-  const handleEditDescription = async () => {
-    if (!editingImage) return;
-    
-    try {
-      await updateImageDescription(editingImage.id, editDescription);
-      toast({
-        title: "Suksess",
-        description: "Bildebeskrivelsen ble oppdatert",
-      });
-      setEditingImage(null);
-      onImagesChange();
-    } catch (error) {
-      console.error('Error updating description:', error);
-      toast({
-        title: "Feil",
-        description: "Kunne ikke oppdatere beskrivelsen",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteImage = async (imageId: string) => {
-    try {
-      await deleteImage(imageId);
-      toast({
-        title: "Suksess",
-        description: "Bildet ble slettet",
-      });
-      onImagesChange();
-    } catch (error) {
-      console.error('Error deleting image:', error);
-      toast({
-        title: "Feil",
-        description: "Kunne ikke slette bildet",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const filteredImages = images.filter(image => 
-    !searchTerm || 
-    image.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    image.image_url.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Generate smart title from description
-  const generateImageTitle = (description?: string): string => {
-    if (!description) return 'Dokumentbilde';
-    
-    // If description is short (under 40 characters), use as-is
-    if (description.length <= 40) return description;
-    
-    // Look for plant/species names (capitalize words that start sentences)
-    const sentences = description.split('.').filter(s => s.trim());
-    if (sentences.length > 0) {
-      const firstSentence = sentences[0].trim();
-      if (firstSentence.length <= 50) return firstSentence;
-    }
-    
-    // Use first 35 characters + ellipsis
-    return description.slice(0, 35).trim() + '...';
-  };
-
-  const openImageModal = (image: DocumentImage, index: number) => {
-    setSelectedImage(image);
-    setSelectedImageIndex(index);
-  };
-
-  const navigateImage = (direction: 'prev' | 'next') => {
-    if (direction === 'prev' && selectedImageIndex > 0) {
-      const newIndex = selectedImageIndex - 1;
-      setSelectedImage(filteredImages[newIndex]);
-      setSelectedImageIndex(newIndex);
-    } else if (direction === 'next' && selectedImageIndex < filteredImages.length - 1) {
-      const newIndex = selectedImageIndex + 1;
-      setSelectedImage(filteredImages[newIndex]);
-      setSelectedImageIndex(newIndex);
-    }
-  };
-
-  // Handle front page image setting
-  const handleSetFrontPageImage = async (imageId: string) => {
-    try {
-      await setFrontPageImage(documentId, imageId);
-      toast({
-        title: "Forsidebilde satt",
-        description: "Bildet er nå forsidebildet for dokumentet",
-      });
-    } catch (error) {
-      console.error('Error setting front page image:', error);
-      toast({
-        title: "Feil",
-        description: "Kunne ikke sette forsidebilde",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (!selectedImage) return;
-      
-      switch (event.key) {
-        case 'ArrowLeft':
-          event.preventDefault();
-          navigateImage('prev');
-          break;
-        case 'ArrowRight':
-          event.preventDefault();
-          navigateImage('next');
-          break;
-        case 'Escape':
-          event.preventDefault();
-          setSelectedImage(null);
-          setSelectedImageIndex(-1);
-          break;
-      }
-    };
-
-    if (selectedImage) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [selectedImage, selectedImageIndex]);
-
-  // Touch/swipe support
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && selectedImageIndex < filteredImages.length - 1) {
-      navigateImage('next');
-    }
-    if (isRightSwipe && selectedImageIndex > 0) {
-      navigateImage('prev');
-    }
-  };
-
   // Drag and drop handlers
-  const [isDragOver, setIsDragOver] = useState(false);
-
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -590,176 +435,259 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
     startUploadProcess(newQueueItems);
   }, [toast, startUploadProcess]);
 
+  const handleEditDescription = async () => {
+    if (!editingImage) return;
+    
+    try {
+      await updateImageDescription(editingImage.id, editDescription);
+      toast({
+        title: "Suksess",
+        description: "Bildebeskrivelsen ble oppdatert",
+      });
+      setEditingImage(null);
+      onImagesChange();
+    } catch (error) {
+      console.error('Error updating description:', error);
+      toast({
+        title: "Feil",
+        description: "Kunne ikke oppdatere beskrivelsen",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteImage = async (imageId: string) => {
+    try {
+      await deleteImage(imageId);
+      toast({
+        title: "Suksess",
+        description: "Bildet ble slettet",
+      });
+      onImagesChange();
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      toast({
+        title: "Feil",
+        description: "Kunne ikke slette bildet",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSetFrontPageImage = async (imageId: string) => {
+    try {
+      await setFrontPageImage(documentId, imageId);
+      toast({
+        title: "Forsidebilde satt",
+        description: "Bildet er nå forsidebildet for dokumentet",
+      });
+    } catch (error) {
+      console.error('Error setting front page image:', error);
+      toast({
+        title: "Feil",
+        description: "Kunne ikke sette forsidebilde",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredImages = images.filter(image => 
+    !searchTerm || 
+    image.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    image.image_url.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const openImageModal = (image: DocumentImage, index: number) => {
+    setSelectedImage(image);
+    setSelectedImageIndex(index);
+  };
+
+  const navigateImage = (direction: 'prev' | 'next') => {
+    if (direction === 'prev' && selectedImageIndex > 0) {
+      const newIndex = selectedImageIndex - 1;
+      setSelectedImage(filteredImages[newIndex]);
+      setSelectedImageIndex(newIndex);
+    } else if (direction === 'next' && selectedImageIndex < filteredImages.length - 1) {
+      const newIndex = selectedImageIndex + 1;
+      setSelectedImage(filteredImages[newIndex]);
+      setSelectedImageIndex(newIndex);
+    }
+  };
+
+  const generateImageTitle = (description?: string): string => {
+    if (!description) return 'Dokumentbilde';
+    
+    // If description is short (under 40 characters), use as-is
+    if (description.length <= 40) return description;
+    
+    // Look for plant/species names (capitalize words that start sentences)
+    const sentences = description.split('.').filter(s => s.trim());
+    if (sentences.length > 0) {
+      const firstSentence = sentences[0].trim();
+      if (firstSentence.length <= 50) return firstSentence;
+    }
+    
+    // Use first 35 characters + ellipsis
+    return description.slice(0, 35).trim() + '...';
+  };
+
   return (
     <div className="space-y-6">
       {/* Enhanced Upload Area with Drag & Drop */}
       <div 
-        className={`border-2 border-dashed rounded-lg p-6 transition-all duration-200 ${
+        className={`border-2 border-dashed rounded-lg p-6 transition-all duration-200 cursor-pointer relative ${
           isDragOver 
             ? 'border-primary bg-primary/5 scale-[1.02]' 
             : uploading 
-              ? 'border-muted bg-muted/30' 
-              : 'border-border hover:border-primary/50 hover:bg-muted/20'
+              ? 'border-muted-foreground/50 bg-muted/30'
+              : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-primary/2'
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onClick={() => {
+          if (!uploading) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+              const files = Array.from((e.target as HTMLInputElement).files || []);
+              if (files.length > 0) {
+                handleFileSelect({ target: { files } } as any);
+              }
+            };
+            input.click();
+          }
+        }}
       >
         <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <div className={`p-3 rounded-full transition-colors ${
-              isDragOver 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-muted text-muted-foreground'
+          <div className="flex items-center justify-center">
+            <div className={`rounded-full p-4 transition-colors ${
+              isDragOver ? 'bg-primary/10' : 'bg-muted'
             }`}>
-              <Upload className="h-6 w-6" />
+              <Upload className={`h-8 w-8 transition-colors ${
+                isDragOver ? 'text-primary' : 'text-muted-foreground'
+              }`} />
             </div>
           </div>
           
           <div className="space-y-2">
-            <h3 className="font-medium">
-              {isDragOver ? 'Slipp bildene her' : 'Last opp bilder'}
+            <h3 className="text-lg font-medium">
+              {uploading ? 'Laster opp bilder...' : 'Last opp bilder'}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Dra og slipp bilder her, eller klikk for å velge
+              {uploading 
+                ? 'Vennligst vent mens bildene blir prosessert'
+                : isDragOver 
+                  ? 'Slipp bildene her'
+                  : 'Dra og slipp bilder her, eller klikk for å velge'
+              }
             </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Label htmlFor="image-upload" className="cursor-pointer">
-              <Button 
-                variant={isDragOver ? "default" : "outline"} 
-                size="sm" 
-                disabled={uploading}
-                className="min-w-[120px]"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Velg bilder
-              </Button>
-              <Input
-                id="image-upload"
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-                disabled={uploading}
-              />
-            </Label>
-            
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
+            <p>PNG, JPG, GIF opp til 10MB • Flere bilder støttes</p>
+            <p className="flex items-center justify-center gap-1 mt-1">
               <Sparkles className="h-3 w-3" />
-              <span>AI analyserer automatisk</span>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-            <span>PNG, JPG, GIF opp til 10MB</span>
-            <span>•</span>
-            <span>Flere bilder støttes</span>
+              AI analyserer automatisk
+            </p>
           </div>
         </div>
         
-        {uploadQueue.length > 0 && (
-          <div className="mt-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium">Opplastingskø ({uploadQueue.length} bilder)</h4>
-              {uploading && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={togglePause}
-                    className="h-8"
-                  >
-                    {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                    {isPaused ? 'Fortsett' : 'Pause'}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={clearQueue}
-                    className="h-8"
-                  >
-                    <X className="h-4 w-4" />
-                    Avbryt
-                  </Button>
-                </div>
-              )}
-            </div>
-            
-            {uploadQueue.map((item, index) => (
-              <Card key={index} className="p-3">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium truncate">
-                      {item.suggestedName || item.file.name}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {item.status === 'analyzing' && (
-                        <div className="flex items-center gap-1">
-                          <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-                          <span className="text-xs text-muted-foreground">AI analyserer...</span>
-                        </div>
-                      )}
-                      {item.status === 'uploading' && (
-                        <div className="flex items-center gap-1">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-xs text-muted-foreground">Laster opp...</span>
-                        </div>
-                      )}
-                      {item.status === 'completed' && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          Ferdig
-                        </Badge>
-                      )}
-                      {item.status === 'retrying' && (
-                        <div className="flex items-center gap-1">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-xs text-muted-foreground">
-                            Prøver igjen... ({item.retryCount || 0}/2)
-                          </span>
-                        </div>
-                      )}
-                      {item.status === 'error' && (
-                        <Badge variant="destructive">
-                          Feil
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {item.progress > 0 && (
-                    <Progress value={item.progress} className="h-2" />
-                  )}
-                  
-                  {item.description && (
-                    <p className="text-xs text-muted-foreground italic">
-                      {item.description}
-                    </p>
-                  )}
-                  
-                  {item.tags && item.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {item.tags.map((tag, tagIndex) => (
-                        <Badge key={tagIndex} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {item.error && (
-                    <p className="text-xs text-destructive">
-                      Feil: {item.error}
-                    </p>
-                  )}
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
+        {/* Hidden file input - backup for browsers without good drag support */}
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+          disabled={uploading}
+        />
       </div>
+
+      {/* Upload Queue */}
+      {uploadQueue.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium">Opplastingskø ({uploadQueue.length} bilder)</h4>
+            {uploading && (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={togglePause}
+                  className="h-8"
+                >
+                  {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                  {isPaused ? 'Fortsett' : 'Pause'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={clearQueue}
+                  className="h-8"
+                >
+                  <X className="h-4 w-4" />
+                  Avbryt
+                </Button>
+              </div>
+            )}
+          </div>
+          
+          {uploadQueue.map((item, index) => (
+            <Card key={index} className="p-3">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium truncate">
+                    {item.suggestedName || item.file.name}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {item.status === 'analyzing' && (
+                      <div className="flex items-center gap-1">
+                        <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                        <span className="text-xs text-muted-foreground">AI analyserer...</span>
+                      </div>
+                    )}
+                    {item.status === 'uploading' && (
+                      <div className="flex items-center gap-1">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-xs text-muted-foreground">Laster opp...</span>
+                      </div>
+                    )}
+                    {item.status === 'completed' && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        Ferdig
+                      </Badge>
+                    )}
+                    {item.status === 'error' && (
+                      <Badge variant="destructive">
+                        Feil
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                {item.progress > 0 && (
+                  <Progress value={item.progress} className="h-2" />
+                )}
+                
+                {item.description && (
+                  <p className="text-xs text-muted-foreground italic">
+                    {item.description}
+                  </p>
+                )}
+                
+                {item.error && (
+                  <p className="text-xs text-destructive">
+                    Feil: {item.error}
+                  </p>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Search and Filter */}
       {images.length > 0 && (
@@ -842,10 +770,9 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
         </div>
       )}
 
-      {/* Enhanced Image Modal */}
+      {/* Image Modal */}
       <Dialog open={!!selectedImage} onOpenChange={() => {setSelectedImage(null); setSelectedImageIndex(-1);}}>
         <DialogContent className="max-w-6xl max-h-[95vh] p-2">
-          {/* Fixed close button */}
           <button
             onClick={() => {setSelectedImage(null); setSelectedImageIndex(-1);}}
             className="absolute top-3 right-3 z-50 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors shadow-lg"
@@ -871,15 +798,10 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
               </div>
             </div>
           </DialogHeader>
+          
           {selectedImage && (
             <div className="space-y-4 px-4 pb-4">
-              {/* Image Navigation */}
-              <div 
-                className="relative group"
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-              >
+              <div className="relative group">
                 <div className="flex justify-center">
                   <img
                     src={selectedImage.image_url}
@@ -888,7 +810,7 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                   />
                 </div>
                 
-                {/* Elegant navigation arrows */}
+                {/* Navigation arrows */}
                 {selectedImageIndex > 0 && (
                   <Button
                     variant="secondary"
@@ -910,29 +832,8 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                     <ChevronRight className="h-6 w-6" />
                   </Button>
                 )}
-                
-                {/* Progress dots */}
-                {filteredImages.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                    {filteredImages.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          setSelectedImage(filteredImages[index]);
-                          setSelectedImageIndex(index);
-                        }}
-                        className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                          index === selectedImageIndex 
-                            ? 'bg-primary w-6' 
-                            : 'bg-muted-foreground/40 hover:bg-muted-foreground/60'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                )}
               </div>
               
-              {/* Image metadata - only show if description is longer than title */}
               {selectedImage.description && selectedImage.description.length > 40 && (
                 <div className="text-sm">
                   <p className="font-medium text-muted-foreground">Full beskrivelse</p>
@@ -1006,22 +907,6 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-              </div>
-
-              {/* Enhanced navigation hint */}
-              <div className="text-xs text-muted-foreground text-center pt-2 border-t">
-                <div className="hidden sm:block flex items-center justify-center gap-4">
-                  <span>Piltaster for navigering</span>
-                  <span>•</span>
-                  <span>ESC for å lukke</span>
-                  <span>•</span>
-                  <span>Klikk prikkene for å hoppe til bilde</span>
-                </div>
-                <div className="sm:hidden flex items-center justify-center gap-4">
-                  <span>Sveip for navigering</span>
-                  <span>•</span>
-                  <span>Trykk prikkene for å hoppe</span>
-                </div>
               </div>
             </div>
           )}
