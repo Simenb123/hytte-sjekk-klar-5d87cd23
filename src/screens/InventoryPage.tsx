@@ -38,10 +38,12 @@ export default function InventoryPage() {
       title="Inventar"
       showBackButton
       actionBar={
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <AIItemDialog />
-          <SkiImportButton />
-          <BulkImportButton />
+          <div className="hidden sm:flex items-center gap-2">
+            <SkiImportButton />
+            <BulkImportButton />
+          </div>
           <NewItemDialog />
         </div>
       }
