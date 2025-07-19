@@ -546,15 +546,94 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
     }
   };
 
+  // Drag and drop handlers
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length !== files.length) {
+      toast({
+        title: "Advarsel",
+        description: "Kun bildefiler er tillatt",
+        variant: "destructive",
+      });
+    }
+
+    if (imageFiles.length === 0) return;
+
+    // Add files to upload queue
+    const newQueueItems: ImageUploadProgress[] = imageFiles.map(file => ({
+      file,
+      progress: 0,
+      status: 'pending'
+    }));
+
+    setUploadQueue(newQueueItems);
+    startUploadProcess(newQueueItems);
+  }, [toast, startUploadProcess]);
+
   return (
     <div className="space-y-6">
-      {/* Compact Upload Area */}
-      <div className="border border-border rounded-lg p-4">
-        <div className="flex items-center gap-4">
-          <Upload className="h-5 w-5 text-muted-foreground" />
-          <div className="flex-1">
+      {/* Enhanced Upload Area with Drag & Drop */}
+      <div 
+        className={`border-2 border-dashed rounded-lg p-6 transition-all duration-200 ${
+          isDragOver 
+            ? 'border-primary bg-primary/5 scale-[1.02]' 
+            : uploading 
+              ? 'border-muted bg-muted/30' 
+              : 'border-border hover:border-primary/50 hover:bg-muted/20'
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className={`p-3 rounded-full transition-colors ${
+              isDragOver 
+                ? 'bg-primary text-primary-foreground' 
+                : 'bg-muted text-muted-foreground'
+            }`}>
+              <Upload className="h-6 w-6" />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <h3 className="font-medium">
+              {isDragOver ? 'Slipp bildene her' : 'Last opp bilder'}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Dra og slipp bilder her, eller klikk for å velge
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Label htmlFor="image-upload" className="cursor-pointer">
-              <Button variant="outline" size="sm" disabled={uploading}>
+              <Button 
+                variant={isDragOver ? "default" : "outline"} 
+                size="sm" 
+                disabled={uploading}
+                className="min-w-[120px]"
+              >
+                <Upload className="h-4 w-4 mr-2" />
                 Velg bilder
               </Button>
               <Input
@@ -567,10 +646,18 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
                 disabled={uploading}
               />
             </Label>
+            
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Sparkles className="h-3 w-3" />
+              <span>AI analyserer automatisk</span>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            AI analyserer automatisk
-          </p>
+          
+          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+            <span>PNG, JPG, GIF opp til 10MB</span>
+            <span>•</span>
+            <span>Flere bilder støttes</span>
+          </div>
         </div>
         
         {uploadQueue.length > 0 && (

@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
-import { Search, Plus, Edit, Trash2, FileText, Eye, ImageIcon, MoreVertical, Download } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, FileText, Eye, ImageIcon, MoreVertical, Download, Upload, X } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 import { useCabinDocuments, CabinDocument, SearchResult, DocumentImage } from '@/hooks/useCabinDocuments';
 import DocumentImageGallery from './DocumentImageGallery';
 import { toast } from 'sonner';
@@ -262,13 +263,61 @@ const DocumentsManager: React.FC = () => {
                     Last ned eksisterende fil
                   </a>
                 )}
-                <div className="space-y-2">
-                  <Input
-                    type="file"
-                    accept=".pdf,.xlsx"
-                    onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-                  />
-                  {file && <p className="text-sm text-muted-foreground">Valgt fil: {file.name}</p>}
+                
+                {/* Enhanced File Upload Section */}
+                <div className="space-y-3 border border-border rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <h4 className="font-medium text-sm">Vedlegg fil</h4>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Label htmlFor="file-upload" className="cursor-pointer flex-1">
+                      <Button 
+                        type="button"
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full justify-start"
+                        disabled={isSubmitting}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {file ? 'Endre fil' : 'Velg fil'}
+                      </Button>
+                      <Input
+                        id="file-upload"
+                        type="file"
+                        accept=".pdf,.xlsx,.docx,.doc,.txt"
+                        onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+                        className="hidden"
+                      />
+                    </Label>
+                    
+                    {file && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFile(null)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {file ? (
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium truncate">{file.name}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {(file.size / 1024 / 1024).toFixed(1)} MB
+                      </Badge>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Ingen fil er valgt. Støttede formater: PDF, Excel, Word, Tekst
+                    </p>
+                  )}
                 </div>
                 <Input
                   value={formData.tags}
