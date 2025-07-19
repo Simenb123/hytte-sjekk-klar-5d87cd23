@@ -532,7 +532,7 @@ const DocumentImageGallery: React.FC<DocumentImageGalleryProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full overflow-y-auto">
       {/* Enhanced Upload Area with Drag & Drop */}
       <div 
         className={`border-2 border-dashed rounded-lg p-6 transition-all duration-200 cursor-pointer relative ${
