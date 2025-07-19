@@ -130,10 +130,12 @@ export function AIItemDialog() {
       setOpen(newOpen);
       if (!newOpen) handleReset();
     }}>
-      <DialogTrigger asChild><Button size="sm" className="gap-2">
+      <DialogTrigger asChild>
+        <Button size="sm" className="gap-2">
           <Sparkles className="h-4 w-4" />
           AI Analyse
-        </Button></DialogTrigger>
+        </Button>
+      </DialogTrigger>
       
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
