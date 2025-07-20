@@ -13,6 +13,11 @@ export interface DbChecklistItem {
   season: string | null;
   assigned_to: string | null;
   created_at: string;
+  app_name?: string | null;
+  app_url_ios?: string | null;
+  app_url_android?: string | null;
+  app_icon_url?: string | null;
+  app_description?: string | null;
   checklist_item_images?: { image_url: string }[];
 }
 

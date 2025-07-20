@@ -227,6 +227,11 @@ export type Database = {
       }
       checklist_items: {
         Row: {
+          app_description: string | null
+          app_icon_url: string | null
+          app_name: string | null
+          app_url_android: string | null
+          app_url_ios: string | null
           area_id: string | null
           assigned_to: string | null
           category: string | null
@@ -236,6 +241,11 @@ export type Database = {
           text: string
         }
         Insert: {
+          app_description?: string | null
+          app_icon_url?: string | null
+          app_name?: string | null
+          app_url_android?: string | null
+          app_url_ios?: string | null
           area_id?: string | null
           assigned_to?: string | null
           category?: string | null
@@ -245,6 +255,11 @@ export type Database = {
           text: string
         }
         Update: {
+          app_description?: string | null
+          app_icon_url?: string | null
+          app_name?: string | null
+          app_url_android?: string | null
+          app_url_ios?: string | null
           area_id?: string | null
           assigned_to?: string | null
           category?: string | null

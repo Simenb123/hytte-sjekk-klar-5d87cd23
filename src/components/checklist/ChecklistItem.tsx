@@ -1,9 +1,12 @@
-
-import React, { useEffect, useState, useRef } from 'react';
-import { CheckSquare, Square, Camera, Upload } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useRef } from 'react';
+import { Camera, Check, Upload, Info, ExternalLink, Smartphone } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { FamilyMemberAssignment } from './FamilyMemberAssignment';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface ChecklistItemProps {
@@ -13,35 +16,62 @@ interface ChecklistItemProps {
   imageUrl?: string;
   assignedTo?: string | null;
   completedBy?: string | null;
+  appName?: string | null;
+  appUrlIos?: string | null;
+  appUrlAndroid?: string | null;
+  appIconUrl?: string | null;
+  appDescription?: string | null;
   onToggle: () => void;
   onImageUpdate?: () => void;
 }
 
-const ChecklistItem: React.FC<ChecklistItemProps> = ({
-  id,
-  text,
-  isCompleted,
-  imageUrl,
-  assignedTo,
+export function ChecklistItem({ 
+  id, 
+  text, 
+  isCompleted, 
+  imageUrl, 
+  assignedTo, 
   completedBy,
-  onToggle,
-  onImageUpdate
-}) => {
+  appName,
+  appUrlIos,
+  appUrlAndroid,
+  appIconUrl,
+  appDescription,
+  onToggle, 
+  onImageUpdate 
+}: ChecklistItemProps) {
   const { user } = useAuth();
-  const [uploading, setUploading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showAppDetails, setShowAppDetails] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Log when checkbox state changes to debug rendering
-  useEffect(() => {
-    console.log(`[ChecklistItem ${id}] isCompleted: ${isCompleted}`);
-  }, [id, isCompleted]);
-  
+  // Detect platform for app store links
+  const detectPlatform = () => {
+    const userAgent = navigator.userAgent || navigator.vendor;
+    if (/iPad|iPhone|iPod/.test(userAgent)) return 'ios';
+    if (/android/i.test(userAgent)) return 'android';
+    return 'unknown';
+  };
+
+  const getAppStoreUrl = () => {
+    const platform = detectPlatform();
+    if (platform === 'ios' && appUrlIos) return appUrlIos;
+    if (platform === 'android' && appUrlAndroid) return appUrlAndroid;
+    return appUrlIos || appUrlAndroid; // Fallback to any available URL
+  };
+
+  const openAppStore = () => {
+    const url = getAppStoreUrl();
+    if (url) {
+      window.open(url, '_blank');
+    }
+  };
+
   const handleToggle = (e: React.MouseEvent) => {
-    // Don't toggle if clicking on camera button or image
-    if ((e.target as HTMLElement).closest('.image-upload-section')) {
+    // Don't toggle if clicking on image upload section or app buttons
+    if ((e.target as HTMLElement).closest('.no-toggle')) {
       return;
     }
-    console.log(`[ChecklistItem ${id}] Clicked, current state: ${isCompleted}, will toggle to: ${!isCompleted}`);
     onToggle();
   };
 
@@ -51,7 +81,7 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
       return;
     }
 
-    setUploading(true);
+    setIsUploading(true);
     try {
       // Delete existing image if there is one
       if (imageUrl) {
@@ -89,7 +119,7 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
       console.error('Error uploading image:', error);
       toast.error('Kunne ikke laste opp bilde');
     } finally {
-      setUploading(false);
+      setIsUploading(false);
     }
   };
 
@@ -99,37 +129,79 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
       handleImageUpload(file);
     }
   };
-  
+
   return (
-    <div
-      className="flex flex-col py-3 px-4 cursor-pointer hover:bg-gray-50"
-      onClick={handleToggle}
-      data-state={isCompleted ? 'checked' : 'unchecked'}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center flex-1">
-          <div className="mr-3 flex-shrink-0">
-            {isCompleted ? (
-              <CheckSquare size={24} className="text-green-600" strokeWidth={2.5} />
-            ) : (
-              <Square size={24} className="text-gray-400" strokeWidth={2.5} />
+    <Card className="p-4 space-y-3">
+      <div className="flex items-start gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleToggle}
+          className="p-1 h-6 w-6 flex-shrink-0 mt-0.5"
+        >
+          {isCompleted ? (
+            <Check className="h-4 w-4 text-green-600" />
+          ) : (
+            <div className="h-4 w-4 border-2 border-gray-300 rounded" />
+          )}
+        </Button>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            {appIconUrl && (
+              <img 
+                src={appIconUrl} 
+                alt={appName || 'App'} 
+                className="w-6 h-6 rounded-md object-cover"
+              />
+            )}
+            <p className={`text-sm ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+              {text}
+            </p>
+            {appName && (
+              <Badge variant="secondary" className="text-xs">
+                {appName}
+              </Badge>
             )}
           </div>
-          <div className="flex-1">
-            <span className={`${isCompleted ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
-              {text}
-            </span>
-            <div className="mt-1">
-              <FamilyMemberAssignment 
-                assignedTo={assignedTo}
-                completedBy={isCompleted ? completedBy : undefined}
-                showCompletedBy={isCompleted}
-              />
+          
+          {appName && (
+            <div className="flex items-center gap-2 mt-2 no-toggle">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openAppStore}
+                className="h-7 text-xs"
+              >
+                <Smartphone className="h-3 w-3 mr-1" />
+                Åpne {appName}
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Button>
+              
+              {appDescription && (
+                <Collapsible open={showAppDetails} onOpenChange={setShowAppDetails}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                      <Info className="h-3 w-3" />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="mt-2 p-3 bg-muted rounded-md text-sm text-muted-foreground">
+                      {appDescription}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
             </div>
-          </div>
+          )}
+          
+          <FamilyMemberAssignment 
+            assignedTo={assignedTo}
+            completedBy={completedBy}
+          />
         </div>
-        
-        <div className="image-upload-section flex items-center gap-2">
+
+        <div className="flex items-center gap-2 flex-shrink-0 no-toggle">
           <input
             type="file"
             ref={fileInputRef}
@@ -137,31 +209,34 @@ const ChecklistItem: React.FC<ChecklistItemProps> = ({
             accept="image/*"
             className="hidden"
           />
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              fileInputRef.current?.click();
-            }}
-            disabled={uploading}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-            title="Last opp bilde"
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="h-8 w-8 p-0"
           >
-            {uploading ? (
-              <Upload size={18} className="animate-spin" />
+            {isUploading ? (
+              <Upload className="h-4 w-4 animate-spin" />
             ) : (
-              <Camera size={18} />
+              <Camera className="h-4 w-4" />
             )}
-          </button>
+          </Button>
         </div>
       </div>
-      
+
       {imageUrl && (
-        <div className="image-upload-section mt-2">
-          <img src={imageUrl} alt="" className="max-h-48 rounded" loading="lazy" />
+        <div className="mt-3">
+          <img
+            src={imageUrl}
+            alt="Checklist item"
+            className="max-w-full h-32 object-cover rounded-md border"
+          />
         </div>
       )}
-    </div>
+    </Card>
   );
-};
+}
 
-export default React.memo(ChecklistItem);
+export default ChecklistItem;

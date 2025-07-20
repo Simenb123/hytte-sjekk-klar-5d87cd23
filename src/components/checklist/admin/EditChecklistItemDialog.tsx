@@ -1,9 +1,10 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Edit2, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +18,11 @@ interface ChecklistItem {
   area_id: string;
   category?: string;
   season?: Season;
+  app_name?: string | null;
+  app_url_ios?: string | null;
+  app_url_android?: string | null;
+  app_icon_url?: string | null;
+  app_description?: string | null;
   checklist_item_images?: { image_url: string }[];
 }
 
@@ -37,7 +43,12 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
     text: item.text,
     area_id: item.area_id,
     category: item.category || '',
-    season: (item.season as Season) || 'all'
+    season: (item.season as Season) || 'all',
+    app_name: item.app_name || '',
+    app_url_ios: item.app_url_ios || '',
+    app_url_android: item.app_url_android || '',
+    app_icon_url: item.app_icon_url || '',
+    app_description: item.app_description || ''
   });
 
   const handleSave = async () => {
@@ -49,7 +60,12 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
         text: formData.text,
         area_id: formData.area_id,
         category: formData.category || null,
-        season: formData.season
+        season: formData.season,
+        app_name: formData.app_name || null,
+        app_url_ios: formData.app_url_ios || null,
+        app_url_android: formData.app_url_android || null,
+        app_icon_url: formData.app_icon_url || null,
+        app_description: formData.app_description || null
       });
 
       if (imageFile && user) {
@@ -115,7 +131,7 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Rediger sjekkliste-punkt</DialogTitle>
         </DialogHeader>
@@ -190,6 +206,65 @@ export function EditChecklistItemDialog({ item, areas, onUpdate, onDelete }: Edi
               </SelectContent>
             </Select>
           </div>
+
+          <Separator />
+          
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium">App-integrasjon (valgfritt)</h4>
+            
+            <div>
+              <Label htmlFor="app_name">App-navn</Label>
+              <Input
+                id="app_name"
+                value={formData.app_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, app_name: e.target.value }))}
+                placeholder="f.eks. Sikom Living"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="app_icon_url">App-ikon URL</Label>
+              <Input
+                id="app_icon_url"
+                value={formData.app_icon_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, app_icon_url: e.target.value }))}
+                placeholder="URL til app-ikonet"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="app_url_ios">App Store URL (iOS)</Label>
+              <Input
+                id="app_url_ios"
+                value={formData.app_url_ios}
+                onChange={(e) => setFormData(prev => ({ ...prev, app_url_ios: e.target.value }))}
+                placeholder="https://apps.apple.com/..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="app_url_android">Google Play URL (Android)</Label>
+              <Input
+                id="app_url_android"
+                value={formData.app_url_android}
+                onChange={(e) => setFormData(prev => ({ ...prev, app_url_android: e.target.value }))}
+                placeholder="https://play.google.com/..."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="app_description">App-beskrivelse</Label>
+              <Textarea
+                id="app_description"
+                value={formData.app_description}
+                onChange={(e) => setFormData(prev => ({ ...prev, app_description: e.target.value }))}
+                placeholder="Beskriv hva som skal gjøres i appen..."
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <Separator />
 
           <div>
             <Label htmlFor="image">Bilde</Label>

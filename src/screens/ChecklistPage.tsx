@@ -144,6 +144,13 @@ export default function ChecklistPage() {
                          text={item.text}
                          isCompleted={item.isCompleted}
                          imageUrl={item.imageUrl}
+                         assignedTo={item.assigned_to}
+                         completedBy={item.completedBy}
+                         appName={item.app_name}
+                         appUrlIos={item.app_url_ios}
+                         appUrlAndroid={item.app_url_android}
+                         appIconUrl={item.app_icon_url}
+                         appDescription={item.app_description}
                          onToggle={() => handleToggleItem(item.id, item.isCompleted)}
                          onImageUpdate={refetch}
                        />
