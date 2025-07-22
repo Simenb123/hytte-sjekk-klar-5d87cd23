@@ -13,6 +13,7 @@ import Dashboard from './screens/Dashboard';
 import ChecklistPage from './screens/ChecklistPage';
 import ChecklistHome from './screens/ChecklistHome';
 import ChecklistAdminPage from './screens/ChecklistAdminPage';
+import FacilitiesAdminPage from './screens/FacilitiesAdminPage';
 import InventoryPage from './screens/InventoryPage';
 import FamilyPage from './screens/FamilyPage';
 import BookingPage from './screens/BookingPage';
@@ -55,6 +56,7 @@ function App() {
                 }
               />
               <Route path="/checklist-admin" element={<ChecklistAdminPage />} />
+              <Route path="/facilities-admin" element={<FacilitiesAdminPage />} />
               <Route
                 path="/inventory"
                 element={

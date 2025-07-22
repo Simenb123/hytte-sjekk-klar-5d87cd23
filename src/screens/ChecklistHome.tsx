@@ -10,6 +10,7 @@ import { checklistCategories } from '@/models/checklist';
 import Layout from '@/layout/Layout';
 import { useActiveBooking } from '@/hooks/useActiveBooking';
 import { useAuth } from '@/hooks/useAuth';
+import { FacilitySelector } from '@/components/facilities/FacilitySelector';
 import { BookingSelector } from '@/components/checklist/BookingSelector';
 import { BookingStatusCard } from '@/components/checklist/BookingStatusCard';
 import { Settings, Plus, CheckSquare } from 'lucide-react';
@@ -21,6 +22,8 @@ const ChecklistHome: React.FC = () => {
   const { activeBooking, hasMultipleRelevantBookings, allBookings, isLoading: bookingsLoading } = useActiveBooking();
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showBookingSelector, setShowBookingSelector] = useState(false);
+  const [showFacilitySelector, setShowFacilitySelector] = useState(false);
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
 
   // Set initial booking when activeBooking changes
   useEffect(() => {
@@ -54,39 +57,84 @@ const ChecklistHome: React.FC = () => {
   const handleStartNewChecklist = () => {
     setSelectedBooking(null);
     setShowBookingSelector(false);
+    setShowFacilitySelector(false);
+    setSelectedFacilities([]);
   };
 
   const handleBookingSelect = (booking: Booking | null) => {
     setSelectedBooking(booking);
     setShowBookingSelector(false);
+    if (booking) {
+      setShowFacilitySelector(true);
+    }
   };
 
-  return (
-    <Layout
-      title="Sjekklister"
-      showBackButton
-      rightContent={
-        <Button
-          size="sm"
-          onClick={() => navigate('/checklist-admin')}
-          className="flex items-center gap-2 bg-hytte-forest text-hytte-cream hover:bg-hytte-forest/90"
-        >
-          <Settings className="h-4 w-4" />
-          Admin
-        </Button>
-      }
-    >
+  const handleFacilitiesSelected = (facilityIds: string[]) => {
+    setSelectedFacilities(facilityIds);
+  };
 
-      <div className="w-full p-6 max-w-7xl mx-auto">
-        {/* Booking Context Section */}
-        {showBookingSelector && hasMultipleRelevantBookings && (
+  if (showBookingSelector) {
+    return (
+      <Layout title="Velg booking">
+        <div className="container mx-auto py-6">
           <BookingSelector
             selectedBooking={selectedBooking}
             availableBookings={allBookings}
             onBookingSelect={handleBookingSelect}
             onStartNewChecklist={handleStartNewChecklist}
           />
-        )}
+        </div>
+      </Layout>
+    );
+  }
+
+  if (showFacilitySelector && selectedBooking) {
+    return (
+      <Layout title="Velg fasiliteter">
+        <div className="container mx-auto py-6">
+          <FacilitySelector
+            bookingId={selectedBooking.id}
+            onFacilitiesSelected={handleFacilitiesSelected}
+          />
+          <div className="mt-8 flex justify-center">
+            <Button onClick={() => setShowFacilitySelector(false)}>
+              Fortsett til sjekkliste
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout
+      title="Sjekklister"
+      showBackButton
+      rightContent={
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            onClick={() => navigate('/facilities-admin')}
+            className="flex items-center gap-2"
+            variant="outline"
+          >
+            <Settings className="h-4 w-4" />
+            Fasiliteter
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => navigate('/checklist-admin')}
+            className="flex items-center gap-2 bg-hytte-forest text-hytte-cream hover:bg-hytte-forest/90"
+          >
+            <Settings className="h-4 w-4" />
+            Admin
+          </Button>
+        </div>
+      }
+    >
+
+      <div className="w-full p-6 max-w-7xl mx-auto">
+        {/* Booking Context Section */}
 
         {selectedBooking && (
           <BookingStatusCard

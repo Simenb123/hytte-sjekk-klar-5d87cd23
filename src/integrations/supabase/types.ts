@@ -32,6 +32,44 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_facilities_used: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          facility_id: string
+          id: string
+          is_used: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          facility_id: string
+          id?: string
+          is_used?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          facility_id?: string
+          id?: string
+          is_used?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_facilities_used_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_family_members: {
         Row: {
           booking_id: string
@@ -236,6 +274,7 @@ export type Database = {
           assigned_to: string | null
           category: string | null
           created_at: string
+          facility_id: string | null
           id: string
           season: string | null
           text: string
@@ -250,6 +289,7 @@ export type Database = {
           assigned_to?: string | null
           category?: string | null
           created_at?: string
+          facility_id?: string | null
           id?: string
           season?: string | null
           text: string
@@ -264,6 +304,7 @@ export type Database = {
           assigned_to?: string | null
           category?: string | null
           created_at?: string
+          facility_id?: string | null
           id?: string
           season?: string | null
           text?: string
@@ -274,6 +315,13 @@ export type Database = {
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "family_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_items_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
             referencedColumns: ["id"]
           },
           {
@@ -368,6 +416,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      facilities: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          icon_url: string | null
+          id: string
+          is_seasonal: boolean | null
+          name: string
+          season: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_seasonal?: boolean | null
+          name: string
+          season?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          is_seasonal?: boolean | null
+          name?: string
+          season?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       family_members: {
         Row: {
