@@ -65,7 +65,7 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({ form }) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Ingen underkategori</SelectItem>
+                  <SelectItem value="ingen">Ingen underkategori</SelectItem>
                   {subcategories.map((subcategory) => (
                     <SelectItem key={subcategory} value={subcategory}>
                       {subcategory}
