@@ -224,6 +224,71 @@ export type Database = {
           },
         ]
       }
+      chat_messages: {
+        Row: {
+          analysis: string | null
+          content: string
+          created_at: string
+          id: string
+          image: string | null
+          is_voice: boolean | null
+          role: string
+          session_id: string
+        }
+        Insert: {
+          analysis?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          image?: string | null
+          is_voice?: boolean | null
+          role: string
+          session_id: string
+        }
+        Update: {
+          analysis?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          image?: string | null
+          is_voice?: boolean | null
+          role?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       checklist_item_images: {
         Row: {
           created_at: string
