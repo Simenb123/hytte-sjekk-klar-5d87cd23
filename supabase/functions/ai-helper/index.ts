@@ -437,30 +437,83 @@ ${topDocs.map(doc => {
       console.error('Error in document search:', error);
     }
 
-    // Fetch user's inventory
+    // Fetch comprehensive inventory data with images and family member info
     const { data: inventoryItems, error: inventoryError } = await supabaseClient
       .from('inventory_items')
-      .select('name, description, brand, color, size, location, shelf, owner, notes, category');
+      .select(`
+        id,
+        name,
+        description,
+        brand,
+        color,
+        location,
+        shelf,
+        size,
+        owner,
+        notes,
+        category,
+        subcategory,
+        primary_location,
+        created_at,
+        family_member_id,
+        item_images ( image_url ),
+        family_members ( id, name, nickname )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(200);
       
     if (inventoryError) {
         console.error('Error fetching inventory for AI helper:', inventoryError);
     }
 
+    // Categories and subcategories for AI context
+    const categoryData = {
+      'Klær': ['Skjørt', 'Kjole', 'Bukse', 'Shorts', 'Sokker', 'Undertøy', 'Topp', 'Genser', 'Jakke', 'Sko', 'Tilbehør'],
+      'Sport': ['Langrennski', 'Langrennstaver', 'Alpint', 'Alpinstaver', 'Skisko', 'Bindinger', 'Hjelm', 'Briller', 'Hansker', 'Sportsbag', 'Annet sportsutstyr'],
+      'Elektronikk': ['Telefon', 'Nettbrett', 'Laptop', 'Kamera', 'Høretelefoner', 'Ladere', 'Kabler', 'Annen elektronikk'],
+      'Verktøy': ['Håndverktøy', 'Elektrisk verktøy', 'Måleverktøy', 'Hagearbeid', 'Annet verktøy'],
+      'Bøker': ['Romaner', 'Fagbøker', 'Magasiner', 'Tegneserier', 'Annet lesestoff'],
+      'Husstand': ['Kjøkkenutstyr', 'Rengjøring', 'Tekstiler', 'Dekorasjon', 'Annet husstand'],
+      'Annet': []
+    };
+
     let inventoryContext = "Inventarlisten er for øyeblikket ikke tilgjengelig.";
     if (inventoryItems && inventoryItems.length > 0) {
+      // Group items by location for better organization
+      const itemsByLocation = inventoryItems.reduce((acc, item) => {
+        const location = item.primary_location || 'ukjent';
+        if (!acc[location]) acc[location] = [];
+        acc[location].push(item);
+        return acc;
+      }, {});
+
       inventoryContext = `
-**Inventarliste:**
-${inventoryItems.map(item => `
-- **${item.name || 'N/A'}**
-  Beskrivelse: ${item.description || 'N/A'}
-  Kategori: ${item.category || 'N/A'}
-  Merke: ${item.brand || 'N/A'}
-  Farge: ${item.color || 'N/A'}
-  Størrelse: ${item.size || 'N/A'}
-  Plassering: ${item.location || 'N/A'}${item.shelf ? ` (Hylle/Skuff: ${item.shelf})` : ''}
-  Eier: ${item.owner || 'N/A'}
-  Notater: ${item.notes || 'N/A'}
-`).join('')}
+**Inventarliste (${inventoryItems.length} gjenstander):**
+
+**Tilgjengelige kategorier og underkategorier:**
+${Object.entries(categoryData).map(([cat, subcats]) => 
+  `- ${cat}: ${subcats.join(', ')}`
+).join('\n')}
+
+**Inventar etter lokasjon:**
+${Object.entries(itemsByLocation).map(([location, items]) => `
+**${location.charAt(0).toUpperCase() + location.slice(1)} (${items.length} gjenstander):**
+${items.map(item => {
+  const owner = item.family_members?.name || item.owner || 'Ukjent';
+  const subcategory = item.subcategory ? ` → ${item.subcategory}` : '';
+  const images = item.item_images?.length > 0 ? ` [${item.item_images.length} bilde(r)]` : '';
+  
+  return `- **${item.name}**${images}
+    Kategori: ${item.category || 'N/A'}${subcategory}
+    Beskrivelse: ${item.description || 'N/A'}
+    Merke: ${item.brand || 'N/A'} | Farge: ${item.color || 'N/A'} | Størrelse: ${item.size || 'N/A'}
+    Plassering: ${item.location || 'N/A'}${item.shelf ? ` (${item.shelf})` : ''}
+    Eier: ${owner}
+    Notater: ${item.notes || 'N/A'}`;
+}).join('\n')}
+`).join('\n')}
+
+**Inventar-søketips:** Du kan søke etter gjenstander basert på navn, kategori, merke, farge, størrelse, eier, eller notater.
       `.trim();
     }
 
@@ -496,6 +549,13 @@ ${image ? '**BILDEANALYSE:** Analyser bildet og gi relevant, praktisk hjelp base
 3. **Værbaserte råd:** Kombiner nåværende vær med aktivitetsforslag og forberedelser
 4. **Konkrete svar:** Gi spesifikke instruksjoner basert på faktisk tilgjengelig utstyr og informasjon
 5. **Referanser:** Nevn eksplisitt hvor informasjonen kommer fra (dokumenter, inventar, etc.)
+
+**INVENTAR-INTELLIGENS:**
+6. **Klesforslag:** Kombiner værforhold med tilgjengelige klær i inventaret for praktiske anbefalinger
+7. **Aktivitetsutstyr:** Koble aktiviteter med relevant utstyr fra inventaret (ski, sykler, fotballutstyr, etc.)
+8. **Sesongtilpassning:** Foreslå sesongriktig utstyr basert på nåværende årstid og inventarliste
+9. **Organisering:** Hjelp med å finne og organisere inventar basert på lokasjon (hjemme/hytta/reiser)
+10. **Pakkelister:** Lag smarte pakkelister basert på aktiviteter og tilgjengelig inventar
 
 **FORBEDRET FORSTÅELSE:**
 - "Gressklipper" inkluderer kantklippere, plenklipper, Ryobi-utstyr
