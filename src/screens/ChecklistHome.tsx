@@ -75,7 +75,10 @@ const ChecklistHome: React.FC = () => {
 
   if (showBookingSelector) {
     return (
-      <Layout title="Velg booking">
+      <Layout 
+        title="Velg booking"
+        onBackClick={() => navigate('/')}
+      >
         <div className="container mx-auto py-6">
           <BookingSelector
             selectedBooking={selectedBooking}
