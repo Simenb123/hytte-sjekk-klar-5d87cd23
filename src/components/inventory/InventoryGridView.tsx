@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit2, MapPin, User, Package } from 'lucide-react';
+import { Edit2, MapPin, User, Package, ImageIcon } from 'lucide-react';
 import { EditItemDialog } from './EditItemDialog';
 import { InventoryItem } from '@/types/inventory';
 import { LocationBadge } from './InventoryLocationFilter';
@@ -26,18 +26,38 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {items.map((item) => (
-        <Card key={item.id} className="hover:shadow-md transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="font-semibold text-sm line-clamp-2">{item.name}</h3>
+        <Card key={item.id} className="hover:shadow-md transition-shadow overflow-hidden">
+          {/* Image section */}
+          <div className="relative h-48 bg-gray-100">
+            {item.item_images && item.item_images.length > 0 ? (
+              <img
+                src={item.item_images[0].image_url}
+                alt={item.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div className={`absolute inset-0 flex items-center justify-center ${item.item_images?.length ? 'hidden' : ''}`}>
+              <ImageIcon className="h-12 w-12 text-gray-400" />
+            </div>
+            <div className="absolute top-2 right-2">
               <EditItemDialog
                 item={item}
                 trigger={
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 bg-white/80 hover:bg-white">
                     <Edit2 className="h-3 w-3" />
                   </Button>
                 }
               />
+            </div>
+          </div>
+          
+          <CardContent className="p-4">
+            <div className="mb-3">
+              <h3 className="font-semibold text-sm line-clamp-2">{item.name}</h3>
             </div>
             
             {item.description && (
