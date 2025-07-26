@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import { Loader2, Trash2 } from 'lucide-react';
 import { InventoryItem } from '@/types/inventory';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { CategorySelector } from './CategorySelector';
 
 const formSchema = z.object({
   name: z.string().optional(),
@@ -46,6 +47,7 @@ const formSchema = z.object({
   owner: z.string().optional(),
   notes: z.string().optional(),
   category: z.string().optional(),
+  subcategory: z.string().optional(),
   family_member_id: z.string().optional(),
   primary_location: z.enum(['hjemme', 'hytta', 'reiser']).optional(),
 });
@@ -103,6 +105,7 @@ export function EditItemDialog({
         owner: item.owner || "",
         notes: item.notes || "",
         category: item.category || "Annet",
+        subcategory: (item as any).subcategory || "",
         family_member_id: item.family_member_id || "",
         primary_location: item.primary_location || "hjemme",
       });
@@ -160,33 +163,7 @@ export function EditItemDialog({
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Kategori</FormLabel>
-                  <Select
-                    value={field.value || "none"}
-                    onValueChange={(val) => field.onChange(val === "none" ? "" : val)}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Velg en kategori" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Klær">Klær</SelectItem>
-                      <SelectItem value="Langrennski">Langrennski</SelectItem>
-                      <SelectItem value="Langrennstaver">Langrennstaver</SelectItem>
-                      <SelectItem value="Alpint">Alpint</SelectItem>
-                      <SelectItem value="Annet">Annet</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <CategorySelector form={form} />
 
             <FormField
               control={form.control}
