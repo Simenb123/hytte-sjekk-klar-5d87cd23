@@ -13,13 +13,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useUpdateInventoryItem, UpdateInventoryItemData } from '@/hooks/useInventory/index';
+import { useUpdateInventoryItem, useDeleteInventoryItem, UpdateInventoryItemData } from '@/hooks/useInventory/index';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { InventoryItem } from '@/types/inventory';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
@@ -71,6 +82,7 @@ export function EditItemDialog({
   const open = controlledOpen ?? uncontrolledOpen;
   const setOpen = onOpenChange ?? setUncontrolledOpen;
   const updateItemMutation = useUpdateInventoryItem();
+  const deleteItemMutation = useDeleteInventoryItem();
   const { data: familyMembers, isLoading: familyMembersLoading } = useFamilyMembers();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -108,6 +120,15 @@ export function EditItemDialog({
       } else {
         toast.error('Noe gikk galt');
       }
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteItemMutation.mutateAsync(item.id);
+      setOpen(false);
+    } catch (error) {
+      // Error is handled in the mutation's onError callback
     }
   };
 
@@ -351,7 +372,40 @@ export function EditItemDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    disabled={deleteItemMutation.isPending || updateItemMutation.isPending}
+                    className="sm:mr-auto"
+                  >
+                    {deleteItemMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Slett gjenstand
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Er du sikker på at du vil slette?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Er du sikker på at du vil slette "{item.name}" fra inventarlisten? 
+                      Denne handlingen kan ikke angres.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDelete}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Ja, slett gjenstand
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
               <Button type="submit" disabled={updateItemMutation.isPending || familyMembersLoading}>
                 {updateItemMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Lagre endringer
