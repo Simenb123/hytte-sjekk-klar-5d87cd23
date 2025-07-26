@@ -58,14 +58,6 @@ export default function Dashboard() {
               />
             </Link>
             
-            <Link to="/calendar">
-              <DashboardCard
-                title="Kalender"
-                description="Se kommende opphold og arrangementer"
-                icon={<Calendar className="h-8 w-8" />}
-                color="bg-gradient-to-br from-indigo-500 to-indigo-600"
-              />
-            </Link>
             
             <Link to="/weather">
               <DashboardCard
