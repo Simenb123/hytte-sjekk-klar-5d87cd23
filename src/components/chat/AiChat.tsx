@@ -6,6 +6,7 @@ import { Send, Loader2, Trash2 } from "lucide-react";
 import ChatMessage from "./ChatMessage";
 import VoiceRecordButton from "./VoiceRecordButton";
 import ImageCaptureButton from "./ImageCaptureButton";
+import PromptSuggestions from "./PromptSuggestions";
 import { useAiChat, ChatMessage as ChatMessageType } from "@/hooks/useAiChat";
 import aiHelperImage from '@/assets/ai-helper-monkey.png';
 
@@ -109,6 +110,12 @@ const AiChat: React.FC = () => {
     ]);
   };
 
+  const handleSuggestionClick = (suggestion: string) => {
+    handleSend(suggestion);
+  };
+
+  const showSuggestions = messages.length === 1 && !loading;
+
   return (
     <div className="flex flex-col h-full max-w-lg mx-auto bg-white">
       <div className="flex items-center justify-between p-4 border-b bg-gray-50">
@@ -145,6 +152,13 @@ const AiChat: React.FC = () => {
           />
         ))}
         {loading && <ChatMessage role="assistant" content="" isLoading={true} />}
+        
+        {showSuggestions && (
+          <div className="mt-6">
+            <PromptSuggestions onSuggestionClick={handleSuggestionClick} />
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
       
