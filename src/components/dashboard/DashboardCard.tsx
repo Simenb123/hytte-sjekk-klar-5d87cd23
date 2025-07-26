@@ -11,8 +11,10 @@ interface DashboardCardProps {
 const DashboardCard = ({ title, description, icon, color }: DashboardCardProps) => {
   return (
     <div className={`${color} text-white rounded-lg shadow-lg p-6 transition-all hover:shadow-xl hover:scale-105`}>
-      <div className="mb-4">{icon}</div>
-      <h2 className="text-xl font-bold mb-2">{title}</h2>
+      <div className="flex items-center gap-3 mb-3">
+        {icon}
+        <h2 className="text-xl font-bold">{title}</h2>
+      </div>
       <p>{description}</p>
     </div>
   );
