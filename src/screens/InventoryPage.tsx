@@ -42,10 +42,12 @@ export default function InventoryPage() {
       actionBar={
         <div className="flex items-center gap-2 flex-wrap">
           <AIItemDialog />
+          {/* Import functionality temporarily hidden due to duplicate entries
           <div className="hidden sm:flex items-center gap-2">
             <SkiImportButton />
             <BulkImportButton />
           </div>
+          */}
           <NewItemDialog />
         </div>
       }
