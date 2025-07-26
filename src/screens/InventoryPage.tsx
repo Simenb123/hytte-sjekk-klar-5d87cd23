@@ -67,6 +67,10 @@ export default function InventoryPage() {
           resultCount={0} // Will be updated by InventoryList
           showFilters={showFilters}
           onToggleFilters={() => setShowFilters(!showFilters)}
+          sortKey={sortKey}
+          onSortKeyChange={setSortKey}
+          sortDirection={sortDirection}
+          onSortDirectionChange={setSortDirection}
         />
         
         <div className="flex justify-end">

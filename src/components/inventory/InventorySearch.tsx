@@ -2,7 +2,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Search, X, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 
@@ -19,6 +19,10 @@ interface InventorySearchProps {
   resultCount: number;
   showFilters: boolean;
   onToggleFilters: () => void;
+  sortKey: string;
+  onSortKeyChange: (value: string) => void;
+  sortDirection: string;
+  onSortDirectionChange: (value: string) => void;
 }
 
 export function InventorySearch({
@@ -33,7 +37,11 @@ export function InventorySearch({
   familyMembers,
   resultCount,
   showFilters,
-  onToggleFilters
+  onToggleFilters,
+  sortKey,
+  onSortKeyChange,
+  sortDirection,
+  onSortDirectionChange
 }: InventorySearchProps) {
   const categories = [
     'Klær', 'Langrennski', 'Langrennstaver', 'Alpint', 'Verktøy', 
@@ -74,6 +82,32 @@ export function InventorySearch({
               <X className="h-3 w-3" />
             </Button>
           )}
+        </div>
+        
+        <div className="flex gap-2">
+          <Select value={sortKey} onValueChange={onSortKeyChange}>
+            <SelectTrigger className="w-[140px]">
+              <ArrowUpDown className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Navn</SelectItem>
+              <SelectItem value="created_at">Opprettet</SelectItem>
+              <SelectItem value="category">Kategori</SelectItem>
+              <SelectItem value="brand">Merke</SelectItem>
+              <SelectItem value="primary_location">Lokasjon</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={sortDirection} onValueChange={onSortDirectionChange}>
+            <SelectTrigger className="w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">A-Å</SelectItem>
+              <SelectItem value="desc">Å-A</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         <Button
