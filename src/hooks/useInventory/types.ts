@@ -12,6 +12,7 @@ export type NewInventoryItemData = {
   owner?: string;
   notes?: string;
   category?: string;
+  subcategory?: string;
   family_member_id?: string;
   primary_location?: PrimaryLocation;
 };
@@ -35,6 +36,7 @@ export const mapItemToRecord = (
   owner: item.owner || null,
   notes: item.notes || null,
   category: item.category ?? defaultCategory,
+  subcategory: item.subcategory || null,
   family_member_id: item.family_member_id || null,
   primary_location: item.primary_location || 'hjemme',
   user_id: userId

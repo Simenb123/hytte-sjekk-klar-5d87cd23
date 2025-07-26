@@ -6,6 +6,7 @@ export interface InventoryAIResult {
   name: string;
   description: string;
   category: string;
+  subcategory?: string;
   brand?: string;
   color?: string;
   size?: string;

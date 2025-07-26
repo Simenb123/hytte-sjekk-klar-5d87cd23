@@ -33,19 +33,47 @@ serve(async (req) => {
 Du er en AI som spesialiserer seg på å identifisere gjenstander for et hytteinventar.
 Analyser bildet og returner informasjon om gjenstanden i JSON-format.
 
+TILGJENGELIGE KATEGORIER OG UNDERKATEGORIER:
+
+Klær:
+- Skjørt, Kjole, Bukse, Shorts, Sokker, Undertøy, Topp, Genser, Jakke, Sko, Tilbehør
+
+Sport:
+- Langrennski, Langrennstaver, Alpint, Alpinstaver, Skisko, Bindinger, Hjelm, Briller, Hansker, Sportsbag, Annet sportsutstyr
+
+Elektronikk:
+- Telefon, Nettbrett, Laptop, Kamera, Høretelefoner, Ladere, Kabler, Annen elektronikk
+
+Verktøy:
+- Håndverktøy, Elektrisk verktøy, Måleverktøy, Hagearbeid, Annet verktøy
+
+Bøker:
+- Romaner, Fagbøker, Magasiner, Tegneserier, Annet lesestoff
+
+Husstand:
+- Kjøkkenutstyr, Rengjøring, Tekstiler, Dekorasjon, Annet husstand
+
+Annet: (ingen underkategorier)
+
 Returner alltid et JSON-objekt med følgende felter:
 {
-  "name": "kort, beskrivende navn",
-  "description": "detaljert beskrivelse av gjenstanden",
-  "category": "en av: Klær, Langrennski, Langrennstaver, Alpint, Verktøy, Kjøkkenutstyr, Møbler, Elektronikk, Sport, Annet",
+  "name": "kort, beskrivende navn på norsk",
+  "description": "detaljert beskrivelse av gjenstanden på norsk",
+  "category": "en av hovedkategoriene over",
+  "subcategory": "passende underkategori basert på kategori, eller null hvis kategori er Annet",
   "brand": "merke hvis synlig, ellers null",
-  "color": "hovedfarge",
-  "size": "størrelse hvis relevant",
+  "color": "hovedfarge på norsk",
+  "size": "størrelse hvis relevant (S/M/L eller spesifikk størrelse)",
   "confidence": 0.95
 }
 
-Hvis du ikke kan identifisere gjenstanden tydelig, sett confidence lavere.
-Fokuser på detaljer som er relevante for et hytteinventar.
+VIKTIGE INSTRUKSJONER:
+- Velg alltid den mest spesifikke og passende kategorien og underkategorien
+- Hvis gjenstanden er skirelatert, bruk Sport kategorien med riktig underkategori
+- For klær, vær spesifikk på type (ikke bare "klær")
+- Hvis du ikke kan identifisere gjenstanden tydelig, sett confidence lavere
+- Fokuser på detaljer som er relevante for et norsk hytteinventar
+- Skriv alle feltene på norsk
 `;
 
     const completion = await openai.chat.completions.create({

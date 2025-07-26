@@ -12,6 +12,7 @@ import { useAddInventoryItem } from '@/hooks/useInventory/index';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 import { useToast } from '@/state/toast';
 import ImageCaptureButton from '@/components/chat/ImageCaptureButton';
+import { getAllCategories, getCategorySubcategories } from '@/data/categories';
 
 export function AIItemDialog() {
   const [open, setOpen] = useState(false);
@@ -22,6 +23,7 @@ export function AIItemDialog() {
     name: '',
     description: '',
     category: '',
+    subcategory: '',
     brand: '',
     color: '',
     size: '',
@@ -48,6 +50,7 @@ export function AIItemDialog() {
           name: result.name || '',
           description: result.description || '',
           category: result.category || '',
+          subcategory: result.subcategory || '',
           brand: result.brand || '',
           color: result.color || '',
           size: result.size || '',
@@ -82,7 +85,8 @@ export function AIItemDialog() {
     try {
       await addItemMutation.mutateAsync({
         ...formData,
-        family_member_id: formData.family_member_id || undefined
+        family_member_id: formData.family_member_id || undefined,
+        image: capturedImage ? await fetch(capturedImage).then(r => r.blob()).then(blob => new File([blob], 'ai-captured-image.jpg', { type: 'image/jpeg' })) : undefined
       });
       
       toast({
@@ -110,6 +114,7 @@ export function AIItemDialog() {
       name: '',
       description: '',
       category: '',
+      subcategory: '',
       brand: '',
       color: '',
       size: '',
@@ -120,10 +125,8 @@ export function AIItemDialog() {
     });
   };
 
-  const categories = [
-    'Klær', 'Langrennski', 'Langrennstaver', 'Alpint', 'Verktøy', 
-    'Kjøkkenutstyr', 'Møbler', 'Elektronikk', 'Sport', 'Annet'
-  ];
+  const categories = getAllCategories();
+  const subcategories = formData.category ? getCategorySubcategories(formData.category) : [];
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
@@ -228,7 +231,7 @@ export function AIItemDialog() {
 
               <div>
                 <Label htmlFor="category">Kategori</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value, subcategory: '' }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Velg kategori" />
                   </SelectTrigger>
@@ -239,6 +242,22 @@ export function AIItemDialog() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {subcategories.length > 0 && (
+                <div>
+                  <Label htmlFor="subcategory">Underkategori</Label>
+                  <Select value={formData.subcategory} onValueChange={(value) => setFormData(prev => ({ ...prev, subcategory: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Velg underkategori" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subcategories.map((subcat) => (
+                        <SelectItem key={subcat} value={subcat}>{subcat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="brand">Merke</Label>
