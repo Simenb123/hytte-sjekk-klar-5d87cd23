@@ -4,6 +4,7 @@ import { User, Loader2, Mic, Camera, Volume2, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from "@/lib/utils";
 import aiHelperImage from '@/assets/ai-helper-monkey.png';
+import InventoryTag from './InventoryTag';
 
 interface ChatMessageProps {
   role: 'user' | 'assistant';
@@ -37,6 +38,37 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       setIsSpeaking(true);
       window.speechSynthesis.speak(utterance);
     }
+  };
+
+  // Parse content for inventory tags and convert to JSX
+  const parseContentWithInventoryTags = (text: string) => {
+    const inventoryTagRegex = /\[ITEM:([^:]+):([^\]]+)\]/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = inventoryTagRegex.exec(text)) !== null) {
+      // Add text before the tag
+      if (match.index > lastIndex) {
+        parts.push(text.slice(lastIndex, match.index));
+      }
+      
+      // Add the inventory tag component
+      const itemId = match[1];
+      const itemName = match[2];
+      parts.push(
+        <InventoryTag key={`${itemId}-${match.index}`} itemId={itemId} itemName={itemName} />
+      );
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add remaining text
+    if (lastIndex < text.length) {
+      parts.push(text.slice(lastIndex));
+    }
+    
+    return parts.length > 1 ? parts : text;
   };
   
   return (
@@ -92,7 +124,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               {isVoice && isUser && (
                 <Mic className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-70" />
               )}
-              <p className="whitespace-pre-wrap m-0 text-sm">{content}</p>
+              <div className="whitespace-pre-wrap m-0 text-sm flex flex-wrap items-center gap-1">
+                {(() => {
+                  const parsed = parseContentWithInventoryTags(content);
+                  if (Array.isArray(parsed)) {
+                    return parsed.map((part, index) => 
+                      typeof part === 'string' ? (
+                        <span key={index}>{part}</span>
+                      ) : part
+                    );
+                  }
+                  return parsed;
+                })()}
+              </div>
               {!isUser && (
                 <Button
                   type="button"

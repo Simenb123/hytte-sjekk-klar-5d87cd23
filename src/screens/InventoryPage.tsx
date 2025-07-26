@@ -8,11 +8,13 @@ import { BulkImportButton } from "@/components/inventory/BulkImportButton";
 import { AIItemDialog } from "@/components/inventory/AIItemDialog";
 import { SkiImportButton } from "@/components/inventory/SkiImportButton";
 import { InventorySearch } from "@/components/inventory/InventorySearch";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useFamilyMembers } from "@/hooks/useFamilyMembers";
 import { useInventoryView } from "@/hooks/useInventoryView";
 
 export default function InventoryPage() {
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState("created_at");
   const [sortDirection, setSortDirection] = useState("desc");
@@ -23,6 +25,17 @@ export default function InventoryPage() {
   
   const { data: familyMembers = [] } = useFamilyMembers();
   const { viewType, setViewType } = useInventoryView();
+
+  // Handle navigation from AI helper with inventory item highlighting
+  useEffect(() => {
+    if (location.state?.searchTerm) {
+      setSearchTerm(location.state.searchTerm);
+    }
+    if (location.state?.highlightItemId) {
+      // TODO: Add highlighting logic when InventoryList supports it
+      console.log('Highlighting item:', location.state.highlightItemId);
+    }
+  }, [location.state]);
 
   console.log('[InventoryPage] Render with state:', {
     searchTerm,

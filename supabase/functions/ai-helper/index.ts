@@ -557,6 +557,9 @@ ${image ? '**BILDEANALYSE:** Analyser bildet og gi relevant, praktisk hjelp base
 9. **Organisering:** Hjelp med å finne og organisere inventar basert på lokasjon (hjemme/hytta/reiser)
 10. **Pakkelister:** Lag smarte pakkelister basert på aktiviteter og tilgjengelig inventar
 
+**KRITISK REGEL:** Når du refererer til spesifikke inventargjenstander, bruk ALLTID dette formatet: [ITEM:${item.id}:${item.name}]
+Eksempel: "Jeg anbefaler [ITEM:abc123:Rød vinterjakke] for dagens vær"
+
 **FORBEDRET FORSTÅELSE:**
 - "Gressklipper" inkluderer kantklippere, plenklipper, Ryobi-utstyr
 - "Snømåking/snøfjerning" inkluderer snøfreser, snøskuffe, snøplog, vintermaskiner
