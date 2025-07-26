@@ -266,6 +266,38 @@ serve(async (req) => {
       ? createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } })
       : createClient(supabaseUrl, serviceKey!)
 
+    // Get user profile for personalization
+    let userContext = "";
+    if (authHeader) {
+      try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('first_name, last_name, gender, birth_date')
+            .eq('id', user.id)
+            .single();
+
+          if (profile) {
+            const age = profile.birth_date 
+              ? Math.floor((new Date().getTime() - new Date(profile.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+              : null;
+            
+            userContext = `
+**BRUKERINFORMASJON:**
+- Navn: ${profile.first_name || ''} ${profile.last_name || ''}
+- Kjønn: ${profile.gender || 'Ikke oppgitt'}
+- Alder: ${age ? `${age} år` : 'Ikke oppgitt'}
+
+**PERSONALISERING:** Tilpass svar basert på brukerens kjønn og alder. For eksempel, ved spørsmål om klær, foreslå passende størrelser og stiler. Ved værråd, ta hensyn til alder og aktivitetsnivå.
+            `.trim();
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    }
+
     // Get current date and time information
     const now = new Date();
     const norskTid = new Intl.DateTimeFormat('no-NO', {
@@ -524,6 +556,8 @@ Vær alltid hyggelig, presis og bruk tilgjengelig informasjon effektivt.
 
 **NÅVÆRENDE DATO OG TID:**
 ${norskTid} (Årstid: ${årstid}, Måned: ${månedsnavn})
+
+${userContext}
 
 ${weatherContext}
 

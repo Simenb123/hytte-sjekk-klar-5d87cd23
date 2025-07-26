@@ -114,7 +114,7 @@ const AiChat: React.FC = () => {
     handleSend(suggestion);
   };
 
-  const showSuggestions = messages.length === 1 && !loading;
+  const showSuggestions = !loading;
 
   return (
     <div className="flex flex-col h-full max-w-lg mx-auto bg-white">
@@ -154,8 +154,11 @@ const AiChat: React.FC = () => {
         {loading && <ChatMessage role="assistant" content="" isLoading={true} />}
         
         {showSuggestions && (
-          <div className="mt-6">
-            <PromptSuggestions onSuggestionClick={handleSuggestionClick} />
+          <div className="mt-4">
+            <PromptSuggestions 
+              onSuggestionClick={handleSuggestionClick}
+              className="bg-white/50 rounded-lg p-3 border border-gray-200/50"
+            />
           </div>
         )}
         
