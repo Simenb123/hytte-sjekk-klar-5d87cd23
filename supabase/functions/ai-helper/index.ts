@@ -591,9 +591,14 @@ ${image ? '**BILDEANALYSE:** Analyser bildet og gi relevant, praktisk hjelp base
 9. **Organisering:** Hjelp med å finne og organisere inventar basert på lokasjon (hjemme/hytta/reiser)
 10. **Pakkelister:** Lag smarte pakkelister basert på aktiviteter og tilgjengelig inventar
 
-**KRITISK REGEL:** Når du refererer til spesifikke inventargjenstander, bruk ALLTID dette formatet: [ITEM:{item_id}:{item_name}]
-Eksempel: "Jeg anbefaler [ITEM:abc123:Rød vinterjakke] for dagens vær"
+**KRITISK REGEL - INVENTAR LENKER:** Når du refererer til spesifikke inventargjenstander, bruk ALLTID dette formatet: [ITEM:{item_id}:{item_name}]
+Eksempel: "Jeg anbefaler [ITEM:abc123:Rød vinterjakke] for dagens vær" - dette vil bli en klikkbar lenke.
 
+**INVENTAR-EKSEMPLER FRA AKTUELLE DATA:**
+For å gi konkrete forslag, her er noen aktuelle inventargjenstander du bør referere til med lenker:
+${inventoryItems?.slice(0, 10).map(item => `- [ITEM:${item.id}:${item.name}] (${item.category}) - ${item.description || 'Ingen beskrivelse'}`).join('\n') || 'Ingen inventar tilgjengelig'}
+
+**SPESIALKUNNSKAP - Hytte på Gaustablikk:**
 **FORBEDRET FORSTÅELSE:**
 - "Gressklipper" inkluderer kantklippere, plenklipper, Ryobi-utstyr
 - "Snømåking/snøfjerning" inkluderer snøfreser, snøskuffe, snøplog, vintermaskiner
@@ -604,6 +609,8 @@ Eksempel: "Jeg anbefaler [ITEM:abc123:Rød vinterjakke] for dagens vær"
 - Tidsreferanser som "igår/nylig/sist" = søk bredere i dokumenter
 
 **BILDEBESKRIVELSER:** Du har tilgang til AI-genererte beskrivelser av bilder i dokumentene som gir ytterligere kontekst og detaljer om utstyr, instruksjoner og forhold.
+
+**VIKTIG:** Bruk ALLTID [ITEM:id:navn] formatet når du nevner spesifikke inventargjenstander slik at brukeren kan klikke direkte på dem!
 
 Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret basert på tilgjengelig informasjon.
     `;
