@@ -40,8 +40,70 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   };
 
-  // Parse content for markdown formatting and inventory tags
+  // Parse content for comprehensive markdown formatting and inventory tags
   const parseContentWithFormatting = (text: string) => {
+    // Split content into paragraphs first
+    const paragraphs = text.split('\n\n');
+    const elements: React.ReactElement[] = [];
+    
+    paragraphs.forEach((paragraph, paragraphIndex) => {
+      if (!paragraph.trim()) return;
+      
+      // Check if it's a numbered list
+      if (/^\d+\.\s/.test(paragraph)) {
+        const listItems = paragraph.split('\n').filter(line => /^\d+\.\s/.test(line));
+        elements.push(
+          <ol key={`ordered-list-${paragraphIndex}`} className="list-decimal list-inside space-y-1 my-2 ml-4">
+            {listItems.map((item, itemIndex) => {
+              const content = item.replace(/^\d+\.\s/, '');
+              return (
+                <li key={`li-${paragraphIndex}-${itemIndex}`} className="text-sm leading-relaxed">
+                  {parseInlineFormatting(content, `li-${paragraphIndex}-${itemIndex}`)}
+                </li>
+              );
+            })}
+          </ol>
+        );
+      }
+      // Check if it's a bullet list
+      else if (/^[-*•]\s/.test(paragraph)) {
+        const listItems = paragraph.split('\n').filter(line => /^[-*•]\s/.test(line));
+        elements.push(
+          <ul key={`unordered-list-${paragraphIndex}`} className="list-disc list-inside space-y-1 my-2 ml-4">
+            {listItems.map((item, itemIndex) => {
+              const content = item.replace(/^[-*•]\s/, '');
+              return (
+                <li key={`li-${paragraphIndex}-${itemIndex}`} className="text-sm leading-relaxed">
+                  {parseInlineFormatting(content, `li-${paragraphIndex}-${itemIndex}`)}
+                </li>
+              );
+            })}
+          </ul>
+        );
+      }
+      // Check if it's a heading (ends with colon and is on its own line)
+      else if (/^[^:]+:$/.test(paragraph.trim()) && paragraph.split('\n').length === 1) {
+        elements.push(
+          <h4 key={`heading-${paragraphIndex}`} className="font-semibold text-sm mt-3 mb-2 text-gray-900 dark:text-gray-100">
+            {paragraph.trim()}
+          </h4>
+        );
+      }
+      // Regular paragraph
+      else {
+        elements.push(
+          <div key={`paragraph-${paragraphIndex}`} className="mb-2 last:mb-0">
+            {parseInlineFormatting(paragraph, `paragraph-${paragraphIndex}`)}
+          </div>
+        );
+      }
+    });
+    
+    return elements.length > 1 ? elements : parseInlineFormatting(text, 'single');
+  };
+
+  // Parse inline formatting (bold, inventory tags) within a text segment
+  const parseInlineFormatting = (text: string, keyPrefix: string) => {
     const parts: (string | React.ReactElement)[] = [];
     
     // First, split by inventory tags and preserve them
@@ -56,11 +118,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           const itemId = match[1];
           const itemName = match[2];
           parts.push(
-            <InventoryTag key={`${itemId}-${segmentIndex}`} itemId={itemId} itemName={itemName} />
+            <InventoryTag key={`${keyPrefix}-item-${itemId}-${segmentIndex}`} itemId={itemId} itemName={itemName} />
           );
         }
       } else {
-        // Parse markdown formatting in this segment
+        // Parse bold formatting in this segment
         const boldRegex = /(\*\*[^*]+\*\*)/g;
         const textParts = segment.split(boldRegex);
         
@@ -69,13 +131,21 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             // Bold text
             const boldText = part.replace(/^\*\*|\*\*$/g, '');
             parts.push(
-              <strong key={`bold-${segmentIndex}-${partIndex}`} className="font-semibold">
+              <strong key={`${keyPrefix}-bold-${segmentIndex}-${partIndex}`} className="font-semibold text-gray-900 dark:text-gray-100">
                 {boldText}
               </strong>
             );
           } else if (part) {
-            // Regular text
-            parts.push(part);
+            // Regular text - split by newlines for proper line breaks
+            const lines = part.split('\n');
+            lines.forEach((line, lineIndex) => {
+              if (lineIndex > 0) {
+                parts.push(<br key={`${keyPrefix}-br-${segmentIndex}-${partIndex}-${lineIndex}`} />);
+              }
+              if (line) {
+                parts.push(line);
+              }
+            });
           }
         });
       }
@@ -99,10 +169,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       
       <div
         className={cn(
-          "p-3 rounded-lg max-w-sm",
+          "p-4 rounded-lg max-w-md lg:max-w-lg",
           isUser
             ? "bg-blue-600 text-white rounded-br-none"
-            : "bg-white text-gray-800 rounded-bl-none shadow-sm border"
+            : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-none shadow-sm border dark:border-gray-700"
         )}
       >
         {isLoading ? (
@@ -137,17 +207,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               {isVoice && isUser && (
                 <Mic className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-70" />
               )}
-              <div className="whitespace-pre-wrap m-0 text-sm flex flex-wrap items-center gap-1">
+              <div className="text-sm leading-relaxed space-y-1">
                 {(() => {
                   const parsed = parseContentWithFormatting(content);
                   if (Array.isArray(parsed)) {
-                    return parsed.map((part, index) => 
-                      typeof part === 'string' ? (
-                        <span key={index}>{part}</span>
-                      ) : part
-                    );
+                    return parsed;
                   }
-                  return parsed;
+                  return <div className="whitespace-pre-wrap">{parsed}</div>;
                 })()}
               </div>
               {!isUser && (
