@@ -7,12 +7,12 @@ import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2
 export default function Dashboard() {
   return (
     <Layout title="Gaustablikk">
-      <div className="w-full p-4 md:p-6">
-          <h1 className="text-3xl font-bold text-hytte-darkblue mb-4 text-center">
+      <div className="w-full pt-2 px-4 pb-4 md:pt-4 md:px-6 md:pb-6">
+          <h1 className="text-3xl font-bold text-hytte-darkblue mb-6 text-center">
             Velkommen til Gaustablikk
           </h1>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link to="/checklist">
               <DashboardCard
                 title="Sjekkliste"
