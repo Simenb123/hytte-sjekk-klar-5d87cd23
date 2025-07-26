@@ -526,6 +526,7 @@ export type Database = {
           name: string
           notes: string | null
           owner: string | null
+          primary_location: Database["public"]["Enums"]["primary_location_enum"]
           shelf: string | null
           size: string | null
           user_id: string
@@ -542,6 +543,7 @@ export type Database = {
           name: string
           notes?: string | null
           owner?: string | null
+          primary_location?: Database["public"]["Enums"]["primary_location_enum"]
           shelf?: string | null
           size?: string | null
           user_id: string
@@ -558,6 +560,7 @@ export type Database = {
           name?: string
           notes?: string | null
           owner?: string | null
+          primary_location?: Database["public"]["Enums"]["primary_location_enum"]
           shelf?: string | null
           size?: string | null
           user_id?: string
@@ -985,7 +988,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      primary_location_enum: "hjemme" | "hytta" | "reiser"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1112,6 +1115,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      primary_location_enum: ["hjemme", "hytta", "reiser"],
+    },
   },
 } as const

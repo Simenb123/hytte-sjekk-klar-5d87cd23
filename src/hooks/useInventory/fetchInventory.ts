@@ -27,6 +27,7 @@ export const fetchInventory = async (userId?: string): Promise<InventoryItem[]> 
         notes,
         category,
         family_member_id,
+        primary_location,
         item_images ( image_url ),
         family_members ( id, name, nickname )
       `)

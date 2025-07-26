@@ -18,6 +18,7 @@ export default function InventoryPage() {
   const [sortDirection, setSortDirection] = useState("desc");
   const [category, setCategory] = useState("all");
   const [familyMemberId, setFamilyMemberId] = useState("all");
+  const [primaryLocation, setPrimaryLocation] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   
   const { data: familyMembers = [] } = useFamilyMembers();
@@ -29,6 +30,7 @@ export default function InventoryPage() {
     sortDirection,
     category,
     familyMemberId,
+    primaryLocation,
     viewType,
     familyMembersCount: familyMembers?.length
   });
@@ -57,6 +59,8 @@ export default function InventoryPage() {
           onCategoryChange={setCategory}
           familyMemberId={familyMemberId}
           onFamilyMemberChange={setFamilyMemberId}
+          primaryLocation={primaryLocation}
+          onPrimaryLocationChange={setPrimaryLocation}
           familyMembers={familyMembers}
           resultCount={0} // Will be updated by InventoryList
           showFilters={showFilters}
@@ -75,6 +79,7 @@ export default function InventoryPage() {
             sortConfig={{ key: sortKey, direction: sortDirection as "asc" | "desc" }} 
             category={category}
             familyMemberId={familyMemberId}
+            primaryLocation={primaryLocation}
             viewType={viewType}
           />
         </InventoryErrorBoundary>

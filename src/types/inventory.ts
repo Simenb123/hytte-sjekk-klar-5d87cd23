@@ -1,4 +1,6 @@
 
+export type PrimaryLocation = 'hjemme' | 'hytta' | 'reiser';
+
 export interface InventoryItem {
   id: string;
   name: string;
@@ -16,6 +18,7 @@ export interface InventoryItem {
   owner: string | null;
   notes: string | null;
   category: string | null;
+  primary_location: PrimaryLocation;
   family_members?: { id: string; name: string; nickname: string | null } | null;
 }
 

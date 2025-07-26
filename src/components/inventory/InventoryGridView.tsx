@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Edit2, MapPin, User, Package } from 'lucide-react';
 import { EditItemDialog } from './EditItemDialog';
 import { InventoryItem } from '@/types/inventory';
+import { LocationBadge } from './InventoryLocationFilter';
 
 interface InventoryGridViewProps {
   items: InventoryItem[];
@@ -46,11 +47,14 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
             )}
             
             <div className="space-y-2">
-              {item.category && (
-                <Badge variant="secondary" className="text-xs">
-                  {item.category}
-                </Badge>
-              )}
+              <div className="flex flex-wrap gap-2 mb-2">
+                <LocationBadge location={item.primary_location} />
+                {item.category && (
+                  <Badge variant="secondary" className="text-xs">
+                    {item.category}
+                  </Badge>
+                )}
+              </div>
               
               <div className="space-y-1">
                 {item.brand && (

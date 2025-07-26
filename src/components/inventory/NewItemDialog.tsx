@@ -35,6 +35,7 @@ const formSchema = z.object({
   notes: z.string().optional(),
   category: z.string().optional(),
   family_member_id: z.string().optional(),
+  primary_location: z.enum(['hjemme', 'hytta', 'reiser']).default('hjemme'),
 });
 
 export function NewItemDialog() {
@@ -56,6 +57,7 @@ export function NewItemDialog() {
       notes: "",
       category: "Annet",
       family_member_id: "",
+      primary_location: "hjemme",
     },
   });
 
@@ -113,6 +115,32 @@ export function NewItemDialog() {
                       <SelectItem value="Langrennstaver">Langrennstaver</SelectItem>
                       <SelectItem value="Alpint">Alpint</SelectItem>
                       <SelectItem value="Annet">Annet</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="primary_location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Hovedlokasjon</FormLabel>
+                  <Select
+                    value={field.value || "hjemme"}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Velg lokasjon" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="hjemme">Hjemme</SelectItem>
+                      <SelectItem value="hytta">På hytta</SelectItem>
+                      <SelectItem value="reiser">På reise</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

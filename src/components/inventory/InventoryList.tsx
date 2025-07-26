@@ -12,6 +12,7 @@ interface InventoryListProps {
   sortConfig: { key: string; direction: "asc" | "desc" };
   category: string;
   familyMemberId: string;
+  primaryLocation: string;
   viewType: "list" | "grid";
 }
 
@@ -20,6 +21,7 @@ const InventoryList: React.FC<InventoryListProps> = ({
   sortConfig,
   category,
   familyMemberId,
+  primaryLocation,
   viewType,
 }) => {
   const { data: items = [], isLoading, error } = useInventory();
@@ -57,6 +59,11 @@ const InventoryList: React.FC<InventoryListProps> = ({
       }
     }
 
+    // Apply primary location filter
+    if (primaryLocation !== "all") {
+      filtered = filtered.filter((item) => item.primary_location === primaryLocation);
+    }
+
     // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
       let aValue = a[sortConfig.key as keyof typeof a];
@@ -82,7 +89,7 @@ const InventoryList: React.FC<InventoryListProps> = ({
     });
 
     return sorted;
-  }, [items, searchTerm, category, familyMemberId, sortConfig, familyMembers]);
+  }, [items, searchTerm, category, familyMemberId, primaryLocation, sortConfig, familyMembers]);
 
   console.log("[InventoryList] Filtering results:", {
     totalItems: items.length,
@@ -90,6 +97,7 @@ const InventoryList: React.FC<InventoryListProps> = ({
     searchTerm,
     category,
     familyMemberId,
+    primaryLocation,
     sortConfig,
   });
 

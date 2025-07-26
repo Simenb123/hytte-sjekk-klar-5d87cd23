@@ -13,6 +13,8 @@ interface InventorySearchProps {
   onCategoryChange: (value: string) => void;
   familyMemberId: string;
   onFamilyMemberChange: (value: string) => void;
+  primaryLocation: string;
+  onPrimaryLocationChange: (value: string) => void;
   familyMembers: Array<{ id: string; name: string; nickname?: string }>;
   resultCount: number;
   showFilters: boolean;
@@ -26,6 +28,8 @@ export function InventorySearch({
   onCategoryChange,
   familyMemberId,
   onFamilyMemberChange,
+  primaryLocation,
+  onPrimaryLocationChange,
   familyMembers,
   resultCount,
   showFilters,
@@ -38,12 +42,14 @@ export function InventorySearch({
 
   const activeFiltersCount = [
     category !== 'all' ? 1 : 0,
-    familyMemberId !== 'all' ? 1 : 0
+    familyMemberId !== 'all' ? 1 : 0,
+    primaryLocation !== 'all' ? 1 : 0
   ].reduce((sum, val) => sum + val, 0);
 
   const clearFilters = () => {
     onCategoryChange('all');
     onFamilyMemberChange('all');
+    onPrimaryLocationChange('all');
     onSearchChange('');
   };
 
@@ -87,7 +93,7 @@ export function InventorySearch({
       </div>
 
       {showFilters && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg border">
           <div>
             <label className="text-sm font-medium mb-2 block">Kategori</label>
             <Select value={category} onValueChange={onCategoryChange}>
@@ -117,6 +123,21 @@ export function InventorySearch({
                     {member.name} {member.nickname ? `(${member.nickname})` : ''}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Lokasjon</label>
+            <Select value={primaryLocation} onValueChange={onPrimaryLocationChange}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle lokasjoner</SelectItem>
+                <SelectItem value="hjemme">Hjemme</SelectItem>
+                <SelectItem value="hytta">På hytta</SelectItem>
+                <SelectItem value="reiser">På reise</SelectItem>
               </SelectContent>
             </Select>
           </div>

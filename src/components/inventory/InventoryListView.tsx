@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { EditItemDialog } from './EditItemDialog';
+import { LocationBadge } from './InventoryLocationFilter';
 import { MoreVertical, Edit, Users, User } from 'lucide-react';
 
 interface InventoryListViewProps {
@@ -90,12 +91,15 @@ const InventoryListView: React.FC<InventoryListViewProps> = ({ items }) => {
                 <TableCell className="text-sm">{item.color || '-'}</TableCell>
                 <TableCell className="text-sm">{item.size || '-'}</TableCell>
                 <TableCell className="text-sm">
-                  {item.location ? (
-                    <span>
-                      {item.location}
-                      {item.shelf && `, hylle ${item.shelf}`}
-                    </span>
-                  ) : '-'}
+                  <div className="flex flex-col gap-1">
+                    <LocationBadge location={item.primary_location} />
+                    {item.location && (
+                      <span className="text-xs text-gray-600">
+                        {item.location}
+                        {item.shelf && `, hylle ${item.shelf}`}
+                      </span>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-sm">
                   {format(new Date(item.created_at), 'd. MMM yyyy', { locale: nb })}

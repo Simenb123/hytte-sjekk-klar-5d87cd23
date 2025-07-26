@@ -1,3 +1,5 @@
+import { PrimaryLocation } from '@/types/inventory';
+
 export type NewInventoryItemData = {
   name: string;
   description?: string;
@@ -11,6 +13,7 @@ export type NewInventoryItemData = {
   notes?: string;
   category?: string;
   family_member_id?: string;
+  primary_location?: PrimaryLocation;
 };
 
 export type UpdateInventoryItemData = NewInventoryItemData & {
@@ -33,5 +36,6 @@ export const mapItemToRecord = (
   notes: item.notes || null,
   category: item.category ?? defaultCategory,
   family_member_id: item.family_member_id || null,
+  primary_location: item.primary_location || 'hjemme',
   user_id: userId
 });
