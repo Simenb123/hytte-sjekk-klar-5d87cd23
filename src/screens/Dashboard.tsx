@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/dashboard/DashboardCard';
@@ -76,8 +75,6 @@ export default function Dashboard() {
                 color="bg-gradient-to-br from-cyan-500 to-cyan-600"
               />
             </Link>
-
-            
             
             <Link to="/ai-helper">
               <DashboardCard
