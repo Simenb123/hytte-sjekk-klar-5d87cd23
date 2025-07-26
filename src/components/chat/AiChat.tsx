@@ -2,19 +2,26 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send, Loader2, Trash2 } from "lucide-react";
+import { Send, Loader2, Trash2, Plus } from "lucide-react";
 import ChatMessage from "./ChatMessage";
 import VoiceRecordButton from "./VoiceRecordButton";
 import ImageCaptureButton from "./ImageCaptureButton";
 import PromptSuggestions from "./PromptSuggestions";
 import { useAiChat, ChatMessage as ChatMessageType } from "@/hooks/useAiChat";
+import { useChatSession } from "@/hooks/useChatSession";
 import aiHelperImage from '@/assets/ai-helper-monkey.png';
 
 const AiChat: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [input, setInput] = useState("");
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const { sendMessage, loading, error } = useAiChat();
+  const { 
+    messages, 
+    saveMessage, 
+    clearSession, 
+    loading: sessionLoading,
+    currentSession 
+  } = useChatSession();
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -24,14 +31,16 @@ const AiChat: React.FC = () => {
 
   useEffect(scrollToBottom, [messages]);
 
-  useEffect(() => {
-    setMessages([
-      {
-        role: 'assistant',
-        content: 'Hei! Jeg er din personlige hyttehjelper. Du kan spørre meg med tekst, lyd eller bilder om hva som helst som har med hytta å gjøre! Prøv for eksempel:\n\n• Ta et bilde av en gjenstand for identifikasjon\n• Spør med stemmen din mens du har hendene opptatt\n• Be om hjelp med vedlikehold eller problemer',
-      },
-    ]);
-  }, []);
+  // Add welcome message if no messages exist
+  const displayMessages = messages.length === 0 ? [
+    {
+      id: 'welcome',
+      role: 'assistant' as const,
+      content: 'Hei! Jeg er din personlige hyttehjelper. Du kan spørre meg med tekst, lyd eller bilder om hva som helst som har med hytta å gjøre! Prøv for eksempel:\n\n• Ta et bilde av en gjenstand for identifikasjon\n• Spør med stemmen din mens du har hendene opptatt\n• Be om hjelp med vedlikehold eller problemer',
+      session_id: '',
+      created_at: ''
+    }
+  ] : messages;
 
   // Auto-resize textarea
   const adjustTextareaHeight = () => {
@@ -61,24 +70,37 @@ const AiChat: React.FC = () => {
       isVoice: !!messageText // If messageText is provided, it came from voice
     };
     
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+    // Save user message to database
+    await saveMessage({
+      role: 'user',
+      content: userMessage.content,
+      image: userMessage.image,
+      is_voice: userMessage.isVoice
+    });
+
     setInput("");
     setPendingImage(null);
 
-    const { reply, analysis } = await sendMessage(newMessages, imageToSend || undefined);
-
-    setMessages((prev) => {
-      const updated = [...prev];
-      if (analysis) {
-        const lastIndex = updated.length - 1;
-        updated[lastIndex] = { ...updated[lastIndex], analysis };
-      }
-      if (reply) {
-        updated.push({ role: 'assistant', content: reply });
-      }
-      return updated;
+    // Convert messages to format expected by AI
+    const messageHistory = messages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+    messageHistory.push({
+      role: userMessage.role,
+      content: userMessage.content
     });
+
+    const { reply, analysis } = await sendMessage(messageHistory, imageToSend || undefined);
+
+    // Save AI response to database
+    if (reply) {
+      await saveMessage({
+        role: 'assistant',
+        content: reply,
+        analysis: analysis || undefined
+      });
+    }
   };
 
   const handleVoiceTranscription = (transcribedText: string) => {
@@ -101,53 +123,62 @@ const AiChat: React.FC = () => {
     }
   };
 
-  const clearChat = () => {
-    setMessages([
-      {
-        role: 'assistant',
-        content: 'Hei! Jeg er din personlige hyttehjelper. Du kan spørre meg med tekst, lyd eller bilder om hva som helst som har med hytta å gjøre!',
-      },
-    ]);
+  const handleClearChat = async () => {
+    await clearSession();
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     handleSend(suggestion);
   };
 
-  const showSuggestions = !loading;
+  const showSuggestions = !loading && !sessionLoading;
 
   return (
-    <div className="flex flex-col h-full max-w-lg mx-auto bg-white">
-      <div className="flex items-center justify-between p-4 border-b bg-gray-50">
-        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full overflow-hidden">
-            <img 
-              src={aiHelperImage} 
-              alt="AI Hyttehjelper" 
-              className="w-full h-full object-cover object-center scale-150"
-              style={{ filter: 'brightness(1.1) contrast(1.2)' }}
-            />
+    <div className="flex flex-col h-full max-w-lg mx-auto bg-white">{sessionLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full overflow-hidden">
+                <img 
+                  src={aiHelperImage} 
+                  alt="AI Hyttehjelper" 
+                  className="w-full h-full object-cover object-center scale-150"
+                  style={{ filter: 'brightness(1.1) contrast(1.2)' }}
+                />
+              </div>
+              {currentSession?.title || 'AI Hyttehjelper'}
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearChat}
+                className="text-gray-600"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearChat}
+                className="text-gray-600"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          AI Hyttehjelper
-        </h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={clearChat}
-          className="text-gray-600"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-      
       <div className="flex-1 space-y-4 overflow-y-auto p-4 bg-gray-50">
-        {messages.map((msg, index) => (
+        {displayMessages.map((msg, index) => (
           <ChatMessage
-            key={index}
+            key={msg.id || index}
             role={msg.role}
             content={msg.content}
             image={msg.image}
-            isVoice={msg.isVoice}
+            isVoice={msg.is_voice}
             analysis={msg.analysis}
           />
         ))}
@@ -227,6 +258,8 @@ const AiChat: React.FC = () => {
           </div>
         </form>
       </div>
+      </>
+    )}
     </div>
   );
 };
