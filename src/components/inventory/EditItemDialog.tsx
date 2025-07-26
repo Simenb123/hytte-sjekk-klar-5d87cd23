@@ -36,6 +36,7 @@ const formSchema = z.object({
   notes: z.string().optional(),
   category: z.string().optional(),
   family_member_id: z.string().optional(),
+  primary_location: z.enum(['hjemme', 'hytta', 'reiser']).optional(),
 });
 
 interface EditItemDialogProps {
@@ -91,6 +92,7 @@ export function EditItemDialog({
         notes: item.notes || "",
         category: item.category || "Annet",
         family_member_id: item.family_member_id || "",
+        primary_location: item.primary_location || "hjemme",
       });
     }
   }, [item, form, open]);
@@ -187,6 +189,32 @@ export function EditItemDialog({
                           {member.name} {member.nickname ? `(${member.nickname})` : ''}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="primary_location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Lokasjon</FormLabel>
+                  <Select
+                    value={field.value || "hjemme"}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Velg lokasjon" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="hjemme">Hjemme</SelectItem>
+                      <SelectItem value="hytta">På hytta</SelectItem>
+                      <SelectItem value="reiser">På reise</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
