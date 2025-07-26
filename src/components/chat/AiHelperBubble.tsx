@@ -11,7 +11,8 @@ export default function AiHelperBubble() {
       <img 
         src={aiHelperImage} 
         alt="AI Hyttehjelper" 
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover object-center scale-150"
+        style={{ filter: 'brightness(1.1) contrast(1.2)' }}
       />
     </Link>
   );

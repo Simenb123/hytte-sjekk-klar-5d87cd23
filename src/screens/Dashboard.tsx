@@ -73,7 +73,7 @@ export default function Dashboard() {
               <DashboardCard
                 title="AI-assistent"
                 description="Få hjelp og råd om hytta"
-                icon={<img src={aiHelperImage} alt="AI Hyttehjelper" className="h-8 w-8 rounded-full object-cover" />}
+                icon={<img src={aiHelperImage} alt="AI Hyttehjelper" className="h-8 w-8 rounded-full object-cover object-center scale-150" style={{ filter: 'brightness(1.1) contrast(1.2)' }} />}
                 color="bg-gradient-to-br from-rose-500 to-rose-600"
               />
             </Link>
