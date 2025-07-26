@@ -529,6 +529,7 @@ export type Database = {
           primary_location: Database["public"]["Enums"]["primary_location_enum"]
           shelf: string | null
           size: string | null
+          subcategory: string | null
           user_id: string
         }
         Insert: {
@@ -546,6 +547,7 @@ export type Database = {
           primary_location?: Database["public"]["Enums"]["primary_location_enum"]
           shelf?: string | null
           size?: string | null
+          subcategory?: string | null
           user_id: string
         }
         Update: {
@@ -563,6 +565,7 @@ export type Database = {
           primary_location?: Database["public"]["Enums"]["primary_location_enum"]
           shelf?: string | null
           size?: string | null
+          subcategory?: string | null
           user_id?: string
         }
         Relationships: [
@@ -739,24 +742,30 @@ export type Database = {
       }
       profiles: {
         Row: {
+          birth_date: string | null
           created_at: string
           first_name: string | null
+          gender: string | null
           id: string
           last_name: string | null
           phone: string | null
           updated_at: string
         }
         Insert: {
+          birth_date?: string | null
           created_at?: string
           first_name?: string | null
+          gender?: string | null
           id: string
           last_name?: string | null
           phone?: string | null
           updated_at?: string
         }
         Update: {
+          birth_date?: string | null
           created_at?: string
           first_name?: string | null
+          gender?: string | null
           id?: string
           last_name?: string | null
           phone?: string | null

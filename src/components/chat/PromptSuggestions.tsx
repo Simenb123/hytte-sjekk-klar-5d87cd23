@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Cloud, 
@@ -80,26 +80,51 @@ const PromptSuggestions: React.FC<PromptSuggestionsProps> = ({
   onSuggestionClick, 
   className = "" 
 }) => {
+  const [currentSuggestions, setCurrentSuggestions] = useState<PromptSuggestion[]>([]);
+
+  const getRandomSuggestions = () => {
+    const shuffled = [...suggestions].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 3);
+  };
+
+  useEffect(() => {
+    setCurrentSuggestions(getRandomSuggestions());
+  }, []);
+
+  const refreshSuggestions = () => {
+    setCurrentSuggestions(getRandomSuggestions());
+  };
+
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Sparkles className="h-4 w-4" />
-        <span className="text-sm font-medium">Foreslåtte spørsmål</span>
+    <div className={`space-y-3 ${className}`}>
+      <div className="flex items-center justify-between text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4" />
+          <span className="text-sm font-medium">Foreslåtte spørsmål</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={refreshSuggestions}
+          className="h-6 w-6 p-0 hover:bg-muted/50"
+        >
+          <Sparkles className="h-3 w-3" />
+        </Button>
       </div>
       
-      <div className="grid gap-2">
-        {suggestions.map((suggestion, index) => {
+      <div className="grid gap-1.5">
+        {currentSuggestions.map((suggestion, index) => {
           const Icon = suggestion.icon;
           return (
             <Button
-              key={index}
+              key={`${suggestion.text}-${index}`}
               variant="outline"
               size="sm"
               onClick={() => onSuggestionClick(suggestion.text)}
-              className="justify-start h-auto p-3 text-left hover:bg-muted/50 transition-colors"
+              className="justify-start h-auto p-2 text-left hover:bg-muted/50 transition-colors text-xs"
             >
-              <Icon className="h-4 w-4 mr-3 text-muted-foreground flex-shrink-0" />
-              <span className="text-sm leading-relaxed">{suggestion.text}</span>
+              <Icon className="h-3 w-3 mr-2 text-muted-foreground flex-shrink-0" />
+              <span className="leading-relaxed">{suggestion.text}</span>
             </Button>
           );
         })}

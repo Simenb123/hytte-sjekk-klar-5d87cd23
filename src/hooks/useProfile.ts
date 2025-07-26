@@ -9,6 +9,8 @@ interface Profile {
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
+  gender: string | null;
+  birth_date: string | null;
 }
 
 export function useProfile(user: User | null) {
@@ -61,7 +63,9 @@ export function useProfile(user: User | null) {
               id: user.id,
               first_name: '',
               last_name: '',
-              phone: ''
+              phone: '',
+              gender: null,
+              birth_date: null
             });
           }
         }
@@ -77,7 +81,7 @@ export function useProfile(user: User | null) {
     fetchProfile();
   }, [user]);
 
-  const updateProfile = async (data: { first_name: string; last_name: string; phone: string }) => {
+  const updateProfile = async (data: { first_name: string; last_name: string; phone: string; gender?: string; birth_date?: string }) => {
     if (!user) return;
 
     setIsSaving(true);
