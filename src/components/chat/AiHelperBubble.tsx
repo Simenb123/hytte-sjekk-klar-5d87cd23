@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import aiHelperImage from '@/assets/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png';
+import aiHelperImage from '@/assets/ai-helper-monkey.png';
 
 export default function AiHelperBubble() {
   return (

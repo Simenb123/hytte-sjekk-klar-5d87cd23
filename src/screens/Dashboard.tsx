@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import Layout from '@/layout/Layout';
 import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen, Wine } from 'lucide-react';
-import aiHelperImage from '@/assets/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png';
+import aiHelperImage from '@/assets/ai-helper-monkey.png';
 
 export default function Dashboard() {
   return (
