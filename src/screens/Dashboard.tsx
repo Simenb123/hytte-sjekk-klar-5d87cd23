@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import Layout from '@/layout/Layout';
-import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen, Wine } from 'lucide-react';
+import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen, Wine, Brain } from 'lucide-react';
 
 export default function Dashboard() {
   return (
@@ -72,7 +72,7 @@ export default function Dashboard() {
               <DashboardCard
                 title="AI-assistent"
                 description="Få hjelp og råd om hytta"
-                icon={<MessageCircle className="h-8 w-8" />}
+                icon={<Brain className="h-8 w-8" />}
                 color="bg-gradient-to-br from-rose-500 to-rose-600"
               />
             </Link>

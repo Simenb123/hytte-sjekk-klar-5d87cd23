@@ -1,5 +1,6 @@
 import React from 'react';
 import Header from '@/components/layout/Header';
+import AiHelperBubble from '@/components/chat/AiHelperBubble';
 
 export type LayoutProps = React.ComponentProps<typeof Header> & {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ export default function Layout({
         </div>
       )}
       <main className="flex-1 pt-[var(--header-h)]">{children}</main>
+      <AiHelperBubble />
     </div>
   );
 }
