@@ -63,28 +63,30 @@ export function InventorySearch({
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Søk etter navn, beskrivelse, merke..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 pr-10"
-          />
-          {searchTerm && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onSearchChange('')}
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
-        
-        <div className="flex gap-2">
+      {/* Search bar on its own row */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          placeholder="Søk etter navn, beskrivelse, merke..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="pl-10 pr-10"
+        />
+        {searchTerm && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onSearchChange('')}
+            className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
+
+      {/* Sort and filter controls on second row */}
+      <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-1 min-w-0">
           <Select value={sortKey} onValueChange={onSortKeyChange}>
             <SelectTrigger className="w-[140px]">
               <ArrowUpDown className="h-4 w-4 mr-2" />
@@ -114,7 +116,7 @@ export function InventorySearch({
           variant="outline"
           size="sm"
           onClick={onToggleFilters}
-          className="gap-2"
+          className="gap-2 flex-shrink-0"
         >
           <SlidersHorizontal className="h-4 w-4" />
           Filter
