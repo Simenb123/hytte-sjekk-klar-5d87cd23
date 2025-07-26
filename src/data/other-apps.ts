@@ -32,15 +32,6 @@ export const otherApps: OtherApp[] = [
     url: 'https://apps.apple.com/no/app/hyttetjenester-appen/id1481330344?l=nb',
   },
   {
-    id: 'skisporet',
-    name: 'Skisporet',
-    shortDescription: 'Åpne Skisporet-appen',
-    longDescription: 'Følg med på oppkjørte langrennsløyper.',
-    icon: Map,
-    color: 'bg-green-600',
-    url: 'https://apps.apple.com/no/app/skisporet/id404514360?l=nb',
-  },
-  {
     id: 'yr',
     name: 'Yr',
     shortDescription: 'Værmelding fra Yr',

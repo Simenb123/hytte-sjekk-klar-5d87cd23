@@ -2,7 +2,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/dashboard/DashboardCard';
-import SkisporetCard from '@/components/dashboard/SkisporetCard';
 import Layout from '@/layout/Layout';
 import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen, Wine } from 'lucide-react';
 
@@ -78,7 +77,7 @@ export default function Dashboard() {
               />
             </Link>
 
-            <SkisporetCard />
+            
             
             <Link to="/ai-helper">
               <DashboardCard
