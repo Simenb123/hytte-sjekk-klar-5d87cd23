@@ -7,6 +7,7 @@ import ChatMessage from "./ChatMessage";
 import VoiceRecordButton from "./VoiceRecordButton";
 import ImageCaptureButton from "./ImageCaptureButton";
 import { useAiChat, ChatMessage as ChatMessageType } from "@/hooks/useAiChat";
+import aiHelperImage from '@/assets/ai-helper-monkey.png';
 
 const AiChat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
@@ -111,8 +112,15 @@ const AiChat: React.FC = () => {
   return (
     <div className="flex flex-col h-full max-w-lg mx-auto bg-white">
       <div className="flex items-center justify-between p-4 border-b bg-gray-50">
-        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-1">
-          <span role="img" aria-label="ape">🙉</span>
+        <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full overflow-hidden">
+            <img 
+              src={aiHelperImage} 
+              alt="AI Hyttehjelper" 
+              className="w-full h-full object-cover object-center scale-150"
+              style={{ filter: 'brightness(1.1) contrast(1.2)' }}
+            />
+          </div>
           AI Hyttehjelper
         </h2>
         <Button
