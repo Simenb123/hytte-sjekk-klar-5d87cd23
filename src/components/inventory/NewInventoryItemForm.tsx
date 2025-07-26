@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FamilyMember } from '@/types/family';
 import { PrimaryLocation } from '@/types/inventory';
-import { InventoryLocationFilter } from './InventoryLocationFilter';
+import { CategorySelector } from './CategorySelector';
 
 interface NewInventoryItemFormProps {
   form: UseFormReturn<any>;
@@ -33,31 +33,9 @@ export const NewInventoryItemForm: React.FC<NewInventoryItemFormProps> = ({
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="category"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Kategori</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Velg kategori" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="Klær">Klær</SelectItem>
-                <SelectItem value="Elektronikk">Elektronikk</SelectItem>
-                <SelectItem value="Sport">Sport</SelectItem>
-                <SelectItem value="Verktøy">Verktøy</SelectItem>
-                <SelectItem value="Bøker">Bøker</SelectItem>
-                <SelectItem value="Annet">Annet</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="md:col-span-2">
+        <CategorySelector form={form} />
+      </div>
 
       <FormField
         control={form.control}
