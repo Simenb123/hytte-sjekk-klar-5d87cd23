@@ -40,33 +40,46 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   };
 
-  // Parse content for inventory tags and convert to JSX
-  const parseContentWithInventoryTags = (text: string) => {
-    const inventoryTagRegex = /\[ITEM:([^:]+):([^\]]+)\]/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-
-    while ((match = inventoryTagRegex.exec(text)) !== null) {
-      // Add text before the tag
-      if (match.index > lastIndex) {
-        parts.push(text.slice(lastIndex, match.index));
-      }
-      
-      // Add the inventory tag component
-      const itemId = match[1];
-      const itemName = match[2];
-      parts.push(
-        <InventoryTag key={`${itemId}-${match.index}`} itemId={itemId} itemName={itemName} />
-      );
-      
-      lastIndex = match.index + match[0].length;
-    }
+  // Parse content for markdown formatting and inventory tags
+  const parseContentWithFormatting = (text: string) => {
+    const parts: (string | React.ReactElement)[] = [];
     
-    // Add remaining text
-    if (lastIndex < text.length) {
-      parts.push(text.slice(lastIndex));
-    }
+    // First, split by inventory tags and preserve them
+    const inventoryTagRegex = /(\[ITEM:[^:]+:[^\]]+\])/g;
+    const segments = text.split(inventoryTagRegex);
+    
+    segments.forEach((segment, segmentIndex) => {
+      if (segment.match(/^\[ITEM:([^:]+):([^\]]+)\]$/)) {
+        // This is an inventory tag
+        const match = segment.match(/^\[ITEM:([^:]+):([^\]]+)\]$/);
+        if (match) {
+          const itemId = match[1];
+          const itemName = match[2];
+          parts.push(
+            <InventoryTag key={`${itemId}-${segmentIndex}`} itemId={itemId} itemName={itemName} />
+          );
+        }
+      } else {
+        // Parse markdown formatting in this segment
+        const boldRegex = /(\*\*[^*]+\*\*)/g;
+        const textParts = segment.split(boldRegex);
+        
+        textParts.forEach((part, partIndex) => {
+          if (part.match(/^\*\*.*\*\*$/)) {
+            // Bold text
+            const boldText = part.replace(/^\*\*|\*\*$/g, '');
+            parts.push(
+              <strong key={`bold-${segmentIndex}-${partIndex}`} className="font-semibold">
+                {boldText}
+              </strong>
+            );
+          } else if (part) {
+            // Regular text
+            parts.push(part);
+          }
+        });
+      }
+    });
     
     return parts.length > 1 ? parts : text;
   };
@@ -126,7 +139,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               )}
               <div className="whitespace-pre-wrap m-0 text-sm flex flex-wrap items-center gap-1">
                 {(() => {
-                  const parsed = parseContentWithInventoryTags(content);
+                  const parsed = parseContentWithFormatting(content);
                   if (Array.isArray(parsed)) {
                     return parsed.map((part, index) => 
                       typeof part === 'string' ? (
