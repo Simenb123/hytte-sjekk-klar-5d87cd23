@@ -97,6 +97,43 @@ async function fetchWeatherData(): Promise<WeatherData | null> {
   }
 }
 
+// Function to extract detailed description from AI reply
+function extractDetailedDescriptionFromReply(reply: string): string | null {
+  if (!reply) return null;
+  
+  // Look for patterns that indicate detailed item descriptions
+  const lines = reply.split('\n');
+  let description = '';
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    // Look for lines that describe the item in detail
+    if (line.includes('ser ut som') || line.includes('beskrive') || line.includes('identifiser') || 
+        line.includes('gjenstanden') || line.includes('dette er') || line.includes('ser jeg')) {
+      // Take this line and potentially the next few lines as description
+      description = line;
+      for (let j = i + 1; j < Math.min(i + 3, lines.length); j++) {
+        const nextLine = lines[j].trim();
+        if (nextLine && !nextLine.includes('?') && nextLine.length > 10) {
+          description += ' ' + nextLine;
+        } else {
+          break;
+        }
+      }
+      break;
+    }
+  }
+  
+  // If no specific pattern found, use the first substantial sentence
+  if (!description) {
+    const sentences = reply.split('.').filter(s => s.trim().length > 20);
+    if (sentences.length > 0) {
+      description = sentences[0].trim() + '.';
+    }
+  }
+  
+  return description || null;
+}
 
 // Helper function to generate multiple search queries
 function generateSearchQueries(originalQuery: string, currentTime: string): string[] {
@@ -800,7 +837,13 @@ Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret
 
         if (!inventoryError && inventoryResult?.result && inventoryResult?.suggestedActions) {
           contextualActions = inventoryResult.suggestedActions;
-          inventoryAnalysisData = inventoryResult.result;
+          
+          // Use the detailed description from our AI response instead of the short one from inventory-ai
+          const detailedDescription = extractDetailedDescriptionFromReply(reply);
+          inventoryAnalysisData = {
+            ...inventoryResult.result,
+            description: detailedDescription || inventoryResult.result.description
+          };
         }
       } catch (error) {
         console.error('Error analyzing image for inventory:', error);
