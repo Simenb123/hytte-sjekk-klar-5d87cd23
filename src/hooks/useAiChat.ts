@@ -98,11 +98,14 @@ export function useAiChat() {
         ...(data.suggestedActions || [])
       ];
 
+      // Use actionData from AI helper if available, otherwise use the inventory analysis
+      const finalActionData = data.actionData || actionData;
+
       return { 
         reply: data.reply, 
         analysis, 
         suggestedActions: allSuggestedActions.length > 0 ? allSuggestedActions : undefined, 
-        actionData 
+        actionData: finalActionData 
       };
     } catch (err: unknown) {
       console.error('Error calling ai-helper function:', err);

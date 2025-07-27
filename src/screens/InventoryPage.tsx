@@ -9,12 +9,13 @@ import { AIItemDialog } from "@/components/inventory/AIItemDialog";
 import { SkiImportButton } from "@/components/inventory/SkiImportButton";
 import { InventorySearch } from "@/components/inventory/InventorySearch";
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useFamilyMembers } from "@/hooks/useFamilyMembers";
 import { useInventoryView } from "@/hooks/useInventoryView";
 
 export default function InventoryPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortKey, setSortKey] = useState("created_at");
   const [sortDirection, setSortDirection] = useState("desc");
@@ -22,11 +23,13 @@ export default function InventoryPage() {
   const [familyMemberId, setFamilyMemberId] = useState("all");
   const [primaryLocation, setPrimaryLocation] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [newItemDialogOpen, setNewItemDialogOpen] = useState(false);
+  const [prefilledData, setPrefilledData] = useState<any>(null);
   
   const { data: familyMembers = [] } = useFamilyMembers();
   const { viewType, setViewType } = useInventoryView();
 
-  // Handle navigation from AI helper with inventory item highlighting
+  // Handle navigation from AI helper with inventory item highlighting and prefilled data
   useEffect(() => {
     if (location.state?.searchTerm) {
       setSearchTerm(location.state.searchTerm);
@@ -35,7 +38,23 @@ export default function InventoryPage() {
       // TODO: Add highlighting logic when InventoryList supports it
       console.log('Highlighting item:', location.state.highlightItemId);
     }
-  }, [location.state]);
+    
+    // Handle prefilled data from URL params (from AI chat)
+    const urlParams = new URLSearchParams(location.search);
+    const prefilledDataParam = urlParams.get('prefilledData');
+    if (prefilledDataParam) {
+      try {
+        const data = JSON.parse(prefilledDataParam);
+        setPrefilledData(data);
+        setNewItemDialogOpen(true);
+        
+        // Clean up URL params
+        navigate(location.pathname, { replace: true });
+      } catch (error) {
+        console.error('Error parsing prefilled data:', error);
+      }
+    }
+  }, [location.state, location.search, navigate]);
 
   console.log('[InventoryPage] Render with state:', {
     searchTerm,
@@ -61,7 +80,11 @@ export default function InventoryPage() {
             <BulkImportButton />
           </div>
           */}
-          <NewItemDialog />
+          <NewItemDialog 
+            open={newItemDialogOpen}
+            onOpenChange={setNewItemDialogOpen}
+            prefilledData={prefilledData}
+          />
         </div>
       }
     >

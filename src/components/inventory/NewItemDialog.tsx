@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -38,10 +38,24 @@ const formSchema = z.object({
   primary_location: z.enum(['hjemme', 'hytta', 'reiser']).default('hjemme'),
 });
 
-export function NewItemDialog() {
-  const [open, setOpen] = useState(false);
+interface NewItemDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  prefilledData?: any;
+}
+
+export function NewItemDialog({ 
+  open: controlledOpen, 
+  onOpenChange: controlledOnOpenChange, 
+  prefilledData 
+}: NewItemDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const addItemMutation = useAddInventoryItem();
   const { data: familyMembers, isLoading: familyMembersLoading } = useFamilyMembers();
+
+  // Use controlled props if provided, otherwise use internal state
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,6 +75,27 @@ export function NewItemDialog() {
     },
   });
 
+  // Pre-fill form with AI data when provided
+  useEffect(() => {
+    if (prefilledData) {
+      const resetData = {
+        name: prefilledData.name || "",
+        description: prefilledData.description || "",
+        brand: prefilledData.brand || "",
+        color: prefilledData.color || "",
+        location: "",
+        shelf: "",
+        size: prefilledData.size || "",
+        owner: "",
+        notes: "",
+        category: prefilledData.category || "Annet",
+        family_member_id: "",
+        primary_location: "hjemme" as const,
+      };
+      form.reset(resetData);
+    }
+  }, [prefilledData, form]);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       await addItemMutation.mutateAsync(values as NewInventoryItemData);
@@ -75,14 +110,16 @@ export function NewItemDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <>
-            <Plus className="mr-2 h-4 w-4" />
-            Legg til gjenstand
-          </>
-        </Button>
-      </DialogTrigger>
+      {controlledOpen === undefined && (
+        <DialogTrigger asChild>
+          <Button>
+            <>
+              <Plus className="mr-2 h-4 w-4" />
+              Legg til gjenstand
+            </>
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Legg til ny gjenstand</DialogTitle>

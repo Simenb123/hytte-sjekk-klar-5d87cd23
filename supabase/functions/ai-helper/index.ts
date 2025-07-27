@@ -680,9 +680,26 @@ Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret
 
     const reply = completion.choices[0].message.content;
 
-    // Analyze the conversation for action suggestions if no image was provided
+    // Analyze the conversation for action suggestions
     let contextualActions: any[] = [];
-    if (!image && history.length > 0) {
+    let inventoryAnalysisData: any = null;
+    
+    // If image is provided, analyze it for inventory suggestions
+    if (image) {
+      try {
+        const { data: inventoryResult, error: inventoryError } = await supabaseClient.functions.invoke('inventory-ai', {
+          body: { image },
+        });
+
+        if (!inventoryError && inventoryResult?.result && inventoryResult?.suggestedActions) {
+          contextualActions = inventoryResult.suggestedActions;
+          inventoryAnalysisData = inventoryResult.result;
+        }
+      } catch (error) {
+        console.error('Error analyzing image for inventory:', error);
+      }
+    } else if (history.length > 0) {
+      // Analyze conversation context for actions if no image
       try {
         const latestUserMessage = history[history.length - 1];
         if (latestUserMessage.role === 'user') {
@@ -707,7 +724,9 @@ Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret
 
     return new Response(JSON.stringify({ 
       reply, 
-      suggestedActions: contextualActions.length > 0 ? contextualActions : undefined 
+      suggestedActions: contextualActions.length > 0 ? contextualActions : undefined,
+      inventoryAnalysis: inventoryAnalysisData,
+      actionData: inventoryAnalysisData
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
