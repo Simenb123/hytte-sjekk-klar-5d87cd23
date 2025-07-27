@@ -20,6 +20,13 @@ export interface ChatMessage {
   image_url?: string;
   is_voice?: boolean;
   analysis?: string;
+  suggested_actions?: Array<{
+    type: 'inventory' | 'documents' | 'wine' | 'hyttebok' | 'checklist';
+    label: string;
+    confidence: number;
+    reason: string;
+  }>;
+  action_data?: any;
   created_at: string;
 }
 
@@ -79,7 +86,14 @@ export function useChatSession() {
 
       const sortedData = (messagesData || []).reverse().map(msg => ({
         ...msg,
-        role: msg.role as 'user' | 'assistant'
+        role: msg.role as 'user' | 'assistant',
+        suggested_actions: msg.suggested_actions as Array<{
+          type: 'inventory' | 'documents' | 'wine' | 'hyttebok' | 'checklist';
+          label: string;
+          confidence: number;
+          reason: string;
+        }> | undefined,
+        action_data: msg.action_data
       }));
       
       if (offset === 0) {
@@ -129,6 +143,13 @@ export function useChatSession() {
     image?: string;
     is_voice?: boolean;
     analysis?: string;
+    suggested_actions?: Array<{
+      type: 'inventory' | 'documents' | 'wine' | 'hyttebok' | 'checklist';
+      label: string;
+      confidence: number;
+      reason: string;
+    }>;
+    action_data?: any;
   }) => {
     if (!currentSession || !user) return;
 
@@ -157,7 +178,9 @@ export function useChatSession() {
           // Keep base64 for compatibility (temporary)
           image: messageData.image,
           is_voice: messageData.is_voice,
-          analysis: messageData.analysis
+          analysis: messageData.analysis,
+          suggested_actions: messageData.suggested_actions,
+          action_data: messageData.action_data
         })
         .select()
         .single();
@@ -166,7 +189,14 @@ export function useChatSession() {
 
       setMessages(prev => [...prev, {
         ...messageResult,
-        role: messageResult.role as 'user' | 'assistant'
+        role: messageResult.role as 'user' | 'assistant',
+        suggested_actions: messageResult.suggested_actions as Array<{
+          type: 'inventory' | 'documents' | 'wine' | 'hyttebok' | 'checklist';
+          label: string;
+          confidence: number;
+          reason: string;
+        }> | undefined,
+        action_data: messageResult.action_data
       }]);
 
       // Auto-update session title based on first user message

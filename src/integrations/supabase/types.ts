@@ -235,6 +235,7 @@ export type Database = {
           is_voice: boolean | null
           role: string
           session_id: string
+          suggested_actions: Json | null
         }
         Insert: {
           analysis?: string | null
@@ -246,6 +247,7 @@ export type Database = {
           is_voice?: boolean | null
           role: string
           session_id: string
+          suggested_actions?: Json | null
         }
         Update: {
           analysis?: string | null
@@ -257,6 +259,7 @@ export type Database = {
           is_voice?: boolean | null
           role?: string
           session_id?: string
+          suggested_actions?: Json | null
         }
         Relationships: [
           {
