@@ -628,7 +628,7 @@ ${items.map(item => {
     Beskrivelse: ${item.description || 'N/A'}
     Merke: ${item.brand || 'N/A'} | Farge: ${item.color || 'N/A'} | Størrelse: ${item.size || 'N/A'}
     Plassering: ${item.location || 'N/A'}${item.shelf ? ` (${item.shelf})` : ''}
-    Eier: ${owner}
+    Eier/tilhører: ${owner}
     Notater: ${item.notes || 'N/A'}`;
 }).join('\n')}
 `).join('\n')}
@@ -673,10 +673,11 @@ ${image ? '**BILDEANALYSE:** Du har mottatt et bilde som du MÅ analysere grundi
    - Hvis bruker er kvinne → anbefal dameprodukter, damestørrelser, dameklær
    - Hvis bruker er barn → anbefal barneprodukter tilpasset alder
 
-2. **Familierolleforståelse:** FORSTÅ brukerens rolle i familien
-   - Ikke anbefal "mors klær" til en sønn eller "fars utstyr" til en datter
-   - Tilpass forslag til brukerens faktiske rolle (forelder/barn/annet)
-   - Bruk familie-konteksten intelligently til å gi relevante råd
+2. **Familierolleforståelse og eierskap:** FORSTÅ brukerens rolle og familieeierskap
+   - ALDRI anbefal andres klær/utstyr uten å spørre eller klargjøre eierskap først
+   - Når du ser klær/utstyr som tilhører andre familiemedlemmer, si tydelig hvem det tilhører
+   - Spør alltid "Er dette dine klær eller tilhører de [familiemedlem]?" når eierskap er uklart
+   - Gi bare anbefalinger for brukerens egne ting eller spør om tillatelse før du foreslår å bruke andres ting
 
 3. **Alderstilpassede råd:** Gi råd som passer brukerens alder og livssituasjon
    - Barn → aktiviteter og utstyr tilpasset barnealder
@@ -704,6 +705,16 @@ ${image ? '**BILDEANALYSE:** Du har mottatt et bilde som du MÅ analysere grundi
 
 **INVENTAR-INTELLIGENS:**
 6. **Klesforslag:** Kombiner værforhold med tilgjengelige klær i inventaret for praktiske anbefalinger
+   - ALLTID sjekk eierskap før du anbefaler klær fra inventaret
+   - Hvis klærne tilhører andre familiemedlemmer, nevn dette eksplisitt
+   - Gi shoppinglenker for nye klær når inventaret ikke har passende alternativer
+   
+   **SHOPPING-LENKER FOR KLESTIPS:**
+   - Herr: [Zalando Herr](https://www.zalando.no/herretoy/), [H&M Herr](https://www2.hm.com/no_no/herrer.html)
+   - Dame: [Zalando Dame](https://www.zalando.no/dameklær/), [H&M Dame](https://www2.hm.com/no_no/damer.html)
+   - Barn: [Zalando Barn](https://www.zalando.no/barn/), [H&M Barn](https://www2.hm.com/no_no/barn.html)
+   - Sport: [XXL](https://www.xxl.no/), [Intersport](https://www.intersport.no/)
+   - Alltid inkluder konkrete produktlenker når du gir klestips!
 7. **Aktivitetsutstyr:** Koble aktiviteter med relevant utstyr fra inventaret (ski, sykler, fotballutstyr, etc.)
 8. **Sesongtilpassning:** Foreslå sesongriktig utstyr basert på nåværende årstid og inventarliste
 9. **Organisering:** Hjelp med å finne og organisere inventar basert på lokasjon (hjemme/hytta/reiser)

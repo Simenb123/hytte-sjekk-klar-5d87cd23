@@ -148,14 +148,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               </strong>
             );
           } else if (part) {
-            // Regular text - split by newlines for proper line breaks
+            // Regular text - split by newlines for proper line breaks and ensure spaces
             const lines = part.split('\n');
             lines.forEach((line, lineIndex) => {
               if (lineIndex > 0) {
                 parts.push(<br key={`${keyPrefix}-br-${segmentIndex}-${partIndex}-${lineIndex}`} />);
               }
               if (line) {
-                parts.push(line);
+                // Ensure proper spacing in text content
+                const cleanedLine = line.replace(/([a-øA-Ø])([A-ØA-Z])/g, '$1 $2');
+                parts.push(cleanedLine);
               }
             });
           }

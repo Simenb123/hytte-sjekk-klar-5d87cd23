@@ -33,6 +33,9 @@ serve(async (req) => {
 Du er en AI som spesialiserer seg på å identifisere gjenstander for et hytteinventar og foreslå relevante handlinger.
 Analyser bildet og returner informasjon om gjenstanden i JSON-format med foreslåtte handlinger.
 
+VIKTIG EIERSKAP: Når du ser klær eller personlige gjenstander, IKKE anta at de tilhører brukeren som laster opp bildet.
+Spør alltid eller nevn at eierskap bør bekreftes, spesielt for klær og personlige effekter.
+
 TILGJENGELIGE KATEGORIER OG UNDERKATEGORIER:
 
 Klær:
