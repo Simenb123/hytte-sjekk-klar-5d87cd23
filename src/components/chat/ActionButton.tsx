@@ -60,7 +60,9 @@ const ActionButton: React.FC<ActionButtonProps> = ({
     switch (type) {
       case 'inventory':
         if (data) {
-          queryParams.set('prefilledData', JSON.stringify(data));
+          // Include both text data and image data if available
+          const dataToPass = { ...data };
+          queryParams.set('prefilledData', JSON.stringify(dataToPass));
         }
         navigate('/inventory?' + queryParams.toString());
         break;

@@ -50,6 +50,7 @@ export function NewItemDialog({
   prefilledData 
 }: NewItemDialogProps = {}) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const addItemMutation = useAddInventoryItem();
   const { data: familyMembers, isLoading: familyMembersLoading } = useFamilyMembers();
 
@@ -77,30 +78,55 @@ export function NewItemDialog({
 
   // Pre-fill form with AI data when provided
   useEffect(() => {
-    if (prefilledData) {
-      const resetData = {
-        name: prefilledData.name || "",
-        description: prefilledData.description || "",
-        brand: prefilledData.brand || "",
-        color: prefilledData.color || "",
-        location: "",
-        shelf: "",
-        size: prefilledData.size || "",
-        owner: "",
-        notes: "",
-        category: prefilledData.category || "Annet",
-        family_member_id: "",
-        primary_location: "hjemme" as const,
-      };
-      form.reset(resetData);
-    }
+    const handlePrefilledData = async () => {
+      if (prefilledData) {
+        const resetData = {
+          name: prefilledData.name || "",
+          description: prefilledData.description || "",
+          brand: prefilledData.brand || "",
+          color: prefilledData.color || "",
+          location: "",
+          shelf: "",
+          size: prefilledData.size || "",
+          owner: "",
+          notes: "",
+          category: prefilledData.category || "Annet",
+          family_member_id: "",
+          primary_location: "hjemme" as const,
+        };
+        form.reset(resetData);
+
+        // Handle image data if available
+        if (prefilledData.originalImage) {
+          console.log('Converting base64 image to file');
+          try {
+            // Convert base64 to blob then to File
+            const base64Response = await fetch(prefilledData.originalImage);
+            const blob = await base64Response.blob();
+            const file = new File([blob], `ai-suggested-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            setImageFile(file);
+            form.setValue('image', file);
+          } catch (error) {
+            console.error('Error converting image:', error);
+          }
+        }
+      }
+    };
+
+    handlePrefilledData();
   }, [prefilledData, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await addItemMutation.mutateAsync(values as NewInventoryItemData);
+      // Use the imageFile state if it exists, otherwise use the form value
+      const dataToSubmit = {
+        ...values,
+        image: imageFile || values.image
+      };
+      await addItemMutation.mutateAsync(dataToSubmit as NewInventoryItemData);
       toast.success("Gjenstand lagt til!");
       form.reset();
+      setImageFile(null);
       setOpen(false);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Ukjent feil';
@@ -345,11 +371,22 @@ export function NewItemDialog({
                 <FormItem>
                   <FormLabel>Bilde (valgfritt)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)}
-                    />
+                    <div className="space-y-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          setImageFile(file);
+                          field.onChange(file);
+                        }}
+                      />
+                      {(imageFile || field.value) && (
+                        <p className="text-sm text-gray-500">
+                          Bilde valgt: {imageFile?.name || field.value?.name || 'Fra AI-analyse'}
+                        </p>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -575,7 +575,7 @@ ${searchContext}
 - **Sesongråd:** Tilpass aktiviteter og forberedelser til vær og årstid
 - **Utstyr:** Bruk dokumenter og inventarliste for spesifikk informasjon
 
-${image ? '**BILDEANALYSE:** Analyser bildet og gi relevant, praktisk hjelp basert på hva du ser.' : ''}
+${image ? '**BILDEANALYSE:** Du har mottatt et bilde og må analysere det grundig. Beskriv hva du ser og gi praktiske råd basert på bildet. IKKE si at du ikke kan analysere bilder - du kan det!' : ''}
 
 **SMART ASSISTANSEREGLER:**
 1. **Konneksjoner:** Forstå sammenhenger mellom begreper (gressklipper = kantklipper, hageutstyr, etc.)

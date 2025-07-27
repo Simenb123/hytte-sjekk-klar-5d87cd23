@@ -99,7 +99,8 @@ export function useAiChat() {
       ];
 
       // Use actionData from AI helper if available, otherwise use the inventory analysis
-      const finalActionData = data.actionData || actionData;
+      // Include the image data if available
+      const finalActionData = data.actionData || (actionData ? { ...actionData, originalImage: image } : null);
 
       return { 
         reply: data.reply, 
