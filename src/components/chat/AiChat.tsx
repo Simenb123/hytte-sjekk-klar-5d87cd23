@@ -14,6 +14,15 @@ import aiHelperImage from '@/assets/ai-helper-monkey.png';
 const AiChat: React.FC = () => {
   const [input, setInput] = useState("");
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [latestActions, setLatestActions] = useState<{
+    suggestedActions?: Array<{
+      type: 'inventory' | 'documents' | 'wine' | 'hyttebok' | 'checklist';
+      label: string;
+      confidence: number;
+      reason: string;
+    }>;
+    actionData?: any;
+  }>({});
   const { sendMessage, loading, error } = useAiChat();
   const { 
     messages, 
@@ -91,14 +100,19 @@ const AiChat: React.FC = () => {
       content: userMessage.content
     });
 
-    const { reply, analysis } = await sendMessage(messageHistory, imageToSend || undefined);
+    const { reply, analysis, suggestedActions, actionData } = await sendMessage(messageHistory, imageToSend || undefined);
+
+    // Store the latest actions for display
+    setLatestActions({ suggestedActions, actionData });
 
     // Save AI response to database
     if (reply) {
       await saveMessage({
         role: 'assistant',
         content: reply,
-        analysis: analysis || undefined
+        analysis: analysis || undefined,
+        // Note: suggestedActions and actionData are not persisted to DB, 
+        // they're only used for the current UI session
       });
     }
   };
@@ -172,16 +186,24 @@ const AiChat: React.FC = () => {
             </div>
           </div>
       <div className="flex-1 space-y-4 overflow-y-auto p-4 bg-gray-50">
-        {displayMessages.map((msg, index) => (
-          <ChatMessage
-            key={msg.id || index}
-            role={msg.role}
-            content={msg.content}
-            image={msg.image}
-            isVoice={msg.is_voice}
-            analysis={msg.analysis}
-          />
-        ))}
+        {displayMessages.map((msg, index) => {
+          // Show actions on the last assistant message if available
+          const isLastAssistantMessage = index === displayMessages.length - 1 && msg.role === 'assistant';
+          const shouldShowActions = isLastAssistantMessage && latestActions.suggestedActions;
+          
+          return (
+            <ChatMessage
+              key={msg.id || index}
+              role={msg.role}
+              content={msg.content}
+              image={msg.image}
+              isVoice={msg.is_voice}
+              analysis={msg.analysis}
+              suggestedActions={shouldShowActions ? latestActions.suggestedActions : undefined}
+              actionData={shouldShowActions ? latestActions.actionData : undefined}
+            />
+          );
+        })}
         {loading && <ChatMessage role="assistant" content="" isLoading={true} />}
         
         {showSuggestions && (

@@ -8,6 +8,13 @@ export type ChatMessage = {
   image?: string;
   isVoice?: boolean;
   analysis?: string;
+  suggestedActions?: Array<{
+    type: 'inventory' | 'documents' | 'wine' | 'hyttebok' | 'checklist';
+    label: string;
+    confidence: number;
+    reason: string;
+  }>;
+  actionData?: any;
 };
 
 export function useAiChat() {
@@ -17,7 +24,17 @@ export function useAiChat() {
   const sendMessage = async (
     messageHistory: ChatMessage[],
     image?: string
-  ): Promise<{ reply: string | null; analysis?: string | null }> => {
+  ): Promise<{ 
+    reply: string | null; 
+    analysis?: string | null;
+    suggestedActions?: Array<{
+      type: 'inventory' | 'documents' | 'wine' | 'hyttebok' | 'checklist';
+      label: string;
+      confidence: number;
+      reason: string;
+    }>;
+    actionData?: any;
+  }> => {
     setLoading(true);
     setError(null);
     try {
@@ -26,6 +43,9 @@ export function useAiChat() {
       } = await supabase.auth.getSession();
 
       let analysis: string | null = null;
+      let suggestedActions: any[] = [];
+      let actionData: any = null;
+      
       const historyWithAnalysis = [...messageHistory];
       if (image) {
         try {
@@ -40,6 +60,8 @@ export function useAiChat() {
           } else if (aiData?.result) {
             const result = aiData.result;
             analysis = `${result.name}. ${result.description}`.trim();
+            suggestedActions = result.suggestedActions || [];
+            actionData = result; // Store the full result for action buttons
             historyWithAnalysis.push({
               role: 'assistant',
               content: `Bildet viser: ${analysis}`,
@@ -70,13 +92,24 @@ export function useAiChat() {
 
       if (data.error) throw new Error(data.error);
 
-      return { reply: data.reply, analysis };
+      // Merge image-based actions with contextual actions from AI helper
+      const allSuggestedActions = [
+        ...(suggestedActions || []),
+        ...(data.suggestedActions || [])
+      ];
+
+      return { 
+        reply: data.reply, 
+        analysis, 
+        suggestedActions: allSuggestedActions.length > 0 ? allSuggestedActions : undefined, 
+        actionData 
+      };
     } catch (err: unknown) {
       console.error('Error calling ai-helper function:', err);
       setError(
         'Beklager, noe gikk galt. Vennligst prøv igjen. Hvis problemet vedvarer, kan det hende API-nøkkelen for OpenAI mangler.'
       );
-      return { reply: null, analysis: null };
+      return { reply: null, analysis: null, suggestedActions: [], actionData: null };
     } finally {
       setLoading(false);
     }

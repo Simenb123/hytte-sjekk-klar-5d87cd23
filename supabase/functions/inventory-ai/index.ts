@@ -30,8 +30,8 @@ serve(async (req) => {
     }
 
     const systemPrompt = `
-Du er en AI som spesialiserer seg på å identifisere gjenstander for et hytteinventar.
-Analyser bildet og returner informasjon om gjenstanden i JSON-format.
+Du er en AI som spesialiserer seg på å identifisere gjenstander for et hytteinventar og foreslå relevante handlinger.
+Analyser bildet og returner informasjon om gjenstanden i JSON-format med foreslåtte handlinger.
 
 TILGJENGELIGE KATEGORIER OG UNDERKATEGORIER:
 
@@ -55,6 +55,24 @@ Husstand:
 
 Annet: (ingen underkategorier)
 
+VURDER HANDLINGER BASERT PÅ BILDETS INNHOLD:
+
+For INVENTARGJENSTANDER (klær, sport, elektronikk, verktøy, etc.):
+- inventory: Legg til i inventarlisten
+
+For VINDOKUMENTER (manualer, instruksjoner, kvitteringer, lapper):
+- documents: Lagre under dokumenter
+- checklist: Opprett sjekklistepunkt (hvis bildet viser noe som bør huskes/sjekkes)
+
+For VINFLASKER/VINDRIKKER:
+- wine: Legg til i vinlageret
+
+For INTERESSANTE OPPLEVELSER/HENDELSER:
+- hyttebok: Lagre som utkast til hytteboka
+
+For PROBLEMER/VEDLIKEHOLD som trengs:
+- checklist: Foreslå sjekklistepunkt
+
 Returner alltid et JSON-objekt med følgende felter:
 {
   "name": "kort, beskrivende navn på norsk",
@@ -64,7 +82,15 @@ Returner alltid et JSON-objekt med følgende felter:
   "brand": "merke hvis synlig, ellers null",
   "color": "hovedfarge på norsk",
   "size": "størrelse hvis relevant (S/M/L eller spesifikk størrelse)",
-  "confidence": 0.95
+  "confidence": 0.95,
+  "suggestedActions": [
+    {
+      "type": "inventory|documents|wine|hyttebok|checklist",
+      "label": "Legg til i inventarlisten|Lagre under dokumenter|Legg til i vinlageret|Lagre i hytteboka|Lag sjekklistepunkt",
+      "confidence": 0.95,
+      "reason": "forklaring på hvorfor denne handlingen foreslås"
+    }
+  ]
 }
 
 VIKTIGE INSTRUKSJONER:

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from "@/lib/utils";
 import aiHelperImage from '@/assets/ai-helper-monkey.png';
 import InventoryTag from './InventoryTag';
+import ActionSuggestions from './ActionSuggestions';
 
 interface ChatMessageProps {
   role: 'user' | 'assistant';
@@ -13,6 +14,13 @@ interface ChatMessageProps {
   isVoice?: boolean;
   isLoading?: boolean;
   analysis?: string;
+  suggestedActions?: Array<{
+    type: 'inventory' | 'documents' | 'wine' | 'hyttebok' | 'checklist';
+    label: string;
+    confidence: number;
+    reason: string;
+  }>;
+  actionData?: any;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -21,7 +29,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   image,
   isVoice = false,
   isLoading = false,
-  analysis
+  analysis,
+  suggestedActions,
+  actionData
 }) => {
   const isUser = role === 'user';
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -235,6 +245,17 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 </Button>
               )}
             </div>
+            
+            {/* Action suggestions for assistant messages */}
+            {!isUser && suggestedActions && suggestedActions.length > 0 && (
+              <ActionSuggestions 
+                actions={suggestedActions} 
+                data={actionData}
+                onActionTaken={() => {
+                  // Optional: Add analytics or other side effects
+                }}
+              />
+            )}
           </div>
         )}
       </div>

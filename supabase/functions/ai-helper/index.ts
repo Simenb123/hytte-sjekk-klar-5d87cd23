@@ -591,8 +591,38 @@ ${image ? '**BILDEANALYSE:** Analyser bildet og gi relevant, praktisk hjelp base
 9. **Organisering:** Hjelp med å finne og organisere inventar basert på lokasjon (hjemme/hytta/reiser)
 10. **Pakkelister:** Lag smarte pakkelister basert på aktiviteter og tilgjengelig inventar
 
+**KONTEKST-INTELLIGENS FOR FORSLAG:**
+11. **Sjekklistepunkt-identifikasjon:** Når brukeren nevner:
+    - "Vi må huske å..." → Foreslå sjekklistepunkt
+    - "Neste gang bør vi..." → Foreslå sjekklistepunkt
+    - "Problemet er at..." → Foreslå sjekklistepunkt for vedlikehold
+    - "Det funker ikke..." → Foreslå sjekklistepunkt for reparasjon
+    - Beskriver vedlikehold, sjekker eller oppgaver → Foreslå sjekklistepunkt
+
+12. **Smart handlingsgjenkjenning:**
+    - Når brukeren beskriver gjenstander → Foreslå inventarregistrering
+    - Når brukeren nevner dokumenter/instruksjoner → Foreslå dokumentlagring
+    - Når brukeren snakker om opplevelser/minner → Foreslå hyttebokinnlegg
+    - Når brukeren viser/snakker om vin → Foreslå vinlagerregistrering
+
 **KRITISK REGEL - INVENTAR LENKER:** Når du refererer til spesifikke inventargjenstander, bruk ALLTID dette formatet: [ITEM:{item_id}:{item_name}]
 Eksempel: "Jeg anbefaler [ITEM:abc123:Rød vinterjakke] for dagens vær" - dette vil bli en klikkbar lenke.
+
+**INTELLIGENTE HANDLINGSFORSLAG:**
+Når du får bilder eller analyser som kan kobles til app-funksjoner, foreslå konkrete handlinger:
+
+For bilder/chat som inkluderer:
+- **Inventargjenstander** → Foreslå: "Vil du legge til dette i inventarlisten?"
+- **Vindokumenter/Instruksjoner** → Foreslå: "Lagre dette under dokumenter"
+- **Vinflasker** → Foreslå: "Legg til i vinlageret"
+- **Opplevelser/Minner** → Foreslå: "Lagre i hytteboka"
+- **Problemer/Vedlikehold** → Foreslå: "Lag sjekklistepunkt for dette"
+
+**CONTEXT-AWARE SUGGESTIONS:**
+Analyser samtaleinnhold for å identifisere:
+- Når brukeren snakker om noe som bør sjekkes/huskes → Foreslå sjekklistepunkt
+- Når brukeren beskriver gjenstander → Foreslå inventarregistrering
+- Når brukeren omtaler dokumenter/instruksjoner → Foreslå dokumentlagring
 
 **INVENTAR-EKSEMPLER FRA AKTUELLE DATA:**
 For å gi konkrete forslag, her er noen aktuelle inventargjenstander du bør referere til med lenker:
@@ -611,6 +641,16 @@ ${inventoryItems?.slice(0, 10).map(item => `- [ITEM:${item.id}:${item.name}] (${
 **BILDEBESKRIVELSER:** Du har tilgang til AI-genererte beskrivelser av bilder i dokumentene som gir ytterligere kontekst og detaljer om utstyr, instruksjoner og forhold.
 
 **VIKTIG:** Bruk ALLTID [ITEM:id:navn] formatet når du nevner spesifikke inventargjenstander slik at brukeren kan klikke direkte på dem!
+
+**INTELLIGENTE HANDLINGSFORSLAG I SVAR:**
+Når du gir svar, analyser om brukerens melding indikerer behov for konkrete handlinger:
+
+- Hvis brukeren beskriver noe som bør huskes: "Basert på det du beskriver, vil du at jeg skal foreslå et sjekklistepunkt for dette?"
+- Hvis brukeren snakker om gjenstander: "Skal jeg hjelpe deg å registrere dette i inventaret?"
+- Hvis brukeren nevner opplevelser: "Dette høres ut som noe som ville passe i hytteboka!"
+- Hvis brukeren snakker om instruksjoner/dokumenter: "Vil du lagre denne informasjonen som et dokument?"
+
+Vær proaktiv med å foreslå relevante handlinger som kan hjelpe brukeren organisere informasjonen bedre.
 
 Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret basert på tilgjengelig informasjon.
     `;
@@ -640,7 +680,35 @@ Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret
 
     const reply = completion.choices[0].message.content;
 
-    return new Response(JSON.stringify({ reply }), {
+    // Analyze the conversation for action suggestions if no image was provided
+    let contextualActions: any[] = [];
+    if (!image && history.length > 0) {
+      try {
+        const latestUserMessage = history[history.length - 1];
+        if (latestUserMessage.role === 'user') {
+          const { data: actionData, error: actionError } = await supabaseClient.functions.invoke(
+            'suggest-actions',
+            {
+              body: {
+                userMessage: latestUserMessage.content,
+                context: history.slice(-3).map(msg => `${msg.role}: ${msg.content}`).join('\n')
+              }
+            }
+          );
+          
+          if (!actionError && actionData?.suggestedActions) {
+            contextualActions = actionData.suggestedActions;
+          }
+        }
+      } catch (error) {
+        console.error('Error analyzing context for actions:', error);
+      }
+    }
+
+    return new Response(JSON.stringify({ 
+      reply, 
+      suggestedActions: contextualActions.length > 0 ? contextualActions : undefined 
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
