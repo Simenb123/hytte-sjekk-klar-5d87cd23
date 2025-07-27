@@ -266,35 +266,86 @@ serve(async (req) => {
       ? createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } })
       : createClient(supabaseUrl, serviceKey!)
 
-    // Get user profile for personalization
+    // Get user profile and family for personalization
     let userContext = "";
     if (authHeader) {
       try {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (user) {
+          // Fetch user profile
           const { data: profile } = await supabaseClient
             .from('profiles')
             .select('first_name, last_name, gender, birth_date')
             .eq('id', user.id)
             .single();
 
+          // Fetch family members
+          const { data: familyMembers } = await supabaseClient
+            .from('family_members')
+            .select('name, nickname, role, birth_date, is_user, linked_user_id')
+            .eq('user_id', user.id);
+
           if (profile) {
             const age = profile.birth_date 
               ? Math.floor((new Date().getTime() - new Date(profile.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
               : null;
+
+            // Determine user's role in family
+            let userRole = 'bruker';
+            let familyContext = '';
+            
+            if (familyMembers && familyMembers.length > 0) {
+              // Find current user in family members
+              const currentUserMember = familyMembers.find(member => 
+                member.linked_user_id === user.id || member.is_user
+              );
+              
+              if (currentUserMember?.role) {
+                userRole = currentUserMember.role === 'parent' ? 'forelder' : 
+                          currentUserMember.role === 'child' ? 'barn' : 
+                          currentUserMember.role;
+              }
+
+              // Build family context
+              const parents = familyMembers.filter(member => member.role === 'parent');
+              const children = familyMembers.filter(member => member.role === 'child');
+              const others = familyMembers.filter(member => member.role === 'other' || !member.role);
+
+              familyContext = `
+**FAMILIEKONTEKST:**
+- Din rolle i familien: ${userRole}
+${parents.length > 0 ? `- Foreldre: ${parents.map(p => p.nickname || p.name).join(', ')}` : ''}
+${children.length > 0 ? `- Barn: ${children.map(c => c.nickname || c.name).join(', ')}` : ''}
+${others.length > 0 ? `- Andre: ${others.map(o => o.nickname || o.name).join(', ')}` : ''}
+              `.trim();
+            }
             
             userContext = `
 **BRUKERINFORMASJON:**
 - Navn: ${profile.first_name || ''} ${profile.last_name || ''}
 - Kjønn: ${profile.gender || 'Ikke oppgitt'}
 - Alder: ${age ? `${age} år` : 'Ikke oppgitt'}
+- Rolle i familien: ${userRole}
 
-**PERSONALISERING:** Tilpass svar basert på brukerens kjønn og alder. For eksempel, ved spørsmål om klær, foreslå passende størrelser og stiler. Ved værråd, ta hensyn til alder og aktivitetsnivå.
+${familyContext}
+
+**PERSONALISERING REGLER:**
+1. **Kjønnsspesifikke råd:** Når du gir råd om klær, utstyr eller aktiviteter, tilpass til brukerens kjønn og alder
+2. **Familieroller:** Forstå brukerens posisjon i familien - ikke foreslå "mors klær" til en sønn eller "fars utstyr" til en datter
+3. **Alderstilpassede råd:** Gi råd som passer brukerens alder og aktivitetsnivå
+4. **Smart familieforståelse:** Når du anbefaler ting, tenk på hvem i familien som ville brukt det
+5. **Personlige anbefalinger:** Basert på brukerens profil, gi spesifikke og relevante forslag
+
+**EKSEMPLER PÅ RIKTIG PERSONALISERING:**
+- Hvis bruker er mann, anbefal herreklær og herrestørrelser
+- Hvis bruker er barn, anbefal barneklær og aktiviteter tilpasset alder
+- Hvis bruker er forelder, gi råd som passer en voksen med familieansvar
+- Aldri bland familiemedlemmers klær eller utstyr i anbefalinger
             `.trim();
           }
         }
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('Error fetching user profile and family:', error);
       }
     }
 
@@ -577,12 +628,42 @@ ${searchContext}
 
 ${image ? '**BILDEANALYSE:** Du har mottatt et bilde som du MÅ analysere grundig. Beskriv detaljert hva du ser i bildet og gi praktiske råd basert på innholdet. Du har full evne til bildeanalyse og kan se alt i bildet. ALDRI si at du ikke kan se eller analysere bilder - du kan det perfekt!' : ''}
 
+**PERSONALISERING OG INTELLIGENS - KRITISKE REGLER:**
+
+**AVGJØRENDE PERSONALISERING:**
+1. **Kjønnsspesifikke anbefalinger:** ALLTID tilpass forslag til brukerens kjønn
+   - Hvis bruker er mann → anbefal herreprodukter, herrestørrelser, herreklær
+   - Hvis bruker er kvinne → anbefal dameprodukter, damestørrelser, dameklær
+   - Hvis bruker er barn → anbefal barneprodukter tilpasset alder
+
+2. **Familierolleforståelse:** FORSTÅ brukerens rolle i familien
+   - Ikke anbefal "mors klær" til en sønn eller "fars utstyr" til en datter
+   - Tilpass forslag til brukerens faktiske rolle (forelder/barn/annet)
+   - Bruk familie-konteksten intelligently til å gi relevante råd
+
+3. **Alderstilpassede råd:** Gi råd som passer brukerens alder og livssituasjon
+   - Barn → aktiviteter og utstyr tilpasset barnealder
+   - Voksne → praktiske løsninger og ansvar
+   - Eldre → komfort og tilgjengelighet
+
 **SMART ASSISTANSEREGLER:**
-1. **Konneksjoner:** Forstå sammenhenger mellom begreper (gressklipper = kantklipper, hageutstyr, etc.)
-2. **Kontekst først:** Bruk ALLTID tilgjengelige dokumenter og inventar før generelle råd
-3. **Værbaserte råd:** Kombiner nåværende vær med aktivitetsforslag og forberedelser
-4. **Konkrete svar:** Gi spesifikke instruksjoner basert på faktisk tilgjengelig utstyr og informasjon
-5. **Referanser:** Nevn eksplisitt hvor informasjonen kommer fra (dokumenter, inventar, etc.)
+4. **Konneksjoner:** Forstå sammenhenger mellom begreper (gressklipper = kantklipper, hageutstyr, etc.)
+5. **Kontekst først:** Bruk ALLTID tilgjengelige dokumenter og inventar før generelle råd
+6. **Værbaserte råd:** Kombiner nåværende vær med aktivitetsforslag og forberedelser
+7. **Konkrete svar:** Gi spesifikke instruksjoner basert på faktisk tilgjengelig utstyr og informasjon
+8. **Referanser:** Nevn eksplisitt hvor informasjonen kommer fra (dokumenter, inventar, etc.)
+
+**EKSEMPLER PÅ FEIL SOM ALDRI SKAL SKJE:**
+❌ "Du kan låne mors klær" (til en sønn)
+❌ "Bruk fars jakke" (til en datter)
+❌ "Dette passer for voksne" (til et barn)
+❌ Generiske råd uten personalisering
+
+**EKSEMPLER PÅ RIKTIGE ANBEFALINGER:**
+✅ "Jeg ser du er mann, så anbefaler herreclothing fra inventaret"
+✅ "Som forelder kan du bruke..."
+✅ "Basert på din alder og rolle i familien..."
+✅ "Dette passer perfekt for deg som [rolle/kjønn/alder]"
 
 **INVENTAR-INTELLIGENS:**
 6. **Klesforslag:** Kombiner værforhold med tilgjengelige klær i inventaret for praktiske anbefalinger
@@ -680,13 +761,29 @@ Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret
 
     let reply = completion.choices[0].message.content;
 
-    // Post-process AI response to remove any "cannot analyze images" statements
-    if (image && reply) {
+    // Post-process AI response to remove problematic statements and improve personalization
+    if (reply) {
+      // Remove "cannot analyze images" statements
       reply = reply
         .replace(/(?:beklager|dessverre).*?(?:kan ikke|klarer ikke).*?(?:se|analysere|beskrive).*?bild.*?[.!]/gi, '')
         .replace(/jeg kan ikke se bildet/gi, '')
         .replace(/som en AI.*?kan jeg ikke.*?bild.*?[.!]/gi, '')
         .replace(/(?:jeg|ai).*?(?:kan ikke|mangler evne).*?(?:se|analysere).*?[.!]/gi, '')
+        .replace(/kan ikke.*?hjelpe.*?med.*?bildeanalyse/gi, '')
+        .replace(/kan dessverre ikke.*?se.*?bilde/gi, '');
+
+      // Remove generic family recommendations that ignore user's role/gender
+      reply = reply
+        .replace(/dette kan være.*?nyttig.*?for.*?familien/gi, '')
+        .replace(/alle i familien.*?kan.*?bruke/gi, '')
+        .replace(/passer.*?for.*?hele.*?familien/gi, '');
+
+      // Clean up formatting
+      reply = reply
+        .replace(/\s+/g, ' ')
+        .replace(/\s+\./g, '.')
+        .replace(/\s+,/g, ',')
+        .replace(/\n\s*\n\s*\n/g, '\n\n')
         .trim();
     }
 
