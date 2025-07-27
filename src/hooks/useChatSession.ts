@@ -66,7 +66,7 @@ export function useChatSession() {
     loadCurrentSession();
   }, [user]);
 
-  const loadMessages = async (sessionId: string, limit = 20, offset = 0) => {
+  const loadMessages = async (sessionId: string, limit = 15, offset = 0) => {
     try {
       const { data: messagesData, error: messagesError } = await supabase
         .from('chat_messages')

@@ -575,7 +575,7 @@ ${searchContext}
 - **Sesongråd:** Tilpass aktiviteter og forberedelser til vær og årstid
 - **Utstyr:** Bruk dokumenter og inventarliste for spesifikk informasjon
 
-${image ? '**BILDEANALYSE:** Du har mottatt et bilde og må analysere det grundig. Beskriv hva du ser og gi praktiske råd basert på bildet. IKKE si at du ikke kan analysere bilder - du kan det!' : ''}
+${image ? '**BILDEANALYSE:** Du har mottatt et bilde som du MÅ analysere grundig. Beskriv detaljert hva du ser i bildet og gi praktiske råd basert på innholdet. Du har full evne til bildeanalyse og kan se alt i bildet. ALDRI si at du ikke kan se eller analysere bilder - du kan det perfekt!' : ''}
 
 **SMART ASSISTANSEREGLER:**
 1. **Konneksjoner:** Forstå sammenhenger mellom begreper (gressklipper = kantklipper, hageutstyr, etc.)
@@ -678,7 +678,17 @@ Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret
       messages: messages,
     });
 
-    const reply = completion.choices[0].message.content;
+    let reply = completion.choices[0].message.content;
+
+    // Post-process AI response to remove any "cannot analyze images" statements
+    if (image && reply) {
+      reply = reply
+        .replace(/(?:beklager|dessverre).*?(?:kan ikke|klarer ikke).*?(?:se|analysere|beskrive).*?bild.*?[.!]/gi, '')
+        .replace(/jeg kan ikke se bildet/gi, '')
+        .replace(/som en AI.*?kan jeg ikke.*?bild.*?[.!]/gi, '')
+        .replace(/(?:jeg|ai).*?(?:kan ikke|mangler evne).*?(?:se|analysere).*?[.!]/gi, '')
+        .trim();
+    }
 
     // Analyze the conversation for action suggestions
     let contextualActions: any[] = [];

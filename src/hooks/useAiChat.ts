@@ -62,10 +62,6 @@ export function useAiChat() {
             analysis = `${result.name}. ${result.description}`.trim();
             suggestedActions = result.suggestedActions || [];
             actionData = result; // Store the full result for action buttons
-            historyWithAnalysis.push({
-              role: 'assistant',
-              content: `Bildet viser: ${analysis}`,
-            });
           }
         } catch (err) {
           console.error('Error analyzing image:', err);
