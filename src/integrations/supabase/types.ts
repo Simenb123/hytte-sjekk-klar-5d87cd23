@@ -231,6 +231,7 @@ export type Database = {
           created_at: string
           id: string
           image: string | null
+          image_url: string | null
           is_voice: boolean | null
           role: string
           session_id: string
@@ -241,6 +242,7 @@ export type Database = {
           created_at?: string
           id?: string
           image?: string | null
+          image_url?: string | null
           is_voice?: boolean | null
           role: string
           session_id: string
@@ -251,6 +253,7 @@ export type Database = {
           created_at?: string
           id?: string
           image?: string | null
+          image_url?: string | null
           is_voice?: boolean | null
           role?: string
           session_id?: string

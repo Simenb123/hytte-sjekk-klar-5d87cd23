@@ -11,6 +11,7 @@ interface ChatMessageProps {
   role: 'user' | 'assistant';
   content: string;
   image?: string;
+  image_url?: string;
   isVoice?: boolean;
   isLoading?: boolean;
   analysis?: string;
@@ -27,6 +28,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   role,
   content,
   image,
+  image_url,
   isVoice = false,
   isLoading = false,
   analysis,
@@ -192,12 +194,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           </div>
         ) : (
           <div className="space-y-2">
-            {image && (
+            {(image_url || image) && (
               <div className="relative">
                 <img
-                  src={image}
+                  src={image_url || image}
                   alt="Sendt bilde"
-                  className="max-w-full h-auto rounded border"
+                  className="max-w-full h-auto rounded border cursor-pointer"
+                  onClick={() => {
+                    const imageSource = image_url || image;
+                    const newWindow = window.open();
+                    if (newWindow) {
+                      newWindow.document.write(`<img src="${imageSource}" style="width: 100%; height: auto;" alt="Full size image">`);
+                    }
+                  }}
                 />
                 {isUser && (
                   <div className="absolute top-1 right-1 bg-black bg-opacity-50 rounded-full p-1">

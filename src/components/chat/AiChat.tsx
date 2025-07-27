@@ -14,6 +14,7 @@ import aiHelperImage from '@/assets/ai-helper-monkey.png';
 const AiChat: React.FC = () => {
   const [input, setInput] = useState("");
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
   const [latestActions, setLatestActions] = useState<{
     suggestedActions?: Array<{
       type: 'inventory' | 'documents' | 'wine' | 'hyttebok' | 'checklist';
@@ -70,50 +71,57 @@ const AiChat: React.FC = () => {
     const imageToSend = image || pendingImage;
     
     if (textToSend === "" && !imageToSend) return;
-    if (loading) return;
+    if (loading || imageUploading) return;
 
-    const userMessage: ChatMessageType = { 
-      role: 'user', 
-      content: textToSend || "Kan du se på dette bildet?",
-      image: imageToSend || undefined,
-      isVoice: !!messageText // If messageText is provided, it came from voice
-    };
-    
-    // Save user message to database
-    await saveMessage({
-      role: 'user',
-      content: userMessage.content,
-      image: userMessage.image,
-      is_voice: userMessage.isVoice
-    });
+    try {
+      setImageUploading(!!imageToSend);
 
-    setInput("");
-    setPendingImage(null);
-
-    // Convert messages to format expected by AI
-    const messageHistory = messages.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
-    messageHistory.push({
-      role: userMessage.role,
-      content: userMessage.content
-    });
-
-    const { reply, analysis, suggestedActions, actionData } = await sendMessage(messageHistory, imageToSend || undefined);
-
-    // Store the latest actions for display
-    setLatestActions({ suggestedActions, actionData });
-
-    // Save AI response to database
-    if (reply) {
+      const userMessage: ChatMessageType = { 
+        role: 'user', 
+        content: textToSend || "Kan du se på dette bildet?",
+        image: imageToSend || undefined,
+        isVoice: !!messageText // If messageText is provided, it came from voice
+      };
+      
+      // Clear input immediately to prevent double sends
+      setInput("");
+      setPendingImage(null);
+      
+      // Save user message to database
       await saveMessage({
-        role: 'assistant',
-        content: reply,
-        analysis: analysis || undefined,
-        // Note: suggestedActions and actionData are not persisted to DB, 
-        // they're only used for the current UI session
+        role: 'user',
+        content: userMessage.content,
+        image: userMessage.image,
+        is_voice: userMessage.isVoice
       });
+
+      // Convert messages to format expected by AI
+      const messageHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      messageHistory.push({
+        role: userMessage.role,
+        content: userMessage.content
+      });
+
+      const { reply, analysis, suggestedActions, actionData } = await sendMessage(messageHistory, imageToSend || undefined);
+
+      // Store the latest actions for display
+      setLatestActions({ suggestedActions, actionData });
+
+      // Save AI response to database
+      if (reply) {
+        await saveMessage({
+          role: 'assistant',
+          content: reply,
+          analysis: analysis || undefined,
+          // Note: suggestedActions and actionData are not persisted to DB, 
+          // they're only used for the current UI session
+        });
+      }
+    } finally {
+      setImageUploading(false);
     }
   };
 
@@ -197,6 +205,7 @@ const AiChat: React.FC = () => {
               role={msg.role}
               content={msg.content}
               image={msg.image}
+              image_url={msg.image_url}
               isVoice={msg.is_voice}
               analysis={msg.analysis}
               suggestedActions={shouldShowActions ? latestActions.suggestedActions : undefined}
@@ -228,11 +237,15 @@ const AiChat: React.FC = () => {
         {pendingImage && (
           <div className="mb-3 flex items-center gap-3 p-3 bg-blue-50 rounded-lg border">
             <img src={pendingImage} alt="Pending" className="w-12 h-12 object-cover rounded border" />
-            <span className="text-sm text-gray-700 flex-1">Bilde klart for sending</span>
+            <span className="text-sm text-gray-700 flex-1">
+              {imageUploading ? "Laster opp bilde..." : "Bilde klart for sending"}
+            </span>
+            {imageUploading && <Loader2 className="h-4 w-4 animate-spin text-blue-600" />}
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => setPendingImage(null)}
+              disabled={imageUploading}
               className="text-xs"
             >
               Fjern
@@ -254,11 +267,11 @@ const AiChat: React.FC = () => {
             />
             <Button 
               type="submit" 
-              disabled={loading || (!input.trim() && !pendingImage)}
+              disabled={loading || imageUploading || (!input.trim() && !pendingImage)}
               size="sm"
               className="absolute bottom-2 right-2 h-8 w-8 p-0"
             >
-              {loading ? (
+              {loading || imageUploading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Send className="h-4 w-4" />
@@ -270,12 +283,12 @@ const AiChat: React.FC = () => {
           <div className="flex justify-center gap-2">
             <VoiceRecordButton 
               onTranscription={handleVoiceTranscription}
-              disabled={loading}
+              disabled={loading || imageUploading}
             />
             
             <ImageCaptureButton 
               onImageCapture={handleImageCapture}
-              disabled={loading}
+              disabled={loading || imageUploading}
             />
           </div>
         </form>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { uploadImageToStorage, base64ToFile, compressImage } from '@/utils/imageUtils';
 
 export interface ChatSession {
   id: string;
@@ -16,6 +17,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   image?: string;
+  image_url?: string;
   is_voice?: boolean;
   analysis?: string;
   created_at: string;
@@ -64,23 +66,33 @@ export function useChatSession() {
     loadCurrentSession();
   }, [user]);
 
-  const loadMessages = async (sessionId: string) => {
+  const loadMessages = async (sessionId: string, limit = 20, offset = 0) => {
     try {
       const { data: messagesData, error: messagesError } = await supabase
         .from('chat_messages')
         .select('*')
         .eq('session_id', sessionId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
       if (messagesError) throw messagesError;
 
-      setMessages((messagesData || []).map(msg => ({
+      const sortedData = (messagesData || []).reverse().map(msg => ({
         ...msg,
         role: msg.role as 'user' | 'assistant'
-      })));
+      }));
+      
+      if (offset === 0) {
+        setMessages(sortedData);
+      } else {
+        setMessages(prev => [...sortedData, ...prev]);
+      }
+      
+      return sortedData.length === limit; // Return true if there might be more messages
     } catch (err: any) {
       console.error('Error loading messages:', err);
       setError('Kunne ikke laste meldinger');
+      return false;
     }
   };
 
@@ -118,14 +130,34 @@ export function useChatSession() {
     is_voice?: boolean;
     analysis?: string;
   }) => {
-    if (!currentSession) return;
+    if (!currentSession || !user) return;
 
     try {
+      let imageUrl: string | undefined;
+      
+      // If there's a base64 image, upload it to storage
+      if (messageData.image && messageData.image.startsWith('data:')) {
+        try {
+          const file = base64ToFile(messageData.image);
+          const compressedFile = await compressImage(file);
+          imageUrl = await uploadImageToStorage(compressedFile, user.id);
+        } catch (uploadError) {
+          console.error('Error uploading image:', uploadError);
+          toast.error('Kunne ikke laste opp bilde');
+        }
+      }
+
       const { data: messageResult, error: messageError } = await supabase
         .from('chat_messages')
         .insert({
           session_id: currentSession.id,
-          ...messageData
+          role: messageData.role,
+          content: messageData.content,
+          image_url: imageUrl,
+          // Keep base64 for compatibility (temporary)
+          image: messageData.image,
+          is_voice: messageData.is_voice,
+          analysis: messageData.analysis
         })
         .select()
         .single();
@@ -149,6 +181,12 @@ export function useChatSession() {
       setError('Kunne ikke lagre melding');
       toast.error('Kunne ikke lagre melding');
     }
+  };
+
+  const loadMoreMessages = async () => {
+    if (!currentSession) return false;
+    
+    return await loadMessages(currentSession.id, 20, messages.length);
   };
 
   const updateSessionTitle = async (title: string) => {
@@ -180,6 +218,7 @@ export function useChatSession() {
     saveMessage,
     createNewSession,
     clearSession,
-    updateSessionTitle
+    updateSessionTitle,
+    loadMoreMessages
   };
 }
