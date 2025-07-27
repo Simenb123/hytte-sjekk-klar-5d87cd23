@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Edit2, MapPin, User, Package, ImageIcon } from 'lucide-react';
 import { EditItemDialog } from './EditItemDialog';
+import { ImageViewer } from './ImageViewer';
 import { InventoryItem } from '@/types/inventory';
 import { LocationBadge } from './InventoryLocationFilter';
 
@@ -13,6 +14,8 @@ interface InventoryGridViewProps {
 }
 
 export function InventoryGridView({ items }: InventoryGridViewProps) {
+  const [selectedImage, setSelectedImage] = useState<{ url: string; name: string } | null>(null);
+
   if (items.length === 0) {
     return (
       <div className="text-center py-12">
@@ -33,7 +36,11 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
               <img
                 src={item.item_images[0].image_url}
                 alt={item.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => setSelectedImage({ 
+                  url: item.item_images[0].image_url, 
+                  name: item.name 
+                })}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                   e.currentTarget.nextElementSibling?.classList.remove('hidden');
@@ -117,6 +124,13 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
           </CardContent>
         </Card>
       ))}
+      
+      <ImageViewer
+        imageUrl={selectedImage?.url || ''}
+        itemName={selectedImage?.name || ''}
+        open={!!selectedImage}
+        onOpenChange={(open) => !open && setSelectedImage(null)}
+      />
     </div>
   );
 }
