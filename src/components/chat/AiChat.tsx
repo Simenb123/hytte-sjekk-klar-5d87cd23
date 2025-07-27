@@ -17,15 +17,6 @@ const AiChat: React.FC = () => {
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
-  const [latestActions, setLatestActions] = useState<{
-    suggestedActions?: Array<{
-      type: 'inventory' | 'documents' | 'wine' | 'hyttebok' | 'checklist';
-      label: string;
-      confidence: number;
-      reason: string;
-    }>;
-    actionData?: any;
-  }>({});
   const { sendMessage, loading, error } = useAiChat();
   const { 
     messages, 
@@ -108,17 +99,14 @@ const AiChat: React.FC = () => {
       setAiProcessing(true);
       const { reply, analysis, suggestedActions, actionData } = await sendMessage(messageHistory, imageToSend || undefined);
 
-      // Store the latest actions for display
-      setLatestActions({ suggestedActions, actionData });
-
-      // Save AI response to database
+      // Save AI response to database with suggested actions
       if (reply) {
         await saveMessage({
           role: 'assistant',
           content: reply,
           analysis: analysis || undefined,
-          // Note: suggestedActions and actionData are not persisted to DB, 
-          // they're only used for the current UI session
+          suggested_actions: suggestedActions,
+          action_data: actionData
         });
       }
     } catch (error) {
@@ -199,25 +187,19 @@ const AiChat: React.FC = () => {
           </div>
           
           <div className="flex-1 space-y-4 overflow-y-auto p-4 bg-gray-50">
-            {displayMessages.map((msg, index) => {
-              // Show actions on the last assistant message if available
-              const isLastAssistantMessage = index === displayMessages.length - 1 && msg.role === 'assistant';
-              const shouldShowActions = isLastAssistantMessage && latestActions.suggestedActions;
-              
-              return (
-                <ChatMessage
-                  key={msg.id || index}
-                  role={msg.role}
-                  content={msg.content}
-                  image={msg.image}
-                  image_url={msg.image_url}
-                  isVoice={msg.is_voice}
-                  analysis={msg.analysis}
-                  suggestedActions={shouldShowActions ? latestActions.suggestedActions : undefined}
-                  actionData={shouldShowActions ? latestActions.actionData : undefined}
-                />
-              );
-            })}
+            {displayMessages.map((msg, index) => (
+              <ChatMessage
+                key={msg.id || index}
+                role={msg.role}
+                content={msg.content}
+                image={msg.image}
+                image_url={msg.image_url}
+                isVoice={msg.is_voice}
+                analysis={msg.analysis}
+                suggestedActions={msg.suggested_actions}
+                actionData={msg.action_data}
+              />
+            ))}
             
             {loading && <ChatMessage role="assistant" content="" isLoading={true} />}
             {aiProcessing && <LoadingIndicator message="AI analyserer bildet..." />}

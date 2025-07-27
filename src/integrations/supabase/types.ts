@@ -226,6 +226,7 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          action_data: Json | null
           analysis: string | null
           content: string
           created_at: string
@@ -238,6 +239,7 @@ export type Database = {
           suggested_actions: Json | null
         }
         Insert: {
+          action_data?: Json | null
           analysis?: string | null
           content: string
           created_at?: string
@@ -250,6 +252,7 @@ export type Database = {
           suggested_actions?: Json | null
         }
         Update: {
+          action_data?: Json | null
           analysis?: string | null
           content?: string
           created_at?: string
