@@ -167,7 +167,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   };
   
   return (
-    <div className={cn("flex items-start gap-3", isUser ? "justify-end" : "justify-start")}>
+    <div className={cn("flex items-start gap-1", isUser ? "justify-end" : "justify-start")}>
       {!isUser && (
         <div className="flex-shrink-0 w-8 h-8 rounded-full overflow-hidden">
           <img 
@@ -181,10 +181,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       
       <div
         className={cn(
-          "p-4 rounded-lg max-w-md lg:max-w-lg",
+          "p-3 rounded-lg",
           isUser
-            ? "bg-blue-600 text-white rounded-br-none"
-            : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-none shadow-sm border dark:border-gray-700"
+            ? "bg-blue-600 text-white rounded-br-none max-w-xs sm:max-w-sm"
+            : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-none shadow-sm border dark:border-gray-700 max-w-sm sm:max-w-md lg:max-w-xl"
         )}
       >
         {isLoading ? (
