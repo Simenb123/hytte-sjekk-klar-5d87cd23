@@ -104,7 +104,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       // Regular paragraph
       else {
         elements.push(
-          <div key={`paragraph-${paragraphIndex}`} className="mb-2 last:mb-0">
+          <div key={`paragraph-${paragraphIndex}`} className="mb-4 last:mb-0 leading-relaxed">
             {parseInlineFormatting(paragraph, `paragraph-${paragraphIndex}`)}
           </div>
         );
@@ -155,9 +155,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                 parts.push(<br key={`${keyPrefix}-br-${segmentIndex}-${partIndex}-${lineIndex}`} />);
               }
               if (line) {
-                // Ensure proper spacing in text content
-                const cleanedLine = line.replace(/([a-øA-Ø])([A-ØA-Z])/g, '$1 $2');
-                parts.push(cleanedLine);
+                parts.push(line);
               }
             });
           }

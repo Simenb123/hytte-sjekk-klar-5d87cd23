@@ -147,7 +147,7 @@ const AiChat: React.FC = () => {
   const showSuggestions = !loading && !sessionLoading && !aiProcessing;
 
   return (
-    <div className="flex flex-col h-full max-w-lg mx-auto bg-white">
+    <div className="flex flex-col h-full max-w-lg mx-auto bg-white relative">
       {sessionLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -186,7 +186,7 @@ const AiChat: React.FC = () => {
             </div>
           </div>
           
-          <div className="flex-1 space-y-4 overflow-y-auto p-4 bg-gray-50">
+          <div className="flex-1 space-y-4 overflow-y-auto p-4 bg-gray-50 pb-32">
             {displayMessages.map((msg, index) => (
               <ChatMessage
                 key={msg.id || index}
@@ -216,7 +216,7 @@ const AiChat: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
           
-          <div className="p-4 bg-white border-t shadow-lg">
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t shadow-lg max-w-lg mx-auto">
             {error && (
               <div className="text-red-500 text-center p-2 text-sm mb-3 bg-red-50 rounded border">
                 {error}
