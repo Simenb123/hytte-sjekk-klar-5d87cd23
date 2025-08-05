@@ -18,7 +18,7 @@ import { PrimaryLocation } from '@/types/inventory';
 export function AIItemDialog() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<'capture' | 'analyze' | 'edit'>('capture');
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [analysisResult, setAnalysisResult] = useState<InventoryAIResult | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -41,10 +41,11 @@ export function AIItemDialog() {
   const { toast } = useToast();
 
   const handleImageCapture = async (images: string[]) => {
-    setCapturedImage(images[0]); // Use first image for display
+    setCapturedImages(images); // Store all captured images
     setStep('analyze');
     
     try {
+      console.log(`[AIItemDialog] Analyzing ${images.length} images with AI`);
       const result = await analyzeItemFromImage(images, familyMembers.map(m => ({
         id: m.id,
         name: m.name,
@@ -56,10 +57,15 @@ export function AIItemDialog() {
       
       if (result) {
         setAnalysisResult(result);
+        console.log('[AIItemDialog] AI analysis result:', result);
         
         // Improved family member matching
         let suggestedFamilyMemberId = '';
-        if (result.suggested_owner?.name) {
+        if (result.suggested_owner?.family_member_id) {
+          // Use AI's direct suggestion if available
+          suggestedFamilyMemberId = result.suggested_owner.family_member_id;
+        } else if (result.suggested_owner?.name) {
+          // Fallback to name matching
           const ownerName = result.suggested_owner.name.toLowerCase();
           const matchedMember = familyMembers.find(member => {
             const memberName = member.name.toLowerCase();
@@ -86,7 +92,7 @@ export function AIItemDialog() {
           color: result.color || '',
           size: result.size || '',
           location: (result as any).location || '',
-          shelf: '',
+          shelf: (result as any).shelf || '',
           family_member_id: suggestedFamilyMemberId,
           primary_location: ((result as any).primary_location as PrimaryLocation) || 'hjemme',
           notes: result.suggested_owner?.reason ? `AI-forslag: ${result.suggested_owner.reason}` : ''
@@ -119,7 +125,12 @@ export function AIItemDialog() {
         ...formData,
         family_member_id: formData.family_member_id || undefined,
         primary_location: formData.primary_location,
-        image: capturedImage ? await fetch(capturedImage).then(r => r.blob()).then(blob => new File([blob], 'ai-captured-image.jpg', { type: 'image/jpeg' })) : undefined
+        images: capturedImages.length > 0 ? await Promise.all(
+          capturedImages.map(async (imageUrl, index) => {
+            const blob = await fetch(imageUrl).then(r => r.blob());
+            return new File([blob], `ai-captured-image-${index + 1}.jpg`, { type: 'image/jpeg' });
+          })
+        ) : undefined
       });
       
       toast({
@@ -141,7 +152,7 @@ export function AIItemDialog() {
 
   const handleReset = () => {
     setStep('capture');
-    setCapturedImage(null);
+    setCapturedImages([]);
     setAnalysisResult(null);
     setFormData({
       name: '',
@@ -218,10 +229,10 @@ export function AIItemDialog() {
               </p>
             </div>
             
-            {capturedImage && (
+            {capturedImages.length > 0 && (
               <div className="flex justify-center">
                 <img 
-                  src={capturedImage} 
+                  src={capturedImages[0]} 
                   alt="Captured item" 
                   className="max-w-xs max-h-48 object-contain border rounded-lg"
                 />
@@ -415,13 +426,19 @@ export function AIItemDialog() {
               </div>
             </div>
 
-            {capturedImage && (
-              <div className="flex justify-center">
-                <img 
-                  src={capturedImage} 
-                  alt="Captured item" 
-                  className="max-w-xs max-h-32 object-contain border rounded-lg"
-                />
+            {capturedImages.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-center">Bilder ({capturedImages.length})</div>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {capturedImages.map((imageUrl, index) => (
+                    <img 
+                      key={index}
+                      src={imageUrl} 
+                      alt={`Captured item ${index + 1}`} 
+                      className="w-20 h-20 object-cover border rounded-lg"
+                    />
+                  ))}
+                </div>
               </div>
             )}
 

@@ -177,6 +177,7 @@ VIKTIGE INSTRUKSJONER:
     
     // Log AI response for debugging
     console.log('AI Analysis Result:', JSON.stringify(result, null, 2));
+    console.log(`AI analyzed ${images.length} image(s) successfully`);
 
     return new Response(JSON.stringify({ result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

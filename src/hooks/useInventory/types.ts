@@ -4,6 +4,7 @@ export type NewInventoryItemData = {
   name: string;
   description?: string;
   image?: File;
+  images?: File[];
   brand?: string;
   color?: string;
   location?: string;

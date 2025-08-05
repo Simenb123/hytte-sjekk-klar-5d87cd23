@@ -39,18 +39,27 @@ const InventoryListView: React.FC<InventoryListViewProps> = ({ items }) => {
             {items.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
-                  {item.item_images && item.item_images.length > 0 ? (
-                    <img 
-                      src={item.item_images[0].image_url} 
-                      alt={item.name || 'Inventar Bilde'} 
-                      className="w-12 h-12 object-cover rounded"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                      <span className="text-gray-400 text-xs">Ingen</span>
-                    </div>
-                  )}
+                  <div className="relative">
+                    {item.item_images && item.item_images.length > 0 ? (
+                      <>
+                        <img 
+                          src={item.item_images[0].image_url} 
+                          alt={item.name || 'Inventar Bilde'} 
+                          className="w-12 h-12 object-cover rounded"
+                          loading="lazy"
+                        />
+                        {item.item_images.length > 1 && (
+                          <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full min-w-[16px] h-4 flex items-center justify-center">
+                            {item.item_images.length}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                        <span className="text-gray-400 text-xs">Ingen</span>
+                      </div>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="font-medium">
                   <div>

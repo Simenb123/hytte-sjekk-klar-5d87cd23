@@ -33,19 +33,26 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
           {/* Image section */}
           <div className="relative h-48 bg-gray-100">
             {item.item_images && item.item_images.length > 0 ? (
-              <img
-                src={item.item_images[0].image_url}
-                alt={item.name}
-                className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                onClick={() => setSelectedImage({ 
-                  url: item.item_images[0].image_url, 
-                  name: item.name 
-                })}
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
+              <>
+                <img
+                  src={item.item_images[0].image_url}
+                  alt={item.name}
+                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => setSelectedImage({ 
+                    url: item.item_images[0].image_url, 
+                    name: item.name 
+                  })}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                {item.item_images.length > 1 && (
+                  <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                    +{item.item_images.length - 1} bilder
+                  </div>
+                )}
+              </>
             ) : null}
             <div className={`absolute inset-0 flex items-center justify-center ${item.item_images?.length ? 'hidden' : ''}`}>
               <ImageIcon className="h-12 w-12 text-gray-400" />
