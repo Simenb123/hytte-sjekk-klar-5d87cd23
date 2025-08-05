@@ -70,13 +70,14 @@ const InventoryListView: React.FC<InventoryListViewProps> = ({ items }) => {
                     )}
                   </div>
                 </TableCell>
-                <TableCell>
-                  {item.category && (
-                    <Badge variant="secondary" className="text-xs">
-                      {item.category}
-                    </Badge>
-                  )}
-                </TableCell>
+                 <TableCell>
+                   {item.category && (
+                     <Badge variant="secondary" className="text-xs">
+                       {item.category}
+                       {item.subcategory && ` • ${item.subcategory}`}
+                     </Badge>
+                   )}
+                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 text-sm">
                     {item.family_members ? (

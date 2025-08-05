@@ -18,6 +18,7 @@ export interface InventoryItem {
   owner: string | null;
   notes: string | null;
   category: string | null;
+  subcategory: string | null;
   primary_location: PrimaryLocation;
   family_members?: { id: string; name: string; nickname: string | null } | null;
 }

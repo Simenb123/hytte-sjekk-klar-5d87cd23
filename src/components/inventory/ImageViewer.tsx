@@ -1,17 +1,19 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { X, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ImageViewerProps {
-  imageUrl: string;
+  images: { image_url: string }[];
   itemName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialIndex?: number;
 }
 
-export function ImageViewer({ imageUrl, itemName, open, onOpenChange }: ImageViewerProps) {
+export function ImageViewer({ images, itemName, open, onOpenChange, initialIndex = 0 }: ImageViewerProps) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -31,6 +33,18 @@ export function ImageViewer({ imageUrl, itemName, open, onOpenChange }: ImageVie
     setZoom(1);
     setPosition({ x: 0, y: 0 });
   }, []);
+
+  const handlePrevImage = useCallback(() => {
+    setCurrentIndex(prev => prev > 0 ? prev - 1 : images.length - 1);
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+  }, [images.length]);
+
+  const handleNextImage = useCallback(() => {
+    setCurrentIndex(prev => prev < images.length - 1 ? prev + 1 : 0);
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+  }, [images.length]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -80,13 +94,16 @@ export function ImageViewer({ imageUrl, itemName, open, onOpenChange }: ImageVie
     setIsDragging(false);
   }, []);
 
-  // Reset zoom and position when dialog opens
+  // Reset zoom and position when dialog opens or image changes
   React.useEffect(() => {
     if (open) {
+      setCurrentIndex(initialIndex);
       setZoom(1);
       setPosition({ x: 0, y: 0 });
     }
-  }, [open]);
+  }, [open, initialIndex]);
+
+  const currentImage = images[currentIndex];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,6 +118,28 @@ export function ImageViewer({ imageUrl, itemName, open, onOpenChange }: ImageVie
           >
             <X className="h-4 w-4" />
           </Button>
+
+          {/* Navigation controls */}
+          {images.length > 1 && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-1/2 left-2 -translate-y-1/2 z-20 h-10 w-10 p-0 bg-background/80 hover:bg-background"
+                onClick={handlePrevImage}
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-1/2 right-2 -translate-y-1/2 z-20 h-10 w-10 p-0 bg-background/80 hover:bg-background"
+                onClick={handleNextImage}
+              >
+                <ChevronRight className="h-6 w-6" />
+              </Button>
+            </>
+          )}
 
           {/* Zoom controls */}
           <div className="absolute top-2 left-2 z-20 flex flex-col gap-1">
@@ -145,27 +184,36 @@ export function ImageViewer({ imageUrl, itemName, open, onOpenChange }: ImageVie
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            <img
-              ref={imageRef}
-              src={imageUrl}
-              alt={itemName}
-              className={`w-full h-full object-contain transition-transform duration-200 ${
-                zoom > 1 ? 'cursor-move' : 'cursor-zoom-in'
-              }`}
-              style={{
-                transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
-                transformOrigin: 'center center'
-              }}
-              onClick={zoom === 1 ? handleZoomIn : undefined}
-              draggable={false}
-            />
+            {currentImage && (
+              <img
+                ref={imageRef}
+                src={currentImage.image_url}
+                alt={itemName}
+                className={`w-full h-full object-contain transition-transform duration-200 ${
+                  zoom > 1 ? 'cursor-move' : 'cursor-zoom-in'
+                }`}
+                style={{
+                  transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
+                  transformOrigin: 'center center'
+                }}
+                onClick={zoom === 1 ? handleZoomIn : undefined}
+                draggable={false}
+              />
+            )}
           </div>
           
           <div className="p-4 bg-background border-t">
             <h3 className="font-semibold text-center">{itemName}</h3>
-            <p className="text-sm text-muted-foreground text-center mt-1">
-              Zoom: {Math.round(zoom * 100)}%
-            </p>
+            <div className="flex justify-center items-center gap-4 mt-2">
+              {images.length > 1 && (
+                <p className="text-sm text-muted-foreground">
+                  Bilde {currentIndex + 1} av {images.length}
+                </p>
+              )}
+              <p className="text-sm text-muted-foreground">
+                Zoom: {Math.round(zoom * 100)}%
+              </p>
+            </div>
           </div>
         </div>
       </DialogContent>

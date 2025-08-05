@@ -14,7 +14,7 @@ interface InventoryGridViewProps {
 }
 
 export function InventoryGridView({ items }: InventoryGridViewProps) {
-  const [selectedImage, setSelectedImage] = useState<{ url: string; name: string } | null>(null);
+  const [selectedImageData, setSelectedImageData] = useState<{ images: { image_url: string }[]; name: string; initialIndex: number } | null>(null);
 
   if (items.length === 0) {
     return (
@@ -38,9 +38,10 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
                   src={item.item_images[0].image_url}
                   alt={item.name}
                   className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => setSelectedImage({ 
-                    url: item.item_images[0].image_url, 
-                    name: item.name 
+                  onClick={() => setSelectedImageData({ 
+                    images: item.item_images, 
+                    name: item.name,
+                    initialIndex: 0
                   })}
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
@@ -51,9 +52,10 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
                   <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded cursor-pointer"
                        onClick={(e) => {
                          e.stopPropagation();
-                         setSelectedImage({ 
-                           url: item.item_images[1]?.image_url || item.item_images[0].image_url, 
-                           name: `${item.name} - Bilde 2` 
+                         setSelectedImageData({ 
+                           images: item.item_images, 
+                           name: item.name,
+                           initialIndex: 1
                          });
                        }}>
                     +{item.item_images.length - 1} bilder
@@ -93,6 +95,7 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
                 {item.category && (
                   <Badge variant="secondary" className="text-xs">
                     {item.category}
+                    {item.subcategory && ` • ${item.subcategory}`}
                   </Badge>
                 )}
               </div>
@@ -140,10 +143,11 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
       ))}
       
       <ImageViewer
-        imageUrl={selectedImage?.url || ''}
-        itemName={selectedImage?.name || ''}
-        open={!!selectedImage}
-        onOpenChange={(open) => !open && setSelectedImage(null)}
+        images={selectedImageData?.images || []}
+        itemName={selectedImageData?.name || ''}
+        open={!!selectedImageData}
+        onOpenChange={(open) => !open && setSelectedImageData(null)}
+        initialIndex={selectedImageData?.initialIndex || 0}
       />
     </div>
   );
