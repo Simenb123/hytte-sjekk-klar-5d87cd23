@@ -21,7 +21,7 @@ serve(async (req) => {
 
     const openai = new OpenAI({ apiKey: openAIApiKey });
     
-    const { image } = await req.json();
+    const { image, family_members = [] } = await req.json();
     if (!image) {
       return new Response(JSON.stringify({ error: 'Bilde er påkrevd.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -29,12 +29,25 @@ serve(async (req) => {
       });
     }
 
+    // Build family member context for AI
+    const familyContext = family_members.length > 0 
+      ? `\n\nFAMILIEMEDLEMMER TIL STØRRELSESANALYSE:\n${family_members.map((member: any) => 
+          `- ${member.name}${member.nickname ? ` (${member.nickname})` : ''}: ${member.role || 'ukjent rolle'}${member.height ? `, høyde ${member.height}cm` : ''}${member.birth_date ? `, født ${new Date(member.birth_date).getFullYear()}` : ''}`
+        ).join('\n')}\n\nNår du ser klær, analyser størrelsen og foreslå hvilken person som mest sannsynlig eier den basert på høyde, alder og kjønn.`
+      : '';
+
     const systemPrompt = `
 Du er en AI som spesialiserer seg på å identifisere gjenstander for et hytteinventar og foreslå relevante handlinger.
 Analyser bildet og returner informasjon om gjenstanden i JSON-format med foreslåtte handlinger.
 
-VIKTIG EIERSKAP: Når du ser klær eller personlige gjenstander, IKKE anta at de tilhører brukeren som laster opp bildet.
-Spør alltid eller nevn at eierskap bør bekreftes, spesielt for klær og personlige effekter.
+KLÆSSTØRRELSER OG EIERSKAP:
+Når du ser klær, analyser etiketter for størrelse (S/M/L, tallstørrelser, barnestørrelser som 134/140, etc.).
+Hvis familiemedlemmer er oppgitt, foreslå eier basert på:
+- Størrelsens forhold til høyde og alder
+- Barnestørrelser → barn
+- Store størrelser → voksne med større høyde
+- Stil og design (barneklær vs voksenklær)
+Returner forslag med årsak og konfidensgrad.${familyContext}
 
 TILGJENGELIGE KATEGORIER OG UNDERKATEGORIER:
 
@@ -86,6 +99,12 @@ Returner alltid et JSON-objekt med følgende felter:
   "color": "hovedfarge på norsk",
   "size": "størrelse hvis relevant (S/M/L eller spesifikk størrelse)",
   "confidence": 0.95,
+  "suggested_owner": {
+    "family_member_id": "ID fra familiemedlemmer hvis foreslått eier, ellers null",
+    "name": "navn på foreslått eier",
+    "confidence": 0.8,
+    "reason": "forklaring på hvorfor denne personen foreslås som eier"
+  },
   "suggestedActions": [
     {
       "type": "inventory|documents|wine|hyttebok|checklist",

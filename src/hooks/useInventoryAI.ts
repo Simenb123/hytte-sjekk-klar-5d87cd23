@@ -11,19 +11,28 @@ export interface InventoryAIResult {
   color?: string;
   size?: string;
   confidence: number;
+  suggested_owner?: {
+    family_member_id: string;
+    name: string;
+    confidence: number;
+    reason: string;
+  };
 }
 
 export function useInventoryAI() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const analyzeItemFromImage = async (image: string): Promise<InventoryAIResult | null> => {
+  const analyzeItemFromImage = async (image: string, familyMembers?: Array<{id: string; name: string; nickname?: string | null; height?: number | null; role?: string | null; birth_date?: string | null}>): Promise<InventoryAIResult | null> => {
     setLoading(true);
     setError(null);
     
     try {
       const { data, error: functionError } = await supabase.functions.invoke('inventory-ai', {
-        body: { image },
+        body: { 
+          image,
+          family_members: familyMembers || []
+        },
       });
 
       if (functionError) throw functionError;

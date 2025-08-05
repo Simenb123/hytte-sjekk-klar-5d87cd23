@@ -8,6 +8,7 @@ export interface FamilyMember {
   role: 'parent' | 'child' | 'other' | null;
   is_user: boolean;
   linked_user_id: string | null;
+  height: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,6 +20,7 @@ export interface NewFamilyMemberData {
   role?: 'parent' | 'child' | 'other';
   is_user?: boolean;
   linked_user_id?: string;
+  height?: number;
 }
 
 export interface UpdateFamilyMemberData extends NewFamilyMemberData {

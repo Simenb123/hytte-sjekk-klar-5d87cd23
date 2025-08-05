@@ -37,6 +37,7 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
   const [birthDate, setBirthDate] = useState(member?.birth_date || '');
   const [role, setRole] = useState<'parent' | 'child' | 'other'>(member?.role || 'other');
   const [linkedUserId, setLinkedUserId] = useState(member?.linked_user_id || 'none');
+  const [height, setHeight] = useState(member?.height?.toString() || '');
 
   const addMutation = useAddFamilyMember();
   const updateMutation = useUpdateFamilyMember();
@@ -60,6 +61,7 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
         role,
         linked_user_id: linkedUserId === 'none' ? undefined : linkedUserId || undefined,
         is_user: linkedUserId !== 'none' && !!linkedUserId,
+        height: height ? parseFloat(height) : undefined,
       };
 
       if (isEdit) {
@@ -81,6 +83,7 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
         setBirthDate('');
         setRole('other');
         setLinkedUserId('none');
+        setHeight('');
       }
     } catch (error) {
       console.error('Error saving family member:', error);
@@ -170,6 +173,22 @@ export const FamilyMemberDialog: React.FC<FamilyMemberDialogProps> = ({ member, 
                   <SelectItem value="other">Annet</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="height" className="text-right">
+                Høyde (cm)
+              </Label>
+              <Input
+                id="height"
+                type="number"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                className="col-span-3"
+                placeholder="F.eks. 175"
+                min="50"
+                max="250"
+                step="0.5"
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="linked_user" className="text-right">

@@ -567,6 +567,7 @@ export type Database = {
         Row: {
           birth_date: string | null
           created_at: string
+          height: number | null
           id: string
           is_user: boolean | null
           linked_user_id: string | null
@@ -579,6 +580,7 @@ export type Database = {
         Insert: {
           birth_date?: string | null
           created_at?: string
+          height?: number | null
           id?: string
           is_user?: boolean | null
           linked_user_id?: string | null
@@ -591,6 +593,7 @@ export type Database = {
         Update: {
           birth_date?: string | null
           created_at?: string
+          height?: number | null
           id?: string
           is_user?: boolean | null
           linked_user_id?: string | null

@@ -43,7 +43,15 @@ export function AIItemDialog() {
     setStep('analyze');
     
     try {
-      const result = await analyzeItemFromImage(image);
+      const result = await analyzeItemFromImage(image, familyMembers.map(m => ({
+        id: m.id,
+        name: m.name,
+        nickname: m.nickname,
+        height: m.height,
+        role: m.role,
+        birth_date: m.birth_date
+      })));
+      
       if (result) {
         setAnalysisResult(result);
         setFormData({
@@ -56,8 +64,8 @@ export function AIItemDialog() {
           size: result.size || '',
           location: '',
           shelf: '',
-          family_member_id: '',
-          notes: ''
+          family_member_id: result.suggested_owner?.family_member_id || '',
+          notes: result.suggested_owner?.reason ? `AI-forslag: ${result.suggested_owner.reason}` : ''
         });
         setStep('edit');
       }
@@ -199,11 +207,24 @@ export function AIItemDialog() {
         {step === 'edit' && (
           <div className="space-y-6">
             {analysisResult && (
-              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span className="text-green-700 text-sm">
-                  AI-analyse fullført! Kontroller og juster informasjonen nedenfor.
-                </span>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-green-700 text-sm">
+                    AI-analyse fullført! Kontroller og juster informasjonen nedenfor.
+                  </span>
+                </div>
+                
+                {analysisResult.suggested_owner && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="text-sm text-blue-700">
+                      <strong>AI foreslår eier:</strong> {analysisResult.suggested_owner.name}
+                    </div>
+                    <div className="text-xs text-blue-600 mt-1">
+                      {analysisResult.suggested_owner.reason} (Sikkerhet: {Math.round(analysisResult.suggested_owner.confidence * 100)}%)
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
