@@ -271,7 +271,7 @@ const AiChat: React.FC = () => {
               
               <div className="flex justify-center gap-2">
                 <VoiceRecordButton onTranscription={handleVoiceTranscription} disabled={loading || imageUploading || aiProcessing} />
-                <ImageCaptureButton onImageCapture={handleImageCapture} disabled={loading || imageUploading || aiProcessing} />
+                <ImageCaptureButton onImageCapture={(images) => handleImageCapture(images[0])} disabled={loading || imageUploading || aiProcessing} />
               </div>
             </form>
           </div>

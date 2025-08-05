@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 
 export function useImageCapture() {
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [isCapturing, setIsCapturing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -27,27 +27,34 @@ export function useImageCapture() {
       
       const reader = new FileReader();
       reader.onload = (e) => {
-        setCapturedImage(e.target?.result as string);
+        const imageData = e.target?.result as string;
+        setCapturedImages(prev => [...prev, imageData]);
         setIsCapturing(false);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const clearImage = () => {
-    setCapturedImage(null);
+  const removeImage = (index: number) => {
+    setCapturedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const clearAllImages = () => {
+    setCapturedImages([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   return {
-    capturedImage,
+    capturedImages,
     isCapturing,
     captureFromCamera,
     selectFromGallery,
-    clearImage,
+    removeImage,
+    clearAllImages,
     fileInputRef,
     handleFileSelect,
+    hasImages: capturedImages.length > 0,
   };
 }

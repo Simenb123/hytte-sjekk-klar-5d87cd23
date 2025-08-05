@@ -38,12 +38,12 @@ export function AIItemDialog() {
   const { data: familyMembers = [] } = useFamilyMembers();
   const { toast } = useToast();
 
-  const handleImageCapture = async (image: string) => {
-    setCapturedImage(image);
+  const handleImageCapture = async (images: string[]) => {
+    setCapturedImage(images[0]); // Use first image for display
     setStep('analyze');
     
     try {
-      const result = await analyzeItemFromImage(image, familyMembers.map(m => ({
+      const result = await analyzeItemFromImage(images, familyMembers.map(m => ({
         id: m.id,
         name: m.name,
         nickname: m.nickname,

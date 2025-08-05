@@ -5,7 +5,7 @@ import { Camera, Image as ImageIcon, X } from 'lucide-react';
 import { useImageCapture } from '@/hooks/useImageCapture';
 
 interface ImageCaptureButtonProps {
-  onImageCapture: (image: string) => void;
+  onImageCapture: (images: string[]) => void;
   disabled?: boolean;
 }
 
@@ -14,52 +14,72 @@ const ImageCaptureButton: React.FC<ImageCaptureButtonProps> = ({
   disabled = false 
 }) => {
   const { 
-    capturedImage, 
+    capturedImages, 
     isCapturing, 
     captureFromCamera, 
     selectFromGallery, 
-    clearImage, 
+    removeImage,
+    clearAllImages, 
     fileInputRef, 
-    handleFileSelect 
+    handleFileSelect,
+    hasImages 
   } = useImageCapture();
 
-  const handleSendImage = () => {
-    if (capturedImage) {
-      onImageCapture(capturedImage);
-      clearImage();
+  const handleSendImages = () => {
+    if (hasImages) {
+      onImageCapture(capturedImages);
+      clearAllImages();
     }
   };
 
   return (
     <div className="flex flex-col items-center gap-2">
-      {capturedImage ? (
+      {hasImages ? (
         <div className="flex flex-col items-center gap-2">
-          <div className="relative">
-            <img 
-              src={capturedImage} 
-              alt="Captured" 
-              className="w-20 h-20 object-cover rounded-lg border shadow-sm"
-            />
+          <div className="flex flex-wrap gap-2 max-w-xs">
+            {capturedImages.map((image, index) => (
+              <div key={index} className="relative">
+                <img 
+                  src={image} 
+                  alt={`Captured ${index + 1}`} 
+                  className="w-16 h-16 object-cover rounded-lg border shadow-sm"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => removeImage(index)}
+                  className="absolute -top-1 -right-1 w-5 h-5 p-0 rounded-full"
+                >
+                  <X className="h-2 w-2" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex gap-2">
             <Button
               type="button"
-              variant="destructive"
+              variant="outline"
               size="sm"
-              onClick={clearImage}
-              className="absolute -top-2 -right-2 w-6 h-6 p-0 rounded-full"
+              onClick={captureFromCamera}
+              disabled={disabled || isCapturing}
+              className="text-xs px-2 py-1"
             >
-              <X className="h-3 w-3" />
+              + Flere bilder
+            </Button>
+            
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={handleSendImages}
+              disabled={disabled}
+              className="text-xs px-3 py-1"
+            >
+              Send {capturedImages.length} bilde{capturedImages.length > 1 ? 'r' : ''}
             </Button>
           </div>
-          <Button
-            type="button"
-            variant="default"
-            size="sm"
-            onClick={handleSendImage}
-            disabled={disabled}
-            className="text-xs px-3 py-1"
-          >
-            Send bilde
-          </Button>
         </div>
       ) : (
         <div className="flex gap-1">

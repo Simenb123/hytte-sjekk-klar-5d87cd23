@@ -21,9 +21,9 @@ serve(async (req) => {
 
     const openai = new OpenAI({ apiKey: openAIApiKey });
     
-    const { image, family_members = [] } = await req.json();
-    if (!image) {
-      return new Response(JSON.stringify({ error: 'Bilde er påkrevd.' }), {
+    const { images, family_members = [] } = await req.json();
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return new Response(JSON.stringify({ error: 'Minst ett bilde er påkrevd.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -38,7 +38,8 @@ serve(async (req) => {
 
     const systemPrompt = `
 Du er en AI som spesialiserer seg på å identifisere gjenstander for et hytteinventar og foreslå relevante handlinger.
-Analyser bildet og returner informasjon om gjenstanden i JSON-format med foreslåtte handlinger.
+Analyser ALLE bildene jeg sender og returner informasjon om gjenstanden i JSON-format med foreslåtte handlinger.
+Du kan se gjenstanden fra flere vinkler - bruk alle bildene til å få en komplett forståelse av objektet.
 
 KLÆSSTØRRELSER OG EIERSKAP:
 Når du ser klær, analyser etiketter for størrelse (S/M/L, tallstørrelser, barnestørrelser som 134/140, etc.).
@@ -131,8 +132,8 @@ VIKTIGE INSTRUKSJONER:
         {
           role: 'user',
           content: [
-            { type: 'text', text: 'Analyser denne gjenstanden for hytteinventar:' },
-            { type: 'image_url', image_url: { url: image } }
+            { type: 'text', text: `Analyser denne gjenstanden for hytteinventar. Jeg sender ${images.length} bilde${images.length > 1 ? 'r' : ''} som viser gjenstanden fra ulike vinkler:` },
+            ...images.map((image: string) => ({ type: 'image_url', image_url: { url: image } }))
           ]
         }
       ],
