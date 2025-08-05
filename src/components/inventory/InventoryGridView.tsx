@@ -48,7 +48,14 @@ export function InventoryGridView({ items }: InventoryGridViewProps) {
                   }}
                 />
                 {item.item_images.length > 1 && (
-                  <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                  <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded cursor-pointer"
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         setSelectedImage({ 
+                           url: item.item_images[1]?.image_url || item.item_images[0].image_url, 
+                           name: `${item.name} - Bilde 2` 
+                         });
+                       }}>
                     +{item.item_images.length - 1} bilder
                   </div>
                 )}

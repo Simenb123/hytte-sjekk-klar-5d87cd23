@@ -59,7 +59,7 @@ export function AIItemDialog() {
         setAnalysisResult(result);
         console.log('[AIItemDialog] AI analysis result:', result);
         
-        // Improved family member matching
+        // Enhanced owner matching logic
         let suggestedFamilyMemberId = '';
         if (result.suggested_owner?.family_member_id) {
           // Use AI's direct suggestion if available
@@ -80,6 +80,24 @@ export function AIItemDialog() {
           
           if (matchedMember) {
             suggestedFamilyMemberId = matchedMember.id;
+          }
+        } else if (familyMembers && result.size) {
+          // Aggressive fallback logic for size-based matching
+          const size = result.size?.toLowerCase();
+          const sizeMatchedMember = familyMembers.find(member => {
+            if (size === '38' || size === 'm' || size === 'medium') {
+              // Size 38/M typically fits adult woman or smaller man
+              return member.role === 'parent';
+            } else if (size === 's' || size === 'small' || size === '36') {
+              // Small sizes - adults
+              return member.role === 'parent';
+            }
+            return false;
+          });
+          
+          if (sizeMatchedMember) {
+            suggestedFamilyMemberId = sizeMatchedMember.id;
+            console.log(`[AIItemDialog] Aggressive fallback match: ${sizeMatchedMember.name} for size ${result.size}`);
           }
         }
         

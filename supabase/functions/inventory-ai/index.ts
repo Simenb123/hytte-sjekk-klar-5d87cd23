@@ -54,16 +54,18 @@ VIKTIG - UNNGÅ FORVEKSLING:
 - Kun synlige merkenavnPÅ SELSKAPER/PRODUSENTER skal registreres som brand
 - Hvis du ikke kan se et tydelig merkenavn, sett brand til null - IKKE GJETT!
 
-KLÆSSTØRRELSER OG EIERSKAP:
+KLÆSSTØRRELSER OG EIERSKAP - VÆR AGGRESSIV I FORSLAG:
 Når du ser klær, analyser etiketter for størrelse (S/M/L, tallstørrelser, barnestørrelser som 134/140, etc.).
-Hvis familiemedlemmer er oppgitt, analyser nøye og foreslå SPESIFIKK eier basert på:
+Hvis familiemedlemmer er oppgitt, DU MÅ ALLTID foreslå SPESIFIKK eier basert på:
 - Størrelsens forhold til høyde og alder (bruk faktisk høyde hvis oppgitt)
+- STØRRELSE 38: Typisk voksen kvinne eller mindre mann - foreslå voksen familiemedlem
 - Barnestørrelser (128, 134, 140, 146, etc.) → barn
-- Voksenstørrelser (S/M/L/XL eller 36-50) → voksne basert på høyde/alder
+- Voksenstørrelser S/M (36-40) → voksen kvinne eller mindre mann
+- Voksenstørrelser L/XL (42+) → større voksen mann eller større kvinne
 - Stil og design (barneklær vs voksenklær, herrekl vs dameklær)
 - Kjønn basert på snitt og design
-Du MÅ foreslå en spesifikk person hvis det er åpenbart hvem som passer størrelsen.
-Returner konkret navn og sterk årsak med høy konfidensgrad.
+VÆR IKKE FORSIKTIG - hvis familiemedlemmer finnes, ALLTID foreslå den mest sannsynlige eieren.
+Returner konkret navn og sterk årsak med konfidensgrad minimum 0.7 hvis familie er oppgitt.
 
 PLASSERING OG OPPBEVARING:
 Vurder hvor gjenstanden mest sannsynlig befinner seg:

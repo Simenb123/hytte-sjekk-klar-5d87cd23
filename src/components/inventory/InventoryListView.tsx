@@ -49,7 +49,8 @@ const InventoryListView: React.FC<InventoryListViewProps> = ({ items }) => {
                           loading="lazy"
                         />
                         {item.item_images.length > 1 && (
-                          <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full min-w-[16px] h-4 flex items-center justify-center">
+                          <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full min-w-[16px] h-4 flex items-center justify-center cursor-pointer hover:bg-blue-600"
+                               title={`Vis alle ${item.item_images.length} bilder`}>
                             {item.item_images.length}
                           </div>
                         )}
