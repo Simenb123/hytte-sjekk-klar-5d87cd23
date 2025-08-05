@@ -133,7 +133,7 @@ Returner alltid et JSON-objekt med følgende felter:
   "confidence": 0.95,
   "suggested_owner": {
     "family_member_id": "ID fra familiemedlemmer hvis foreslått eier, ellers null",
-    "name": "navn på foreslått eier (bruk fullt navn fra familiemedlemmer)",
+    "name": "BARE FORNAVN på foreslått eier (f.eks. 'May-Tone', ikke 'May-Tone Eikum')",
     "confidence": 0.8,
     "reason": "spesifikk forklaring basert på størrelse, alder, høyde og kjønn"
   },
