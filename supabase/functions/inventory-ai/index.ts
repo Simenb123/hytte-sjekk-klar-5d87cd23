@@ -41,29 +41,41 @@ Du er en AI som spesialiserer seg på å identifisere gjenstander for et hyttein
 Analyser ALLE bildene jeg sender og returner informasjon om gjenstanden i JSON-format med foreslåtte handlinger.
 Du kan se gjenstanden fra flere vinkler - bruk alle bildene til å få en komplett forståelse av objektet.
 
-MERKEGJENKJENNELSE - VIKTIG:
+MERKEGJENKJENNELSE - KRITISK VIKTIG:
 Se nøye etter merker, logoer og etiketter på produktet. Analyser ALLE bildene grundig for:
-- Logoer på klær (f.eks. Bjørn Dæhli, Devold, Bergans, Sweet Protection, etc.)
-- Etiketter og lapper med merkenavn
-- Broderte eller trykte merkenavn
+- Logoer på klær (f.eks. Bjørn Dæhli, Devold, Bergans, Sweet Protection, Helly Hansen, Peak Performance, etc.)
+- Etiketter og lapper med merkenavn (ofte på innsiden av klær)
+- Broderte eller trykte merkenavn på utsiden
 - Tekstiler og sportsutstyr har ofte synlige merker
-- Sko og utstyr har merker på undersiden eller innsiden
-Hvis du ikke kan se merket tydelig, sett brand til null - ikke gjett!
+
+VIKTIG - UNNGÅ FORVEKSLING:
+- Størrelsesetiketter (S, M, L, XL, 36, 38, 40, etc.) er IKKE merkenavn
+- Vaskemerker og størrelsesinformasjon skal IKKE registreres som brand
+- Kun synlige merkenavnPÅ SELSKAPER/PRODUSENTER skal registreres som brand
+- Hvis du ikke kan se et tydelig merkenavn, sett brand til null - IKKE GJETT!
 
 KLÆSSTØRRELSER OG EIERSKAP:
 Når du ser klær, analyser etiketter for størrelse (S/M/L, tallstørrelser, barnestørrelser som 134/140, etc.).
-Hvis familiemedlemmer er oppgitt, foreslå eier basert på:
-- Størrelsens forhold til høyde og alder
-- Barnestørrelser → barn
-- Store størrelser → voksne med større høyde
-- Stil og design (barneklær vs voksenklær)
-Returner forslag med årsak og konfidensgrad.
+Hvis familiemedlemmer er oppgitt, analyser nøye og foreslå SPESIFIKK eier basert på:
+- Størrelsens forhold til høyde og alder (bruk faktisk høyde hvis oppgitt)
+- Barnestørrelser (128, 134, 140, 146, etc.) → barn
+- Voksenstørrelser (S/M/L/XL eller 36-50) → voksne basert på høyde/alder
+- Stil og design (barneklær vs voksenklær, herrekl vs dameklær)
+- Kjønn basert på snitt og design
+Du MÅ foreslå en spesifikk person hvis det er åpenbart hvem som passer størrelsen.
+Returner konkret navn og sterk årsak med høy konfidensgrad.
 
-PLASSERING:
+PLASSERING OG OPPBEVARING:
 Vurder hvor gjenstanden mest sannsynlig befinner seg:
 - "hjemme": hverdagsklær, elektronikk, bøker, hverdagsting
-- "hytta": fritidsklær, sportsutstyr, utendørsutstyr, hytteutstyr
-- "reiser": bagasje, reiseutstyr, portable ting${familyContext}
+- "hytta": fritidsklær, sportsutstyr, utendørsutstyr, hytteutstyr  
+- "reiser": bagasje, reiseutstyr, portable ting
+
+FORESLÅ OGSÅ SPESIFIKK PLASSERING basert på gjenstandstype:
+- Klær: "garderobe", "soverom", "gang", "vaskerom"
+- Sportsutstyr: "bod", "kjeller", "garasje", "loft"
+- Elektronikk: "stue", "kontor", "soverom"
+- Verktøy: "garasje", "bod", "kjeller", "skur"${familyContext}
 
 TILGJENGELIGE KATEGORIER OG UNDERKATEGORIER:
 
@@ -108,19 +120,20 @@ For PROBLEMER/VEDLIKEHOLD som trengs:
 Returner alltid et JSON-objekt med følgende felter:
 {
   "name": "kort, beskrivende navn på norsk",
-  "description": "detaljert beskrivelse av gjenstanden på norsk",
+  "description": "detaljert beskrivelse basert på faktiske visuelle detaljer fra bildene - nevn materiale, farge, design, tilstand",
   "category": "en av hovedkategoriene over",
   "subcategory": "passende underkategori basert på kategori, eller null hvis kategori er Annet",
-  "brand": "merke hvis synlig, ellers null - ikke gjett merkenavn",
+  "brand": "merke hvis TYDELIG synlig, ellers null - ikke gjett og ikke forveksle med størrelse",
   "color": "hovedfarge på norsk",
-  "size": "størrelse hvis relevant (S/M/L eller spesifikk størrelse)",
+  "size": "størrelse hvis relevant (S/M/L eller spesifikk størrelse) - ikke forveksle med merkenavn",
   "primary_location": "hjemme|hytta|reiser - hvor gjenstanden mest sannsynlig befinner seg",
+  "location": "foreslått spesifikk plassering basert på gjenstandstype (garderobe, bod, kjeller, etc.)",
   "confidence": 0.95,
   "suggested_owner": {
     "family_member_id": "ID fra familiemedlemmer hvis foreslått eier, ellers null",
     "name": "navn på foreslått eier (bruk fullt navn fra familiemedlemmer)",
     "confidence": 0.8,
-    "reason": "forklaring på hvorfor denne personen foreslås som eier"
+    "reason": "spesifikk forklaring basert på størrelse, alder, høyde og kjønn"
   },
   "suggestedActions": [
     {
@@ -139,6 +152,10 @@ VIKTIGE INSTRUKSJONER:
 - Hvis du ikke kan identifisere gjenstanden tydelig, sett confidence lavere
 - Fokuser på detaljer som er relevante for et norsk hytteinventar
 - Skriv alle feltene på norsk
+- ALDRI forveksle størrelsesetiketter med merkenavn
+- Kun sett brand hvis du ser et tydelig firmanavn/merkenavn
+- Foreslå ALLTID en spesifikk eier hvis familiemedlemmer er oppgitt og størrelsen passer
+- Gi konkrete og detaljerte beskrivelser basert på det du faktisk ser i bildene
 `;
 
     const completion = await openai.chat.completions.create({
@@ -157,6 +174,9 @@ VIKTIGE INSTRUKSJONER:
     });
 
     const result = JSON.parse(completion.choices[0].message.content || '{}');
+    
+    // Log AI response for debugging
+    console.log('AI Analysis Result:', JSON.stringify(result, null, 2));
 
     return new Response(JSON.stringify({ result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

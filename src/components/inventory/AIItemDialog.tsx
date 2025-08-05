@@ -85,7 +85,7 @@ export function AIItemDialog() {
           brand: result.brand || '',
           color: result.color || '',
           size: result.size || '',
-          location: '',
+          location: (result as any).location || '',
           shelf: '',
           family_member_id: suggestedFamilyMemberId,
           primary_location: ((result as any).primary_location as PrimaryLocation) || 'hjemme',
