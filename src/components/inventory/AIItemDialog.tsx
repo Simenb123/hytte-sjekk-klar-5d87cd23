@@ -13,6 +13,7 @@ import { useFamilyMembers } from '@/hooks/useFamilyMembers';
 import { useToast } from '@/state/toast';
 import ImageCaptureButton from '@/components/chat/ImageCaptureButton';
 import { getAllCategories, getCategorySubcategories } from '@/data/categories';
+import { PrimaryLocation } from '@/types/inventory';
 
 export function AIItemDialog() {
   const [open, setOpen] = useState(false);
@@ -30,6 +31,7 @@ export function AIItemDialog() {
     location: '',
     shelf: '',
     family_member_id: '',
+    primary_location: 'hjemme' as PrimaryLocation,
     notes: ''
   });
 
@@ -54,6 +56,27 @@ export function AIItemDialog() {
       
       if (result) {
         setAnalysisResult(result);
+        
+        // Improved family member matching
+        let suggestedFamilyMemberId = '';
+        if (result.suggested_owner?.name) {
+          const ownerName = result.suggested_owner.name.toLowerCase();
+          const matchedMember = familyMembers.find(member => {
+            const memberName = member.name.toLowerCase();
+            const memberNickname = member.nickname?.toLowerCase() || '';
+            
+            // Exact match or partial match
+            return memberName === ownerName || 
+                   memberName.includes(ownerName) || 
+                   ownerName.includes(memberName) ||
+                   (memberNickname && (memberNickname === ownerName || ownerName.includes(memberNickname)));
+          });
+          
+          if (matchedMember) {
+            suggestedFamilyMemberId = matchedMember.id;
+          }
+        }
+        
         setFormData({
           name: result.name || '',
           description: result.description || '',
@@ -64,7 +87,8 @@ export function AIItemDialog() {
           size: result.size || '',
           location: '',
           shelf: '',
-          family_member_id: result.suggested_owner?.family_member_id || '',
+          family_member_id: suggestedFamilyMemberId,
+          primary_location: ((result as any).primary_location as PrimaryLocation) || 'hjemme',
           notes: result.suggested_owner?.reason ? `AI-forslag: ${result.suggested_owner.reason}` : ''
         });
         setStep('edit');
@@ -94,6 +118,7 @@ export function AIItemDialog() {
       await addItemMutation.mutateAsync({
         ...formData,
         family_member_id: formData.family_member_id || undefined,
+        primary_location: formData.primary_location,
         image: capturedImage ? await fetch(capturedImage).then(r => r.blob()).then(blob => new File([blob], 'ai-captured-image.jpg', { type: 'image/jpeg' })) : undefined
       });
       
@@ -129,6 +154,7 @@ export function AIItemDialog() {
       location: '',
       shelf: '',
       family_member_id: '',
+      primary_location: 'hjemme' as PrimaryLocation,
       notes: ''
     });
   };
@@ -330,30 +356,52 @@ export function AIItemDialog() {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="owner">Eier</Label>
-                <Select
-                  value={formData.family_member_id || "none"}
-                  onValueChange={(value) =>
-                    setFormData(prev => ({
-                      ...prev,
-                      family_member_id: value === "none" ? "" : value,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Velg eier" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Ingen spesifikk eier</SelectItem>
-                    {familyMembers.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name} {member.nickname ? `(${member.nickname})` : ''}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+               <div>
+                 <Label htmlFor="owner">Eier</Label>
+                 <Select
+                   value={formData.family_member_id || "none"}
+                   onValueChange={(value) =>
+                     setFormData(prev => ({
+                       ...prev,
+                       family_member_id: value === "none" ? "" : value,
+                     }))
+                   }
+                 >
+                   <SelectTrigger>
+                     <SelectValue placeholder="Velg eier" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="none">Ingen spesifikk eier</SelectItem>
+                     {familyMembers.map((member) => (
+                       <SelectItem key={member.id} value={member.id}>
+                         {member.name} {member.nickname ? `(${member.nickname})` : ''}
+                       </SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
+               </div>
+
+               <div>
+                 <Label htmlFor="primary_location">Hvor er den?</Label>
+                  <Select
+                    value={formData.primary_location}
+                    onValueChange={(value: PrimaryLocation) =>
+                      setFormData(prev => ({
+                        ...prev,
+                        primary_location: value,
+                      }))
+                    }
+                 >
+                   <SelectTrigger>
+                     <SelectValue placeholder="Velg plassering" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="hjemme">Hjemme</SelectItem>
+                     <SelectItem value="hytta">På hytta</SelectItem>
+                     <SelectItem value="reiser">På reise</SelectItem>
+                   </SelectContent>
+                 </Select>
+               </div>
 
               <div className="md:col-span-2">
                 <Label htmlFor="notes">Notater</Label>
