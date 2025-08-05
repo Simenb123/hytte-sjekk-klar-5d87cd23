@@ -113,8 +113,41 @@ export function AIItemDialog() {
           } else {
             console.log('[AIItemDialog] No name match found for:', suggestionName);
           }
-        } else if (familyMembers && result.size) {
-          // Aggressive fallback logic for size-based matching
+        }
+        
+        // Force owner selection if AI didn't suggest one but family members exist
+        if (!suggestedFamilyMemberId && familyMembers && familyMembers.length > 0) {
+          console.log('[AIItemDialog] AI failed to suggest owner, forcing fallback based on size:', result.size);
+          
+          // Size-based aggressive fallback
+          const size = result.size?.toLowerCase() || '';
+          let fallbackMember = null;
+          
+          if (size.includes('xs') || size.includes('s') || size === '34' || size === '36') {
+            // Small sizes - prefer youngest or female family member
+            fallbackMember = familyMembers.find(m => m.role?.toLowerCase().includes('barn') || 
+                                                   m.role?.toLowerCase().includes('datter')) ||
+                            familyMembers.find(m => m.birth_date && new Date().getFullYear() - new Date(m.birth_date).getFullYear() < 18) ||
+                            familyMembers[0];
+          } else if (size.includes('l') || size.includes('xl') || size === '42' || size === '44' || size === '46') {
+            // Large sizes - prefer male/adult family member
+            fallbackMember = familyMembers.find(m => m.role?.toLowerCase().includes('far') || 
+                                                   m.role?.toLowerCase().includes('sønn')) ||
+                            familyMembers.find(m => m.height && m.height > 170) ||
+                            familyMembers[0];
+          } else {
+            // Medium or unknown size - just pick first family member
+            fallbackMember = familyMembers[0];
+          }
+          
+          if (fallbackMember) {
+            suggestedFamilyMemberId = fallbackMember.id;
+            console.log('[AIItemDialog] Forced owner selection:', fallbackMember.name, 'based on size:', size);
+          }
+        }
+        
+        if (familyMembers && result.size) {
+          // Original size-based matching (kept as secondary option)
           const size = result.size?.toLowerCase();
           const sizeMatchedMember = familyMembers.find(member => {
             if (size === '38' || size === 'm' || size === 'medium') {

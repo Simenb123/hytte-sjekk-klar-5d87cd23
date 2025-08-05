@@ -54,18 +54,23 @@ VIKTIG - UNNGÅ FORVEKSLING:
 - Kun synlige merkenavnPÅ SELSKAPER/PRODUSENTER skal registreres som brand
 - Hvis du ikke kan se et tydelig merkenavn, sett brand til null - IKKE GJETT!
 
-KLÆSSTØRRELSER OG EIERSKAP - VÆR AGGRESSIV I FORSLAG:
+KLÆSSTØRRELSER OG EIERSKAP - OBLIGATORISK Å FORESLÅ EIER:
 Når du ser klær, analyser etiketter for størrelse (S/M/L, tallstørrelser, barnestørrelser som 134/140, etc.).
-Hvis familiemedlemmer er oppgitt, DU MÅ ALLTID foreslå SPESIFIKK eier basert på:
-- Størrelsens forhold til høyde og alder (bruk faktisk høyde hvis oppgitt)
-- STØRRELSE 38: Typisk voksen kvinne eller mindre mann - foreslå voksen familiemedlem
-- Barnestørrelser (128, 134, 140, 146, etc.) → barn
-- Voksenstørrelser S/M (36-40) → voksen kvinne eller mindre mann
-- Voksenstørrelser L/XL (42+) → større voksen mann eller større kvinne
-- Stil og design (barneklær vs voksenklær, herrekl vs dameklær)
-- Kjønn basert på snitt og design
-VÆR IKKE FORSIKTIG - hvis familiemedlemmer finnes, ALLTID foreslå den mest sannsynlige eieren.
-Returner konkret navn og sterk årsak med konfidensgrad minimum 0.7 hvis familie er oppgitt.
+Hvis familiemedlemmer er oppgitt, DU MÅ ALLTID foreslå SPESIFIKK eier - ALDRI returner null name!
+
+OBLIGATORISKE REGLER FOR EIERFORSLAG:
+- Barnestørrelser (128, 134, 140, 146, etc.) → yngste familiemedlem eller barn
+- Små voksenstørrelser (XS, S, 34-38) → kvinnelig familiemedlem eller mindre mann
+- Mellomstørrelser (M, 38-42) → kvinnelig familiemedlem eller gjennomsnittlig mann  
+- Store størrelser (L, XL, 42+) → mannlig familiemedlem eller større kvinne
+- Hvis ingen tydelig størrelsesmarkering: foreslå den mest aktive/utendørs-orienterte i familien
+
+OBLIGATORISK: Hvis familiemedlemmer finnes, MÅ du alltid returnere:
+- name: faktisk fornavn fra familielisten (f.eks. "May-Tone")
+- confidence: minimum 0.7 (ikke lavere!)
+- reason: konkret forklaring basert på størrelse/høyde/stil
+
+INGEN UNNSKYLNINGER - hvis familie finnes, VELG EN EIER basert på beste gjetning!
 
 PLASSERING OG OPPBEVARING:
 Vurder hvor gjenstanden mest sannsynlig befinner seg:
