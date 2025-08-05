@@ -82,29 +82,33 @@ const ImageCaptureButton: React.FC<ImageCaptureButtonProps> = ({
           </div>
         </div>
       ) : (
-        <div className="flex gap-1">
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-muted-foreground text-center">
+            Velg flere bilder for bedre AI-analyse
+          </p>
+          
           <Button
             type="button"
-            variant="outline"
+            variant="default"
             size="sm"
-            onClick={captureFromCamera}
+            onClick={selectFromGallery}
             disabled={disabled || isCapturing}
-            className="flex-1"
+            className="w-full"
           >
-            <Camera className="h-4 w-4" />
-            <span className="sr-only">Ta bilde</span>
+            <ImageIcon className="h-4 w-4 mr-2" />
+            Velg flere fra bibliotek
           </Button>
           
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={selectFromGallery}
+            onClick={captureFromCamera}
             disabled={disabled || isCapturing}
-            className="flex-1"
+            className="w-full"
           >
-            <ImageIcon className="h-4 w-4" />
-            <span className="sr-only">Velg bilde</span>
+            <Camera className="h-4 w-4 mr-2" />
+            Ta bilde med kamera
           </Button>
         </div>
       )}
@@ -113,6 +117,7 @@ const ImageCaptureButton: React.FC<ImageCaptureButtonProps> = ({
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        multiple
         onChange={handleFileSelect}
         className="hidden"
       />

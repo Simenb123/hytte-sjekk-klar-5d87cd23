@@ -16,22 +16,32 @@ export function useImageCapture() {
   const selectFromGallery = () => {
     if (fileInputRef.current) {
       fileInputRef.current.removeAttribute('capture');
+      fileInputRef.current.setAttribute('multiple', 'true');
       fileInputRef.current.click();
     }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    const files = Array.from(event.target.files || []);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length > 0) {
       setIsCapturing(true);
       
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageData = e.target?.result as string;
-        setCapturedImages(prev => [...prev, imageData]);
+      Promise.all(
+        imageFiles.map(file => {
+          return new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              resolve(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+          });
+        })
+      ).then(imageDataArray => {
+        setCapturedImages(prev => [...prev, ...imageDataArray]);
         setIsCapturing(false);
-      };
-      reader.readAsDataURL(file);
+      });
     }
   };
 
