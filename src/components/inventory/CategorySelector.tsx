@@ -12,15 +12,24 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({ form }) => {
   const selectedCategory = form.watch('category');
   const subcategories = selectedCategory ? getCategorySubcategories(selectedCategory) : [];
 
-  // Reset subcategory when category changes
+  // Reset subcategory only if it's invalid for the new category
   React.useEffect(() => {
     if (selectedCategory) {
       const currentSubcategory = form.getValues('subcategory');
-      if (currentSubcategory && !subcategories.includes(currentSubcategory)) {
+      // Only reset if subcategory exists and is NOT valid for this category
+      if (currentSubcategory && currentSubcategory !== '' && !subcategories.includes(currentSubcategory)) {
+        console.log(`[CategorySelector] Resetting invalid subcategory "${currentSubcategory}" for category "${selectedCategory}"`);
         form.setValue('subcategory', '');
+      } else if (currentSubcategory && subcategories.includes(currentSubcategory)) {
+        console.log(`[CategorySelector] Keeping valid subcategory "${currentSubcategory}" for category "${selectedCategory}"`);
       }
     } else {
-      form.setValue('subcategory', '');
+      // Only reset subcategory if no category is selected
+      const currentSubcategory = form.getValues('subcategory');
+      if (currentSubcategory) {
+        console.log(`[CategorySelector] Resetting subcategory because no category selected`);
+        form.setValue('subcategory', '');
+      }
     }
   }, [selectedCategory, subcategories, form]);
 
