@@ -60,3 +60,15 @@ export interface CompletionLogWithDetails extends DbCompletionLog {
     last_name: string | null;
   };
 }
+
+export interface DbBookingChecklistCompletion {
+  id: string;
+  booking_id: string;
+  user_id: string;
+  category: string;
+  completed_at: string;
+  completion_data: Record<string, any>;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}

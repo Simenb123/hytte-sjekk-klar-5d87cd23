@@ -32,6 +32,42 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_checklist_completions: {
+        Row: {
+          booking_id: string
+          category: string
+          completed_at: string
+          completion_data: Json
+          created_at: string
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          category: string
+          completed_at?: string
+          completion_data?: Json
+          created_at?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_id?: string
+          category?: string
+          completed_at?: string
+          completion_data?: Json
+          created_at?: string
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       booking_facilities_used: {
         Row: {
           booking_id: string | null

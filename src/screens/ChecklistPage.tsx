@@ -6,6 +6,7 @@ import { ChecklistCategory, checklistCategories } from "@/models/checklist";
 import ChecklistItem from "@/components/checklist/ChecklistItem";
 import { logItemCompletion } from "@/services/checklist.service";
 import { toast } from "sonner";
+import BookingChecklistActions from "@/components/checklist/BookingChecklistActions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CheckCircle, Loader2, Calendar, User } from "lucide-react";
 import Layout from "@/layout/Layout";
@@ -123,6 +124,16 @@ export default function ChecklistPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Booking Checklist Actions */}
+        {selectedBooking && areas && category && (
+          <BookingChecklistActions
+            bookingId={selectedBooking.id}
+            category={category}
+            areasData={areas}
+            categoryDisplayName={pageTitle}
+          />
         )}
 
         {areas && areas.length > 0 ? (
