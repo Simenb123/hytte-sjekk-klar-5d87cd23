@@ -32,8 +32,8 @@ serve(async (req) => {
     // Build family member context for AI
     const familyContext = family_members.length > 0 
       ? `\n\nFAMILIEMEDLEMMER TIL STØRRELSESANALYSE:\n${family_members.map((member: any) => 
-          `- ${member.name}${member.nickname ? ` (${member.nickname})` : ''}: ${member.role || 'ukjent rolle'}${member.height ? `, høyde ${member.height}cm` : ''}${member.birth_date ? `, født ${new Date(member.birth_date).getFullYear()}` : ''}`
-        ).join('\n')}\n\nNår du ser klær, analyser størrelsen og foreslå hvilken person som mest sannsynlig eier den basert på høyde, alder og kjønn.`
+          `- ID: ${member.id}, Navn: ${member.name}${member.nickname ? ` (Kallenavn: ${member.nickname})` : ''}, Rolle: ${member.role || 'ukjent'}${member.height ? `, Høyde: ${member.height}cm` : ''}${member.birth_date ? `, Født: ${new Date(member.birth_date).getFullYear()}` : ''}`
+        ).join('\n')}\n\nNår du ser klær, VELG EKSAKT det navnet som står i listen over, ikke bare fornavn!`
       : '';
 
     const systemPrompt = `
@@ -66,7 +66,8 @@ OBLIGATORISKE REGLER FOR EIERFORSLAG:
 - Hvis ingen tydelig størrelsesmarkering: foreslå den mest aktive/utendørs-orienterte i familien
 
 OBLIGATORISK: Hvis familiemedlemmer finnes, MÅ du alltid returnere:
-- name: faktisk fornavn fra familielisten (f.eks. "May-Tone")
+- family_member_id: bruk ID fra familielisten
+- name: EKSAKT SAMME NAVN som i familielisten (f.eks. "Hilde Bjørndalen")
 - confidence: minimum 0.7 (ikke lavere!)
 - reason: konkret forklaring basert på størrelse/høyde/stil
 
@@ -137,8 +138,8 @@ Returner alltid et JSON-objekt med følgende felter:
   "location": "foreslått spesifikk plassering basert på gjenstandstype (garderobe, bod, kjeller, etc.)",
   "confidence": 0.95,
   "suggested_owner": {
-    "family_member_id": "ID fra familiemedlemmer hvis foreslått eier, ellers null",
-    "name": "BARE FORNAVN på foreslått eier (f.eks. 'May-Tone', ikke 'May-Tone Eikum')",
+    "family_member_id": "EKSAKT ID fra familielisten hvis eier foreslått, ellers null",
+    "name": "EKSAKT SAMME NAVN som i familielisten (f.eks. 'Hilde Bjørndalen')",
     "confidence": 0.8,
     "reason": "spesifikk forklaring basert på størrelse, alder, høyde og kjønn"
   },

@@ -65,11 +65,16 @@ export function AIItemDialog() {
         console.log('[AIItemDialog] AI suggested owner:', result.suggested_owner);
         
         if (result.suggested_owner?.family_member_id) {
-          // Use AI's direct suggestion if available
-          suggestedFamilyMemberId = result.suggested_owner.family_member_id;
-          console.log('[AIItemDialog] Using direct family_member_id:', suggestedFamilyMemberId);
+          // Use AI's direct family_member_id if provided
+          const directMatch = familyMembers?.find(m => m.id === result.suggested_owner.family_member_id);
+          if (directMatch) {
+            suggestedFamilyMemberId = result.suggested_owner.family_member_id;
+            console.log('[AIItemDialog] Direct ID match:', directMatch.name);
+          } else {
+            console.log('[AIItemDialog] ID not found in family list:', result.suggested_owner.family_member_id);
+          }
         } else if (result.suggested_owner?.name && familyMembers) {
-          // Enhanced name matching - handle both full names and first names
+          // Fallback: name matching with exact match priority
           const suggestionName = result.suggested_owner.name.toLowerCase().trim();
           console.log('[AIItemDialog] Trying to match name:', suggestionName);
           
@@ -77,34 +82,28 @@ export function AIItemDialog() {
             const memberName = member.name.toLowerCase();
             const memberNickname = member.nickname?.toLowerCase();
             
-            // Extract first name from AI suggestion (in case it's full name like "May-Tone Eikum")
+            // Exact name match (highest priority)
+            if (memberName === suggestionName) {
+              console.log('[AIItemDialog] Exact name match found:', member.name);
+              return true;
+            }
+            
+            // Nickname match
+            if (memberNickname === suggestionName) {
+              console.log('[AIItemDialog] Nickname match found:', member.name);
+              return true;
+            }
+            
+            // First name match (extract first name from both)
             const suggestionFirstName = suggestionName.split(' ')[0];
             const memberFirstName = memberName.split(' ')[0];
             
-            console.log(`[AIItemDialog] Comparing: "${suggestionFirstName}" vs "${memberFirstName}" (${member.name})`);
-            
-            // Try exact match first
-            if (memberName === suggestionName || memberNickname === suggestionName) {
-              console.log('[AIItemDialog] Exact match found');
-              return true;
-            }
-            
-            // Try first name match
             if (memberFirstName === suggestionFirstName) {
-              console.log('[AIItemDialog] First name match found');
+              console.log('[AIItemDialog] First name match found:', member.name);
               return true;
             }
             
-            // Try partial match
-            const partialMatch = memberName.includes(suggestionName) || 
-                               suggestionName.includes(memberName) ||
-                               (memberNickname && (memberNickname.includes(suggestionName) || suggestionName.includes(memberNickname)));
-            
-            if (partialMatch) {
-              console.log('[AIItemDialog] Partial match found');
-            }
-            
-            return partialMatch;
+            return false;
           });
           
           if (matchedMember) {
