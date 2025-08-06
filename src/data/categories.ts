@@ -9,6 +9,7 @@ export const CATEGORIES = {
     'Topp',
     'Genser',
     'Jakke',
+    'Lue',
     'Sko',
     'Tilbehør'
   ],
