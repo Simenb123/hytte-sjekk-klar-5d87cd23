@@ -22,6 +22,7 @@ import AiHelperPage from './screens/AiHelperPage';
 import DocumentsPage from './screens/DocumentsPage';
 import WineCellarPage from './screens/WineCellarPage';
 import HyttebokPage from './screens/HyttebokPage';
+import MammasHjorneScreen from './screens/MammasHjorneScreen';
 import OtherApps from './screens/OtherApps';
 import LogsPage from './screens/LogsPage';
 import ProfilePage from './screens/ProfilePage';
@@ -117,6 +118,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/mammas-hjorne" element={<MammasHjorneScreen />} />
               <Route path="/other-apps" element={<OtherApps />} />
               <Route path="/logs" element={<LogsPage />} />
               <Route
