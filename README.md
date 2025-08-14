@@ -60,6 +60,8 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+**Final cleanup completed**: All React Native dependencies removed for web-only deployment. The app now uses web-compatible fallbacks for AsyncStorage, NetInfo, and KeepAwake functionality.
+
 ## Weather data caching
 
 The app stores the last successful weather forecast in `localStorage` for 30 minutes.
