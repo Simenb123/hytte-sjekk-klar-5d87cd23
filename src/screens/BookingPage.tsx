@@ -18,6 +18,7 @@ import BookingFamilyMembers from '@/components/booking/BookingFamilyMembers';
 import BookingListItem from '@/components/booking/BookingListItem';
 import { CalendarSection } from '@/components/calendar/CalendarSection';
 import { GoogleCalendarSection } from '@/components/calendar/GoogleCalendarSection';
+import { GoogleCalendarConnectView } from '@/components/calendar/GoogleCalendarConnectView';
 import { CalendarInfo } from '@/components/calendar/CalendarInfo';
 import ReminderTestButton from '@/components/calendar/ReminderTestButton';
 import { Link } from 'react-router-dom';
@@ -441,24 +442,32 @@ const BookingPage = () => {
           </TabsContent>
 
           <TabsContent value="google" className="space-y-4">
-            <GoogleCalendarSection
-              isGoogleConnected={isGoogleConnected}
-              isLoadingEvents={isLoadingEvents}
-              googleEvents={googleEvents}
-              fetchGoogleEvents={fetchGoogleEvents}
-              googleTokens={googleTokens}
-              bookings={bookings}
-              onNewBooking={handleNewBooking}
-              connectGoogleCalendar={connectGoogleCalendar}
-              disconnectGoogleCalendar={disconnectGoogleCalendar}
-              isConnecting={isConnecting}
-              connectionError={connectionError}
-              fetchError={fetchError}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              sharedCalendarExists={sharedCalendarExists}
-              onShareCalendarSuccess={handleShareCalendarSuccess}
-            />
+            {isGoogleConnected ? (
+              <GoogleCalendarSection
+                isGoogleConnected={isGoogleConnected}
+                isLoadingEvents={isLoadingEvents}
+                googleEvents={googleEvents}
+                fetchGoogleEvents={fetchGoogleEvents}
+                googleTokens={googleTokens}
+                bookings={bookings}
+                onNewBooking={handleNewBooking}
+                connectGoogleCalendar={connectGoogleCalendar}
+                disconnectGoogleCalendar={disconnectGoogleCalendar}
+                isConnecting={isConnecting}
+                connectionError={connectionError}
+                fetchError={fetchError}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                sharedCalendarExists={sharedCalendarExists}
+                onShareCalendarSuccess={handleShareCalendarSuccess}
+              />
+            ) : (
+              <GoogleCalendarConnectView
+                onConnect={connectGoogleCalendar}
+                isConnecting={isConnecting}
+                connectionError={connectionError || fetchError}
+              />
+            )}
             
             <CalendarInfo isGoogleConnected={isGoogleConnected} />
           </TabsContent>
