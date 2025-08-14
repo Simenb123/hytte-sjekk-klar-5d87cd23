@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleEventsList } from './GoogleEventsList';
+import { GoogleCalendarConnectView } from './GoogleCalendarConnectView';
 import { ConnectionErrorView } from './google/ConnectionErrorView';
 import { GoogleAuthErrorView } from './google/GoogleAuthErrorView';
 import { isEdgeFunctionError, isAuthError } from './google/utils';
@@ -14,6 +15,8 @@ interface GoogleCalendarTabProps {
   fetchGoogleEvents: () => void;
   connectGoogleCalendar: () => void;
   fetchError: string | null;
+  isGoogleConnected: boolean;
+  isConnecting: boolean;
 }
 
 export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
@@ -21,7 +24,9 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
   googleEvents,
   fetchGoogleEvents,
   connectGoogleCalendar,
-  fetchError
+  fetchError,
+  isGoogleConnected,
+  isConnecting
 }) => {
   // Improved error detection with dedicated check for third-party cookie issues
   const connectionFailed = isEdgeFunctionError(fetchError);
@@ -77,6 +82,17 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
         onRetry={handleRetry}
         isRetrying={isRetrying}
         connectionError={isThirdPartyCookieBlocked}
+      />
+    );
+  }
+
+  // If not connected to Google Calendar at all, show connect view
+  if (!isGoogleConnected) {
+    return (
+      <GoogleCalendarConnectView
+        onConnect={connectGoogleCalendar}
+        isConnecting={isConnecting}
+        connectionError={fetchError}
       />
     );
   }

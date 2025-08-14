@@ -159,19 +159,7 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
         <Tabs defaultValue="bookings" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="bookings">Bookinger</TabsTrigger>
-            {isGoogleConnected && !hasConnectionIssue && (
-              <TabsTrigger value="google">Google Calendar</TabsTrigger>
-            )}
-            {isGoogleConnected && hasConnectionIssue && (
-              <TabsTrigger value="google" disabled className="opacity-50 cursor-not-allowed">
-                Google Calendar
-              </TabsTrigger>
-            )}
-            {!isGoogleConnected && (
-              <TabsTrigger value="google" disabled className="opacity-50 cursor-not-allowed">
-                Google Calendar
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="google">Google Calendar</TabsTrigger>
           </TabsList>
           
           <TabsContent value="bookings">
@@ -189,17 +177,17 @@ export const GoogleCalendarSection: React.FC<GoogleCalendarSectionProps> = ({
             />
           </TabsContent>
           
-          {isGoogleConnected && (
-            <TabsContent value="google">
-              <GoogleCalendarTab
-                isLoadingEvents={isLoadingEvents}
-                googleEvents={googleEvents}
-                fetchGoogleEvents={fetchGoogleEvents}
-                connectGoogleCalendar={connectGoogleCalendar}
-                fetchError={fetchError}
-              />
-            </TabsContent>
-          )}
+          <TabsContent value="google" className="mt-4">
+            <GoogleCalendarTab
+              isLoadingEvents={isLoadingEvents}
+              googleEvents={googleEvents}
+              fetchGoogleEvents={fetchGoogleEvents}
+              connectGoogleCalendar={connectGoogleCalendar}
+              fetchError={fetchError}
+              isGoogleConnected={isGoogleConnected}
+              isConnecting={isConnecting}
+            />
+          </TabsContent>
         </Tabs>
       </div>
     </>
