@@ -186,7 +186,7 @@ function MammasLogo({ silhouetteUrl }: { silhouetteUrl?: string }) {
     <div className="flex items-center gap-2 px-3 py-2 bg-gray-800 rounded-2xl">
       <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
         <img 
-          src="/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png" 
+          src="/lovable-uploads/ac048470-b6b7-4455-8b66-c2888b848ecf.png" 
           alt="Mamma profil ikon" 
           className="w-10 h-10 object-cover"
         />
