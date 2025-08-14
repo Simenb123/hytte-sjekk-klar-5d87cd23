@@ -20,7 +20,8 @@ const MammasHjorneContainer: React.FC = () => {
     });
     if (error) throw error;
     
-    const locationName = LOCATION_NAME;
+    // Use the location name from the weather API response, fallback to config
+    const locationName = data.location || LOCATION_NAME;
     
     return {
       updatedISO: data.lastUpdated,

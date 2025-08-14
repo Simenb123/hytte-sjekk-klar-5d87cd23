@@ -9,6 +9,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { SilhouetteUploader } from '@/components/admin/SilhouetteUploader';
+import { LocationPicker } from '@/components/location/LocationPicker';
 
 // ---------- Types ----------
 export type Event = {
@@ -312,6 +313,11 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   const [online, setOnline] = useState(true);
   const [usingMock, setUsingMock] = useState(!(fetchEvents && fetchWeather));
   const [selectedLocation, setSelectedLocation] = useState<WeatherLocation>(weatherLocations[0]);
+  const [currentWeatherLocation, setCurrentWeatherLocation] = useState<{ name: string; latitude: number; longitude: number }>({
+    name: weatherLocations[0].name,
+    latitude: weatherLocations[0].lat,
+    longitude: weatherLocations[0].lon
+  });
   const [silhouetteUrl, setSilhouetteUrl] = useState<string | null>(null);
 
   const [adminVisible, setAdminVisible] = useState(false);
@@ -384,7 +390,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         we = makeMockWeather(selectedLocation.name);
       } else {
         if (fetchEvents) ev = await fetchEvents();
-        if (fetchWeather) we = await fetchWeather(selectedLocation.lat, selectedLocation.lon);
+        if (fetchWeather) we = await fetchWeather(currentWeatherLocation.latitude, currentWeatherLocation.longitude);
       }
       setEvents(ev);
       if (we) setWeather(we);
@@ -492,6 +498,16 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
     } else {
       setPinError('Feil PIN');
     }
+  };
+
+  const handleLocationSelect = (location: { name: string; latitude: number; longitude: number }) => {
+    setCurrentWeatherLocation(location);
+    // Update the legacy selectedLocation for compatibility
+    setSelectedLocation({
+      name: location.name,
+      lat: location.latitude,
+      lon: location.longitude
+    });
   };
 
   const dialHref = (c: Contact) => {
@@ -754,8 +770,17 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               onSilhouetteGenerated={setSilhouetteUrl}
               currentSilhouette={silhouetteUrl}
             />
+
+            {/* Location Selector */}
+            <div className="border-t border-gray-700 pt-4 mt-4">
+              <h4 className="text-gray-300 text-lg font-semibold mb-3">Værlokasjon</h4>
+              <LocationPicker
+                currentLocation={currentWeatherLocation}
+                onLocationSelect={handleLocationSelect}
+              />
+            </div>
             
-            <div className="flex items-center justify-between py-3 min-h-[56px]">
+            <div className="flex items-center justify-between py-3 min-h-[56px] border-t border-gray-700 mt-4 pt-4">
               <span className="text-gray-300 text-lg flex-1">Online</span>
               <span className="px-3 py-1.5 bg-yellow-900 text-yellow-200 rounded-lg text-sm">
                 {online ? 'Online' : 'Offline'}
