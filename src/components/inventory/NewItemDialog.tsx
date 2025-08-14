@@ -35,7 +35,7 @@ const formSchema = z.object({
   notes: z.string().optional(),
   category: z.string().optional(),
   family_member_id: z.string().optional(),
-  primary_location: z.enum(['hjemme', 'hytta', 'reiser']).default('hjemme'),
+  primary_location: z.enum(['hjemme', 'hytta', 'reiser']).optional(),
 });
 
 interface NewItemDialogProps {

@@ -87,9 +87,13 @@ export function EditItemDialog({
   const deleteItemMutation = useDeleteInventoryItem();
   const { data: familyMembers, isLoading: familyMembersLoading } = useFamilyMembers();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  type FormValues = z.infer<typeof formSchema>;
+  
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {},
+    defaultValues: {
+      primary_location: 'hjemme',
+    },
   });
 
   useEffect(() => {
@@ -112,7 +116,7 @@ export function EditItemDialog({
     }
   }, [item, form, open]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     try {
       await updateItemMutation.mutateAsync({ ...values, id: item.id } as UpdateInventoryItemData);
       toast.success("Gjenstand oppdatert!");
