@@ -533,7 +533,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         </View>
 
         {/* Kalender */}
-        <View style={[styles.eventsCard, { marginLeft: 16 }] }>
+        <View style={[styles.eventsCard, { marginLeft: 24 }]}>
           <Text style={styles.sectionTitle}>Neste avtaler</Text>
           <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
             {/* I dag */}
@@ -561,7 +561,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
           {contacts.map((c, i) => (
             <Pressable
               key={i}
-              style={[styles.ftButton, i !== contacts.length - 1 && { marginRight: 12 }]}
+              style={[styles.ftButton, i !== contacts.length - 1 && { marginRight: 16 }]}
               onPress={() =>
                 Linking.openURL(dialHref(c) || '').catch(() => {})
               }
@@ -618,7 +618,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                 <Text style={styles.btnText}>Avbryt</Text>
               </Pressable>
               <Pressable
-                style={[styles.btn, styles.btnPrimary, { marginLeft: 12 }]}
+                style={[styles.btn, styles.btnPrimary, { marginLeft: 16 }]}
                 onPress={verifyPin}
               >
                 <Text style={[styles.btnText, { color: 'white' }]}>OK</Text>
@@ -666,7 +666,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                 <Text style={styles.btnText}>Oppdater nå</Text>
               </Pressable>
               <Pressable
-                style={[styles.btn, styles.btnPrimary, { marginLeft: 12 }]}
+                style={[styles.btn, styles.btnPrimary, { marginLeft: 16 }]}
                 onPress={() => setAdminVisible(false)}
               >
                 <Text style={[styles.btnText, { color: 'white' }]}>Lukk</Text>
@@ -679,90 +679,338 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   );
 };
 
-// ---------- Styles ----------
+// ---------- Styles (iPad 11 optimized) ----------
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f1115', padding: 24, paddingTop: 16 },
-  header: { marginBottom: 8 },
-  dateLine: { fontSize: 28, color: '#E6E6EA', fontWeight: '600' },
-  bigClock: { fontSize: 80, color: '#FFFFFF', fontWeight: '700', letterSpacing: 1 },
-  subHeaderRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  updated: { fontSize: 16, color: '#9AA0A6' },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#0f1115', 
+    padding: 32, 
+    paddingTop: 24,
+    width: '100%',
+  },
+  header: { marginBottom: 16 },
+  dateLine: { 
+    fontSize: 36, 
+    color: '#E6E6EA', 
+    fontWeight: '600',
+    lineHeight: 42,
+  },
+  bigClock: { 
+    fontSize: 96, 
+    color: '#FFFFFF', 
+    fontWeight: '700', 
+    letterSpacing: 2,
+    lineHeight: 110,
+  },
+  subHeaderRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginTop: 8,
+    minHeight: 28,
+  },
+  updated: { fontSize: 18, color: '#9AA0A6' },
   badge: {
-    fontSize: 14, color: '#FFD34D', backgroundColor: '#3A2E00',
-    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8,
+    fontSize: 16, 
+    color: '#FFD34D', 
+    backgroundColor: '#3A2E00',
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 10,
+    minHeight: 32,
+    textAlign: 'center',
   },
 
-  contentRow: { flex: 1, flexDirection: 'row', marginTop: 8 },
+  contentRow: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    marginTop: 20,
+  },
 
-  weatherCard: { flex: 1, backgroundColor: '#171A21', borderRadius: 16, padding: 16 },
-  eventsCard: { flex: 1.3, backgroundColor: '#171A21', borderRadius: 16, padding: 16 },
-  sectionTitle: { fontSize: 22, color: '#FFFFFF', fontWeight: '700', marginBottom: 12 },
+  weatherCard: { 
+    flex: 1, 
+    backgroundColor: '#171A21', 
+    borderRadius: 20, 
+    padding: 24,
+    minHeight: 400,
+  },
+  eventsCard: { 
+    flex: 1.3, 
+    backgroundColor: '#171A21', 
+    borderRadius: 20, 
+    padding: 24,
+    minHeight: 400,
+  },
+  sectionTitle: { 
+    fontSize: 28, 
+    color: '#FFFFFF', 
+    fontWeight: '700', 
+    marginBottom: 16,
+    lineHeight: 34,
+  },
 
-  weatherNowRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  weatherEmoji: { fontSize: 48, marginRight: 12 },
-  weatherNowTemp: { fontSize: 44, color: '#FFFFFF', fontWeight: '700' },
-  weatherDetails: { fontSize: 16, color: '#BFC5CF' },
+  weatherNowRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 16,
+  },
+  weatherEmoji: { fontSize: 64, marginRight: 16 },
+  weatherNowTemp: { 
+    fontSize: 56, 
+    color: '#FFFFFF', 
+    fontWeight: '700',
+    lineHeight: 64,
+  },
+  weatherDetails: { 
+    fontSize: 18, 
+    color: '#BFC5CF',
+    marginTop: 4,
+  },
   weatherHour: {
-    width: 82, backgroundColor: '#1F2430', borderRadius: 12,
-    padding: 8, alignItems: 'center',
+    width: 100, 
+    backgroundColor: '#1F2430', 
+    borderRadius: 16,
+    padding: 12, 
+    alignItems: 'center',
+    minHeight: 120,
+    justifyContent: 'space-between',
   },
-  weatherHourTime: { fontSize: 16, color: '#C8CCD6' },
-  weatherHourEmoji: { fontSize: 28, marginVertical: 6 },
-  weatherHourTemp: { fontSize: 18, color: '#FFFFFF', fontWeight: '600' },
+  weatherHourTime: { 
+    fontSize: 18, 
+    color: '#C8CCD6',
+    fontWeight: '500',
+  },
+  weatherHourEmoji: { 
+    fontSize: 36, 
+    marginVertical: 8,
+  },
+  weatherHourTemp: { 
+    fontSize: 20, 
+    color: '#FFFFFF', 
+    fontWeight: '600',
+  },
 
-  dayHeading: { fontSize: 18, color: '#C8CCD6', marginBottom: 8, marginTop: 4 },
-  emptyText: { fontSize: 18, color: '#9AA0A6' },
+  dayHeading: { 
+    fontSize: 22, 
+    color: '#C8CCD6', 
+    marginBottom: 12, 
+    marginTop: 8,
+    fontWeight: '600',
+  },
+  emptyText: { 
+    fontSize: 20, 
+    color: '#9AA0A6',
+    lineHeight: 28,
+  },
 
   eventRow: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#2A2F3A',
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth, 
+    borderBottomColor: '#2A2F3A',
+    minHeight: 80,
   },
-  eventTitle: { fontSize: 20, color: '#FFFFFF', fontWeight: '600' },
-  eventMeta: { fontSize: 16, color: '#9AA0A6', marginTop: 2 },
+  eventTitle: { 
+    fontSize: 22, 
+    color: '#FFFFFF', 
+    fontWeight: '600',
+    lineHeight: 28,
+  },
+  eventMeta: { 
+    fontSize: 18, 
+    color: '#9AA0A6', 
+    marginTop: 4,
+    lineHeight: 24,
+  },
 
   badgePill: {
-    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999,
-    backgroundColor: '#666', marginRight: 12,
+    paddingHorizontal: 14, 
+    paddingVertical: 8, 
+    borderRadius: 999,
+    backgroundColor: '#666', 
+    marginRight: 16,
+    minWidth: 80,
+    minHeight: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  badgePillText: { color: '#fff', fontWeight: '700', fontSize: 12, letterSpacing: 0.3 },
+  badgePillText: { 
+    color: '#fff', 
+    fontWeight: '700', 
+    fontSize: 14, 
+    letterSpacing: 0.5,
+  },
 
-  ftRow: { flexDirection: 'row', marginTop: 12 },
-  ftButton: { backgroundColor: '#0B63A8', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12 },
-  ftButtonText: { color: 'white', fontSize: 18, fontWeight: '700' },
-  ftButtonSub: { color: 'white', fontSize: 14, opacity: 0.9 },
+  ftRow: { 
+    flexDirection: 'row', 
+    marginTop: 20,
+  },
+  ftButton: { 
+    backgroundColor: '#0B63A8', 
+    borderRadius: 16, 
+    paddingHorizontal: 24, 
+    paddingVertical: 16,
+    minHeight: 72,
+    minWidth: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ftButtonText: { 
+    color: 'white', 
+    fontSize: 20, 
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  ftButtonSub: { 
+    color: 'white', 
+    fontSize: 16, 
+    opacity: 0.9,
+    textAlign: 'center',
+  },
 
-  nightBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  nightTime: { fontSize: 120, color: '#DDE3EA', fontWeight: '700' },
-  nightDate: { fontSize: 24, color: '#B0B6C0', marginTop: 8 },
+  nightBox: { 
+    flex: 1, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  nightTime: { 
+    fontSize: 140, 
+    color: '#DDE3EA', 
+    fontWeight: '700',
+    textAlign: 'center',
+    letterSpacing: 2,
+  },
+  nightDate: { 
+    fontSize: 28, 
+    color: '#B0B6C0', 
+    marginTop: 16,
+    textAlign: 'center',
+    lineHeight: 36,
+  },
 
-  cornerHotspot: { position: 'absolute', top: 0, right: 0, width: 96, height: 96, zIndex: 20 },
+  cornerHotspot: { 
+    position: 'absolute', 
+    top: 0, 
+    right: 0, 
+    width: 120, 
+    height: 120, 
+    zIndex: 20,
+  },
 
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center' },
-  modalCard: { width: 420, maxWidth: '90%', backgroundColor: '#171A21', borderRadius: 16, padding: 20 },
-  modalTitle: { fontSize: 22, color: 'white', fontWeight: '700', marginBottom: 8 },
+  modalBackdrop: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.65)', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    padding: 32,
+  },
+  modalCard: { 
+    width: 480, 
+    maxWidth: '90%', 
+    backgroundColor: '#171A21', 
+    borderRadius: 20, 
+    padding: 32,
+  },
+  modalTitle: { 
+    fontSize: 26, 
+    color: 'white', 
+    fontWeight: '700', 
+    marginBottom: 16,
+    textAlign: 'center',
+  },
   pinInput: {
-    backgroundColor: '#0f1115', color: 'white', borderRadius: 10,
-    borderWidth: 1, borderColor: '#2A2F3A', paddingHorizontal: 12,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
-    fontSize: 22, letterSpacing: 6, textAlign: 'center',
+    backgroundColor: '#0f1115', 
+    color: 'white', 
+    borderRadius: 12,
+    borderWidth: 2, 
+    borderColor: '#2A2F3A', 
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    fontSize: 28, 
+    letterSpacing: 8, 
+    textAlign: 'center',
+    minHeight: 64,
   },
-  pinError: { color: '#FF7373', fontSize: 14, marginTop: 6 },
-  modalButtons: { flexDirection: 'row', marginTop: 12 },
-  btn: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12 },
+  pinError: { 
+    color: '#FF7373', 
+    fontSize: 16, 
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  modalButtons: { 
+    flexDirection: 'row', 
+    marginTop: 20,
+  },
+  btn: { 
+    paddingHorizontal: 24, 
+    paddingVertical: 16, 
+    borderRadius: 12,
+    minHeight: 56,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   btnGhost: { backgroundColor: '#00000030' },
   btnPrimary: { backgroundColor: '#0B63A8' },
-  btnText: { color: '#E6E6EA', fontSize: 16, fontWeight: '700' },
+  btnText: { 
+    color: '#E6E6EA', 
+    fontSize: 18, 
+    fontWeight: '700',
+    textAlign: 'center',
+  },
 
-  adminBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
-  adminPanel: { backgroundColor: '#171A21', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 },
-  adminTitle: { fontSize: 20, color: 'white', fontWeight: '800', marginBottom: 8 },
-  adminRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },
-  adminLabel: { color: '#C8CCD6', fontSize: 16 },
+  adminBackdrop: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.45)', 
+    justifyContent: 'flex-end',
+  },
+  adminPanel: { 
+    backgroundColor: '#171A21', 
+    borderTopLeftRadius: 24, 
+    borderTopRightRadius: 24, 
+    padding: 32,
+    maxHeight: '80%',
+  },
+  adminTitle: { 
+    fontSize: 24, 
+    color: 'white', 
+    fontWeight: '800', 
+    marginBottom: 16,
+  },
+  adminRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingVertical: 12,
+    minHeight: 56,
+  },
+  adminLabel: { 
+    color: '#C8CCD6', 
+    fontSize: 18,
+    flex: 1,
+  },
 
-  toggle: { width: 56, height: 32, borderRadius: 999, backgroundColor: '#2A2F3A', padding: 4, justifyContent: 'center' },
+  toggle: { 
+    width: 64, 
+    height: 36, 
+    borderRadius: 999, 
+    backgroundColor: '#2A2F3A', 
+    padding: 4, 
+    justifyContent: 'center',
+  },
   toggleOn: { backgroundColor: '#16803C' },
-  knob: { width: 24, height: 24, borderRadius: 999, backgroundColor: '#9AA0A6', transform: [{ translateX: 0 }] },
-  knobOn: { backgroundColor: '#fff', transform: [{ translateX: 24 }] },
+  knob: { 
+    width: 28, 
+    height: 28, 
+    borderRadius: 999, 
+    backgroundColor: '#9AA0A6', 
+    transform: [{ translateX: 0 }],
+  },
+  knobOn: { 
+    backgroundColor: '#fff', 
+    transform: [{ translateX: 28 }],
+  },
 });
 
 // Enkel selvtest (valgfritt)
