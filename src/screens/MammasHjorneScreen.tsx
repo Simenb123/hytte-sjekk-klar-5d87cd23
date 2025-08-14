@@ -25,6 +25,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { useKeepAwake } from 'expo-keep-awake';
+import { SilhouetteUploader } from '@/components/admin/SilhouetteUploader';
 
 // ---------- Types ----------
 export type Event = {
@@ -200,11 +201,19 @@ const isNow = (startISO: string, endISO: string) => {
 // ---------- Underkomponenter ----------
 
 // Mammas hjørne logo
-function MammasLogo() {
+function MammasLogo({ silhouetteUrl }: { silhouetteUrl?: string }) {
   return (
     <View style={styles.logoContainer}>
       <View style={styles.logoIcon}>
-        <Text style={styles.logoEmoji}>👩‍🦳</Text>
+        {silhouetteUrl ? (
+          <img 
+            src={silhouetteUrl} 
+            alt="Mamma silhouette" 
+            style={styles.silhouetteImage}
+          />
+        ) : (
+          <Text style={styles.logoEmoji}>👩‍🦳</Text>
+        )}
       </View>
       <Text style={styles.logoText}>Mamma's hjørne</Text>
     </View>
@@ -330,6 +339,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   const [online, setOnline] = useState(true);
   const [usingMock, setUsingMock] = useState(!(fetchEvents && fetchWeather));
   const [selectedLocation, setSelectedLocation] = useState<WeatherLocation>(weatherLocations[0]);
+  const [silhouetteUrl, setSilhouetteUrl] = useState<string | null>(null);
 
   const [adminVisible, setAdminVisible] = useState(false);
   const [adminArmed, setAdminArmed] = useState(false);
@@ -569,7 +579,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             </View>
           </View>
           <View style={styles.headerRight}>
-            <MammasLogo />
+            <MammasLogo silhouetteUrl={silhouetteUrl} />
           </View>
         </View>
       </View>
@@ -743,6 +753,13 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               <Text style={styles.adminLabel}>Bruk mock-data</Text>
               <Toggle val={usingMock} onChange={setUsingMock} />
             </View>
+            
+            {/* Silhouette uploader */}
+            <SilhouetteUploader 
+              onSilhouetteGenerated={setSilhouetteUrl}
+              currentSilhouette={silhouetteUrl}
+            />
+            
             <View style={styles.adminRow}>
               <Text style={styles.adminLabel}>Online</Text>
               <Text style={[styles.badge, { alignSelf: 'auto' }]}>
@@ -1213,6 +1230,14 @@ const styles = StyleSheet.create({
   dropdownItemTextSelected: {
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+
+  // Silhouette image style
+  silhouetteImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    objectFit: 'cover',
   },
 });
 
