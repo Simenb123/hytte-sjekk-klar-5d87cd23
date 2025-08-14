@@ -20,9 +20,6 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "react-native": "react-native-web",
-      "@react-native-async-storage/async-storage": path.resolve(__dirname, "./src/lib/asyncStorage.ts"),
-      "@react-native-community/netinfo": path.resolve(__dirname, "./src/lib/netInfo.ts"),
-      "expo-keep-awake": path.resolve(__dirname, "./src/lib/keepAwake.ts"),
     },
   },
 }));
