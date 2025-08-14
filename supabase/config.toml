@@ -10,7 +10,8 @@ site_url = "https://effective-yodel-g46644wqwp74c9995.github.dev"
 additional_redirect_urls = [
   "https://effective-yodel-g46644wqwp74c9995.github.dev/*",
   "http://localhost:8080/*",
-  "https://hytte-sjekk-klar-5d87cd23.vercel.app/*"
+  "https://hytte-sjekk-klar-5d87cd23.vercel.app/*",
+  "https://id-preview--97756950-3c85-41a4-94ae-a14ccf690d68.lovable.app/*"
 ]
 
 [functions.google-calendar]
