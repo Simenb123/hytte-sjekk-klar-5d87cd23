@@ -80,6 +80,21 @@ const STORAGE_EVENTS = 'mh_events_v1';
 const STORAGE_WEATHER = 'mh_weather_v1';
 const STORAGE_UPDATED_AT = 'mh_updated_v1';
 
+const storage: {
+  getItem: (key: string) => Promise<string | null>;
+  multiSet: (entries: [string, string][]) => Promise<void>;
+} =
+  Platform.OS === 'web'
+    ? {
+        getItem: async (k: string) =>
+          typeof window !== 'undefined' ? window.localStorage.getItem(k) : null,
+        multiSet: async (pairs: [string, string][]) => {
+          if (typeof window === 'undefined') return;
+          for (const [k, v] of pairs) window.localStorage.setItem(k, v);
+        },
+      }
+    : AsyncStorage;
+
 // For demo: ikon→emoji; kan erstattes med YR-ikoner
 const symbolToEmoji = (s: string): string => {
   const key = s.toLowerCase();
@@ -281,9 +296,9 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
     (async () => {
       try {
         const [e, w, u] = await Promise.all([
-          AsyncStorage.getItem(STORAGE_EVENTS),
-          AsyncStorage.getItem(STORAGE_WEATHER),
-          AsyncStorage.getItem(STORAGE_UPDATED_AT),
+          storage.getItem(STORAGE_EVENTS),
+          storage.getItem(STORAGE_WEATHER),
+          storage.getItem(STORAGE_UPDATED_AT),
         ]);
         if (e) setEvents(JSON.parse(e));
         if (w) setWeather(JSON.parse(w));
@@ -308,7 +323,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       if (we) setWeather(we);
       const ts = new Date().toISOString();
       setLastUpdated(ts);
-      await AsyncStorage.multiSet([
+      await storage.multiSet([
         [STORAGE_EVENTS, JSON.stringify(ev)],
         [STORAGE_WEATHER, JSON.stringify(we)],
         [STORAGE_UPDATED_AT, ts],
