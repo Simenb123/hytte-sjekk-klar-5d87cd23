@@ -15,17 +15,20 @@ const MammasHjorneContainer: React.FC = () => {
   };
 
   const fetchWeather = async (lat: number = WEATHER_LAT, lon: number = WEATHER_LON): Promise<WeatherSnapshot> => {
+    console.log(`Fetching weather for coordinates: ${lat}, ${lon}`);
     const { data, error } = await supabase.functions.invoke('weather-proxy', {
       body: { lat, lon, days: 1 },
     });
-    if (error) throw error;
+    if (error) {
+      console.error('Weather fetch error:', error);
+      throw error;
+    }
     
-    // Use the location name from the weather API response, fallback to config
-    const locationName = data.location || LOCATION_NAME;
+    console.log('Weather data received:', data);
     
     return {
       updatedISO: data.lastUpdated,
-      locationName,
+      locationName: data.location || LOCATION_NAME,
       now: {
         tempC: data.current.temperature,
         symbol: data.current.icon,

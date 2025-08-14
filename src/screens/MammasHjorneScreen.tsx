@@ -304,6 +304,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   const weatherLocations: WeatherLocation[] = [
     { name: 'Gaustablikk', lat: 59.8726, lon: 8.6475 },
     { name: 'Jeløya (Moss)', lat: 59.4, lon: 10.6 },
+    { name: 'Oslo', lat: 59.9139, lon: 10.7522 },
   ];
 
   // state-variabler
@@ -318,6 +319,28 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
     latitude: weatherLocations[0].lat,
     longitude: weatherLocations[0].lon
   });
+
+  // Handle location changes from LocationPicker
+  const handleLocationChange = (location: WeatherLocation) => {
+    console.log('Location changed to:', location);
+    setSelectedLocation(location);
+    setCurrentWeatherLocation({
+      name: location.name,
+      latitude: location.lat,
+      longitude: location.lon
+    });
+  };
+
+  const handleLocationPickerSelect = (location: { name: string; latitude: number; longitude: number }) => {
+    console.log('LocationPicker selected:', location);
+    const weatherLocation: WeatherLocation = {
+      name: location.name,
+      lat: location.latitude,
+      lon: location.longitude
+    };
+    setSelectedLocation(weatherLocation);
+    setCurrentWeatherLocation(location);
+  };
   const [silhouetteUrl, setSilhouetteUrl] = useState<string | null>(null);
 
   const [adminVisible, setAdminVisible] = useState(false);
@@ -421,7 +444,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       if (unsub) unsub();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [usingMock, selectedLocation]);
+  }, [usingMock, currentWeatherLocation]);
 
   // heartbeat
   useEffect(() => {
@@ -601,7 +624,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             <LocationDropdown 
               locations={weatherLocations}
               selectedLocation={selectedLocation}
-              onLocationChange={setSelectedLocation}
+              onLocationChange={handleLocationChange}
             />
           </div>
           <div className="text-blue-200 text-xl mb-8 font-medium">{weather?.locationName || selectedLocation.name}</div>

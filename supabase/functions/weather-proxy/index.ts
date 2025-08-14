@@ -32,10 +32,22 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const lat = url.searchParams.get('lat') || '59.9139';
-    const lon = url.searchParams.get('lon') || '10.7522';
-    const days = parseInt(url.searchParams.get('days') || '5');
+    // Handle both GET (query params) and POST (request body)
+    let lat = '59.9139';
+    let lon = '10.7522'; 
+    let days = 5;
+
+    if (req.method === 'POST') {
+      const body = await req.json();
+      lat = body.lat?.toString() || lat;
+      lon = body.lon?.toString() || lon;
+      days = parseInt(body.days?.toString() || '5');
+    } else {
+      const url = new URL(req.url);
+      lat = url.searchParams.get('lat') || lat;
+      lon = url.searchParams.get('lon') || lon;
+      days = parseInt(url.searchParams.get('days') || '5');
+    }
 
     const cacheKey = `${lat}-${lon}-${days}`;
     const cached = cache.get(cacheKey);
@@ -64,7 +76,27 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const transformedData = transformWeatherData(data, days, lat, lon);
+    
+    // Try reverse geocoding to get proper location name
+    let locationName = `${lat}, ${lon}`;
+    try {
+      const geocodeResponse = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`,
+        { headers: { 'User-Agent': 'hytteapp/1.0 (contact@example.com)' } }
+      );
+      if (geocodeResponse.ok) {
+        const geocodeData = await geocodeResponse.json();
+        if (geocodeData.display_name) {
+          // Extract meaningful location name from display_name
+          const parts = geocodeData.display_name.split(',');
+          locationName = parts.slice(0, 2).join(', ').trim();
+        }
+      }
+    } catch (geocodeError) {
+      console.log('Reverse geocoding failed, using coordinates:', geocodeError);
+    }
+    
+    const transformedData = transformWeatherData(data, days, lat, lon, locationName);
     
     // Cache the result
     cache.set(cacheKey, { data: transformedData, timestamp: Date.now() });
@@ -84,7 +116,7 @@ serve(async (req) => {
   }
 });
 
-function transformWeatherData(data: any, maxDays: number, lat: string, lon: string): WeatherData {
+function transformWeatherData(data: any, maxDays: number, lat: string, lon: string, locationName?: string): WeatherData {
   const timeseries = data.properties.timeseries;
   const current = timeseries[0];
   
@@ -141,7 +173,7 @@ function transformWeatherData(data: any, maxDays: number, lat: string, lon: stri
     });
 
   return {
-    location: `${lat}, ${lon}`,
+    location: locationName || `${lat}, ${lon}`,
     current: {
       temperature: Math.round(current.data.instant.details.air_temperature),
       condition: getConditionFromSymbol(current.data.next_1_hours?.summary?.symbol_code || 'unknown'),
