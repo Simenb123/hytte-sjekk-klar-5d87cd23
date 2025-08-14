@@ -524,7 +524,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               {fmtTimeHM(now)}
             </div>
             <div className="text-3xl text-gray-400 leading-9">
-              I dag er det {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
+              I dag: {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
             </div>
             {!online && (
               <div className="inline-block mt-4 px-3 py-2 bg-yellow-900 text-yellow-200 rounded-lg text-lg">
