@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import DashboardCard from '@/components/dashboard/DashboardCard';
 import Layout from '@/layout/Layout';
-import { Users, ClipboardList, Package, Calendar, Cloud, MessageCircle, Gamepad2, FileText, User, BookOpen, NotebookPen, Wine } from 'lucide-react';
+import { Users, ClipboardList, Package, Calendar, Cloud, Gamepad2, FileText, User, BookOpen, NotebookPen, Wine } from 'lucide-react';
 import aiHelperImage from '@/assets/ai-helper-monkey.png';
 
 export default function Dashboard() {
@@ -95,7 +95,16 @@ export default function Dashboard() {
                 color="bg-gradient-to-br from-yellow-500 to-yellow-600"
               />
             </Link>
-            
+
+            <Link to="/mammas-hjorne">
+              <DashboardCard
+                title="Mammas hjørne"
+                description="Infoskjerm for mamma"
+                icon={<User className="h-8 w-8" />}
+                color="bg-gradient-to-br from-pink-500 to-pink-600"
+              />
+            </Link>
+
             <Link to="/other-apps">
               <DashboardCard
                 title="Andre apper"
