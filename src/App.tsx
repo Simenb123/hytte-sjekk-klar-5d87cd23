@@ -28,6 +28,7 @@ import LogsPage from './screens/LogsPage';
 import ProfilePage from './screens/ProfilePage';
 import AuthPage from './screens/AuthPage';
 import NotFound from './screens/NotFound';
+import GoogleCalendarCallback from './components/auth/GoogleCalendarCallback';
 
 const queryClient = new QueryClient();
 
@@ -84,7 +85,7 @@ function App() {
               />
               {/* Redirect /calendar to /booking to maintain compatibility */}
               <Route path="/calendar" element={<Navigate to="/booking" replace />} />
-              <Route path="/auth/calendar" element={<Navigate to="/booking" replace />} />
+              <Route path="/auth/calendar" element={<GoogleCalendarCallback />} />
               <Route path="/weather" element={<WeatherApp />} />
               <Route
                 path="/ai-helper"
