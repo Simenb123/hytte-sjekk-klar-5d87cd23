@@ -60,6 +60,8 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+Note: React Native dependencies have been removed for web-only deployment compatibility.
+
 ## Weather data caching
 
 The app stores the last successful weather forecast in `localStorage` for 30 minutes.
