@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, Alert } from 'react-native';
 import { useSilhouetteGenerator } from '@/hooks/useSilhouetteGenerator';
 
 interface SilhouetteUploaderProps {
@@ -23,7 +22,7 @@ export const SilhouetteUploader: React.FC<SilhouetteUploaderProps> = ({
 
   const handleGenerateSilhouette = async () => {
     if (!selectedFile) {
-      Alert.alert('Feil', 'Velg et bilde først');
+      alert('Velg et bilde først');
       return;
     }
 
@@ -31,75 +30,61 @@ export const SilhouetteUploader: React.FC<SilhouetteUploaderProps> = ({
       const result = await generateSilhouette(selectedFile);
       if (result) {
         onSilhouetteGenerated(result.silhouette);
-        Alert.alert('Suksess', result.message);
+        alert(`Suksess: ${result.message}`);
         setSelectedFile(null);
       }
     } catch (err) {
-      Alert.alert('Feil', 'Kunne ikke generere silhuett');
+      alert('Kunne ikke generere silhuett');
     }
   };
 
   return (
-    <View style={{ padding: 16, backgroundColor: '#2A2F3A', borderRadius: 12, marginVertical: 8 }}>
-      <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600', marginBottom: 12 }}>
+    <div className="p-4 bg-gray-700 rounded-xl my-2">
+      <h4 className="text-white text-lg font-semibold mb-3">
         Mamma's Silhuett
-      </Text>
+      </h4>
       
       {currentSilhouette && (
-        <View style={{ marginBottom: 12, alignItems: 'center' }}>
+        <div className="mb-3 text-center">
           <img 
             src={currentSilhouette} 
             alt="Current silhouette" 
-            style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: '#1F2430' }}
+            className="w-15 h-15 rounded-full bg-gray-800 mx-auto"
           />
-          <Text style={{ color: '#9AA0A6', fontSize: 12, marginTop: 4 }}>
+          <div className="text-gray-400 text-sm mt-1">
             Nåværende silhuett
-          </Text>
-        </View>
+          </div>
+        </div>
       )}
 
       <input
         type="file"
         accept="image/*"
         onChange={handleFileSelect}
-        style={{
-          marginBottom: 12,
-          padding: 8,
-          backgroundColor: '#1F2430',
-          color: '#FFFFFF',
-          borderRadius: 8,
-          border: '1px solid #3A3F4A',
-          width: '100%'
-        }}
+        className="w-full mb-3 p-2 bg-gray-800 text-white rounded-lg border border-gray-600"
       />
 
       {selectedFile && (
-        <Text style={{ color: '#9AA0A6', fontSize: 14, marginBottom: 12 }}>
+        <div className="text-gray-400 text-sm mb-3">
           Valgt: {selectedFile.name}
-        </Text>
+        </div>
       )}
 
-      <Pressable
-        onPress={handleGenerateSilhouette}
+      <button
+        onClick={handleGenerateSilhouette}
         disabled={!selectedFile || loading}
-        style={{
-          backgroundColor: selectedFile && !loading ? '#0B63A8' : '#3A3F4A',
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderRadius: 8,
-          alignItems: 'center'
-        }}
+        className={`w-full px-4 py-3 rounded-lg text-white font-semibold ${
+          selectedFile && !loading ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 cursor-not-allowed'
+        }`}
       >
-        <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>
-          {loading ? 'Genererer silhuett...' : 'Generer Silhuett'}
-        </Text>
-      </Pressable>
+        {loading ? 'Genererer silhuett...' : 'Generer Silhuett'}
+      </button>
 
       {error && (
-        <Text style={{ color: '#FF7373', fontSize: 14, marginTop: 8 }}>
+        <div className="text-red-400 text-sm mt-2">
           {error}
-        </Text>
+        </div>
       )}
-    </View>
+    </div>
   );
 };

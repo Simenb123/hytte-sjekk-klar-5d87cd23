@@ -1,30 +1,13 @@
 // MammasHjorneScreen.tsx
 // --------------------------------------------------------------
-// iPad-optimalisert infoskjerm for "Mammas hjørne" (React Native/Expo)
+// iPad-optimalisert infoskjerm for "Mammas hjørne" (Web/React)
 // Funksjoner: Stor dato/klokke (nb-NO), neste avtaler (i dag + i morgen),
 // vær (nå + neste timer), nattmodus 01–07, offline-cache, nettstatus,
 // skjult adminhjørne (PIN 2468), valgfri FaceTime/SMS-knapper, pixel-shift.
 // Tidsone: Europe/Oslo, 24-timers klokke.
 // --------------------------------------------------------------
-// Koble til ekte data:
-// 1) Events: prop `fetchEvents: () => Promise<Event[]>` kaller backend-endepunkt
-//    (f.eks. GET /calendar/mamma/upcoming?days=2) og returnerer sorterte avtaler.
-// 2) Vær: prop `fetchWeather: () => Promise<WeatherSnapshot>` fra YR-proxy.
-// 3) Realtime: valgfri `initRealtime?: (onChange: () => void) => () => void`
-//    som kobler Supabase-channel og kaller `onChange` ved endring.
-// 4) Telemetry: `onHeartbeat?: (p: HeartbeatPayload) => void` hver 5. min.
-// 5) Avhengigheter (Expo):
-//    expo install @react-native-async-storage/async-storage @react-native-community/netinfo expo-keep-awake
-// --------------------------------------------------------------
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  View, Text, StyleSheet, Pressable, Modal, TextInput,
-  Linking, ScrollView, Platform,
-} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from '@react-native-community/netinfo';
-import { useKeepAwake } from 'expo-keep-awake';
 import { SilhouetteUploader } from '@/components/admin/SilhouetteUploader';
 
 // ---------- Types ----------
@@ -91,17 +74,14 @@ const STORAGE_UPDATED_AT = 'mh_updated_v1';
 const storage: {
   getItem: (key: string) => Promise<string | null>;
   multiSet: (entries: [string, string][]) => Promise<void>;
-} =
-  Platform.OS === 'web'
-    ? {
-        getItem: async (k: string) =>
-          typeof window !== 'undefined' ? window.localStorage.getItem(k) : null,
-        multiSet: async (pairs: [string, string][]) => {
-          if (typeof window === 'undefined') return;
-          for (const [k, v] of pairs) window.localStorage.setItem(k, v);
-        },
-      }
-    : AsyncStorage;
+} = {
+  getItem: async (k: string) =>
+    typeof window !== 'undefined' ? window.localStorage.getItem(k) : null,
+  multiSet: async (pairs: [string, string][]) => {
+    if (typeof window === 'undefined') return;
+    for (const [k, v] of pairs) window.localStorage.setItem(k, v);
+  },
+};
 
 // For demo: ikon→emoji; kan erstattes med YR-ikoner
 const symbolToEmoji = (s: string): string => {
@@ -203,20 +183,20 @@ const isNow = (startISO: string, endISO: string) => {
 // Mammas hjørne logo
 function MammasLogo({ silhouetteUrl }: { silhouetteUrl?: string }) {
   return (
-    <View style={styles.logoContainer}>
-      <View style={styles.logoIcon}>
+    <div className="flex items-center gap-3 px-5 py-3 bg-gray-800 rounded-2xl">
+      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
         {silhouetteUrl ? (
           <img 
             src={silhouetteUrl} 
             alt="Mamma silhouette" 
-            style={styles.silhouetteImage}
+            className="w-12 h-12 rounded-full object-cover"
           />
         ) : (
-          <Text style={styles.logoEmoji}>👩‍🦳</Text>
+          <span className="text-3xl">👩‍🦳</span>
         )}
-      </View>
-      <Text style={styles.logoText}>Mamma's hjørne</Text>
-    </View>
+      </div>
+      <span className="text-xl font-bold text-white">Mamma's hjørne</span>
+    </div>
   );
 }
 
@@ -233,40 +213,34 @@ function LocationDropdown({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <View style={styles.dropdownContainer}>
-      <Pressable 
-        onPress={() => setIsOpen(!isOpen)}
-        style={styles.dropdownButton}
+    <div className="relative min-w-[180px]">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between bg-gray-700 text-white px-4 py-3 rounded-xl text-sm font-medium min-h-[44px]"
       >
-        <Text style={styles.dropdownText}>{selectedLocation.name}</Text>
-        <Text style={styles.dropdownArrow}>{isOpen ? '▲' : '▼'}</Text>
-      </Pressable>
+        <span>{selectedLocation.name}</span>
+        <span className="text-gray-400 ml-2">{isOpen ? '▲' : '▼'}</span>
+      </button>
       
       {isOpen && (
-        <View style={styles.dropdownMenu}>
+        <div className="absolute top-12 left-0 right-0 bg-gray-700 rounded-xl border border-gray-600 shadow-xl z-50">
           {locations.map((location) => (
-            <Pressable
+            <button
               key={location.name}
-              onPress={() => {
+              onClick={() => {
                 onLocationChange(location);
                 setIsOpen(false);
               }}
-              style={[
-                styles.dropdownItem,
-                selectedLocation.name === location.name && styles.dropdownItemSelected
-              ]}
+              className={`w-full text-left px-4 py-3.5 text-sm font-medium border-b border-gray-600 last:border-b-0 min-h-[48px] hover:bg-gray-600 ${
+                selectedLocation.name === location.name ? 'bg-blue-600 text-white' : 'text-white'
+              }`}
             >
-              <Text style={[
-                styles.dropdownItemText,
-                selectedLocation.name === location.name && styles.dropdownItemTextSelected
-              ]}>
-                {location.name}
-              </Text>
-            </Pressable>
+              {location.name}
+            </button>
           ))}
-        </View>
+        </div>
       )}
-    </View>
+    </div>
   );
 }
 
@@ -275,39 +249,43 @@ function EventRow({ ev }: { ev: Event }) {
   const e = parseISO(ev.end);
 
   const badge = isNow(ev.start, ev.end)
-    ? { label: 'Nå', color: '#16803C' }
+    ? { label: 'Nå', cssClass: 'bg-green-600' }
     : inNextHours(ev.start, 3)
-    ? { label: 'Snart', color: '#9B5B00' }
+    ? { label: 'Snart', cssClass: 'bg-orange-600' }
     : inNextHours(ev.start, 24)
-    ? { label: 'I morgen', color: '#0B63A8' }
-    : { label: 'Utover', color: '#666' };
+    ? { label: 'I morgen', cssClass: 'bg-blue-600' }
+    : { label: 'Utover', cssClass: 'bg-gray-600' };
 
   return (
-    <View style={styles.eventRow}>
-      <View style={[styles.badgePill, { backgroundColor: badge.color }]}>
-        <Text style={styles.badgePillText}>{badge.label}</Text>
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.eventTitle}>{ev.title}</Text>
-        <Text style={styles.eventMeta}>
+    <div className="flex items-center gap-3 py-4 border-b border-gray-700 min-h-[80px]">
+      <div className={`px-3.5 py-2 rounded-full text-xs text-white font-bold min-w-[80px] text-center ${badge.cssClass}`}>
+        {badge.label}
+      </div>
+      <div className="flex-1">
+        <div className="text-white font-semibold text-xl leading-7">{ev.title}</div>
+        <div className="text-gray-400 text-lg mt-1 leading-6">
           {fmtTimeHM(s)}–{fmtTimeHM(e)}
           {ev.location ? `  ·  ${ev.location}` : ''}
-        </Text>
-      </View>
-    </View>
+        </div>
+      </div>
+    </div>
   );
 }
 
 function Toggle({ val, onChange }: { val: boolean; onChange: (v: boolean) => void }) {
   return (
-    <Pressable
-      accessibilityRole="switch"
-      accessibilityState={{ checked: val }}
-      onPress={() => onChange(!val)}
-      style={[styles.toggle, val && styles.toggleOn]}
+    <button
+      onClick={() => onChange(!val)}
+      className={`relative inline-flex h-9 w-16 items-center rounded-full p-1 transition-colors ${
+        val ? 'bg-green-600' : 'bg-gray-600'
+      }`}
     >
-      <View style={[styles.knob, val && styles.knobOn]} />
-    </Pressable>
+      <span
+        className={`inline-block h-7 w-7 transform rounded-full bg-white transition-transform ${
+          val ? 'translate-x-7' : 'translate-x-0'
+        }`}
+      />
+    </button>
   );
 }
 
@@ -324,7 +302,6 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
     { name: 'Eva', relation: 'Venninne', number: '+47XXXXXXXX', type: 'sms' },
   ],
 }) => {
-  useKeepAwake();
 
   // Lokasjoner for værvarsel
   const weatherLocations: WeatherLocation[] = [
@@ -375,8 +352,14 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
   // nettstatus
   useEffect(() => {
-    const unsub = NetInfo.addEventListener((state) => setOnline(!!state.isConnected));
-    return () => unsub();
+    const updateOnlineStatus = () => setOnline(navigator.onLine);
+    updateOnlineStatus();
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    return () => {
+      window.removeEventListener('online', updateOnlineStatus);
+      window.removeEventListener('offline', updateOnlineStatus);
+    };
   }, []);
 
   // last cache ved start
@@ -526,233 +509,234 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
     }
   };
 
+  const openLink = (url: string) => {
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
+  };
+
   // ---------- Render ----------
   if (withinNight) {
     return (
-      <View style={[styles.container, { backgroundColor: '#0b0b0f' }] }>
-        <View
-          style={[
-            styles.nightBox,
-            { transform: [{ translateX: shift.x }, { translateY: shift.y }] },
-          ]}
-        >
-          <Text style={styles.nightTime}>{fmtTimeHM(now)}</Text>
-          <Text style={styles.nightDate}>
-            I dag er det {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
-          </Text>
-          {!online && <Text style={styles.badge}>Frakoblet</Text>}
-        </View>
-      </View>
+      <div 
+        className="flex-1 bg-gray-950 p-8 pt-6 w-full min-h-screen"
+        style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
+      >
+        <div className="flex-1 flex items-center justify-center px-8">
+          <div className="text-center">
+            <div className="text-9xl text-gray-200 font-bold tracking-wider leading-none mb-4">
+              {fmtTimeHM(now)}
+            </div>
+            <div className="text-3xl text-gray-400 leading-9">
+              I dag er det {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
+            </div>
+            {!online && (
+              <div className="inline-block mt-4 px-3 py-2 bg-yellow-900 text-yellow-200 rounded-lg text-lg">
+                Frakoblet
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        { transform: [{ translateX: shift.x }, { translateY: shift.y }] },
-      ]}
+    <div 
+      className="flex-1 bg-gray-950 p-8 pt-6 w-full min-h-screen"
+      style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
     >
       {/* skjult admin trigger */}
-      <Pressable
-        onPress={handleCornerTap}
-        style={styles.cornerHotspot}
-        accessibilityLabel="Skjult adminområde"
+      <button
+        onClick={handleCornerTap}
+        className="absolute top-0 right-0 w-30 h-30 z-20 opacity-0"
+        aria-label="Skjult adminområde"
       />
 
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.dateLine}>
+      <div className="mb-4">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <div className="text-4xl text-gray-200 font-semibold leading-10 mb-2">
               I dag er det{' '}
               {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
-            </Text>
-            <Text style={styles.bigClock}>{fmtTimeHM(now)}</Text>
-            <View style={styles.subHeaderRow}>
-              <Text style={styles.updated}>
+            </div>
+            <div className="text-8xl text-white font-bold tracking-wide leading-none mb-2">
+              {fmtTimeHM(now)}
+            </div>
+            <div className="flex items-center gap-3 min-h-7">
+              <span className="text-lg text-gray-400">
                 Sist oppdatert {lastUpdated ? fmtTimeHM(parseISO(lastUpdated)) : '—'}
-              </Text>
+              </span>
               {!online && (
-                <Text style={[styles.badge, { marginLeft: 12 }]}>Frakoblet</Text>
+                <span className="px-3 py-1.5 bg-yellow-900 text-yellow-200 rounded-lg text-sm font-medium">
+                  Frakoblet
+                </span>
               )}
-            </View>
-          </View>
-          <View style={styles.headerRight}>
+            </div>
+          </div>
+          <div className="ml-8">
             <MammasLogo silhouetteUrl={silhouetteUrl} />
-          </View>
-        </View>
-      </View>
+          </div>
+        </div>
+      </div>
 
-      <View style={styles.contentRow}>
+      <div className="flex-1 flex gap-6 mt-5">
         {/* Vær */}
-        <View style={styles.weatherCard}>
-          <View style={styles.weatherHeader}>
-            <Text style={styles.sectionTitle}>Været</Text>
+        <div className="flex-1 bg-gray-800 rounded-xl p-6 min-h-[400px]">
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-3xl text-white font-bold leading-8">Været</h2>
             <LocationDropdown 
               locations={weatherLocations}
               selectedLocation={selectedLocation}
               onLocationChange={setSelectedLocation}
             />
-          </View>
-          <Text style={styles.weatherLocation}>{weather?.locationName || selectedLocation.name}</Text>
-          <View style={styles.weatherNowRow}>
-            <Text style={styles.weatherEmoji}>
+          </div>
+          <div className="text-gray-400 mb-4">{weather?.locationName || selectedLocation.name}</div>
+          <div className="flex items-center mb-4">
+            <span className="text-6xl mr-4">
               {symbolToEmoji(weather?.now.symbol ?? 'clearsky')}
-            </Text>
-            <View>
-              <Text style={styles.weatherNowTemp}>
+            </span>
+            <div>
+              <div className="text-6xl text-white font-bold leading-none">
                 {Math.round(weather?.now.tempC ?? 18)}°
-              </Text>
+              </div>
               {typeof weather?.now.windMs === 'number' && (
-                <Text style={styles.weatherDetails}>
+                <div className="text-lg text-gray-300 mt-1">
                   Vind {weather?.now.windMs?.toFixed(1)} m/s
-                </Text>
+                </div>
               )}
-            </View>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingVertical: 8 }}
-          >
+            </div>
+          </div>
+          <div className="flex gap-3 overflow-x-auto py-2">
             {(weather?.hourly ?? makeMockWeather().hourly).map((h, idx) => (
-              <View
+              <div
                 key={idx}
-                style={[styles.weatherHour, idx !== 0 ? { marginLeft: 12 } : null]}
+                className="w-25 bg-gray-700 rounded-2xl p-3 text-center min-h-[120px] flex flex-col justify-between"
               >
-                <Text style={styles.weatherHourTime}>
+                <div className="text-lg text-gray-300 font-medium">
                   {fmtTimeHM(parseISO(h.timeISO))}
-                </Text>
-                <Text style={styles.weatherHourEmoji}>
+                </div>
+                <div className="text-4xl my-2">
                   {symbolToEmoji(h.symbol)}
-                </Text>
-                <Text style={styles.weatherHourTemp}>
+                </div>
+                <div className="text-xl text-white font-semibold">
                   {Math.round(h.tempC)}°
-                </Text>
-              </View>
+                </div>
+              </div>
             ))}
-          </ScrollView>
-        </View>
+          </div>
+        </div>
 
         {/* Kalender */}
-        <View style={[styles.eventsCard, { marginLeft: 24 }]}>
-          <Text style={styles.sectionTitle}>Neste avtaler</Text>
-          <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+        <div className="flex-[1.3] bg-gray-800 rounded-xl p-6 min-h-[400px]">
+          <h2 className="text-3xl text-white font-bold mb-4 leading-8">Neste avtaler</h2>
+          <div className="overflow-y-auto pb-6">
             {/* I dag */}
-            <Text style={styles.dayHeading}>I dag</Text>
+            <h3 className="text-2xl text-gray-300 mb-3 mt-2 font-semibold">I dag</h3>
             {grouped.evToday.length === 0 ? (
-              <Text style={styles.emptyText}>Ingen avtaler i dag.</Text>
+              <div className="text-xl text-gray-400 leading-7">Ingen avtaler i dag.</div>
             ) : (
               grouped.evToday.map((ev) => <EventRow key={ev.id} ev={ev} />)
             )}
 
             {/* I morgen */}
-            <Text style={[styles.dayHeading, { marginTop: 16 }]}>I morgen</Text>
+            <h3 className="text-2xl text-gray-300 mb-3 mt-4 font-semibold">I morgen</h3>
             {grouped.evTomorrow.length === 0 ? (
-              <Text style={styles.emptyText}>Ingen avtaler i morgen.</Text>
+              <div className="text-xl text-gray-400 leading-7">Ingen avtaler i morgen.</div>
             ) : (
               grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} />)
             )}
-          </ScrollView>
-        </View>
-      </View>
+          </div>
+        </div>
+      </div>
 
       {/* FaceTime/SMS-knapper */}
       {showFT && (
-        <View style={styles.ftRow}>
+        <div className="flex gap-4 mt-5">
           {contacts.map((c, i) => (
-            <Pressable
+            <button
               key={i}
-              style={[styles.ftButton, i !== contacts.length - 1 && { marginRight: 16 }]}
-              onPress={() =>
-                Linking.openURL(dialHref(c) || '').catch(() => {})
-              }
+              className="bg-blue-600 rounded-2xl px-6 py-4 min-h-[72px] min-w-[120px] text-center"
+              onClick={() => openLink(dialHref(c) || '')}
             >
-              <Text style={styles.ftButtonText}>
+              <div className="text-white text-xl font-bold">
                 {c.type === 'video'
                   ? '🎥'
                   : c.type === 'audio'
                   ? '📞'
                   : '💬'}{' '}
                 {c.name}
-              </Text>
+              </div>
               {c.relation && (
-                <Text style={styles.ftButtonSub}>{c.relation}</Text>
+                <div className="text-white text-base opacity-90">{c.relation}</div>
               )}
-            </Pressable>
+            </button>
           ))}
-        </View>
+        </div>
       )}
 
       {/* PIN modal */}
-      <Modal
-        visible={adminArmed}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setAdminArmed(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Skriv PIN</Text>
-            <TextInput
-              style={styles.pinInput}
+      {adminArmed && (
+        <div className="fixed inset-0 bg-black bg-opacity-65 flex items-center justify-center p-8 z-50">
+          <div className="w-[480px] max-w-[90%] bg-gray-800 rounded-xl p-8">
+            <h3 className="text-2xl text-white font-bold mb-4 text-center">Skriv PIN</h3>
+            <input
+              type="password"
+              className="w-full bg-gray-950 text-white rounded-xl border-2 border-gray-600 px-4 py-4 text-3xl tracking-widest text-center min-h-[64px]"
               value={pin}
-              onChangeText={(t) => {
-                setPin(t.replace(/\D/g, '').slice(0, 8));
+              onChange={(e) => {
+                setPin(e.target.value.replace(/\D/g, '').slice(0, 8));
                 if (pinError) setPinError('');
               }}
               placeholder="••••"
-              placeholderTextColor="#999"
-              keyboardType="number-pad"
-              secureTextEntry
               autoFocus
             />
-            {!!pinError && <Text style={styles.pinError}>{pinError}</Text>}
-            <View style={styles.modalButtons}>
-              <Pressable
-                style={[styles.btn, styles.btnGhost]}
-                onPress={() => {
+            {pinError && (
+              <div className="text-red-400 text-center mt-2">{pinError}</div>
+            )}
+            <div className="flex gap-4 mt-5">
+              <button
+                className="flex-1 bg-gray-900 bg-opacity-30 text-gray-200 px-6 py-4 rounded-xl text-lg font-bold min-h-[56px]"
+                onClick={() => {
                   setAdminArmed(false);
                   setPin('');
                   setPinError('');
                 }}
               >
-                <Text style={styles.btnText}>Avbryt</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.btn, styles.btnPrimary, { marginLeft: 16 }]}
-                onPress={verifyPin}
+                Avbryt
+              </button>
+              <button
+                className="flex-1 bg-blue-600 text-white px-6 py-4 rounded-xl text-lg font-bold min-h-[56px]"
+                onClick={verifyPin}
               >
-                <Text style={[styles.btnText, { color: 'white' }]}>OK</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Admin-panel */}
-      <Modal
-        visible={adminVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setAdminVisible(false)}
-      >
-        <View style={styles.adminBackdrop}>
-          <View style={styles.adminPanel}>
-            <Text style={styles.adminTitle}>Admin</Text>
-            <View style={styles.adminRow}>
-              <Text style={styles.adminLabel}>Nattmodus nå</Text>
+      {adminVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-45 flex justify-end z-50">
+          <div className="bg-gray-800 rounded-tl-3xl rounded-tr-3xl p-8 max-h-[80%] overflow-y-auto w-full max-w-md">
+            <h3 className="text-2xl text-white font-extrabold mb-4">Admin</h3>
+            
+            <div className="flex items-center justify-between py-3 min-h-[56px]">
+              <span className="text-gray-300 text-lg flex-1">Nattmodus nå</span>
               <Toggle val={forceNight} onChange={setForceNight} />
-            </View>
-            <View style={styles.adminRow}>
-              <Text style={styles.adminLabel}>Vis FaceTime/SMS</Text>
+            </div>
+            
+            <div className="flex items-center justify-between py-3 min-h-[56px]">
+              <span className="text-gray-300 text-lg flex-1">Vis FaceTime/SMS</span>
               <Toggle val={showFT} onChange={setShowFT} />
-            </View>
-            <View style={styles.adminRow}>
-              <Text style={styles.adminLabel}>Bruk mock-data</Text>
+            </div>
+            
+            <div className="flex items-center justify-between py-3 min-h-[56px]">
+              <span className="text-gray-300 text-lg flex-1">Bruk mock-data</span>
               <Toggle val={usingMock} onChange={setUsingMock} />
-            </View>
+            </div>
             
             {/* Silhouette uploader */}
             <SilhouetteUploader 
@@ -760,486 +744,34 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               currentSilhouette={silhouetteUrl}
             />
             
-            <View style={styles.adminRow}>
-              <Text style={styles.adminLabel}>Online</Text>
-              <Text style={[styles.badge, { alignSelf: 'auto' }]}>
+            <div className="flex items-center justify-between py-3 min-h-[56px]">
+              <span className="text-gray-300 text-lg flex-1">Online</span>
+              <span className="px-3 py-1.5 bg-yellow-900 text-yellow-200 rounded-lg text-sm">
                 {online ? 'Online' : 'Offline'}
-              </Text>
-            </View>
+              </span>
+            </div>
 
-            <View style={{ height: 12 }} />
-            <View style={[styles.modalButtons, { justifyContent: 'flex-end' }] }>
-              <Pressable
-                style={[styles.btn, styles.btnGhost]}
-                onPress={() => loadAll()}
+            <div className="h-3" />
+            <div className="flex justify-end gap-4">
+              <button
+                className="bg-gray-900 bg-opacity-30 text-gray-200 px-6 py-4 rounded-xl text-lg font-bold"
+                onClick={() => loadAll()}
               >
-                <Text style={styles.btnText}>Oppdater nå</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.btn, styles.btnPrimary, { marginLeft: 16 }]}
-                onPress={() => setAdminVisible(false)}
+                Oppdater nå
+              </button>
+              <button
+                className="bg-blue-600 text-white px-6 py-4 rounded-xl text-lg font-bold"
+                onClick={() => setAdminVisible(false)}
               >
-                <Text style={[styles.btnText, { color: 'white' }]}>Lukk</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
+                Lukk
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
-
-// ---------- Styles (iPad 11 optimized) ----------
-const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#0f1115', 
-    padding: 32, 
-    paddingTop: 24,
-    width: '100%',
-  },
-  header: { marginBottom: 16 },
-  dateLine: { 
-    fontSize: 36, 
-    color: '#E6E6EA', 
-    fontWeight: '600',
-    lineHeight: 42,
-  },
-  bigClock: { 
-    fontSize: 96, 
-    color: '#FFFFFF', 
-    fontWeight: '700', 
-    letterSpacing: 2,
-    lineHeight: 110,
-  },
-  subHeaderRow: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginTop: 8,
-    minHeight: 28,
-  },
-  updated: { fontSize: 18, color: '#9AA0A6' },
-  badge: {
-    fontSize: 16, 
-    color: '#FFD34D', 
-    backgroundColor: '#3A2E00',
-    paddingHorizontal: 12, 
-    paddingVertical: 6, 
-    borderRadius: 10,
-    minHeight: 32,
-    textAlign: 'center',
-  },
-
-  contentRow: { 
-    flex: 1, 
-    flexDirection: 'row', 
-    marginTop: 20,
-  },
-
-  weatherCard: { 
-    flex: 1, 
-    backgroundColor: '#171A21', 
-    borderRadius: 20, 
-    padding: 24,
-    minHeight: 400,
-  },
-  eventsCard: { 
-    flex: 1.3, 
-    backgroundColor: '#171A21', 
-    borderRadius: 20, 
-    padding: 24,
-    minHeight: 400,
-  },
-  sectionTitle: { 
-    fontSize: 28, 
-    color: '#FFFFFF', 
-    fontWeight: '700', 
-    marginBottom: 16,
-    lineHeight: 34,
-  },
-
-  weatherNowRow: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    marginBottom: 16,
-  },
-  weatherEmoji: { fontSize: 64, marginRight: 16 },
-  weatherNowTemp: { 
-    fontSize: 56, 
-    color: '#FFFFFF', 
-    fontWeight: '700',
-    lineHeight: 64,
-  },
-  weatherDetails: { 
-    fontSize: 18, 
-    color: '#BFC5CF',
-    marginTop: 4,
-  },
-  weatherHour: {
-    width: 100, 
-    backgroundColor: '#1F2430', 
-    borderRadius: 16,
-    padding: 12, 
-    alignItems: 'center',
-    minHeight: 120,
-    justifyContent: 'space-between',
-  },
-  weatherHourTime: { 
-    fontSize: 18, 
-    color: '#C8CCD6',
-    fontWeight: '500',
-  },
-  weatherHourEmoji: { 
-    fontSize: 36, 
-    marginVertical: 8,
-  },
-  weatherHourTemp: { 
-    fontSize: 20, 
-    color: '#FFFFFF', 
-    fontWeight: '600',
-  },
-
-  dayHeading: { 
-    fontSize: 22, 
-    color: '#C8CCD6', 
-    marginBottom: 12, 
-    marginTop: 8,
-    fontWeight: '600',
-  },
-  emptyText: { 
-    fontSize: 20, 
-    color: '#9AA0A6',
-    lineHeight: 28,
-  },
-
-  eventRow: {
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth, 
-    borderBottomColor: '#2A2F3A',
-    minHeight: 80,
-  },
-  eventTitle: { 
-    fontSize: 22, 
-    color: '#FFFFFF', 
-    fontWeight: '600',
-    lineHeight: 28,
-  },
-  eventMeta: { 
-    fontSize: 18, 
-    color: '#9AA0A6', 
-    marginTop: 4,
-    lineHeight: 24,
-  },
-
-  badgePill: {
-    paddingHorizontal: 14, 
-    paddingVertical: 8, 
-    borderRadius: 999,
-    backgroundColor: '#666', 
-    marginRight: 16,
-    minWidth: 80,
-    minHeight: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgePillText: { 
-    color: '#fff', 
-    fontWeight: '700', 
-    fontSize: 14, 
-    letterSpacing: 0.5,
-  },
-
-  ftRow: { 
-    flexDirection: 'row', 
-    marginTop: 20,
-  },
-  ftButton: { 
-    backgroundColor: '#0B63A8', 
-    borderRadius: 16, 
-    paddingHorizontal: 24, 
-    paddingVertical: 16,
-    minHeight: 72,
-    minWidth: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ftButtonText: { 
-    color: 'white', 
-    fontSize: 20, 
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  ftButtonSub: { 
-    color: 'white', 
-    fontSize: 16, 
-    opacity: 0.9,
-    textAlign: 'center',
-  },
-
-  nightBox: { 
-    flex: 1, 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-  },
-  nightTime: { 
-    fontSize: 140, 
-    color: '#DDE3EA', 
-    fontWeight: '700',
-    textAlign: 'center',
-    letterSpacing: 2,
-  },
-  nightDate: { 
-    fontSize: 28, 
-    color: '#B0B6C0', 
-    marginTop: 16,
-    textAlign: 'center',
-    lineHeight: 36,
-  },
-
-  cornerHotspot: { 
-    position: 'absolute', 
-    top: 0, 
-    right: 0, 
-    width: 120, 
-    height: 120, 
-    zIndex: 20,
-  },
-
-  modalBackdrop: { 
-    flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.65)', 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    padding: 32,
-  },
-  modalCard: { 
-    width: 480, 
-    maxWidth: '90%', 
-    backgroundColor: '#171A21', 
-    borderRadius: 20, 
-    padding: 32,
-  },
-  modalTitle: { 
-    fontSize: 26, 
-    color: 'white', 
-    fontWeight: '700', 
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  pinInput: {
-    backgroundColor: '#0f1115', 
-    color: 'white', 
-    borderRadius: 12,
-    borderWidth: 2, 
-    borderColor: '#2A2F3A', 
-    paddingHorizontal: 16,
-    paddingVertical: 18,
-    fontSize: 28, 
-    letterSpacing: 8, 
-    textAlign: 'center',
-    minHeight: 64,
-  },
-  pinError: { 
-    color: '#FF7373', 
-    fontSize: 16, 
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  modalButtons: { 
-    flexDirection: 'row', 
-    marginTop: 20,
-  },
-  btn: { 
-    paddingHorizontal: 24, 
-    paddingVertical: 16, 
-    borderRadius: 12,
-    minHeight: 56,
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnGhost: { backgroundColor: '#00000030' },
-  btnPrimary: { backgroundColor: '#0B63A8' },
-  btnText: { 
-    color: '#E6E6EA', 
-    fontSize: 18, 
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-
-  adminBackdrop: { 
-    flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.45)', 
-    justifyContent: 'flex-end',
-  },
-  adminPanel: { 
-    backgroundColor: '#171A21', 
-    borderTopLeftRadius: 24, 
-    borderTopRightRadius: 24, 
-    padding: 32,
-    maxHeight: '80%',
-  },
-  adminTitle: { 
-    fontSize: 24, 
-    color: 'white', 
-    fontWeight: '800', 
-    marginBottom: 16,
-  },
-  adminRow: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
-    paddingVertical: 12,
-    minHeight: 56,
-  },
-  adminLabel: { 
-    color: '#C8CCD6', 
-    fontSize: 18,
-    flex: 1,
-  },
-
-  toggle: { 
-    width: 64, 
-    height: 36, 
-    borderRadius: 999, 
-    backgroundColor: '#2A2F3A', 
-    padding: 4, 
-    justifyContent: 'center',
-  },
-  toggleOn: { backgroundColor: '#16803C' },
-  knob: { 
-    width: 28, 
-    height: 28, 
-    borderRadius: 999, 
-    backgroundColor: '#9AA0A6', 
-    transform: [{ translateX: 0 }],
-  },
-  knobOn: { 
-    backgroundColor: '#fff', 
-    transform: [{ translateX: 28 }],
-  },
-
-  // Logo styles
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#1F2430',
-    borderRadius: 16,
-  },
-  logoIcon: {
-    marginRight: 12,
-  },
-  logoEmoji: {
-    fontSize: 32,
-  },
-  logoText: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-
-  // Header layout styles
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerRight: {
-    marginLeft: 32,
-    alignSelf: 'flex-start',
-  },
-
-  // Weather header and location styles
-  weatherHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  weatherLocation: {
-    fontSize: 16,
-    color: '#9AA0A6',
-    marginBottom: 16,
-  },
-
-  // Dropdown styles
-  dropdownContainer: {
-    position: 'relative',
-    minWidth: 180,
-  },
-  dropdownButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#2A2F3A',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minHeight: 44,
-  },
-  dropdownText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '500',
-  },
-  dropdownArrow: {
-    fontSize: 14,
-    color: '#9AA0A6',
-    marginLeft: 8,
-  },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 48,
-    left: 0,
-    right: 0,
-    backgroundColor: '#2A2F3A',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#3A3F4A',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 1000,
-  },
-  dropdownItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#3A3F4A',
-    minHeight: 48,
-    justifyContent: 'center',
-  },
-  dropdownItemSelected: {
-    backgroundColor: '#0B63A8',
-  },
-  dropdownItemText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '500',
-  },
-  dropdownItemTextSelected: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-
-  // Silhouette image style
-  silhouetteImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    objectFit: 'cover',
-  },
-});
 
 // Enkel selvtest (valgfritt)
 export function __runMammasHjorneSelfTests() {
@@ -1280,4 +812,3 @@ export function __runMammasHjorneSelfTests() {
 }
 
 export default MammasHjorneScreen;
-
