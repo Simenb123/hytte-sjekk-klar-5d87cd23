@@ -20,8 +20,6 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "react-native": "react-native-web",
-      "@react-native-community/netinfo": path.resolve(__dirname, "./test/mocks/netinfo.ts"),
-      "expo-keep-awake": path.resolve(__dirname, "./test/mocks/expo-keep-awake.ts"),
     },
   },
 }));
