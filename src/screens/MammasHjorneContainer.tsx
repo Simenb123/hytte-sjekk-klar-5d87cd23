@@ -10,7 +10,7 @@ import { WEATHER_LAT, WEATHER_LON } from '@/config';
 const MammasHjorneContainer: React.FC = () => {
   const fetchEvents = async (): Promise<Event[]> => {
     try {
-      // For now, return empty array since Google Calendar integration requires authentication
+      // Google Calendar integration requires authentication - returning empty events
       // This prevents the build error while keeping the functionality intact
       console.log('Google Calendar integration requires authentication - returning empty events');
       return [];
