@@ -21,13 +21,18 @@ const MammasHjorneContainer: React.FC = () => {
     }
   };
 
-  const fetchWeather = async (): Promise<WeatherSnapshot> => {
+  const fetchWeather = async (lat: number = WEATHER_LAT, lon: number = WEATHER_LON): Promise<WeatherSnapshot> => {
     const { data, error } = await supabase.functions.invoke('weather-proxy', {
-      body: { lat: WEATHER_LAT, lon: WEATHER_LON, days: 1 },
+      body: { lat, lon, days: 1 },
     });
     if (error) throw error;
+    
+    // Determine location name based on coordinates
+    const locationName = lat === 59.4 && lon === 10.6 ? 'Jeløya (Moss)' : 'Gaustablikk';
+    
     return {
       updatedISO: data.lastUpdated,
+      locationName,
       now: {
         tempC: data.current.temperature,
         symbol: data.current.icon,

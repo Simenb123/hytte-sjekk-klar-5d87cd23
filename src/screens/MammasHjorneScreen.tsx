@@ -39,8 +39,15 @@ export type Event = {
 
 export type WeatherSnapshot = {
   updatedISO: string;
+  locationName: string;
   now: { tempC: number; symbol: string; windMs?: number; feelsLikeC?: number };
   hourly: { timeISO: string; tempC: number; symbol: string }[]; // neste 6–12 timer
+};
+
+export type WeatherLocation = {
+  name: string;
+  lat: number;
+  lon: number;
 };
 
 export type HeartbeatPayload = {
@@ -61,7 +68,7 @@ export type Contact = {
 
 export type MammasHjorneProps = {
   fetchEvents?: () => Promise<Event[]>;
-  fetchWeather?: () => Promise<WeatherSnapshot>;
+  fetchWeather?: (lat: number, lon: number) => Promise<WeatherSnapshot>;
   initRealtime?: (onChange: () => void) => () => void;
   onHeartbeat?: (p: HeartbeatPayload) => void;
   showFaceTime?: boolean;
@@ -127,7 +134,7 @@ const makeMockEvents = (): Event[] => {
   ];
 };
 
-const makeMockWeather = (): WeatherSnapshot => {
+const makeMockWeather = (locationName: string = 'Gaustablikk'): WeatherSnapshot => {
   const now = new Date();
   const hours = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getTime() + (i + 1) * 60 * 60 * 1000);
@@ -139,6 +146,7 @@ const makeMockWeather = (): WeatherSnapshot => {
   });
   return {
     updatedISO: now.toISOString(),
+    locationName,
     now: { tempC: 18, symbol: 'partlycloudy', windMs: 2.6, feelsLikeC: 18 },
     hourly: hours,
   };
@@ -190,6 +198,69 @@ const isNow = (startISO: string, endISO: string) => {
 };
 
 // ---------- Underkomponenter ----------
+
+// Mammas hjørne logo
+function MammasLogo() {
+  return (
+    <View style={styles.logoContainer}>
+      <View style={styles.logoIcon}>
+        <Text style={styles.logoEmoji}>👩‍🦳</Text>
+      </View>
+      <Text style={styles.logoText}>Mamma's hjørne</Text>
+    </View>
+  );
+}
+
+// Lokasjon dropdown
+function LocationDropdown({ 
+  locations, 
+  selectedLocation, 
+  onLocationChange 
+}: { 
+  locations: WeatherLocation[];
+  selectedLocation: WeatherLocation;
+  onLocationChange: (location: WeatherLocation) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <View style={styles.dropdownContainer}>
+      <Pressable 
+        onPress={() => setIsOpen(!isOpen)}
+        style={styles.dropdownButton}
+      >
+        <Text style={styles.dropdownText}>{selectedLocation.name}</Text>
+        <Text style={styles.dropdownArrow}>{isOpen ? '▲' : '▼'}</Text>
+      </Pressable>
+      
+      {isOpen && (
+        <View style={styles.dropdownMenu}>
+          {locations.map((location) => (
+            <Pressable
+              key={location.name}
+              onPress={() => {
+                onLocationChange(location);
+                setIsOpen(false);
+              }}
+              style={[
+                styles.dropdownItem,
+                selectedLocation.name === location.name && styles.dropdownItemSelected
+              ]}
+            >
+              <Text style={[
+                styles.dropdownItemText,
+                selectedLocation.name === location.name && styles.dropdownItemTextSelected
+              ]}>
+                {location.name}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 function EventRow({ ev }: { ev: Event }) {
   const s = parseISO(ev.start);
   const e = parseISO(ev.end);
@@ -246,12 +317,19 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 }) => {
   useKeepAwake();
 
+  // Lokasjoner for værvarsel
+  const weatherLocations: WeatherLocation[] = [
+    { name: 'Gaustablikk', lat: 59.8726, lon: 8.6475 },
+    { name: 'Jeløya (Moss)', lat: 59.4, lon: 10.6 },
+  ];
+
   // state-variabler
   const [events, setEvents] = useState<Event[]>([]);
   const [weather, setWeather] = useState<WeatherSnapshot | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [online, setOnline] = useState(true);
   const [usingMock, setUsingMock] = useState(!(fetchEvents && fetchWeather));
+  const [selectedLocation, setSelectedLocation] = useState<WeatherLocation>(weatherLocations[0]);
 
   const [adminVisible, setAdminVisible] = useState(false);
   const [adminArmed, setAdminArmed] = useState(false);
@@ -314,10 +392,10 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       let we = weather;
       if (usingMock) {
         ev = makeMockEvents();
-        we = makeMockWeather();
+        we = makeMockWeather(selectedLocation.name);
       } else {
         if (fetchEvents) ev = await fetchEvents();
-        if (fetchWeather) we = await fetchWeather();
+        if (fetchWeather) we = await fetchWeather(selectedLocation.lat, selectedLocation.lon);
       }
       setEvents(ev);
       if (we) setWeather(we);
@@ -348,7 +426,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       if (unsub) unsub();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [usingMock]);
+  }, [usingMock, selectedLocation]);
 
   // heartbeat
   useEffect(() => {
@@ -450,7 +528,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         >
           <Text style={styles.nightTime}>{fmtTimeHM(now)}</Text>
           <Text style={styles.nightDate}>
-            I dag er {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
+            I dag er det {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
           </Text>
           {!online && <Text style={styles.badge}>Frakoblet</Text>}
         </View>
@@ -474,25 +552,40 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.dateLine}>
-          I dag er{' '}
-          {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
-        </Text>
-        <Text style={styles.bigClock}>{fmtTimeHM(now)}</Text>
-        <View style={styles.subHeaderRow}>
-          <Text style={styles.updated}>
-            Sist oppdatert {lastUpdated ? fmtTimeHM(parseISO(lastUpdated)) : '—'}
-          </Text>
-          {!online && (
-            <Text style={[styles.badge, { marginLeft: 12 }]}>Frakoblet</Text>
-          )}
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.dateLine}>
+              I dag er det{' '}
+              {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
+            </Text>
+            <Text style={styles.bigClock}>{fmtTimeHM(now)}</Text>
+            <View style={styles.subHeaderRow}>
+              <Text style={styles.updated}>
+                Sist oppdatert {lastUpdated ? fmtTimeHM(parseISO(lastUpdated)) : '—'}
+              </Text>
+              {!online && (
+                <Text style={[styles.badge, { marginLeft: 12 }]}>Frakoblet</Text>
+              )}
+            </View>
+          </View>
+          <View style={styles.headerRight}>
+            <MammasLogo />
+          </View>
         </View>
       </View>
 
       <View style={styles.contentRow}>
         {/* Vær */}
         <View style={styles.weatherCard}>
-          <Text style={styles.sectionTitle}>Været</Text>
+          <View style={styles.weatherHeader}>
+            <Text style={styles.sectionTitle}>Været</Text>
+            <LocationDropdown 
+              locations={weatherLocations}
+              selectedLocation={selectedLocation}
+              onLocationChange={setSelectedLocation}
+            />
+          </View>
+          <Text style={styles.weatherLocation}>{weather?.locationName || selectedLocation.name}</Text>
           <View style={styles.weatherNowRow}>
             <Text style={styles.weatherEmoji}>
               {symbolToEmoji(weather?.now.symbol ?? 'clearsky')}
@@ -1010,6 +1103,116 @@ const styles = StyleSheet.create({
   knobOn: { 
     backgroundColor: '#fff', 
     transform: [{ translateX: 28 }],
+  },
+
+  // Logo styles
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#1F2430',
+    borderRadius: 16,
+  },
+  logoIcon: {
+    marginRight: 12,
+  },
+  logoEmoji: {
+    fontSize: 32,
+  },
+  logoText: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
+  // Header layout styles
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    marginLeft: 32,
+    alignSelf: 'flex-start',
+  },
+
+  // Weather header and location styles
+  weatherHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  weatherLocation: {
+    fontSize: 16,
+    color: '#9AA0A6',
+    marginBottom: 16,
+  },
+
+  // Dropdown styles
+  dropdownContainer: {
+    position: 'relative',
+    minWidth: 180,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#2A2F3A',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    minHeight: 44,
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  dropdownArrow: {
+    fontSize: 14,
+    color: '#9AA0A6',
+    marginLeft: 8,
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 48,
+    left: 0,
+    right: 0,
+    backgroundColor: '#2A2F3A',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#3A3F4A',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#3A3F4A',
+    minHeight: 48,
+    justifyContent: 'center',
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#0B63A8',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  dropdownItemTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 });
 
