@@ -69,7 +69,7 @@ export const BookingsList: React.FC<BookingsListProps> = ({
         <Button 
           onClick={onConnectGoogle} 
           disabled={isConnecting}
-          className="w-full mt-3 bg-white text-black border border-gray-300 hover:bg-gray-100"
+          className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white"
         >
           {isConnecting ? (
             <>
