@@ -11,10 +11,9 @@ export function useUsers() {
     queryKey: ['users'],
     queryFn: async (): Promise<User[]> => {
       try {
-        // Fetch from profiles table to get user info accessible from client
+        // Use secure function instead of direct table access
         const { data, error } = await supabase
-          .from('profiles')
-          .select('id, first_name, last_name');
+          .rpc('get_users_for_family_linking');
         
         if (error) {
           console.error('Error fetching users:', error);
@@ -25,17 +24,11 @@ export function useUsers() {
           return [];
         }
 
-        // Map to display format with full name as "email"
-        return data.map(profile => {
-          const firstName = profile.first_name?.trim() || '';
-          const lastName = profile.last_name?.trim() || '';
-          const fullName = `${firstName} ${lastName}`.trim();
-          
-          return {
-            id: profile.id,
-            email: fullName || 'Ukjent bruker'
-          };
-        });
+        // Map to expected format
+        return data.map(user => ({
+          id: user.id,
+          email: user.display_name
+        }));
       } catch (error) {
         console.error('Error in useUsers:', error);
         return [];
