@@ -33,6 +33,9 @@ export const GoogleCalendarConnectView: React.FC<GoogleCalendarConnectViewProps>
             <p className="text-muted-foreground text-sm">
               Koble til Google Calendar for å synkronisere bookinger og hendelser automatisk.
             </p>
+            <p className="text-xs text-muted-foreground">
+              💡 Bruker sikker popup-basert innlogging for å unngå nettleserrestriksjoner
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -40,6 +43,7 @@ export const GoogleCalendarConnectView: React.FC<GoogleCalendarConnectViewProps>
               <li>• Se alle dine Google Calendar-hendelser</li>
               <li>• Automatisk synkronisering med bookinger</li>
               <li>• Del kalender med andre brukere</li>
+              <li>• Fungerer i alle moderne nettlesere</li>
             </ul>
           </div>
 

@@ -13,6 +13,9 @@ const GoogleCalendarCallback: React.FC = () => {
   useEffect(() => {
     const processCallback = async () => {
       try {
+        // Check if this is running in a popup window
+        const isPopup = window.opener && window.opener !== window;
+        
         // Get authorization code from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
@@ -20,6 +23,15 @@ const GoogleCalendarCallback: React.FC = () => {
 
         if (error) {
           console.error('OAuth error:', error);
+          if (isPopup) {
+            // Send error message to parent window
+            window.opener.postMessage({
+              type: 'GOOGLE_OAUTH_ERROR',
+              error: error
+            }, window.location.origin);
+            window.close();
+            return;
+          }
           setStatus('error');
           setErrorMessage(`Google OAuth error: ${error}`);
           return;
@@ -27,6 +39,15 @@ const GoogleCalendarCallback: React.FC = () => {
 
         if (!code) {
           console.error('No authorization code received');
+          if (isPopup) {
+            // Send error message to parent window
+            window.opener.postMessage({
+              type: 'GOOGLE_OAUTH_ERROR',
+              error: 'No authorization code received'
+            }, window.location.origin);
+            window.close();
+            return;
+          }
           setStatus('error');
           setErrorMessage('Ingen autorisasjonskode mottatt fra Google');
           return;
@@ -36,17 +57,48 @@ const GoogleCalendarCallback: React.FC = () => {
         const success = await handleOAuthCallback(code);
 
         if (success) {
+          if (isPopup) {
+            // Send success message to parent window
+            window.opener.postMessage({
+              type: 'GOOGLE_OAUTH_SUCCESS'
+            }, window.location.origin);
+            window.close();
+            return;
+          }
+          
           setStatus('success');
           // Redirect to Mamma's hjørne after successful connection
           setTimeout(() => {
             navigate('/mammas-hjorne');
           }, 2000);
         } else {
+          if (isPopup) {
+            // Send error message to parent window
+            window.opener.postMessage({
+              type: 'GOOGLE_OAUTH_ERROR',
+              error: 'Could not complete connection'
+            }, window.location.origin);
+            window.close();
+            return;
+          }
+          
           setStatus('error');
           setErrorMessage('Kunne ikke fullføre tilkobling til Google Calendar');
         }
       } catch (error) {
         console.error('Error processing OAuth callback:', error);
+        
+        const isPopup = window.opener && window.opener !== window;
+        if (isPopup) {
+          // Send error message to parent window
+          window.opener.postMessage({
+            type: 'GOOGLE_OAUTH_ERROR',
+            error: 'Unexpected error during connection'
+          }, window.location.origin);
+          window.close();
+          return;
+        }
+        
         setStatus('error');
         setErrorMessage('Uventet feil ved tilkobling til Google Calendar');
       }

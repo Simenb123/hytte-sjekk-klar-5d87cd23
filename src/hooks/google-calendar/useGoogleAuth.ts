@@ -5,6 +5,68 @@ import { handleOAuthCallback as processOAuthCallback } from '@/services/googleCa
 import { storeGoogleTokens, removeGoogleTokens } from '@/utils/tokenStorage';
 import type { GoogleCalendarState } from './types';
 
+// Popup-based OAuth utility to avoid iframe issues
+function openOAuthPopup(url: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    console.log('🔵 Opening OAuth popup window...');
+    
+    const popup = window.open(
+      url,
+      'google-oauth',
+      'width=500,height=600,scrollbars=yes,resizable=yes'
+    );
+    
+    if (!popup) {
+      console.error('❌ Popup blocked by browser');
+      toast.error('Popup-vindu ble blokkert av nettleseren. Vennligst tillat popup-vinduer for denne siden.');
+      resolve(false);
+      return;
+    }
+
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        console.log('🔴 Popup window closed');
+        clearInterval(checkClosed);
+        resolve(false);
+      }
+    }, 1000);
+
+    // Listen for messages from the popup
+    const messageHandler = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      if (event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
+        console.log('✅ Received OAuth success message from popup');
+        clearInterval(checkClosed);
+        popup.close();
+        window.removeEventListener('message', messageHandler);
+        resolve(true);
+      } else if (event.data.type === 'GOOGLE_OAUTH_ERROR') {
+        console.error('❌ Received OAuth error message from popup:', event.data.error);
+        clearInterval(checkClosed);
+        popup.close();
+        window.removeEventListener('message', messageHandler);
+        resolve(false);
+      }
+    };
+
+    window.addEventListener('message', messageHandler);
+
+    // Timeout after 5 minutes
+    setTimeout(() => {
+      if (!popup.closed) {
+        console.log('⏱️ OAuth popup timeout');
+        popup.close();
+      }
+      clearInterval(checkClosed);
+      window.removeEventListener('message', messageHandler);
+      resolve(false);
+    }, 300000);
+  });
+}
+
 export function useGoogleAuth(
   setState: Dispatch<SetStateAction<GoogleCalendarState>>
 ) {
@@ -17,99 +79,54 @@ export function useGoogleAuth(
       console.log('Initiating Google Calendar connection...');
       toast.info('Kobler til Google Calendar...');
       
-      console.log('Invoking google-calendar edge function...');
+      const currentOrigin = window.location.origin;
+      console.log('Current origin for Google OAuth request:', currentOrigin);
       
-      try {
-        const currentOrigin = window.location.origin;
-        console.log('Current origin for Google OAuth request:', currentOrigin);
+      const { data, error } = await supabase.functions.invoke('google-calendar', {
+        method: 'GET'
+      });
+      
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+      
+      if (data?.error) {
+        console.error('Google API error:', data.error);
+        if (data.details) {
+          console.error('Error details:', data.details);
+        }
+        throw new Error(data.error);
+      }
+      
+      if (data?.url) {
+        console.log('Received Google authorization URL, attempting popup-based OAuth...', data.url);
         
-        const { data, error } = await supabase.functions.invoke('google-calendar', {
-          method: 'GET'
-        });
+        // Try popup-based OAuth first to avoid iframe issues
+        const success = await openOAuthPopup(data.url);
         
-        if (error) {
-          console.error('Supabase function error:', error);
-          throw error;
+        if (success) {
+          console.log('✅ Popup OAuth completed successfully');
+          return true;
         }
         
-        if (data?.error) {
-          console.error('Google API error:', data.error);
-          if (data.details) {
-            console.error('Error details:', data.details);
-          }
-          throw new Error(data.error);
+        // Fallback to redirect if popup fails
+        console.log('⚠️ Popup failed, falling back to redirect...');
+        sessionStorage.setItem('calendarReturnUrl', window.location.href);
+        
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        
+        if (isSafari || isIOS) {
+          console.log('Detected Safari or iOS browser which commonly blocks third-party cookies');
+          toast.warning('Du bruker Safari eller iOS som kan blokkere tredjepartsinfokapsler. Hvis innloggingen feiler, prøv å aktivere tredjepartsinfokapsler i nettleserinnstillingene eller bruk en annen nettleser.');
         }
         
-        if (data?.url) {
-          console.log('Received Google authorization URL, redirecting...', data.url);
-          sessionStorage.setItem('calendarReturnUrl', window.location.href);
-          
-          console.log('Redirecting to:', data.url);
-          
-          const browserInfo = {
-            userAgent: navigator.userAgent,
-            cookiesEnabled: navigator.cookieEnabled,
-            language: navigator.language,
-            platform: navigator.platform,
-            vendor: navigator.vendor,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            thirdPartyCookiesSupported: 'Unknown - will be tested during OAuth flow'
-          };
-          console.log('Browser environment details:', browserInfo);
-          
-          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-          
-          if (isSafari || isIOS) {
-            console.log('Detected Safari or iOS browser which commonly blocks third-party cookies');
-            toast.warning('Du bruker Safari eller iOS som kan blokkere tredjepartsinfokapsler. Hvis innloggingen feiler, prøv å aktivere tredjepartsinfokapsler i nettleserinnstillingene eller bruk en annen nettleser.');
-          }
-          
-          setTimeout(() => {
-            window.location.href = data.url;
-          }, 100);
-        } else {
-          throw new Error('Ingen autoriseringslenke mottatt fra serveren');
-        }
-      } catch (fetchError: unknown) {
-        console.error('Error detail:', fetchError);
-        
-        try {
-          const nav = navigator as Navigator & {
-            connection?: any;
-          };
-          const connection = nav.connection;
-          const networkState = {
-            online: navigator.onLine,
-            connection: connection
-              ? {
-                  type: connection.type,
-                  effectiveType: connection.effectiveType,
-                  downlink: connection.downlink,
-                  rtt: connection.rtt,
-                }
-              : 'Not available',
-            timestamp: new Date().toISOString(),
-          };
-          console.log('Network state during error:', networkState);
-        } catch (e) {
-          console.log('Could not retrieve network state:', e);
-        }
-
-        const fe = fetchError as {
-          name?: string;
-          message?: string;
-          context?: { value?: { message?: string } };
-        };
-        if (
-          fe.name === 'FunctionsFetchError' ||
-          fe.message?.includes('Failed to fetch') ||
-          fe.context?.value?.message?.includes('Failed to fetch')
-        ) {
-          throw new Error('Nettverksfeil ved tilkobling til Edge Function. Sjekk at Edge Function er aktiv og at alle miljøvariabler er riktig satt opp.');
-        }
-
-        throw fetchError as Error;
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 100);
+      } else {
+        throw new Error('Ingen autoriseringslenke mottatt fra serveren');
       }
     } catch (error: unknown) {
       console.error('Error connecting to Google Calendar:', error);
