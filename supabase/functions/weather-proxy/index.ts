@@ -127,8 +127,8 @@ function transformWeatherData(data: any, maxDays: number, lat: string, lon: stri
   const timeseries = data.properties.timeseries;
   const current = timeseries[0];
   
-  // Extract hourly data for next 12 hours
-  const hourly = timeseries.slice(0, 12).map((entry: any) => ({
+  // Extract hourly data for next 8 hours
+  const hourly = timeseries.slice(0, 8).map((entry: any) => ({
     timeISO: entry.time,
     tempC: Math.round(entry.data.instant.details.air_temperature),
     symbol: entry.data.next_1_hours?.summary?.symbol_code || entry.data.next_6_hours?.summary?.symbol_code || 'unknown',

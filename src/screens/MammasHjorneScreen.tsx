@@ -767,7 +767,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                 return (
                   <div
                     key={idx}
-                    className="min-w-[90px] bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md"
+                    className="min-w-[75px] bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md"
                   >
                     <div className="text-blue-200 text-xs font-medium mb-2">
                       {fmtTimeHM(parseISO(h.timeISO))}
