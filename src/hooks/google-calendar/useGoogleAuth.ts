@@ -174,35 +174,60 @@ export function useGoogleAuth(
     setState(prev => ({ ...prev, connectionError: null }));
     
     try {
-      console.log('Processing OAuth callback with code:', code.substring(0, 10) + '...');
+      console.log('🔄 Starting OAuth callback processing with code:', code.substring(0, 10) + '...');
+      console.log('🔄 Calling processOAuthCallback service function...');
+      
       const tokens = await processOAuthCallback(code);
+      console.log('📨 Received response from processOAuthCallback:', {
+        tokens_exists: !!tokens,
+        access_token_exists: tokens?.access_token ? true : false,
+        access_token_type: typeof tokens?.access_token,
+        access_token_length: tokens?.access_token?.length,
+        refresh_token_exists: tokens?.refresh_token ? true : false,
+        token_type: tokens?.token_type,
+        scope: tokens?.scope,
+        expiry_date: tokens?.expiry_date
+      });
       
       if (!tokens) {
+        console.error('❌ No tokens received from server');
         throw new Error('Ingen tokens mottatt fra serveren');
       }
 
       // Validate token structure before saving
       if (!tokens.access_token || typeof tokens.access_token !== 'string') {
+        console.error('❌ Invalid token structure received from server:', {
+          access_token_exists: !!tokens.access_token,
+          access_token_type: typeof tokens.access_token,
+          tokens_object: tokens
+        });
         throw new Error('Ugyldig token-struktur mottatt fra serveren');
       }
       
-      console.log('Saving tokens to localStorage:', {
+      console.log('✅ Tokens validation passed, preparing to store:', {
         access_token_exists: !!tokens.access_token,
         refresh_token_exists: !!tokens.refresh_token,
         expiry_date: tokens.expiry_date
       });
       
       // Store tokens using the utility with retry mechanism
+      console.log('💾 Calling storeGoogleTokens...');
       const stored = await storeGoogleTokens(tokens);
+      console.log('💾 storeGoogleTokens result:', stored);
+      
       if (!stored) {
+        console.error('❌ Failed to store tokens in localStorage');
         throw new Error('Kunne ikke lagre tokens i localStorage');
       }
       
+      console.log('✅ Tokens stored successfully, updating state...');
       setState(prev => ({
         ...prev,
         googleTokens: tokens,
         isGoogleConnected: true
       }));
+      
+      console.log('🎉 OAuth callback completed successfully!');
       toast.success('Koblet til Google Calendar!');
       return true;
     } catch (error: unknown) {
