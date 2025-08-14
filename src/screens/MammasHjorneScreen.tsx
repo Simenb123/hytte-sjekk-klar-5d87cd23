@@ -183,15 +183,15 @@ const isNow = (startISO: string, endISO: string) => {
 // Mammas hjørne logo
 function MammasLogo({ silhouetteUrl }: { silhouetteUrl?: string }) {
   return (
-    <div className="flex items-center gap-3 px-5 py-3 bg-gray-800 rounded-2xl">
-      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+    <div className="flex items-center gap-2 px-3 py-2 bg-gray-800 rounded-2xl">
+      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
         <img 
-          src="/lovable-uploads/e9c132ed-dcd7-4c5b-9fa5-94757d393fed.png" 
+          src="/lovable-uploads/e5ff44d2-e8ee-4312-925b-75026c32e7f6.png" 
           alt="Mamma profil ikon" 
-          className="w-12 h-12 object-cover"
+          className="w-10 h-10 object-cover"
         />
       </div>
-      <span className="text-xl font-bold text-white">Mamma's hjørne</span>
+      <span className="text-lg font-bold text-white">Mamma's hjørne</span>
     </div>
   );
 }
