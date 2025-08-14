@@ -25,8 +25,21 @@ export type Event = {
 export type WeatherSnapshot = {
   updatedISO: string;
   locationName: string;
-  now: { tempC: number; symbol: string; windMs?: number; feelsLikeC?: number };
-  hourly: { timeISO: string; tempC: number; symbol: string }[]; // neste 6–12 timer
+  now: { 
+    tempC: number; 
+    symbol: string; 
+    windMs?: number; 
+    feelsLikeC?: number; 
+    humidity?: number; 
+    windDirection?: string; 
+  };
+  hourly: { 
+    timeISO: string; 
+    tempC: number; 
+    symbol: string; 
+    precipitation?: number; 
+    windSpeed?: number; 
+  }[]; // neste 6–12 timer
 };
 
 export type WeatherLocation = {

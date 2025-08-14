@@ -33,11 +33,15 @@ const MammasHjorneContainer: React.FC = () => {
         tempC: data.current.temperature,
         symbol: data.current.icon,
         windMs: data.current.windSpeed,
+        humidity: data.current.humidity,
+        windDirection: data.current.windDirection,
       },
-      hourly: (data.forecast || []).slice(0, 6).map((h: any) => ({
-        timeISO: h.date,
-        tempC: (h.temperature.min + h.temperature.max) / 2,
-        symbol: h.icon,
+      hourly: (data.hourly || []).map((h: any) => ({
+        timeISO: h.timeISO,
+        tempC: h.tempC,
+        symbol: h.symbol,
+        precipitation: h.precipitation,
+        windSpeed: h.windSpeed,
       })),
     };
   };

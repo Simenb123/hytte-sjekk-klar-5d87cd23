@@ -11,6 +11,13 @@ interface WeatherData {
     windDirection: string;
     icon: string;
   };
+  hourly: Array<{
+    timeISO: string;
+    tempC: number;
+    symbol: string;
+    precipitation: number;
+    windSpeed: number;
+  }>;
   forecast: Array<{
     date: string;
     day: string;
@@ -120,6 +127,15 @@ function transformWeatherData(data: any, maxDays: number, lat: string, lon: stri
   const timeseries = data.properties.timeseries;
   const current = timeseries[0];
   
+  // Extract hourly data for next 12 hours
+  const hourly = timeseries.slice(0, 12).map((entry: any) => ({
+    timeISO: entry.time,
+    tempC: Math.round(entry.data.instant.details.air_temperature),
+    symbol: entry.data.next_1_hours?.summary?.symbol_code || entry.data.next_6_hours?.summary?.symbol_code || 'unknown',
+    precipitation: entry.data.next_1_hours?.details?.precipitation_amount || entry.data.next_6_hours?.details?.precipitation_amount || 0,
+    windSpeed: Math.round(entry.data.instant.details.wind_speed * 10) / 10,
+  }));
+  
   // Group by date for forecast
   const forecastByDate = new Map();
   
@@ -182,6 +198,7 @@ function transformWeatherData(data: any, maxDays: number, lat: string, lon: stri
       windDirection: getWindDirection(current.data.instant.details.wind_from_direction),
       icon: current.data.next_1_hours?.summary?.symbol_code || 'unknown',
     },
+    hourly,
     forecast,
     lastUpdated: new Date().toISOString(),
   };
