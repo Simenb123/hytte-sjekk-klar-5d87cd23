@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -19,20 +19,43 @@ export const useNotifications = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user } = useAuth();
+  
+  // Use refs to avoid dependency loops
+  const userRef = useRef(user);
+  const lastFetchRef = useRef<number>(0);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  // Update user ref when user changes
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
-  const fetchNotifications = useCallback(async () => {
-    if (!user) {
+  const fetchNotifications = useCallback(async (forceRefresh = false) => {
+    const currentUser = userRef.current;
+    
+    if (!currentUser) {
+      console.log('useNotifications: No user, clearing notifications');
       setNotifications([]);
       setUnreadCount(0);
       setIsLoading(false);
       return;
     }
 
+    // Debouncing - avoid fetching too frequently (minimum 2 seconds between calls)
+    const now = Date.now();
+    if (!forceRefresh && now - lastFetchRef.current < 2000) {
+      console.log('useNotifications: Skipping fetch due to debouncing');
+      return;
+    }
+    
+    lastFetchRef.current = now;
+    console.log('useNotifications: Fetching notifications for user:', currentUser.id);
+
     try {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -50,6 +73,7 @@ export const useNotifications = () => {
 
         setNotifications(formattedNotifications);
         setUnreadCount(formattedNotifications.filter(n => !n.read).length);
+        console.log('useNotifications: Updated notifications count:', formattedNotifications.length);
       }
     } catch (error: unknown) {
       console.error('Error fetching notifications:', error);
@@ -57,7 +81,7 @@ export const useNotifications = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, []); // Remove user from dependencies to avoid recreation
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -105,13 +129,37 @@ export const useNotifications = () => {
     }
   };
 
+  // Initial fetch - only trigger when user changes, not when fetchNotifications recreates
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    if (user) {
+      console.log('useNotifications: Initial fetch for user:', user.id);
+      // Use timeout to avoid immediate rapid calls
+      const timeoutId = setTimeout(() => {
+        fetchNotifications(true); // Force refresh on initial load
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [user?.id]); // Only depend on user.id, not the entire user object
 
-  // Set up real-time subscription
+  // Set up real-time subscription with debounced callback
   useEffect(() => {
     if (!user) return;
+
+    console.log('useNotifications: Setting up real-time subscription for user:', user.id);
+
+    const debouncedFetch = () => {
+      // Clear any existing timeout
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      
+      // Set new timeout for debounced fetch
+      debounceTimeoutRef.current = setTimeout(() => {
+        console.log('useNotifications: Real-time update triggered');
+        fetchNotifications();
+      }, 500); // 500ms debounce for real-time updates
+    };
 
     const channel = supabase
       .channel('notifications-changes')
@@ -123,16 +171,21 @@ export const useNotifications = () => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
         },
-        () => {
-          fetchNotifications();
+        (payload) => {
+          console.log('useNotifications: Database change detected:', payload.eventType);
+          debouncedFetch();
         }
       )
       .subscribe();
 
     return () => {
+      console.log('useNotifications: Cleaning up real-time subscription');
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
       supabase.removeChannel(channel);
     };
-  }, [user, fetchNotifications]);
+  }, [user?.id]); // Only depend on user.id
 
   return {
     notifications,
