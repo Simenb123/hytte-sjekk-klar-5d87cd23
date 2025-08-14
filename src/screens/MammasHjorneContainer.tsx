@@ -5,7 +5,7 @@ import MammasHjorneScreen, {
   HeartbeatPayload,
 } from './MammasHjorneScreen';
 import { supabase } from '@/integrations/supabase/client';
-import { WEATHER_LAT, WEATHER_LON } from '@/config';
+import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME } from '@/config';
 
 const MammasHjorneContainer: React.FC = () => {
   // Temporarily disabled Google Calendar to fix build issues
@@ -20,7 +20,7 @@ const MammasHjorneContainer: React.FC = () => {
     });
     if (error) throw error;
     
-    const locationName = lat === 59.4 && lon === 10.6 ? 'Jeløya (Moss)' : 'Gaustablikk';
+    const locationName = LOCATION_NAME;
     
     return {
       updatedISO: data.lastUpdated,

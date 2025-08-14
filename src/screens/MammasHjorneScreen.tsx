@@ -579,53 +579,68 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
       <div className="flex-1 flex gap-6 mt-5">
         {/* Vær */}
-        <div className="flex-1 bg-gray-800 rounded-xl p-6 min-h-[400px]">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-3xl text-white font-bold leading-8">Været</h2>
+        <div className="flex-1 bg-gradient-to-br from-blue-900/20 to-blue-800/10 border border-blue-500/20 rounded-2xl p-8 min-h-[400px] backdrop-blur-sm">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-4xl text-white font-bold tracking-wide">Været</h2>
             <LocationDropdown 
               locations={weatherLocations}
               selectedLocation={selectedLocation}
               onLocationChange={setSelectedLocation}
             />
           </div>
-          <div className="text-gray-400 mb-4">{weather?.locationName || selectedLocation.name}</div>
-          <div className="flex items-center mb-4">
-            <span className="text-6xl mr-4">
-              {symbolToEmoji(weather?.now.symbol ?? 'clearsky')}
-            </span>
-            <div>
-              <div className="text-6xl text-white font-bold leading-none">
-                {Math.round(weather?.now.tempC ?? 18)}°
+          <div className="text-blue-200 text-xl mb-8 font-medium">{weather?.locationName || selectedLocation.name}</div>
+          
+          {/* Current weather card */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 mb-8 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="text-8xl drop-shadow-lg">
+                  {symbolToEmoji(weather?.now.symbol ?? 'clearsky')}
+                </div>
+                <div>
+                  <div className="text-7xl text-white font-bold leading-none mb-2">
+                    {Math.round(weather?.now.tempC ?? 18)}°
+                  </div>
+                  <div className="text-blue-200 text-lg">Nå</div>
+                </div>
               </div>
               {typeof weather?.now.windMs === 'number' && (
-                <div className="text-lg text-gray-300 mt-1">
-                  Vind {weather?.now.windMs?.toFixed(1)} m/s
+                <div className="text-right">
+                  <div className="text-blue-200 text-lg mb-1">Vind</div>
+                  <div className="text-white text-2xl font-semibold">
+                    {weather?.now.windMs?.toFixed(1)} m/s
+                  </div>
                 </div>
               )}
             </div>
           </div>
-          <div className="flex gap-3 overflow-x-auto py-2">
-            {(weather?.hourly ?? makeMockWeather().hourly).map((h, idx) => (
-              <div
-                key={idx}
-                className="w-25 bg-gray-700 rounded-2xl p-3 text-center min-h-[120px] flex flex-col justify-between"
-              >
-                <div className="text-lg text-gray-300 font-medium">
-                  {fmtTimeHM(parseISO(h.timeISO))}
+          
+          {/* Hourly forecast */}
+          <div className="mt-4">
+            <h3 className="text-blue-200 text-xl font-semibold mb-4">Neste timer</h3>
+            <div className="flex gap-4 overflow-x-auto pb-2">
+              {(weather?.hourly ?? makeMockWeather().hourly).map((h, idx) => (
+                <div
+                  key={idx}
+                  className="min-w-[100px] bg-white/5 backdrop-blur-sm rounded-xl p-4 text-center border border-white/10 hover:bg-white/10 transition-colors"
+                >
+                  <div className="text-blue-200 text-sm font-medium mb-2">
+                    {fmtTimeHM(parseISO(h.timeISO))}
+                  </div>
+                  <div className="text-4xl mb-2 drop-shadow-sm">
+                    {symbolToEmoji(h.symbol)}
+                  </div>
+                  <div className="text-xl text-white font-bold">
+                    {Math.round(h.tempC)}°
+                  </div>
                 </div>
-                <div className="text-4xl my-2">
-                  {symbolToEmoji(h.symbol)}
-                </div>
-                <div className="text-xl text-white font-semibold">
-                  {Math.round(h.tempC)}°
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Kalender */}
-        <div className="flex-[1.3] bg-gray-800 rounded-xl p-6 min-h-[400px]">
+        <div className="flex-[1.3] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-8 min-h-[400px] backdrop-blur-sm">
           <h2 className="text-3xl text-white font-bold mb-4 leading-8">Neste avtaler</h2>
           <div className="overflow-y-auto pb-6">
             {/* I dag */}
