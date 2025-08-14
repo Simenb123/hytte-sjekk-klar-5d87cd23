@@ -2,6 +2,7 @@ import { useCallback, useState, type Dispatch, type SetStateAction } from 'react
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { handleOAuthCallback as processOAuthCallback } from '@/services/googleCalendar.service';
+import { storeGoogleTokens, removeGoogleTokens } from '@/utils/tokenStorage';
 import type { GoogleCalendarState } from './types';
 
 export function useGoogleAuth(
@@ -153,7 +154,11 @@ export function useGoogleAuth(
 
   const disconnectGoogleCalendar = useCallback(() => {
     console.log('Disconnecting from Google Calendar...');
-    localStorage.removeItem('googleCalendarTokens');
+    const removed = removeGoogleTokens();
+    if (!removed) {
+      console.warn('Failed to remove tokens from storage');
+    }
+    
     setState(prev => ({
       ...prev,
       googleTokens: null,
@@ -175,8 +180,24 @@ export function useGoogleAuth(
       if (!tokens) {
         throw new Error('Ingen tokens mottatt fra serveren');
       }
+
+      // Validate token structure before saving
+      if (!tokens.access_token || typeof tokens.access_token !== 'string') {
+        throw new Error('Ugyldig token-struktur mottatt fra serveren');
+      }
       
-      localStorage.setItem('googleCalendarTokens', JSON.stringify(tokens));
+      console.log('Saving tokens to localStorage:', {
+        access_token_exists: !!tokens.access_token,
+        refresh_token_exists: !!tokens.refresh_token,
+        expiry_date: tokens.expiry_date
+      });
+      
+      // Store tokens using the utility with retry mechanism
+      const stored = await storeGoogleTokens(tokens);
+      if (!stored) {
+        throw new Error('Kunne ikke lagre tokens i localStorage');
+      }
+      
       setState(prev => ({
         ...prev,
         googleTokens: tokens,

@@ -22,6 +22,10 @@ export const GoogleEventsList: React.FC<GoogleEventsListProps> = ({
   error
 }) => {
   const handleRefresh = () => {
+    if (error?.includes('kvote overskredet') || error?.includes('quotaExceeded')) {
+      toast.warning('Google Calendar API kvote overskredet. Vennligst vent noen minutter før du prøver igjen.');
+      return;
+    }
     toast.info('Oppdaterer Google Calendar...');
     onRefresh();
   };

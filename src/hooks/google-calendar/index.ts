@@ -1,52 +1,65 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useGoogleAuth } from './useGoogleAuth';
 import { useGoogleEvents } from './useGoogleEvents';
+import { retrieveGoogleTokens } from '@/utils/tokenStorage';
 import { GoogleCalendarState, initialState } from './types';
 
 export function useGoogleCalendar() {
   const [state, setState] = useState<GoogleCalendarState>(initialState);
+  const isInitializedRef = useRef(false);
   
   const { connectGoogleCalendar, disconnectGoogleCalendar, handleOAuthCallback } = useGoogleAuth(setState);
   const { fetchGoogleEvents, fetchGoogleCalendars } = useGoogleEvents(
-    () => state.googleTokens,
+    useCallback(() => state.googleTokens, [state.googleTokens]),
     setState,
     disconnectGoogleCalendar
   );
 
-  // Load tokens from localStorage on component mount
+  // Load tokens from localStorage on component mount (only once)
   useEffect(() => {
-    console.log('Loading Google Calendar tokens from localStorage');
-    const storedTokens = localStorage.getItem('googleCalendarTokens');
-    if (storedTokens) {
-      try {
-        const tokens = JSON.parse(storedTokens);
-        console.log('Found stored tokens, access_token exists:', !!tokens.access_token);
-        setState(prev => ({
-          ...prev,
-          googleTokens: tokens,
-          isGoogleConnected: true
-        }));
-        
-        // If we have tokens, fetch events right away
+    if (isInitializedRef.current) return;
+    
+    console.log('Loading Google Calendar tokens from localStorage (initial load)');
+    const tokens = retrieveGoogleTokens();
+    
+    if (tokens) {
+      console.log('Found stored tokens, access_token exists:', !!tokens.access_token);
+      setState(prev => ({
+        ...prev,
+        googleTokens: tokens,
+        isGoogleConnected: true
+      }));
+      
+      // Delay initial fetch to avoid immediate API calls and rate limiting
+      setTimeout(() => {
         fetchGoogleEvents(tokens);
         fetchGoogleCalendars(tokens);
-      } catch (e) {
-        console.error('Error parsing stored tokens:', e);
-        localStorage.removeItem('googleCalendarTokens');
-        setState(prev => ({
-          ...prev,
-          connectionError: 'Kunne ikke koble til Google Calendar. Vennligst prøv igjen.'
-        }));
-      }
+      }, 1000); // Increased delay to 1 second
     } else {
-      console.log('No Google Calendar tokens found in localStorage');
+      console.log('No valid Google Calendar tokens found in localStorage');
     }
-  }, [fetchGoogleEvents, fetchGoogleCalendars]);
+    
+    isInitializedRef.current = true;
+  }, []);
+
+  // Memoize the refresh functions to pass forceRefresh
+  const refreshGoogleEvents = useCallback(() => {
+    if (state.googleTokens) {
+      fetchGoogleEvents(state.googleTokens, true); // force refresh
+    }
+  }, [state.googleTokens, fetchGoogleEvents]);
+
+  const refreshGoogleCalendars = useCallback(() => {
+    if (state.googleTokens) {
+      fetchGoogleCalendars(state.googleTokens, true); // force refresh
+    }
+  }, [state.googleTokens, fetchGoogleCalendars]);
 
   return {
     ...state,
-    fetchGoogleEvents,
+    fetchGoogleEvents: refreshGoogleEvents,
+    fetchGoogleCalendars: refreshGoogleCalendars,
     connectGoogleCalendar,
     disconnectGoogleCalendar,
     handleOAuthCallback,
