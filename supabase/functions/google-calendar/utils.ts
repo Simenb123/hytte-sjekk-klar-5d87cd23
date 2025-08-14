@@ -16,8 +16,8 @@ export const getRequiredEnv = (name: string): string => {
 export const getRedirectURI = (origin: string): string => {
   console.log(`Getting redirect URI based on origin: ${origin}`);
   
-  // Hvis origin er lovableproject.com, da er det Lovable preview miljø
-  if (origin.includes('lovableproject.com')) {
+  // Hvis origin er lovableproject.com eller lovable.app, da er det Lovable preview miljø
+  if (origin.includes('lovableproject.com') || origin.includes('lovable.app')) {
     console.log('In Lovable preview environment, using special redirect URL');
     return `${origin}/auth/calendar`;
   }

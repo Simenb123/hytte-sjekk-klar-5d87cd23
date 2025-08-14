@@ -20,6 +20,11 @@ describe('getRedirectURI', () => {
     expect(url).toBe('https://foo.lovableproject.com/auth/calendar');
   });
 
+  it('uses preview url for lovable.app', () => {
+    const url = getRedirectURI('https://id-preview--97756950-3c85-41a4-94ae-a14ccf690d68.lovable.app');
+    expect(url).toBe('https://id-preview--97756950-3c85-41a4-94ae-a14ccf690d68.lovable.app/auth/calendar');
+  });
+
   it('defaults to origin for other domains', () => {
     const url = getRedirectURI('https://example.com');
     expect(url).toBe('https://example.com/auth/calendar');
