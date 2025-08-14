@@ -23,7 +23,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "react-native": ["react-native-web"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
