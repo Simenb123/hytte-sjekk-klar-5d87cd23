@@ -8,16 +8,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { WEATHER_LAT, WEATHER_LON } from '@/config';
 
 const MammasHjorneContainer: React.FC = () => {
+  // Temporarily disabled Google Calendar to fix build issues
   const fetchEvents = async (): Promise<Event[]> => {
-    try {
-      // Google Calendar integration requires authentication - returning empty events
-      // This prevents the build error while keeping the functionality intact
-      console.log('Google Calendar integration requires authentication - returning empty events');
-      return [];
-    } catch (err) {
-      console.error('Failed to fetch events', err);
-      return [];
-    }
+    console.log('Events temporarily disabled - returning empty array');
+    return [];
   };
 
   const fetchWeather = async (lat: number = WEATHER_LAT, lon: number = WEATHER_LON): Promise<WeatherSnapshot> => {
@@ -26,7 +20,6 @@ const MammasHjorneContainer: React.FC = () => {
     });
     if (error) throw error;
     
-    // Determine location name based on coordinates
     const locationName = lat === 59.4 && lon === 10.6 ? 'Jeløya (Moss)' : 'Gaustablikk';
     
     return {
@@ -47,7 +40,7 @@ const MammasHjorneContainer: React.FC = () => {
 
   const initRealtime = (onChange: () => void) => {
     const channel = supabase
-      .channel('mammas-hjorne')
+      .channel('mammas-hjorne-new')
       .on('broadcast', { event: 'refresh' }, onChange)
       .subscribe();
     return () => {
@@ -56,7 +49,7 @@ const MammasHjorneContainer: React.FC = () => {
   };
 
   const onHeartbeat = (payload: HeartbeatPayload) => {
-    console.log('MammasHjorne heartbeat', payload);
+    console.log('MammasHjorne heartbeat (new)', payload);
   };
 
   return (
