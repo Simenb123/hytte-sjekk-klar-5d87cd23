@@ -6,12 +6,39 @@ import MammasHjorneScreen, {
 } from './MammasHjorneScreen';
 import { supabase } from '@/integrations/supabase/client';
 import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME } from '@/config';
+import { useGoogleCalendar } from '@/hooks/google-calendar';
 
 const MammasHjorneContainer: React.FC = () => {
-  // Temporarily disabled Google Calendar to fix build issues
+  const { 
+    googleEvents, 
+    isGoogleConnected, 
+    connectGoogleCalendar,
+    fetchError 
+  } = useGoogleCalendar();
+
   const fetchEvents = async (): Promise<Event[]> => {
-    console.log('Events temporarily disabled - returning empty array');
-    return [];
+    try {
+      if (isGoogleConnected && googleEvents.length > 0) {
+        console.log('Using Google Calendar events:', googleEvents.length);
+        // Convert Google events to Event format
+        return googleEvents.map(event => ({
+          id: event.id,
+          title: event.summary,
+          start: event.start.dateTime,
+          end: event.end.dateTime,
+          location: undefined,
+          attendees: undefined,
+          allDay: false
+        }));
+      } else {
+        console.log('Google Calendar not connected or no events, using mock data');
+        // Fallback to mock data when not connected
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching Google Calendar events:', error);
+      return [];
+    }
   };
 
   const fetchWeather = async (lat: number = WEATHER_LAT, lon: number = WEATHER_LON): Promise<WeatherSnapshot> => {
@@ -66,6 +93,9 @@ const MammasHjorneContainer: React.FC = () => {
       fetchWeather={fetchWeather}
       initRealtime={initRealtime}
       onHeartbeat={onHeartbeat}
+      isGoogleConnected={isGoogleConnected}
+      onConnectGoogle={connectGoogleCalendar}
+      googleConnectionError={fetchError}
     />
   );
 };

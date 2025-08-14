@@ -71,6 +71,9 @@ export type MammasHjorneProps = {
   onHeartbeat?: (p: HeartbeatPayload) => void;
   showFaceTime?: boolean;
   contacts?: Contact[];
+  isGoogleConnected?: boolean;
+  onConnectGoogle?: () => Promise<boolean>;
+  googleConnectionError?: string | null;
 };
 
 // ---------- Konstanter ----------
@@ -371,6 +374,9 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
     { name: 'Kari', relation: 'Datter', number: '+47XXXXXXXX', type: 'audio' },
     { name: 'Eva', relation: 'Venninne', number: '+47XXXXXXXX', type: 'sms' },
   ],
+  isGoogleConnected = false,
+  onConnectGoogle,
+  googleConnectionError,
 }) => {
 
   // Lokasjoner for værvarsel
@@ -793,7 +799,29 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
         {/* Kalender */}
         <div className="flex-[1.3] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-8 min-h-[400px] backdrop-blur-sm">
-          <h2 className="text-3xl text-white font-bold mb-4 leading-8">Neste avtaler</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-3xl text-white font-bold leading-8">Neste avtaler</h2>
+            <div className="flex items-center gap-2">
+              {isGoogleConnected ? (
+                <div className="flex items-center gap-2 text-green-300">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span className="text-sm">Google Calendar</span>
+                </div>
+              ) : (
+                <button
+                  onClick={onConnectGoogle}
+                  className="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-lg transition-colors"
+                >
+                  Koble til Google
+                </button>
+              )}
+            </div>
+          </div>
+          {googleConnectionError && (
+            <div className="text-orange-300 text-sm mb-3 bg-orange-900/20 p-2 rounded-lg">
+              Feil: {googleConnectionError}
+            </div>
+          )}
           <div className="overflow-y-auto pb-6">
             {/* I dag */}
             <h3 className="text-2xl text-gray-300 mb-3 mt-2 font-semibold">I dag</h3>
