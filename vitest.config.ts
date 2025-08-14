@@ -7,7 +7,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      'react-native': path.resolve(__dirname, './test/mocks/react-native.ts'),
     },
   },
   test: {
