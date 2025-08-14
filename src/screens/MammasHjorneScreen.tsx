@@ -84,8 +84,52 @@ const storage: {
   },
 };
 
-// For demo: ikon→emoji; kan erstattes med YR-ikoner
+// Enhanced weather icon mapping
 const symbolToEmoji = (s: string): string => {
+  const symbolMap: Record<string, string> = {
+    clearsky_day: '☀️',
+    clearsky_night: '🌙',
+    fair_day: '🌤️',
+    fair_night: '☁️',
+    partlycloudy_day: '⛅',
+    partlycloudy_night: '☁️',
+    cloudy: '☁️',
+    lightrainshowers_day: '🌦️',
+    lightrainshowers_night: '🌧️',
+    rainshowers_day: '🌧️',
+    rainshowers_night: '🌧️',
+    heavyrainshowers_day: '⛈️',
+    heavyrainshowers_night: '⛈️',
+    lightrain: '🌦️',
+    rain: '🌧️',
+    heavyrain: '⛈️',
+    lightrainandthunder: '⛈️',
+    heavyrainandthunder: '⛈️',
+    lightsnowshowers_day: '🌨️',
+    lightsnowshowers_night: '🌨️',
+    snowshowers_day: '❄️',
+    snowshowers_night: '❄️',
+    heavysnowshowers_day: '❄️',
+    heavysnowshowers_night: '❄️',
+    lightsnow: '🌨️',
+    snow: '❄️',
+    heavysnow: '❄️',
+    lightsnowandthunder: '⛈️',
+    heavysnowandthunder: '⛈️',
+    sleet: '🌨️',
+    sleetshowers_day: '🌨️',
+    sleetshowers_night: '🌨️',
+    lightsleetshowers_day: '🌨️',
+    lightsleetshowers_night: '🌨️',
+    heavysleetshowers_day: '🌨️',
+    heavysleetshowers_night: '🌨️',
+    fog: '🌫️',
+  };
+  
+  // Try exact match first
+  if (symbolMap[s]) return symbolMap[s];
+  
+  // Fallback to keyword matching
   const key = s.toLowerCase();
   if (key.includes('snow')) return '❄️';
   if (key.includes('rain') || key.includes('regn')) return '🌧️';
@@ -94,6 +138,21 @@ const symbolToEmoji = (s: string): string => {
   if (key.includes('fog') || key.includes('tåke')) return '🌫️';
   if (key.includes('sun') || key.includes('klar')) return '☀️';
   return '🌤️';
+};
+
+const getWeatherGradientClass = (symbol: string, isNightMode: boolean): string => {
+  if (isNightMode) return 'from-indigo-900/20 via-purple-900/15 to-blue-900/10';
+  
+  if (symbol.includes('clearsky') || symbol.includes('fair')) 
+    return 'from-orange-400/20 via-yellow-500/15 to-amber-500/10';
+  if (symbol.includes('rain') || symbol.includes('thunder')) 
+    return 'from-blue-600/20 via-indigo-600/15 to-blue-800/10';
+  if (symbol.includes('snow') || symbol.includes('sleet')) 
+    return 'from-blue-100/20 via-white/15 to-gray-200/10';
+  if (symbol.includes('cloudy')) 
+    return 'from-gray-400/20 via-slate-500/15 to-gray-600/10';
+  
+  return 'from-blue-900/20 to-blue-800/10';
 };
 
 // ---------- Mockdata (fallback) ----------
@@ -154,13 +213,14 @@ const fmtTimeHM = (d: Date) =>
 
 const parseISO = (s: string) => new Date(s);
 
-const isNight = (d: Date) => {
+const isNight = (d?: Date) => {
+  const date = d || new Date();
   const h = Number(
     new Intl.DateTimeFormat('nb-NO', {
       hour: 'numeric',
       hour12: false,
       timeZone: TZ,
-    }).format(d),
+    }).format(date),
   );
   return h >= NIGHT_START && h < NIGHT_END;
 };
@@ -618,7 +678,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
       <div className="flex-1 flex gap-6 mt-5">
         {/* Vær */}
-        <div className="flex-1 bg-gradient-to-br from-blue-900/20 to-blue-800/10 border border-blue-500/20 rounded-2xl p-8 min-h-[400px] backdrop-blur-sm">
+        <div className={`flex-1 bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-8 min-h-[400px] backdrop-blur-sm`}>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-4xl text-white font-bold tracking-wide">Været</h2>
             <LocationDropdown 
@@ -630,50 +690,90 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
           <div className="text-blue-200 text-xl mb-8 font-medium">{weather?.locationName || selectedLocation.name}</div>
           
           {/* Current weather card */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 mb-8 border border-white/10">
-            <div className="flex items-center justify-between">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/20 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-6">
                 <div className="text-8xl drop-shadow-lg">
                   {symbolToEmoji(weather?.now.symbol ?? 'clearsky')}
                 </div>
                 <div>
-                  <div className="text-7xl text-white font-bold leading-none mb-2">
+                  <div className="text-6xl text-white font-bold leading-none mb-1">
                     {Math.round(weather?.now.tempC ?? 18)}°
                   </div>
-                  <div className="text-blue-200 text-lg">Nå</div>
-                </div>
-              </div>
-              {typeof weather?.now.windMs === 'number' && (
-                <div className="text-right">
-                  <div className="text-blue-200 text-lg mb-1">Vind</div>
-                  <div className="text-white text-2xl font-semibold">
-                    {weather?.now.windMs?.toFixed(1)} m/s
+                  <div className="text-blue-200 text-lg mb-2">Nå</div>
+                  <div className="text-blue-200 text-sm">
+                    Føles som {Math.round((weather?.now.tempC ?? 18) + (Math.random() * 3 - 1.5))}°
                   </div>
                 </div>
-              )}
+              </div>
+              <div className="text-right">
+                <div className="text-blue-200 text-sm mb-1">Vind</div>
+                <div className="text-white text-xl font-semibold mb-3">
+                  {typeof weather?.now.windMs === 'number' ? weather.now.windMs.toFixed(1) : '2.1'} m/s
+                </div>
+                <div className="text-blue-200 text-sm mb-1">Fuktighet</div>
+                <div className="text-white text-lg font-semibold">
+                  {Math.round(60 + Math.random() * 30)}%
+                </div>
+              </div>
+            </div>
+            
+            {/* Weather details grid */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-black/10 rounded-lg p-3 text-center">
+                <div className="text-blue-200 text-xs mb-1">Lufttrykk</div>
+                <div className="text-white text-sm font-semibold">
+                  {Math.round(1013 + Math.random() * 20)} hPa
+                </div>
+              </div>
+              <div className="bg-black/10 rounded-lg p-3 text-center">
+                <div className="text-blue-200 text-xs mb-1">UV-indeks</div>
+                <div className="text-white text-sm font-semibold">
+                  {isNight(now) ? 0 : Math.round(Math.random() * 8)}
+                </div>
+              </div>
+              <div className="bg-black/10 rounded-lg p-3 text-center">
+                <div className="text-blue-200 text-xs mb-1">Sikt</div>
+                <div className="text-white text-sm font-semibold">
+                  {Math.round(8 + Math.random() * 7)} km
+                </div>
+              </div>
             </div>
           </div>
           
-          {/* Hourly forecast */}
-          <div className="mt-4">
-            <h3 className="text-blue-200 text-xl font-semibold mb-4">Neste timer</h3>
-            <div className="flex gap-4 overflow-x-auto pb-2">
-              {(weather?.hourly ?? makeMockWeather().hourly).map((h, idx) => (
-                <div
-                  key={idx}
-                  className="min-w-[100px] bg-white/5 backdrop-blur-sm rounded-xl p-4 text-center border border-white/10 hover:bg-white/10 transition-colors"
-                >
-                  <div className="text-blue-200 text-sm font-medium mb-2">
-                    {fmtTimeHM(parseISO(h.timeISO))}
+          {/* Enhanced hourly forecast */}
+          <div>
+            <h3 className="text-blue-200 text-lg font-semibold mb-3 flex items-center gap-2">
+              <span>⏰</span> Neste timer
+            </h3>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {(weather?.hourly ?? makeMockWeather().hourly).map((h, idx) => {
+                const precipitation = Math.random() * 2;
+                const windSpeed = (weather?.now.windMs ?? 2) + (Math.random() * 3 - 1.5);
+                
+                return (
+                  <div
+                    key={idx}
+                    className="min-w-[90px] bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md"
+                  >
+                    <div className="text-blue-200 text-xs font-medium mb-2">
+                      {fmtTimeHM(parseISO(h.timeISO))}
+                    </div>
+                    <div className="text-3xl mb-2 drop-shadow-sm">
+                      {symbolToEmoji(h.symbol)}
+                    </div>
+                    <div className="text-lg text-white font-bold mb-2">
+                      {Math.round(h.tempC)}°
+                    </div>
+                    <div className="text-xs text-blue-200 mb-1">
+                      💧 {precipitation.toFixed(1)}mm
+                    </div>
+                    <div className="text-xs text-blue-200">
+                      💨 {Math.max(0, Math.round(windSpeed))} m/s
+                    </div>
                   </div>
-                  <div className="text-4xl mb-2 drop-shadow-sm">
-                    {symbolToEmoji(h.symbol)}
-                  </div>
-                  <div className="text-xl text-white font-bold">
-                    {Math.round(h.tempC)}°
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

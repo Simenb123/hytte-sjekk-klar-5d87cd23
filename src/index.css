@@ -170,7 +170,43 @@
   }
   
   .weather-card {
-    @apply bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl p-6 text-white mb-6;
+    @apply bg-gradient-to-br rounded-xl p-6 text-white mb-6 shadow-lg;
+  }
+
+  .weather-sunny {
+    @apply from-orange-400 via-yellow-500 to-amber-500;
+  }
+
+  .weather-cloudy {
+    @apply from-gray-400 via-slate-500 to-gray-600;
+  }
+
+  .weather-rainy {
+    @apply from-blue-600 via-indigo-600 to-blue-800;
+  }
+
+  .weather-snowy {
+    @apply from-blue-100 via-white to-gray-200 text-gray-800;
+  }
+
+  .weather-stormy {
+    @apply from-gray-700 via-gray-800 to-gray-900;
+  }
+
+  .weather-night {
+    @apply from-indigo-900 via-purple-900 to-blue-900;
+  }
+
+  .weather-detail-item {
+    @apply flex items-center justify-between p-3 bg-black/10 rounded-lg backdrop-blur-sm;
+  }
+
+  .weather-detail-icon {
+    @apply w-5 h-5 opacity-75;
+  }
+
+  .weather-hourly-card {
+    @apply bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center min-w-[80px] hover:bg-white/20 transition-colors;
   }
   
   .animate-fade-in {
