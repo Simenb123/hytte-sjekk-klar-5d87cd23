@@ -701,7 +701,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
   return (
     <div 
-      className="flex-1 bg-gray-950 p-8 pt-6 w-full min-h-screen"
+      className="flex-1 bg-gray-950 p-6 pt-4 w-full min-h-screen max-w-[1400px] mx-auto"
       style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
     >
       {/* skjult admin trigger */}
@@ -739,7 +739,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 flex gap-6 mt-5">
+      <div className="flex-1 flex gap-8 mt-6">
         {/* Vær */}
         <div className={`flex-1 bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-8 min-h-[400px] backdrop-blur-sm`}>
           <div className="flex justify-between items-center mb-6">
