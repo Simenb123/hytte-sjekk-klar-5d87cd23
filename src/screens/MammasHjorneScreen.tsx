@@ -810,7 +810,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               <span>⏰</span> Neste timer
             </h3>
             <div className="flex gap-3 overflow-x-auto pb-2">
-              {(weather?.hourly ?? makeMockWeather().hourly).map((h, idx) => {
+              {(weather?.hourly ?? makeMockWeather().hourly).slice(0, 6).map((h, idx) => {
                 const precipitation = Math.random() * 2;
                 const windSpeed = (weather?.now.windMs ?? 2) + (Math.random() * 3 - 1.5);
                 
