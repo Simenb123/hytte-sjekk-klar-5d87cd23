@@ -10,7 +10,7 @@ import {
   shareCalendarWithFamily,
   getCalendarSharingLink
 } from './calendar.ts';
-import { GoogleAuthResponse, RequestData, GoogleCalendarEvent } from './types.ts';
+import { GoogleAuthResponse, RequestData, GoogleCalendarEvent, GoogleTokens } from './types.ts';
 import { validateAndRefreshTokens, isAuthError } from './token-refresh.ts';
 
 /**

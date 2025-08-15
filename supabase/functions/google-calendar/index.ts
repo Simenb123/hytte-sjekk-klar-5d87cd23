@@ -2,7 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from './constants.ts';
-import { getRequiredEnv, getRedirectURI } from './utils.ts';
+import { getRequiredEnv } from './utils.ts';
 import { handleAuthUrlGeneration, handleOAuthCodeExchange, handleCalendarOperations } from './handlers.ts';
 
 console.log("Google Calendar Edge Function starting up...");
