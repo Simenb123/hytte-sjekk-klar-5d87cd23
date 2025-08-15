@@ -38,14 +38,24 @@ const MammasHjorneContainer: React.FC = () => {
         // Convert Google events to Event format with better debugging
         const convertedEvents = googleEvents.map(event => {
           console.log('Converting event:', event.summary, 'from calendar:', event.calendarSummary || 'primary');
+          
+          // Handle both timed and all-day events properly
+          const startTime = event.start.dateTime || event.start.date;
+          const endTime = event.end.dateTime || event.end.date;
+          const isAllDay = event.allDay || !!event.start.date;
+          
+          if (!startTime || !endTime) {
+            console.warn('Event missing start/end time:', event.summary, { start: event.start, end: event.end });
+          }
+          
           return {
             id: event.id,
             title: event.summary,
-            start: event.start.dateTime,
-            end: event.end.dateTime,
+            start: startTime || new Date().toISOString(),
+            end: endTime || new Date().toISOString(),
             location: event.location,
             attendees: undefined,
-            allDay: false
+            allDay: isAllDay
           };
         });
         console.log('Converted events:', convertedEvents.length);

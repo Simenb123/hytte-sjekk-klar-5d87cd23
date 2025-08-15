@@ -5,16 +5,19 @@ export interface GoogleEvent {
   description?: string;
   location?: string;
   start: {
-    dateTime: string;
-    timeZone: string;
+    dateTime?: string;
+    date?: string;
+    timeZone?: string;
   };
   end: {
-    dateTime: string;
-    timeZone: string;
+    dateTime?: string;
+    date?: string;
+    timeZone?: string;
   };
   htmlLink?: string;
   calendarSummary?: string;
   calendarId?: string;
+  allDay?: boolean;
 }
 
 export interface GoogleCalendar {

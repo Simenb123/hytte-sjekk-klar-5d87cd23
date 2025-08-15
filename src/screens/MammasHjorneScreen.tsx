@@ -227,7 +227,19 @@ const fmtTimeHM = (d: Date) =>
     timeZone: TZ,
   }).format(d);
 
-const parseISO = (s: string) => new Date(s);
+const parseISO = (s: string) => {
+  try {
+    const date = new Date(s);
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date string:', s);
+      return new Date(); // Return current date as fallback
+    }
+    return date;
+  } catch (error) {
+    console.error('Error parsing date:', s, error);
+    return new Date(); // Return current date as fallback
+  }
+};
 
 const isNight = (d?: Date) => {
   const date = d || new Date();
@@ -337,7 +349,7 @@ function EventRow({ ev }: { ev: Event }) {
       <div className="flex-1">
         <div className="text-white font-semibold text-xl leading-7">{ev.title}</div>
         <div className="text-gray-400 text-lg mt-1 leading-6">
-          {fmtTimeHM(s)}–{fmtTimeHM(e)}
+          {ev.allDay ? 'Hele dagen' : `${fmtTimeHM(s)}–${fmtTimeHM(e)}`}
           {ev.location ? `  ·  ${ev.location}` : ''}
         </div>
       </div>

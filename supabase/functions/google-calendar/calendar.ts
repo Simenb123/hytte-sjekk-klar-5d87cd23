@@ -51,17 +51,46 @@ export const fetchEvents = async (accessToken: string) => {
     }
   }
 
-  // Sort all events by start time
-  allEvents.sort((a, b) => {
-    const startA = new Date(a.start?.dateTime || a.start?.date).getTime();
-    const startB = new Date(b.start?.dateTime || b.start?.date).getTime();
+  // Normalize events and sort by start time
+  const normalizedEvents = allEvents.map((event: any) => {
+    // Handle both all-day and timed events
+    const isAllDay = !!event.start?.date;
+    
+    // Convert all-day events to dateTime format for consistent handling
+    if (isAllDay) {
+      const startDate = new Date(event.start.date + 'T00:00:00');
+      const endDate = new Date(event.end.date + 'T23:59:59');
+      
+      return {
+        ...event,
+        allDay: true,
+        start: {
+          dateTime: startDate.toISOString(),
+          timeZone: 'Europe/Oslo'
+        },
+        end: {
+          dateTime: endDate.toISOString(),
+          timeZone: 'Europe/Oslo'
+        }
+      };
+    } else {
+      return {
+        ...event,
+        allDay: false
+      };
+    }
+  });
+
+  normalizedEvents.sort((a, b) => {
+    const startA = new Date(a.start.dateTime).getTime();
+    const startB = new Date(b.start.dateTime).getTime();
     return startA - startB;
   });
 
-  console.log(`Total events found across all calendars: ${allEvents.length}`);
+  console.log(`Total events found across all calendars: ${normalizedEvents.length}`);
   
   return {
-    items: allEvents,
+    items: normalizedEvents,
     nextPageToken: null,
     summary: 'All accessible calendars'
   };
