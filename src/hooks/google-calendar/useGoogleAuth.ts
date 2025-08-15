@@ -42,7 +42,14 @@ function openOAuthPopup(url: string): Promise<boolean> {
         clearInterval(checkClosed);
         popup.close();
         window.removeEventListener('message', messageHandler);
-        resolve(true);
+        
+        // Add small delay to allow for any final token operations
+        setTimeout(() => {
+          console.log('🔄 Triggering token refresh in parent window...');
+          // Force a token refresh to ensure they're loaded in the parent window
+          window.dispatchEvent(new CustomEvent('google-oauth-success'));
+          resolve(true);
+        }, 1000);
       } else if (event.data.type === 'GOOGLE_OAUTH_ERROR') {
         console.error('❌ Received OAuth error message from popup:', event.data.error);
         clearInterval(checkClosed);

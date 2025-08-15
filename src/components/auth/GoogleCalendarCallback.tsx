@@ -58,11 +58,19 @@ const GoogleCalendarCallback: React.FC = () => {
 
         if (success) {
           if (isPopup) {
+            // Wait a bit longer to ensure token storage is complete
+            console.log('🔄 Waiting for token storage to complete...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
             // Send success message to parent window
             window.opener.postMessage({
               type: 'GOOGLE_OAUTH_SUCCESS'
             }, window.location.origin);
-            window.close();
+            
+            // Additional delay before closing to ensure message is received
+            setTimeout(() => {
+              window.close();
+            }, 500);
             return;
           }
           
