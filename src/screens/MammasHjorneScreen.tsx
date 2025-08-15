@@ -812,7 +812,6 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             <div className="flex gap-3 overflow-x-auto pb-2">
               {(weather?.hourly ?? makeMockWeather().hourly).slice(0, 6).map((h, idx) => {
                 const precipitation = Math.random() * 2;
-                const windSpeed = (weather?.now.windMs ?? 2) + (Math.random() * 3 - 1.5);
                 
                 return (
                   <div
@@ -828,11 +827,8 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                     <div className="text-lg text-white font-bold mb-2">
                       {Math.round(h.tempC)}°
                     </div>
-                    <div className="text-xs text-blue-200 mb-1">
-                      💧 {precipitation.toFixed(1)}mm
-                    </div>
                     <div className="text-xs text-blue-200">
-                      💨 {Math.max(0, Math.round(windSpeed))} m/s
+                      💧 {precipitation.toFixed(1)}mm
                     </div>
                   </div>
                 );
@@ -842,7 +838,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         </div>
 
         {/* Kalender */}
-        <div className="flex-[1.3] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-8 min-h-[400px] backdrop-blur-sm">
+        <div className="flex-1 bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-8 min-h-[400px] backdrop-blur-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-3xl text-white font-bold leading-8">Neste avtaler</h2>
             <div className="flex items-center gap-2">
