@@ -7,6 +7,20 @@ Deno.serve(async (req) => {
   console.log(`[${new Date().toISOString()}] ${req.method} request received`);
   console.log('🔄 Google Calendar Edge Function restarted - New deployment active');
   
+  // DEBUG: Log all available environment variables
+  console.log('🔍 DEBUG: Available environment variables:');
+  for (const [key, value] of Object.entries(Deno.env.toObject())) {
+    if (key.includes('GOOGLE') || key.includes('CLIENT')) {
+      console.log(`  ${key}: ${value ? '[SET]' : '[NOT SET]'}`);
+    }
+  }
+  
+  // Specific checks for Google secrets
+  const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
+  const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
+  console.log(`🔍 GOOGLE_CLIENT_ID: ${googleClientId ? 'EXISTS (length: ' + googleClientId.length + ')' : 'MISSING'}`);
+  console.log(`🔍 GOOGLE_CLIENT_SECRET: ${googleClientSecret ? 'EXISTS (length: ' + googleClientSecret.length + ')' : 'MISSING'}`);
+  
   // CORS preflight request
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
