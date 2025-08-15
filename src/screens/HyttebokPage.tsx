@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAiChat } from '@/hooks/useAiChat';
 import { useHyttebokEntries, useAddHyttebokEntry } from '@/hooks/useHyttebok';
+import { TestSecretsButton } from '@/components/calendar/TestSecretsButton';
 export default function HyttebokPage() {
   const [text, setText] = useState('');
   const { sendMessage, loading } = useAiChat();
@@ -26,6 +27,7 @@ export default function HyttebokPage() {
   return (
     <Layout title="Hytteboka" showBackButton>
       <div className="w-full p-4 space-y-6">
+        <TestSecretsButton />
         <div className="bg-white p-4 rounded-lg shadow">
           <Textarea
             value={text}
