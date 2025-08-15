@@ -13,11 +13,26 @@ const MammasHjorneContainer: React.FC = () => {
     googleEvents, 
     isGoogleConnected, 
     connectGoogleCalendar,
-    fetchError 
+    fetchError,
+    isLoadingEvents
   } = useGoogleCalendar();
 
   const fetchEvents = async (): Promise<Event[]> => {
+    console.log('MammasHjorne fetchEvents called - State:', {
+      isGoogleConnected,
+      isLoadingEvents,
+      googleEventsCount: googleEvents.length,
+      fetchError
+    });
+
     try {
+      // If we're still loading events, wait a bit and return empty for now
+      if (isLoadingEvents) {
+        console.log('Google Calendar events still loading, returning empty array');
+        return [];
+      }
+
+      // If connected and we have events, use them
       if (isGoogleConnected && googleEvents.length > 0) {
         console.log('Using Google Calendar events:', googleEvents.length);
         // Convert Google events to Event format
@@ -30,11 +45,17 @@ const MammasHjorneContainer: React.FC = () => {
           attendees: undefined,
           allDay: false
         }));
-      } else {
-        console.log('Google Calendar not connected or no events, using mock data');
-        // Fallback to mock data when not connected
+      }
+
+      // If connected but no events, still return empty (not mock data)
+      if (isGoogleConnected && googleEvents.length === 0) {
+        console.log('Google Calendar connected but no events found');
         return [];
       }
+
+      // Not connected - return empty array 
+      console.log('Google Calendar not connected, returning empty array');
+      return [];
     } catch (error) {
       console.error('Error fetching Google Calendar events:', error);
       return [];
