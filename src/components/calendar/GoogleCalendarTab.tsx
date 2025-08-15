@@ -7,6 +7,7 @@ import { ConnectionErrorView } from './google/ConnectionErrorView';
 import { GoogleAuthErrorView } from './google/GoogleAuthErrorView';
 import { isEdgeFunctionError, isAuthError } from './google/utils';
 import { useConnectionRetry } from '@/hooks/google-calendar/useConnectionRetry';
+import { GoogleCalendarDebugPanel } from './GoogleCalendarDebugPanel';
 import type { GoogleEvent } from '@/types/googleCalendar.types';
 
 interface GoogleCalendarTabProps {
@@ -98,20 +99,24 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Google Calendar Hendelser</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <GoogleEventsList
-          events={googleEvents}
-          isLoading={isLoadingEvents}
-          onRefresh={fetchGoogleEvents}
-          error={fetchError}
-        />
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <GoogleCalendarDebugPanel />
+      
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Google Calendar Hendelser</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <GoogleEventsList
+            events={googleEvents}
+            isLoading={isLoadingEvents}
+            onRefresh={fetchGoogleEvents}
+            error={fetchError}
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 };
