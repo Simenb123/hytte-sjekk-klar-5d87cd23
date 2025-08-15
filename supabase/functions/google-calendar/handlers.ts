@@ -247,16 +247,15 @@ const handleOtherCalendarOperations = async (
         }
       }
       
+      // Create full-day event structure for cabin bookings
       const eventData = {
         summary: event.title,
         description: event.description,
         start: {
-          dateTime: event.startDate,
-          timeZone: 'Europe/Oslo'
+          date: event.startDate  // Use date format (YYYY-MM-DD) for full-day events
         },
         end: {
-          dateTime: event.endDate,
-          timeZone: 'Europe/Oslo'
+          date: event.endDate    // Use date format (YYYY-MM-DD) for full-day events
         }
       };
       

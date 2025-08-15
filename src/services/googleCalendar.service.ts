@@ -190,14 +190,28 @@ export const createCalendarEvent = async (tokens: GoogleOAuthTokens, eventData: 
   endDate: string;
 }, useSharedCalendar: boolean = false) => {
   try {
-    console.log('Creating calendar event with data:', eventData);
+    // Format dates for full-day Google Calendar events
+    const formatDateForGoogleCalendar = (dateString: string): string => {
+      const date = new Date(dateString);
+      // Format as YYYY-MM-DD for full-day events
+      return date.toISOString().split('T')[0];
+    };
+
+    const formattedEventData = {
+      title: eventData.title,
+      description: eventData.description,
+      startDate: formatDateForGoogleCalendar(eventData.startDate),
+      endDate: formatDateForGoogleCalendar(eventData.endDate)
+    };
+    
+    console.log('Creating calendar event with formatted data:', formattedEventData);
     
     const { data, error } = await supabase.functions.invoke('google-calendar', {
       method: 'POST',
       body: { 
         action: 'create_event',
         tokens,
-        event: eventData,
+        event: formattedEventData,
         useSharedCalendar
       }
     });
