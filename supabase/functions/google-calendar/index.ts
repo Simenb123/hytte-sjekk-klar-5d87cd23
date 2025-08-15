@@ -38,10 +38,35 @@ Deno.serve(async (req) => {
 
     // Håndter POST-forespørsler for OAuth-kode-utveksling og kalenderoperasjoner
     if (req.method === 'POST') {
-      const requestData: RequestData = await req.json();
+      let requestData: RequestData;
       
-      // Logging uten sensitive data
-      console.log('POST request data keys:', Object.keys(requestData));
+      try {
+        requestData = await req.json();
+        console.log('✅ Successfully parsed POST request JSON');
+      } catch (parseError) {
+        console.error('❌ Failed to parse POST request JSON:', parseError);
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON in request body' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Detailed logging without sensitive data
+      console.log('🔍 POST request data keys:', Object.keys(requestData));
+      console.log('🔍 POST request data structure:', {
+        has_code: !!requestData.code,
+        has_action: !!requestData.action,
+        has_tokens: !!requestData.tokens,
+        action_value: requestData.action,
+        tokens_structure: requestData.tokens ? {
+          has_access_token: !!requestData.tokens.access_token,
+          access_token_type: typeof requestData.tokens.access_token,
+          access_token_length: requestData.tokens.access_token?.length || 0,
+          has_refresh_token: !!requestData.tokens.refresh_token,
+          token_type: requestData.tokens.token_type,
+          scope: requestData.tokens.scope
+        } : 'NO_TOKENS'
+      });
       
       // Håndter OAuth-kode-utveksling
       if (requestData.code) {

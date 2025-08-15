@@ -87,9 +87,49 @@ export const handleOAuthCodeExchange = async (requestData: RequestData, origin: 
  * Handle calendar operations with tokens and automatic refresh
  */
 export const handleCalendarOperations = async (requestData: RequestData): Promise<Response> => {
+  console.log('🔍 DEBUG: Starting handleCalendarOperations');
+  console.log('🔍 DEBUG: Request data keys:', Object.keys(requestData));
+  console.log('🔍 DEBUG: Action:', requestData.action);
+  console.log('🔍 DEBUG: Tokens structure check:', {
+    tokens_exists: !!requestData.tokens,
+    access_token_exists: !!requestData.tokens?.access_token,
+    access_token_type: typeof requestData.tokens?.access_token,
+    access_token_length: requestData.tokens?.access_token?.length || 0,
+    refresh_token_exists: !!requestData.tokens?.refresh_token,
+    token_type: requestData.tokens?.token_type,
+    scope: requestData.tokens?.scope,
+    expiry_date: requestData.tokens?.expiry_date
+  });
+  
   const { action, tokens } = requestData;
   
-  if (!tokens?.access_token) {
+  // Detailed validation of required fields
+  if (!action) {
+    console.error('❌ Missing action parameter');
+    const response: GoogleAuthResponse = { 
+      error: 'Missing action parameter',
+      status: 400 
+    };
+    return new Response(
+      JSON.stringify(response),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+  
+  if (!tokens) {
+    console.error('❌ Missing tokens parameter');
+    const response: GoogleAuthResponse = { 
+      error: 'Missing tokens parameter',
+      status: 400 
+    };
+    return new Response(
+      JSON.stringify(response),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+  
+  if (!tokens.access_token) {
+    console.error('❌ Missing access_token in tokens');
     const response: GoogleAuthResponse = { 
       error: 'No access token provided',
       status: 401 
@@ -97,6 +137,18 @@ export const handleCalendarOperations = async (requestData: RequestData): Promis
     return new Response(
       JSON.stringify(response),
       { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+  
+  if (typeof tokens.access_token !== 'string') {
+    console.error('❌ Invalid access_token type:', typeof tokens.access_token);
+    const response: GoogleAuthResponse = { 
+      error: 'Invalid access token format',
+      status: 400 
+    };
+    return new Response(
+      JSON.stringify(response),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 

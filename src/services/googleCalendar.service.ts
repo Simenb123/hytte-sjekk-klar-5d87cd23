@@ -9,16 +9,49 @@ import { storeGoogleTokens } from '@/utils/tokenStorage';
  */
 export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<GoogleEvent[]> => {
   try {
-    console.log('Fetching calendar events with tokens:', 
-      tokens ? { access_token_exists: !!tokens.access_token } : 'No tokens'
-    );
+    console.log('🔍 DEBUG: Starting fetchCalendarEvents');
+    console.log('🔍 DEBUG: Input tokens validation:', {
+      tokens_exists: !!tokens,
+      access_token_exists: !!tokens?.access_token,
+      access_token_type: typeof tokens?.access_token,
+      access_token_length: tokens?.access_token?.length || 0,
+      refresh_token_exists: !!tokens?.refresh_token,
+      token_type: tokens?.token_type,
+      scope: tokens?.scope,
+      expiry_date: tokens?.expiry_date
+    });
     
+    // Validate tokens before sending
+    if (!tokens) {
+      throw new Error('No tokens provided to fetchCalendarEvents');
+    }
+    
+    if (!tokens.access_token || typeof tokens.access_token !== 'string') {
+      throw new Error('Invalid or missing access_token in tokens');
+    }
+    
+    const requestBody = { 
+      action: 'list_events',
+      tokens
+    };
+    
+    console.log('🔍 DEBUG: Request body structure:', {
+      action: requestBody.action,
+      tokens_included: !!requestBody.tokens,
+      tokens_access_token_length: requestBody.tokens?.access_token?.length || 0
+    });
+    
+    console.log('📡 Calling supabase.functions.invoke...');
     const { data, error } = await supabase.functions.invoke('google-calendar', {
       method: 'POST',
-      body: { 
-        action: 'list_events',
-        tokens
-      }
+      body: requestBody
+    });
+    
+    console.log('📡 Supabase response received:', {
+      data_exists: !!data,
+      error_exists: !!error,
+      data_keys: data ? Object.keys(data) : 'NO_DATA',
+      error_details: error
     });
 
     if (error) {
@@ -55,12 +88,34 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
  */
 export const fetchCalendarList = async (tokens: GoogleOAuthTokens): Promise<GoogleCalendar[]> => {
   try {
+    console.log('🔍 DEBUG: Starting fetchCalendarList');
+    console.log('🔍 DEBUG: Input tokens validation:', {
+      tokens_exists: !!tokens,
+      access_token_exists: !!tokens?.access_token,
+      access_token_type: typeof tokens?.access_token,
+      access_token_length: tokens?.access_token?.length || 0
+    });
+    
+    // Validate tokens before sending
+    if (!tokens || !tokens.access_token || typeof tokens.access_token !== 'string') {
+      throw new Error('Invalid tokens provided to fetchCalendarList');
+    }
+    
+    const requestBody = { 
+      action: 'get_calendars',
+      tokens
+    };
+    
+    console.log('📡 Calling supabase.functions.invoke for calendars...');
     const { data, error } = await supabase.functions.invoke('google-calendar', {
       method: 'POST',
-      body: { 
-        action: 'get_calendars',
-        tokens
-      }
+      body: requestBody
+    });
+    
+    console.log('📡 Calendars response received:', {
+      data_exists: !!data,
+      error_exists: !!error,
+      data_keys: data ? Object.keys(data) : 'NO_DATA'
     });
 
     if (error) {

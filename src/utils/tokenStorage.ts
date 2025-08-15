@@ -8,9 +8,11 @@ const RETRY_DELAY = 100; // ms
  * Safely store Google OAuth tokens with retry mechanism
  */
 export const storeGoogleTokens = async (tokens: GoogleOAuthTokens): Promise<boolean> => {
-  console.log('storeGoogleTokens called with:', {
+  console.log('🔍 DEBUG: storeGoogleTokens called with:', {
+    tokens_exists: !!tokens,
     access_token_exists: !!tokens?.access_token,
-    access_token_length: tokens?.access_token?.length,
+    access_token_type: typeof tokens?.access_token,
+    access_token_length: tokens?.access_token?.length || 0,
     refresh_token_exists: !!tokens?.refresh_token,
     token_type: tokens?.token_type,
     scope: tokens?.scope,
@@ -80,7 +82,7 @@ export const storeGoogleTokens = async (tokens: GoogleOAuthTokens): Promise<bool
  */
 export const retrieveGoogleTokens = (): GoogleOAuthTokens | null => {
   try {
-    console.log('retrieveGoogleTokens called - checking localStorage...');
+    console.log('🔍 DEBUG: retrieveGoogleTokens called - checking localStorage...');
     const stored = localStorage.getItem(TOKENS_KEY);
     
     if (!stored) {
@@ -91,11 +93,13 @@ export const retrieveGoogleTokens = (): GoogleOAuthTokens | null => {
     console.log(`✅ Found stored tokens in localStorage (${stored.length} characters)`);
     const tokens = JSON.parse(stored) as GoogleOAuthTokens;
     
-    // Validate token structure
-    if (!tokens.access_token || typeof tokens.access_token !== 'string') {
+    // Enhanced validation of token structure
+    if (!tokens.access_token || typeof tokens.access_token !== 'string' || tokens.access_token.length < 10) {
       console.error('❌ Invalid token structure found, removing from storage:', {
         access_token_exists: !!tokens.access_token,
-        access_token_type: typeof tokens.access_token
+        access_token_type: typeof tokens.access_token,
+        access_token_length: tokens.access_token?.length || 0,
+        access_token_sample: tokens.access_token?.substring(0, 10) + '...' || 'NONE'
       });
       localStorage.removeItem(TOKENS_KEY);
       return null;
