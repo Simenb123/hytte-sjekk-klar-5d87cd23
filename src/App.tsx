@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/state/auth';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { GoogleCalendarProvider } from '@/contexts/GoogleCalendarContext';
 import './App.css';
 
 // Import pages
@@ -36,9 +37,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <div className="App">
-            <Routes>
+        <GoogleCalendarProvider>
+          <Router>
+            <div className="App">
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route
@@ -132,10 +134,11 @@ function App() {
               />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-          </div>
-        </Router>
+              </Routes>
+              <Toaster />
+            </div>
+          </Router>
+        </GoogleCalendarProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
