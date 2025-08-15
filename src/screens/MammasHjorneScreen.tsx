@@ -273,11 +273,11 @@ const isNow = (startISO: string, endISO: string) => {
 function MammasLogo({ silhouetteUrl }: { silhouetteUrl?: string }) {
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-gray-800 rounded-2xl">
-      <div className="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center overflow-hidden">
+      <div className="w-24 h-24 rounded-full bg-amber-500 flex items-center justify-center overflow-hidden">
         <img 
           src="/lovable-uploads/3d8c6965-c80d-4939-82fe-1571dd5475fc.png" 
           alt="Mamma profil ikon" 
-          className="w-10 h-10 object-cover"
+          className="w-20 h-20 object-cover"
         />
       </div>
       <span className="text-lg font-bold text-white">Mamma's hjørne</span>
