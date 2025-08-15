@@ -102,7 +102,9 @@ export function useGoogleEvents(
         if (err.message?.includes('invalid_grant') ||
             err.message?.includes('invalid_token') ||
             err.message?.includes('utløpt') ||
-            err.message?.includes('expired')) {
+            err.message?.includes('expired') ||
+            err.message?.includes('requiresReauth') ||
+            err.message?.includes('Authentication failed')) {
           console.log('Authentication error detected, disconnecting Google Calendar');
           disconnectGoogleCalendar();
           toast.error('Google Calendar-tilgangen er utløpt. Vennligst koble til på nytt.');

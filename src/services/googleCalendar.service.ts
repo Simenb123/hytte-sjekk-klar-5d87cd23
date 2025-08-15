@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { GoogleEvent, GoogleCalendar, GoogleOAuthTokens } from '@/types/googleCalendar.types';
 import { toast } from 'sonner';
+import { storeGoogleTokens } from '@/utils/tokenStorage';
 
 /**
  * Henter kalender-hendelser fra Google Calendar via Edge Function
@@ -32,6 +33,13 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
 
     if (data?.events) {
       console.log(`Successfully fetched ${data.events.length} events`);
+      
+      // Handle refreshed tokens if provided
+      if (data.refreshedTokens) {
+        console.log('Received refreshed tokens from events fetch, updating storage');
+        await storeGoogleTokens(data.refreshedTokens);
+      }
+      
       return data.events;
     }
 
@@ -67,6 +75,13 @@ export const fetchCalendarList = async (tokens: GoogleOAuthTokens): Promise<Goog
 
     if (data?.calendars) {
       console.log(`Successfully fetched ${data.calendars.length} calendars`);
+      
+      // Handle refreshed tokens if provided
+      if (data.refreshedTokens) {
+        console.log('Received refreshed tokens from calendars fetch, updating storage');
+        await storeGoogleTokens(data.refreshedTokens);
+      }
+      
       return data.calendars;
     }
 
