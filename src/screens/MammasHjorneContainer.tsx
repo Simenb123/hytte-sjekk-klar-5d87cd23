@@ -41,7 +41,7 @@ const MammasHjorneContainer: React.FC = () => {
           title: event.summary,
           start: event.start.dateTime,
           end: event.end.dateTime,
-          location: undefined,
+          location: event.location,
           attendees: undefined,
           allDay: false
         }));
