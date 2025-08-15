@@ -5,6 +5,7 @@ import { RequestData } from './types.ts';
 
 Deno.serve(async (req) => {
   console.log(`[${new Date().toISOString()}] ${req.method} request received`);
+  console.log('🔄 Google Calendar Edge Function restarted - New deployment active');
   
   // CORS preflight request
   if (req.method === 'OPTIONS') {

@@ -184,11 +184,13 @@ export function useGoogleAuth(
   }, [setState]);
 
   const disconnectGoogleCalendar = useCallback(() => {
-    console.log('Disconnecting from Google Calendar...');
-    const removed = removeGoogleTokens();
-    if (!removed) {
-      console.warn('Failed to remove tokens from storage');
-    }
+    console.log('🔴 Disconnecting from Google Calendar...');
+    
+    // Clear all possible token storage locations
+    removeGoogleTokens();
+    localStorage.removeItem('googleCalendarTokens');
+    localStorage.removeItem('google_calendar_tokens'); 
+    localStorage.removeItem('google-tokens');
     
     setState(prev => ({
       ...prev,
