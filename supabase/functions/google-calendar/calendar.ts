@@ -6,23 +6,65 @@ export const fetchEvents = async (accessToken: string) => {
   const threeMonthsLater = new Date(now);
   threeMonthsLater.setMonth(now.getMonth() + 3);
 
-  const calendarResponse = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now.toISOString()}&timeMax=${threeMonthsLater.toISOString()}&singleEvents=true&orderBy=startTime`,
-    { 
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    }
-  );
+  // Fetch events from all calendars the user has access to
+  console.log('Fetching events from all accessible calendars');
+  
+  // First get the calendar list
+  const { items: calendars } = await fetchCalendars(accessToken);
+  console.log(`Found ${calendars.length} calendars`);
+  
+  let allEvents: any[] = [];
+  
+  // Fetch events from each calendar
+  for (const calendar of calendars) {
+    try {
+      console.log(`Fetching events from calendar: ${calendar.summary} (${calendar.id})`);
+      const calendarResponse = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendar.id)}/events?timeMin=${now.toISOString()}&timeMax=${threeMonthsLater.toISOString()}&singleEvents=true&orderBy=startTime`,
+        { 
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-  if (!calendarResponse.ok) {
-    const errorText = await calendarResponse.text();
-    console.error('Calendar API error:', errorText);
-    throw new Error(`Failed to fetch calendar events: ${errorText}`);
+      if (!calendarResponse.ok) {
+        console.error(`Failed to fetch events from calendar ${calendar.summary}:`, await calendarResponse.text());
+        continue; // Skip this calendar but continue with others
+      }
+
+      const calendarData = await calendarResponse.json();
+      const events = calendarData.items || [];
+      console.log(`Found ${events.length} events in calendar ${calendar.summary}`);
+      
+      // Add calendar info to each event for debugging
+      events.forEach((event: any) => {
+        event.calendarSummary = calendar.summary;
+        event.calendarId = calendar.id;
+      });
+      
+      allEvents = allEvents.concat(events);
+    } catch (error) {
+      console.error(`Error fetching events from calendar ${calendar.summary}:`, error);
+      continue; // Skip this calendar but continue with others
+    }
   }
 
-  return calendarResponse.json();
+  // Sort all events by start time
+  allEvents.sort((a, b) => {
+    const startA = new Date(a.start?.dateTime || a.start?.date).getTime();
+    const startB = new Date(b.start?.dateTime || b.start?.date).getTime();
+    return startA - startB;
+  });
+
+  console.log(`Total events found across all calendars: ${allEvents.length}`);
+  
+  return {
+    items: allEvents,
+    nextPageToken: null,
+    summary: 'All accessible calendars'
+  };
 };
 
 export const fetchCalendars = async (accessToken: string) => {

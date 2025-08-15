@@ -543,21 +543,43 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
     return () => clearInterval(t);
   }, [onHeartbeat, online, events.length, lastUpdated, weather?.updatedISO, usingMock]);
 
-  // grouping
+  // grouping - extended to include this week and next week
   const grouped = useMemo(() => {
     const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const isSameDay = (a: Date, b: Date) => startOfDay(a).getTime() === startOfDay(b).getTime();
+    const isWithinDays = (eventDate: Date, fromDate: Date, days: number) => {
+      const diffMs = eventDate.getTime() - fromDate.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays < days;
+    };
 
     const evToday: Event[] = [];
     const evTomorrow: Event[] = [];
+    const evThisWeek: Event[] = [];
+    const evNextWeek: Event[] = [];
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    console.log('Mammas hjørne - processing events:', events.length);
+    
     events.forEach((ev) => {
       const s = parseISO(ev.start);
-      if (isSameDay(s, today)) evToday.push(ev);
-      else if (isSameDay(s, tomorrow)) evTomorrow.push(ev);
+      console.log('Processing event:', ev.title, 'at', s);
+      
+      if (isSameDay(s, today)) {
+        evToday.push(ev);
+        console.log('Added to today:', ev.title);
+      } else if (isSameDay(s, tomorrow)) {
+        evTomorrow.push(ev);
+        console.log('Added to tomorrow:', ev.title);
+      } else if (isWithinDays(s, today, 7)) {
+        evThisWeek.push(ev);
+        console.log('Added to this week:', ev.title);
+      } else if (isWithinDays(s, today, 14)) {
+        evNextWeek.push(ev);
+        console.log('Added to next week:', ev.title);
+      }
     });
 
     const sortByStart = (a: Event, b: Event) =>
@@ -565,7 +587,17 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
     evToday.sort(sortByStart);
     evTomorrow.sort(sortByStart);
-    return { evToday, evTomorrow };
+    evThisWeek.sort(sortByStart);
+    evNextWeek.sort(sortByStart);
+    
+    console.log('Event groups:', {
+      today: evToday.length,
+      tomorrow: evTomorrow.length, 
+      thisWeek: evThisWeek.length,
+      nextWeek: evNextWeek.length
+    });
+    
+    return { evToday, evTomorrow, evThisWeek, evNextWeek };
   }, [events]);
 
   const withinNight = forceNight || isNight(now);
@@ -822,6 +854,15 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               Feil: {googleConnectionError}
             </div>
           )}
+          {isGoogleConnected && events.length === 0 && (
+            <div className="text-blue-300 text-sm mb-3 bg-blue-900/20 p-3 rounded-lg">
+              <div className="font-semibold mb-2">Ingen avtaler funnet</div>
+              <div className="text-xs">
+                Hvis andre familiemedlemmer skal se avtalene, må kalenderen deles i Google Calendar. 
+                Hver person må også koble sin egen Google-konto til appen.
+              </div>
+            </div>
+          )}
           <div className="overflow-y-auto pb-6">
             {/* I dag */}
             <h3 className="text-2xl text-gray-300 mb-3 mt-2 font-semibold">I dag</h3>
@@ -837,6 +878,22 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               <div className="text-xl text-gray-400 leading-7">Ingen avtaler i morgen.</div>
             ) : (
               grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} />)
+            )}
+
+            {/* Denne uken */}
+            {grouped.evThisWeek.length > 0 && (
+              <>
+                <h3 className="text-2xl text-gray-300 mb-3 mt-4 font-semibold">Denne uken</h3>
+                {grouped.evThisWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
+              </>
+            )}
+
+            {/* Neste uke */}
+            {grouped.evNextWeek.length > 0 && (
+              <>
+                <h3 className="text-2xl text-gray-300 mb-3 mt-4 font-semibold">Neste uke</h3>
+                {grouped.evNextWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
+              </>
             )}
           </div>
         </div>

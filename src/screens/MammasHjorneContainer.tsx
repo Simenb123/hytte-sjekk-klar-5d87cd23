@@ -35,16 +35,21 @@ const MammasHjorneContainer: React.FC = () => {
       // If connected and we have events, use them
       if (isGoogleConnected && googleEvents.length > 0) {
         console.log('Using Google Calendar events:', googleEvents.length);
-        // Convert Google events to Event format
-        return googleEvents.map(event => ({
-          id: event.id,
-          title: event.summary,
-          start: event.start.dateTime,
-          end: event.end.dateTime,
-          location: event.location,
-          attendees: undefined,
-          allDay: false
-        }));
+        // Convert Google events to Event format with better debugging
+        const convertedEvents = googleEvents.map(event => {
+          console.log('Converting event:', event.summary, 'from calendar:', event.calendarSummary || 'primary');
+          return {
+            id: event.id,
+            title: event.summary,
+            start: event.start.dateTime,
+            end: event.end.dateTime,
+            location: event.location,
+            attendees: undefined,
+            allDay: false
+          };
+        });
+        console.log('Converted events:', convertedEvents.length);
+        return convertedEvents;
       }
 
       // If connected but no events, still return empty (not mock data)

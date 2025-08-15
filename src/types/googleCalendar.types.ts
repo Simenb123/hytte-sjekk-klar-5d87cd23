@@ -13,6 +13,8 @@ export interface GoogleEvent {
     timeZone: string;
   };
   htmlLink?: string;
+  calendarSummary?: string;
+  calendarId?: string;
 }
 
 export interface GoogleCalendar {
