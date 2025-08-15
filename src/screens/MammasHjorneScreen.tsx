@@ -280,7 +280,7 @@ function MammasLogo({ silhouetteUrl }: { silhouetteUrl?: string }) {
           className="w-20 h-20 object-cover"
         />
       </div>
-      <span className="text-lg font-bold text-white">Mamma's hjørne</span>
+      <span className="text-3xl font-bold text-white">Mamma's hjørne</span>
     </div>
   );
 }
