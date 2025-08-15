@@ -87,268 +87,222 @@ export const handleOAuthCodeExchange = async (requestData: RequestData, origin: 
  * Handle calendar operations with tokens and automatic refresh
  */
 export const handleCalendarOperations = async (requestData: RequestData): Promise<Response> => {
-  console.log('🔍 DEBUG: Starting handleCalendarOperations');
-  console.log('🔍 DEBUG: Request data keys:', Object.keys(requestData));
-  console.log('🔍 DEBUG: Action:', requestData.action);
-  console.log('🔍 DEBUG: Tokens structure check:', {
-    tokens_exists: !!requestData.tokens,
-    access_token_exists: !!requestData.tokens?.access_token,
-    access_token_type: typeof requestData.tokens?.access_token,
-    access_token_length: requestData.tokens?.access_token?.length || 0,
-    refresh_token_exists: !!requestData.tokens?.refresh_token,
-    token_type: requestData.tokens?.token_type,
-    scope: requestData.tokens?.scope,
-    expiry_date: requestData.tokens?.expiry_date
-  });
-  
-  const { action, tokens } = requestData;
-  
-  // Detailed validation of required fields
-  if (!action) {
-    console.error('❌ Missing action parameter');
-    const response: GoogleAuthResponse = { 
-      error: 'Missing action parameter',
-      status: 400 
-    };
-    return new Response(
-      JSON.stringify(response),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-  
-  if (!tokens) {
-    console.error('❌ Missing tokens parameter');
-    const response: GoogleAuthResponse = { 
-      error: 'Missing tokens parameter',
-      status: 400 
-    };
-    return new Response(
-      JSON.stringify(response),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-  
-  if (!tokens.access_token) {
-    console.error('❌ Missing access_token in tokens');
-    const response: GoogleAuthResponse = { 
-      error: 'No access token provided',
-      status: 401 
-    };
-    return new Response(
-      JSON.stringify(response),
-      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-  
-  if (typeof tokens.access_token !== 'string') {
-    console.error('❌ Invalid access_token type:', typeof tokens.access_token);
-    const response: GoogleAuthResponse = { 
-      error: 'Invalid access token format',
-      status: 400 
-    };
-    return new Response(
-      JSON.stringify(response),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-
-  // Get environment variables for token refresh
-  const GOOGLE_CLIENT_ID = getRequiredEnv('GOOGLE_CLIENT_ID');
-  const GOOGLE_CLIENT_SECRET = getRequiredEnv('GOOGLE_CLIENT_SECRET');
-
   try {
-    // Validate and refresh tokens if needed
-    let { tokens: validTokens, refreshed } = await validateAndRefreshTokens(
-      tokens,
-      GOOGLE_CLIENT_ID,
-      GOOGLE_CLIENT_SECRET
-    );
-
-    let response;
-    console.log(`Processing calendar operation: ${action}`);
+    console.log(`🗓️ Handling calendar operation: ${requestData.action}`);
     
-    // Execute the operation with retry logic for auth errors
-    try {
-      switch (action) {
-        case 'list_events':
-          response = await fetchEvents(validTokens.access_token);
-          break;
-          
-        case 'get_calendars':
-          response = await fetchCalendars(validTokens.access_token);
-          break;
-          
-        default:
-          // Handle other actions without retry for now
-          return await handleOtherCalendarOperations(action, requestData, validTokens.access_token);
-      }
-    } catch (error) {
-      // If we get an auth error and haven't already refreshed, try once more
-      if (isAuthError(error) && !refreshed && tokens.refresh_token) {
-        console.log('Auth error detected, attempting token refresh and retry');
-        try {
-          const refreshResult = await validateAndRefreshTokens(
-            tokens,
-            GOOGLE_CLIENT_ID,
-            GOOGLE_CLIENT_SECRET
-          );
-          validTokens = refreshResult.tokens;
-          
-          // Retry the operation
-          switch (action) {
-            case 'list_events':
-              response = await fetchEvents(validTokens.access_token);
-              break;
-              
-            case 'get_calendars':
-              response = await fetchCalendars(validTokens.access_token);
-              break;
-          }
-        } catch (retryError) {
-          console.error('Retry after token refresh failed:', retryError);
-          return new Response(
-            JSON.stringify({
-              error: 'Authentication failed. Please reconnect your Google Calendar.',
-              details: 'Token refresh failed',
-              status: 401,
-              requiresReauth: true
-            }),
-            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-      } else {
-        throw error; // Re-throw if not an auth error or already tried refresh
-      }
-    }
-
-    // Return success response with refreshed tokens if applicable
-    const successResponse: any = {};
+    const { action, tokens } = requestData;
     
-    if (action === 'list_events') {
-      successResponse.events = response.items || [];
-    } else if (action === 'get_calendars') {
-      successResponse.calendars = response.items || [];
-    }
-    
-    // Include refreshed tokens in response if they were updated
-    if (refreshed) {
-      successResponse.refreshedTokens = validTokens;
-    }
-    
-    return new Response(
-      JSON.stringify(successResponse),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error: unknown) {
-    console.error(`Error in calendar operation ${action}:`, error);
-
-    const message = error instanceof Error ? error.message : String(error);
-    
-    // Check if it's an authentication error
-    if (isAuthError(error)) {
+    if (!tokens || !tokens.access_token) {
       return new Response(
-        JSON.stringify({
-          error: 'Authentication failed. Please reconnect your Google Calendar.',
-          details: message,
+        JSON.stringify({ error: 'Valid access tokens are required' }),
+        { 
           status: 401,
-          requiresReauth: true
-        }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
       );
     }
     
+    console.log(`🔑 Token validation:`, {
+      access_token_exists: !!tokens.access_token,
+      refresh_token_exists: !!tokens.refresh_token,
+      token_type: tokens.token_type,
+      expiry_date: tokens.expiry_date
+    });
+    
+    // Validate and refresh tokens if needed
+    const clientId = getRequiredEnv('GOOGLE_CLIENT_ID');
+    const clientSecret = getRequiredEnv('GOOGLE_CLIENT_SECRET');
+    
+    let validTokens: GoogleTokens;
+    let refreshed = false;
+    
+    try {
+      const result = await validateAndRefreshTokens(tokens, clientId, clientSecret);
+      validTokens = result.tokens;
+      refreshed = result.refreshed;
+      
+      if (refreshed) {
+        console.log('🔄 Tokens were refreshed');
+      }
+    } catch (error) {
+      console.error('❌ Token validation/refresh failed:', error);
+      
+      if (isAuthError(error)) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Authentication failed. Please reconnect your Google Calendar.',
+            requiresReauth: true
+          }),
+          { 
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      throw error;
+    }
+    
+    // Handle specific actions
+    try {
+      switch (action) {
+        case 'list_events':
+          console.log('📅 Fetching calendar events');
+          const events = await fetchEvents(validTokens.access_token);
+          console.log(`✅ Fetched ${events.length} events`);
+          
+          return new Response(
+            JSON.stringify({
+              events,
+              success: true,
+              refreshedTokens: refreshed ? validTokens : undefined
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+          
+        case 'get_calendars':
+          console.log('📋 Fetching calendar list');
+          const calendars = await fetchCalendars(validTokens.access_token);
+          console.log(`✅ Fetched ${calendars.length} calendars`);
+          
+          return new Response(
+            JSON.stringify({
+              calendars,
+              success: true,
+              refreshedTokens: refreshed ? validTokens : undefined
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+          
+        default:
+          return await handleOtherCalendarOperations(requestData, validTokens, refreshed);
+      }
+    } catch (apiError) {
+      console.error(`❌ Google API error for action ${action}:`, apiError);
+      
+      if (isAuthError(apiError)) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Authentication failed. Please reconnect your Google Calendar.',
+            requiresReauth: true
+          }),
+          { 
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      throw apiError;
+    }
+  } catch (error) {
+    console.error('❌ Error in calendar operations:', error);
     return new Response(
-      JSON.stringify({
-        error: message,
-        status: 400
+      JSON.stringify({ 
+        error: 'Calendar operation failed',
+        details: error.message
       }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     );
   }
 };
 
 /**
- * Handle other calendar operations (create_event, setup_shared_calendar)
+ * Håndterer andre kalender-operasjoner som event creation og sharing
  */
 const handleOtherCalendarOperations = async (
-  action: string,
   requestData: RequestData,
-  accessToken: string
+  validTokens: GoogleTokens,
+  refreshed: boolean
 ): Promise<Response> => {
+  const { action, event, calendar, useSharedCalendar } = requestData;
+  
   switch (action) {
-    case 'create_event': {
-      if (!requestData.event) {
-        throw new Error('No event data provided');
+    case 'create_event':
+      if (!event) {
+        return new Response(
+          JSON.stringify({ error: 'Event data is required for creating events' }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
       }
-
-      let calendarId = 'primary';
-      let createdSharedCalendar = null;
-
-      // Hvis useSharedCalendar er true, opprett eller finn hytte-kalenderen
-      if (requestData.useSharedCalendar) {
-        console.log('Creating/finding shared hytte calendar');
-        const calendarName = requestData.calendar?.name || 'Hytte Booking';
-        createdSharedCalendar = await createOrFindHyttaCalendar(accessToken, calendarName);
-        calendarId = createdSharedCalendar.id;
-        console.log(`Using shared hytte calendar with ID: ${calendarId}`);
+      
+      console.log('📝 Creating calendar event:', event.title);
+      
+      let targetCalendarId = 'primary';
+      
+      if (useSharedCalendar && calendar?.name) {
+        console.log(`🏡 Creating/finding shared calendar: ${calendar.name}`);
+        const sharedCalendar = await createOrFindHyttaCalendar(validTokens.access_token, calendar.name);
+        targetCalendarId = sharedCalendar.id;
+        
+        if (calendar.shareWith && calendar.shareWith.length > 0) {
+          console.log(`👥 Sharing calendar with: ${calendar.shareWith.join(', ')}`);
+          await shareCalendarWithFamily(validTokens.access_token, targetCalendarId, calendar.shareWith);
+        }
       }
-
-      const calendarEvent: GoogleCalendarEvent = {
-        summary: requestData.event.title,
-        description: requestData.event.description || '',
+      
+      const eventData = {
+        summary: event.title,
+        description: event.description,
         start: {
-          dateTime: new Date(requestData.event.startDate).toISOString(),
+          dateTime: event.startDate,
           timeZone: 'Europe/Oslo'
         },
         end: {
-          dateTime: new Date(requestData.event.endDate).toISOString(),
+          dateTime: event.endDate,
           timeZone: 'Europe/Oslo'
         }
       };
-
-      const response = await createEvent(accessToken, calendarEvent, calendarId);
-
+      
+      const createdEvent = await createEvent(validTokens.access_token, eventData, targetCalendarId);
+      console.log('✅ Event created successfully');
+      
       return new Response(
         JSON.stringify({
-          event: response,
-          sharedCalendar: createdSharedCalendar
+          event: createdEvent,
+          calendarId: targetCalendarId,
+          success: true,
+          refreshedTokens: refreshed ? validTokens : undefined
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-    }
-    
-    case 'setup_shared_calendar': {
-      console.log('Setting up shared hytte calendar');
-      // Angi standardnavn hvis ikke angitt
-      const calendarName = requestData.calendar?.name || 'Hytte Booking';
-
-      // Opprett eller finn hytte-kalenderen
-      const hyttaCalendar = await createOrFindHyttaCalendar(accessToken, calendarName);
-
-      let sharingResults = null;
-      // Hvis e-poster er oppgitt, del kalenderen
-      if (requestData.calendar?.shareWith && requestData.calendar.shareWith.length > 0) {
-        sharingResults = await shareCalendarWithFamily(
-          accessToken,
-          hyttaCalendar.id,
-          requestData.calendar.shareWith
+      
+    case 'get_calendar_sharing':
+      if (!calendar?.id) {
+        return new Response(
+          JSON.stringify({ error: 'Calendar ID is required' }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
         );
       }
-
-      // Generer delings-lenker
-      const sharingLinks = await getCalendarSharingLink(accessToken, hyttaCalendar.id);
-
+      
+      console.log(`🔗 Getting sharing links for calendar: ${calendar.id}`);
+      const sharingInfo = await getCalendarSharingLink(validTokens.access_token, calendar.id);
+      
       return new Response(
         JSON.stringify({
-          calendar: hyttaCalendar,
-          sharingResults,
-          sharingLinks
+          sharing: sharingInfo,
+          success: true,
+          refreshedTokens: refreshed ? validTokens : undefined
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-    }
       
     default:
-      throw new Error('Invalid action requested');
+      return new Response(
+        JSON.stringify({ error: `Unknown action: ${action}` }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
   }
 };

@@ -1,166 +1,156 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useGoogleCalendar } from '@/hooks/google-calendar';
-import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useGoogleCalendar } from '@/contexts/GoogleCalendarContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
-const GoogleCalendarCallback: React.FC = () => {
+/**
+ * OAuth callback-side for Google Calendar
+ * Håndterer authorization code fra Google og sender den til parent window
+ */
+export default function GoogleCalendarCallback() {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { handleOAuthCallback } = useGoogleCalendar();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     const processCallback = async () => {
-      try {
-        // Check if this is running in a popup window
-        const isPopup = window.opener && window.opener !== window;
+      console.log('🔵 Google Calendar OAuth callback processing started');
+      
+      const code = searchParams.get('code');
+      const error = searchParams.get('error');
+      const state = searchParams.get('state');
+      
+      console.log('🔍 URL parameters:', {
+        code_exists: !!code,
+        code_length: code?.length,
+        error,
+        state,
+        full_url: window.location.href
+      });
+
+      // Handle OAuth errors
+      if (error) {
+        console.error('❌ OAuth error from Google:', error);
         
-        // Get authorization code from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const error = urlParams.get('error');
-
-        if (error) {
-          console.error('OAuth error:', error);
-          if (isPopup) {
-            // Send error message to parent window
-            window.opener.postMessage({
-              type: 'GOOGLE_OAUTH_ERROR',
-              error: error
-            }, window.location.origin);
-            window.close();
-            return;
-          }
-          setStatus('error');
-          setErrorMessage(`Google OAuth error: ${error}`);
-          return;
+        let errorMessage = 'Google Calendar-tilkobling ble avbrutt.';
+        if (error === 'access_denied') {
+          errorMessage = 'Tilgang til Google Calendar ble nektet. Vennligst prøv igjen og gi tillatelse.';
         }
-
-        if (!code) {
-          console.error('No authorization code received');
-          if (isPopup) {
-            // Send error message to parent window
-            window.opener.postMessage({
-              type: 'GOOGLE_OAUTH_ERROR',
-              error: 'No authorization code received'
-            }, window.location.origin);
-            window.close();
-            return;
-          }
-          setStatus('error');
-          setErrorMessage('Ingen autorisasjonskode mottatt fra Google');
-          return;
-        }
-
-        console.log('Processing OAuth callback with code:', code);
-        const result = await handleOAuthCallback(code);
-
-        if (result.success && result.tokens) {
-          if (isPopup) {
-            console.log('✅ Sending tokens to parent window via postMessage');
-            
-            // Send tokens directly to parent window
-            window.opener.postMessage({
-              type: 'GOOGLE_OAUTH_SUCCESS',
-              tokens: result.tokens
-            }, window.location.origin);
-            
-            // Close popup after short delay
-            setTimeout(() => {
-              window.close();
-            }, 500);
-            return;
-          }
-          
-          setStatus('success');
-          // Redirect to Mamma's hjørne after successful connection
-          setTimeout(() => {
-            navigate('/mammas-hjorne');
-          }, 2000);
-        } else {
-          if (isPopup) {
-            // Send error message to parent window
-            window.opener.postMessage({
-              type: 'GOOGLE_OAUTH_ERROR',
-              error: 'Could not complete connection'
-            }, window.location.origin);
-            window.close();
-            return;
-          }
-          
-          setStatus('error');
-          setErrorMessage('Kunne ikke fullføre tilkobling til Google Calendar');
-        }
-      } catch (error) {
-        console.error('Error processing OAuth callback:', error);
         
-        const isPopup = window.opener && window.opener !== window;
-        if (isPopup) {
-          // Send error message to parent window
+        toast.error(errorMessage);
+        
+        // If we're in a popup, send error to parent
+        if (window.opener && window.opener !== window) {
+          console.log('📡 Sending error message to parent window');
           window.opener.postMessage({
             type: 'GOOGLE_OAUTH_ERROR',
-            error: 'Unexpected error during connection'
+            error: errorMessage
           }, window.location.origin);
           window.close();
           return;
         }
         
-        setStatus('error');
-        setErrorMessage('Uventet feil ved tilkobling til Google Calendar');
+        // Otherwise redirect to main page
+        navigate('/');
+        return;
+      }
+
+      // Handle missing authorization code
+      if (!code) {
+        console.error('❌ No authorization code received from Google');
+        const errorMessage = 'Ingen autorisasjonskode mottatt fra Google.';
+        toast.error(errorMessage);
+        
+        if (window.opener && window.opener !== window) {
+          console.log('📡 Sending error message to parent window (no code)');
+          window.opener.postMessage({
+            type: 'GOOGLE_OAUTH_ERROR',
+            error: errorMessage
+          }, window.location.origin);
+          window.close();
+          return;
+        }
+        
+        navigate('/');
+        return;
+      }
+
+      try {
+        console.log('🔄 Processing OAuth callback with authorization code');
+        
+        // If we're in a popup, handle the code exchange here and send tokens to parent
+        if (window.opener && window.opener !== window) {
+          console.log('📡 Processing OAuth in popup window');
+          
+          const result = await handleOAuthCallback(code);
+          
+          if (result.success && result.tokens) {
+            console.log('✅ OAuth successful in popup, sending tokens to parent');
+            window.opener.postMessage({
+              type: 'GOOGLE_OAUTH_SUCCESS',
+              tokens: result.tokens
+            }, window.location.origin);
+            
+            toast.success('Google Calendar koblet til!');
+            setTimeout(() => window.close(), 1000);
+          } else {
+            throw new Error('OAuth-utveksling feilet');
+          }
+        } else {
+          // Direct callback (not popup)
+          console.log('🔄 Processing OAuth in direct callback');
+          
+          const result = await handleOAuthCallback(code);
+          
+          if (result.success) {
+            console.log('✅ OAuth successful, redirecting to previous page');
+            toast.success('Google Calendar koblet til!');
+            
+            // Redirect to the stored return URL or default
+            const returnUrl = sessionStorage.getItem('calendarReturnUrl') || '/';
+            sessionStorage.removeItem('calendarReturnUrl');
+            navigate(returnUrl);
+          } else {
+            throw new Error('OAuth-utveksling feilet');
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error processing OAuth callback:', error);
+        
+        const errorMessage = error instanceof Error ? error.message : 'Ukjent feil ved OAuth-behandling';
+        toast.error(errorMessage);
+        
+        if (window.opener && window.opener !== window) {
+          console.log('📡 Sending error to parent window');
+          window.opener.postMessage({
+            type: 'GOOGLE_OAUTH_ERROR',
+            error: errorMessage
+          }, window.location.origin);
+          window.close();
+        } else {
+          navigate('/');
+        }
       }
     };
 
     processCallback();
-  }, [handleOAuthCallback, navigate]);
-
-  const getStatusIcon = () => {
-    switch (status) {
-      case 'loading':
-        return <Loader2 className="w-12 h-12 animate-spin text-blue-500" />;
-      case 'success':
-        return <CheckCircle className="w-12 h-12 text-green-500" />;
-      case 'error':
-        return <XCircle className="w-12 h-12 text-red-500" />;
-    }
-  };
-
-  const getStatusMessage = () => {
-    switch (status) {
-      case 'loading':
-        return 'Kobler til Google Calendar...';
-      case 'success':
-        return 'Google Calendar tilkoblet! Omdirigerer...';
-      case 'error':
-        return errorMessage;
-    }
-  };
+  }, [searchParams, navigate, handleOAuthCallback]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
-        <CardContent className="p-8 text-center">
-          <div className="mb-6">
-            {getStatusIcon()}
-          </div>
-          <h2 className="text-xl font-semibold mb-4">
-            Google Calendar tilkobling
-          </h2>
-          <p className="text-gray-600 mb-6">
-            {getStatusMessage()}
-          </p>
-          {status === 'error' && (
-            <button
-              onClick={() => navigate('/mammas-hjorne')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              Tilbake til Mamma's hjørne
-            </button>
-          )}
+        <CardHeader className="text-center">
+          <CardTitle>Google Calendar</CardTitle>
+          <CardDescription>
+            Behandler tilkobling til Google Calendar...
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </CardContent>
       </Card>
     </div>
   );
-};
-
-export default GoogleCalendarCallback;
+}

@@ -1,111 +1,73 @@
 
-// SIMPLIFIED FOR DEBUGGING
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-};
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { corsHeaders } from './constants.ts';
+import { getRequiredEnv, getRedirectURI } from './utils.ts';
+import { handleAuthUrlGeneration, handleOAuthCodeExchange, handleCalendarOperations } from './handlers.ts';
 
-Deno.serve(async (req) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} request received`);
-  console.log('🔄 SIMPLIFIED Google Calendar Edge Function');
+console.log("Google Calendar Edge Function starting up...");
+
+serve(async (req) => {
+  console.log(`\n🔵 === NEW REQUEST === ${new Date().toISOString()} ===`);
+  console.log(`Method: ${req.method}`);
+  console.log(`URL: ${req.url}`);
   
-  // CORS preflight request
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('🔍 Handling OPTIONS request');
+    console.log('⚙️ CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Check secrets immediately
-    const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID');
-    const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
-    console.log(`🔍 GOOGLE_CLIENT_ID: ${googleClientId ? 'EXISTS (length: ' + googleClientId.length + ')' : 'MISSING'}`);
-    console.log(`🔍 GOOGLE_CLIENT_SECRET: ${googleClientSecret ? 'EXISTS (length: ' + googleClientSecret.length + ')' : 'MISSING'}`);
+    // Check environment variables
+    const googleClientId = getRequiredEnv('GOOGLE_CLIENT_ID');
+    const googleClientSecret = getRequiredEnv('GOOGLE_CLIENT_SECRET');
     
-    if (!googleClientId) {
-      console.error('❌ GOOGLE_CLIENT_ID missing');
-      return new Response(
-        JSON.stringify({ error: 'GOOGLE_CLIENT_ID not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    if (!googleClientSecret) {
-      console.error('❌ GOOGLE_CLIENT_SECRET missing');
-      return new Response(
-        JSON.stringify({ error: 'GOOGLE_CLIENT_SECRET not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    console.log('✅ Environment variables validated');
 
-    const origin = req.headers.get('origin') || 'https://example.com';
-    console.log(`🔍 Request origin: ${origin}`);
-
-    // Handle GET requests - generate OAuth URL
+    // Handle GET requests - OAuth URL generation
     if (req.method === 'GET') {
-      console.log('🔍 Handling GET request - generating OAuth URL');
-      
-      const redirectUri = `${origin}/auth/calendar`;
-      const scopes = [
-        'https://www.googleapis.com/auth/calendar.readonly',
-        'https://www.googleapis.com/auth/calendar.events'
-      ];
-      
-      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-      authUrl.searchParams.append('client_id', googleClientId);
-      authUrl.searchParams.append('redirect_uri', redirectUri);
-      authUrl.searchParams.append('response_type', 'code');
-      authUrl.searchParams.append('scope', scopes.join(' '));
-      authUrl.searchParams.append('access_type', 'offline');
-      authUrl.searchParams.append('prompt', 'consent');
-
-      console.log(`✅ Generated auth URL successfully`);
-      return new Response(
-        JSON.stringify({ url: authUrl.toString() }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:3000';
+      return await handleAuthUrlGeneration(req, origin);
     }
 
-    // Handle POST requests
+    // Handle POST requests - OAuth exchange and calendar operations
     if (req.method === 'POST') {
-      console.log('🔍 Handling POST request');
+      const bodyText = await req.text();
+      console.log(`📦 Raw request body: ${bodyText.substring(0, 200)}...`);
       
-      let requestData;
-      try {
-        requestData = await req.json();
-        console.log('✅ Successfully parsed POST request JSON');
-        console.log('🔍 POST request keys:', Object.keys(requestData));
-      } catch (parseError) {
-        console.error('❌ Failed to parse POST request JSON:', parseError);
-        return new Response(
-          JSON.stringify({ error: 'Invalid JSON in request body' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      const requestData = JSON.parse(bodyText);
+      console.log(`📦 Request action: ${requestData.action || 'code_exchange'}`);
+      
+      // Handle OAuth code exchange
+      if (requestData.code && !requestData.action) {
+        const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:3000';
+        return await handleOAuthCodeExchange(requestData, origin);
       }
       
-      // For now, just return success for any POST request
-      console.log('✅ POST request processed successfully (simplified)');
-      return new Response(
-        JSON.stringify({ success: true, message: 'POST request received and processed' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      // Handle calendar operations
+      return await handleCalendarOperations(requestData);
     }
 
-    console.log('❌ Method not allowed:', req.method);
     return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: `Method ${req.method} not allowed` }),
+      { 
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     );
+
   } catch (error) {
-    console.error('❌ Edge function error:', error);
-    
+    console.error('💥 Unhandled error in edge function:', error);
     return new Response(
       JSON.stringify({ 
-        error: `Edge function error: ${error.message}`,
-        stack: error.stack
+        error: 'Internal server error',
+        details: error.message 
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
     );
   }
 });
