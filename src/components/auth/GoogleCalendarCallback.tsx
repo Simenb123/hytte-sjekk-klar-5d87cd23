@@ -54,20 +54,19 @@ const GoogleCalendarCallback: React.FC = () => {
         }
 
         console.log('Processing OAuth callback with code:', code);
-        const success = await handleOAuthCallback(code);
+        const result = await handleOAuthCallback(code);
 
-        if (success) {
+        if (result.success && result.tokens) {
           if (isPopup) {
-            // Wait a bit longer to ensure token storage is complete
-            console.log('🔄 Waiting for token storage to complete...');
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            console.log('✅ Sending tokens to parent window via postMessage');
             
-            // Send success message to parent window
+            // Send tokens directly to parent window
             window.opener.postMessage({
-              type: 'GOOGLE_OAUTH_SUCCESS'
+              type: 'GOOGLE_OAUTH_SUCCESS',
+              tokens: result.tokens
             }, window.location.origin);
             
-            // Additional delay before closing to ensure message is received
+            // Close popup after short delay
             setTimeout(() => {
               window.close();
             }, 500);

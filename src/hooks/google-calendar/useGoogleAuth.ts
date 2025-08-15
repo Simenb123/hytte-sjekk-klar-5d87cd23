@@ -32,7 +32,7 @@ function openOAuthPopup(url: string): Promise<boolean> {
     }, 1000);
 
     // Listen for messages from the popup
-    const messageHandler = (event: MessageEvent) => {
+    const messageHandler = async (event: MessageEvent) => {
       if (event.origin !== window.location.origin) {
         return;
       }
@@ -43,13 +43,20 @@ function openOAuthPopup(url: string): Promise<boolean> {
         popup.close();
         window.removeEventListener('message', messageHandler);
         
-        // Add small delay to allow for any final token operations
-        setTimeout(() => {
-          console.log('🔄 Triggering token refresh in parent window...');
-          // Force a token refresh to ensure they're loaded in the parent window
-          window.dispatchEvent(new CustomEvent('google-oauth-success'));
-          resolve(true);
-        }, 1000);
+        // If tokens were sent directly, store them
+        if (event.data.tokens) {
+          console.log('📦 Storing tokens received from popup');
+          const stored = await storeGoogleTokens(event.data.tokens);
+          if (stored) {
+            console.log('✅ Tokens stored successfully in parent window');
+            // Trigger immediate state update
+            window.dispatchEvent(new CustomEvent('google-oauth-success'));
+          } else {
+            console.error('❌ Failed to store tokens in parent window');
+          }
+        }
+        
+        resolve(true);
       } else if (event.data.type === 'GOOGLE_OAUTH_ERROR') {
         console.error('❌ Received OAuth error message from popup:', event.data.error);
         clearInterval(checkClosed);
@@ -194,7 +201,7 @@ export function useGoogleAuth(
     toast.success('Koblet fra Google Calendar');
   }, [setState]);
 
-  const handleOAuthCallback = useCallback(async (code: string) => {
+  const handleOAuthCallback = useCallback(async (code: string): Promise<{ success: boolean; tokens?: any }> => {
     setState(prev => ({ ...prev, connectionError: null }));
     
     try {
@@ -253,7 +260,7 @@ export function useGoogleAuth(
       
       console.log('🎉 OAuth callback completed successfully!');
       toast.success('Koblet til Google Calendar!');
-      return true;
+      return { success: true, tokens };
     } catch (error: unknown) {
       console.error('Error exchanging code for tokens:', error);
 
@@ -284,7 +291,7 @@ export function useGoogleAuth(
         connectionError: errorMessage
       }));
     }
-    return false;
+    return { success: false };
   }, [setState]);
 
   return {

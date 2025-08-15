@@ -43,31 +43,26 @@ export function useGoogleCalendar() {
     isInitializedRef.current = true;
   }, []);
 
-  // Listen for OAuth success events and retry token loading
+  // Listen for OAuth success events and update state immediately
   useEffect(() => {
     const handleOAuthSuccess = () => {
-      console.log('🔄 OAuth success event received, retrying token load...');
+      console.log('🔄 OAuth success event received, checking for tokens...');
       
-      // Retry loading tokens after OAuth success
-      setTimeout(() => {
-        const tokens = retrieveGoogleTokens();
-        if (tokens) {
-          console.log('✅ Successfully loaded tokens after OAuth success');
-          setState(prev => ({
-            ...prev,
-            googleTokens: tokens,
-            isGoogleConnected: true
-          }));
-          
-          // Fetch data with new tokens
-          setTimeout(() => {
-            fetchGoogleEvents(tokens);
-            fetchGoogleCalendars(tokens);
-          }, 500);
-        } else {
-          console.warn('⚠️ Still no tokens found after OAuth success');
-        }
-      }, 1000);
+      const tokens = retrieveGoogleTokens();
+      if (tokens) {
+        console.log('✅ Successfully loaded tokens after OAuth success');
+        setState(prev => ({
+          ...prev,
+          googleTokens: tokens,
+          isGoogleConnected: true
+        }));
+        
+        // Fetch data with new tokens immediately
+        fetchGoogleEvents(tokens);
+        fetchGoogleCalendars(tokens);
+      } else {
+        console.warn('⚠️ Still no tokens found after OAuth success');
+      }
     };
 
     window.addEventListener('google-oauth-success', handleOAuthSuccess);
