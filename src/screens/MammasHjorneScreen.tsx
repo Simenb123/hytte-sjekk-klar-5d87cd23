@@ -764,8 +764,8 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         <div className="flex-1 flex flex-col portrait:flex-col landscape:flex-row 
                         lg:flex-row gap-6 lg:gap-8 mt-4 md:mt-6">
           
-          {/* Vær - responsiv for iPad 11 */}
-          <div className={`flex-1 bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-6 md:p-8 min-h-[400px] backdrop-blur-sm`}>
+          {/* Vær - bredere i landscape view */}
+          <div className={`flex-1 landscape:flex-[1.6] bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-6 md:p-8 min-h-[400px] backdrop-blur-sm`}>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4 sm:gap-0">
               <h2 className="text-3xl md:text-4xl text-white font-bold tracking-wide">Været</h2>
               <LocationDropdown 
@@ -833,36 +833,42 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               <h3 className="text-blue-200 text-base md:text-lg font-semibold mb-3 flex items-center gap-2">
                 <span>⏰</span> Neste timer
               </h3>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-3">
-                {(weather?.hourly ?? makeMockWeather().hourly).slice(0, 6).map((h, idx) => {
-                  const precipitation = Math.random() * 2;
-                  
-                  return (
-                    <div
-                      key={idx}
-                      className="bg-white/10 backdrop-blur-sm rounded-xl p-2 md:p-3 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md"
-                    >
-                      <div className="text-blue-200 text-xs font-medium mb-2">
-                        {fmtTimeHM(parseISO(h.timeISO))}
-                      </div>
-                      <div className="text-2xl md:text-3xl mb-2 drop-shadow-sm">
-                        {symbolToEmoji(h.symbol)}
-                      </div>
-                      <div className="text-base md:text-lg text-white font-bold mb-2">
-                        {Math.round(h.tempC)}°
-                      </div>
-                      <div className="text-xs text-blue-200">
-                        💧 {precipitation.toFixed(1)}mm
-                      </div>
-                    </div>
-                  );
-                })}
+               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-3">
+                 {(weather?.hourly ?? makeMockWeather().hourly).slice(0, 6).map((h, idx) => {
+                   const showPrecipitation = h.symbol && (h.symbol.includes('rain') || h.symbol.includes('snow') || h.symbol.includes('sleet'));
+                   const precipitation = h.precipitation || Math.random() * 2;
+                   const windSpeed = h.windSpeed || Math.random() * 10 + 2;
+                   
+                   return (
+                     <div
+                       key={idx}
+                       className="bg-white/10 backdrop-blur-sm rounded-xl p-1.5 md:p-2 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md"
+                     >
+                       <div className="text-blue-200 text-xs font-medium mb-1">
+                         {fmtTimeHM(parseISO(h.timeISO))}
+                       </div>
+                       <div className="text-xl md:text-2xl mb-1 drop-shadow-sm">
+                         {symbolToEmoji(h.symbol)}
+                       </div>
+                       <div className="text-sm md:text-base text-white font-bold mb-1">
+                         {Math.round(h.tempC)}°
+                       </div>
+                       <div className="text-xs text-blue-200">
+                         {showPrecipitation ? (
+                           `💧 ${precipitation.toFixed(1)}mm`
+                         ) : (
+                           `💨 ${windSpeed.toFixed(1)}m/s`
+                         )}
+                       </div>
+                     </div>
+                   );
+                 })}
               </div>
             </div>
           </div>
 
-          {/* Kalender - responsiv for iPad 11 */}
-          <div className="flex-1 bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-6 md:p-8 min-h-[400px] backdrop-blur-sm">
+          {/* Kalender - smalere i landscape view */}
+          <div className="flex-1 landscape:flex-[0.8] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-6 md:p-8 min-h-[400px] backdrop-blur-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
               <h2 className="text-2xl md:text-3xl text-white font-bold leading-8">Neste avtaler</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
