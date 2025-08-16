@@ -108,10 +108,10 @@ const MammasHjorneContainer: React.FC = () => {
       })),
       forecast: (data.forecast || []).map((day: any) => ({
         date: day.date,
-        minTemp: day.minTemp,
-        maxTemp: day.maxTemp,
-        symbol: day.condition,
-        description: day.description,
+        minTemp: day.temperature.min,
+        maxTemp: day.temperature.max,
+        symbol: day.icon,
+        description: day.condition,
       })),
     };
   };
