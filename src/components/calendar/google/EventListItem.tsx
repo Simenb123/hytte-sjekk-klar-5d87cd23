@@ -32,11 +32,11 @@ export const EventListItem: React.FC<EventListItemProps> = ({ event }) => {
       
       <div className="text-sm text-gray-500 mt-2 ml-6">
         <Badge variant="outline" className="mr-2 bg-gray-50">
-          {formatGoogleEventDate(event.start.dateTime)}
+          {formatGoogleEventDate(event.start.dateTime, event.start.date)}
         </Badge>
         <span className="mx-1">→</span>
         <Badge variant="outline" className="bg-gray-50">
-          {formatGoogleEventDate(event.end.dateTime)}
+          {formatGoogleEventDate(event.end.dateTime, event.end.date)}
         </Badge>
       </div>
       

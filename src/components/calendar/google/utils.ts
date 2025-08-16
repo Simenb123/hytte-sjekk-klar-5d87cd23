@@ -3,18 +3,33 @@ import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import type { GoogleOAuthTokens } from '@/types/googleCalendar.types';
 
-export const formatGoogleEventDate = (dateString: string): string => {
+export const formatGoogleEventDate = (dateTime?: string, date?: string): string => {
   try {
-    const date = new Date(dateString);
+    // Try dateTime first (events with specific time)
+    const dateToFormat = dateTime || date;
     
-    if (isNaN(date.getTime())) {
-      console.error('Invalid date:', dateString);
+    if (!dateToFormat) {
+      console.error('No date or dateTime provided');
+      return 'Ingen dato';
+    }
+    
+    const parsedDate = new Date(dateToFormat);
+    
+    if (isNaN(parsedDate.getTime())) {
+      console.error('Invalid date:', dateToFormat);
       return 'Ugyldig dato';
     }
     
-    return format(date, 'PPp', { locale: nb });
+    // Use different formats for all-day events vs timed events
+    if (dateTime) {
+      // Timed event - show date and time
+      return format(parsedDate, 'PPp', { locale: nb });
+    } else {
+      // All-day event - show only date
+      return format(parsedDate, 'PP', { locale: nb });
+    }
   } catch (e) {
-    console.error('Error formatting date:', e, dateString);
+    console.error('Error formatting date:', e, { dateTime, date });
     return 'Ugyldig dato format';
   }
 };
