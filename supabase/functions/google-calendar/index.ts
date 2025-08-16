@@ -1,13 +1,10 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { handleAuthUrlGeneration, handleOAuthCodeExchange, handleCalendarOperations } from './handlers.ts';
+import { corsHeaders } from './constants.ts';
 
-console.log("🚀 Google Calendar Edge Function starting up (DEBUG MODE)...");
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+console.log("🚀 Google Calendar Edge Function starting up...");
 
 serve(async (req) => {
   console.log(`\n🔵 === NEW REQUEST === ${new Date().toISOString()} ===`);
@@ -22,6 +19,7 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
+    const origin = req.headers.get('origin') || 'http://localhost:3000';
     
     // DEBUG ENDPOINT: Check environment variables
     if (url.pathname.includes('/debug')) {
@@ -34,7 +32,6 @@ serve(async (req) => {
         google_client_secret_exists: !!Deno.env.get('GOOGLE_CLIENT_SECRET'),
         google_client_id_length: Deno.env.get('GOOGLE_CLIENT_ID')?.length || 0,
         google_client_secret_length: Deno.env.get('GOOGLE_CLIENT_SECRET')?.length || 0,
-        all_env_vars: Deno.env.toObject()
       };
       
       console.log('🔍 Environment check result:', envCheck);
@@ -89,40 +86,34 @@ serve(async (req) => {
     // Handle GET requests - OAuth URL generation
     if (req.method === 'GET') {
       console.log('🔗 Generating OAuth URL...');
-      
-      const origin = req.headers.get('origin') || 'http://localhost:3000';
-      const redirectUri = `${origin}/google-calendar-callback`;
-      
-      const scope = encodeURIComponent('https://www.googleapis.com/auth/calendar');
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${googleClientId}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=${scope}&` +
-        `response_type=code&` +
-        `access_type=offline&` +
-        `prompt=consent`;
-
-      console.log('🔗 Generated OAuth URL successfully');
-      
-      return new Response(JSON.stringify({ url: authUrl }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return await handleAuthUrlGeneration(req, origin);
     }
 
-    // Handle POST requests - simplified for now
+    // Handle POST requests - OAuth code exchange and calendar operations
     if (req.method === 'POST') {
       const bodyText = await req.text();
       console.log(`📦 Request body: ${bodyText.substring(0, 200)}...`);
       
       const requestData = JSON.parse(bodyText);
-      console.log(`📦 Request action: ${requestData.action || 'unknown'}`);
+      console.log(`📦 Request action: ${requestData.action || 'code_exchange'}`);
       
-      // For now, just return success for any POST request
+      // Handle OAuth code exchange (when user returns from Google)
+      if (requestData.code && !requestData.action) {
+        console.log('🔄 Handling OAuth code exchange...');
+        return await handleOAuthCodeExchange(requestData, origin);
+      }
+      
+      // Handle calendar operations (list_events, get_calendars, etc.)
+      if (requestData.action) {
+        console.log(`📅 Handling calendar action: ${requestData.action}`);
+        return await handleCalendarOperations(requestData);
+      }
+      
       return new Response(JSON.stringify({ 
-        status: 'received',
-        action: requestData.action || 'unknown',
-        message: 'Request received successfully (simplified handler)'
+        error: 'Invalid request format',
+        message: 'Request must include either code for OAuth exchange or action for calendar operations'
       }), {
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
