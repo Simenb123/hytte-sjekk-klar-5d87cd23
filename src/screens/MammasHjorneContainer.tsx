@@ -80,7 +80,7 @@ const MammasHjorneContainer: React.FC = () => {
   const fetchWeather = async (lat: number = WEATHER_LAT, lon: number = WEATHER_LON): Promise<WeatherSnapshot> => {
     console.log(`Fetching weather for coordinates: ${lat}, ${lon}`);
     const { data, error } = await supabase.functions.invoke('weather-proxy', {
-      body: { lat, lon, days: 1 },
+      body: { lat, lon, days: 5 },
     });
     if (error) {
       console.error('Weather fetch error:', error);
@@ -105,6 +105,13 @@ const MammasHjorneContainer: React.FC = () => {
         symbol: h.symbol,
         precipitation: h.precipitation,
         windSpeed: h.windSpeed,
+      })),
+      forecast: (data.forecast || []).map((day: any) => ({
+        date: day.date,
+        minTemp: day.minTemp,
+        maxTemp: day.maxTemp,
+        symbol: day.condition,
+        description: day.description,
       })),
     };
   };

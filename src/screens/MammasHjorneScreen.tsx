@@ -10,6 +10,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { SilhouetteUploader } from '@/components/admin/SilhouetteUploader';
 import { LocationPicker } from '@/components/location/LocationPicker';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // ---------- Types ----------
 export type Event = {
@@ -39,7 +40,14 @@ export type WeatherSnapshot = {
     symbol: string; 
     precipitation?: number; 
     windSpeed?: number; 
-  }[]; // neste 6–12 timer
+  }[]; // neste 12–24 timer
+  forecast?: {
+    date: string;
+    minTemp: number;
+    maxTemp: number;
+    symbol: string;
+    description?: string;
+  }[]; // neste dager
 };
 
 export type WeatherLocation = {
@@ -837,42 +845,84 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               </div>
             </div>
             
-            {/* Enhanced hourly forecast - komprimert for iPad 11 */}
+            {/* Enhanced hourly forecast with scrolling */}
             <div>
               <h3 className="text-blue-200 text-sm md:text-base font-semibold mb-2 flex items-center gap-2">
                 <span>⏰</span> Neste timer
               </h3>
-               <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 md:gap-2">
-                 {(weather?.hourly ?? makeMockWeather().hourly).slice(0, 6).map((h, idx) => {
-                   const showPrecipitation = h.symbol && (h.symbol.includes('rain') || h.symbol.includes('snow') || h.symbol.includes('sleet'));
-                   const precipitation = h.precipitation || Math.random() * 2;
-                   const windSpeed = h.windSpeed || Math.random() * 10 + 2;
-                   
-                   return (
-                     <div
-                       key={idx}
-                       className="bg-white/10 backdrop-blur-sm rounded-lg p-1 md:p-1.5 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md"
-                     >
-                       <div className="text-blue-200 text-xs font-medium mb-1">
-                         {fmtTimeHM(parseISO(h.timeISO))}
-                       </div>
-                       <div className="text-lg md:text-xl mb-1 drop-shadow-sm">
-                         {symbolToEmoji(h.symbol)}
-                       </div>
-                       <div className="text-xs md:text-sm text-white font-bold mb-1">
-                         {Math.round(h.tempC)}°
-                       </div>
-                       <div className="text-xs text-blue-200">
-                         {showPrecipitation ? (
-                           `💧 ${precipitation.toFixed(1)}mm`
-                         ) : (
-                           `💨 ${windSpeed.toFixed(1)}m/s`
-                         )}
-                       </div>
-                     </div>
-                   );
-                 })}
-              </div>
+              <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex gap-1 md:gap-2 pb-2">
+                  {(weather?.hourly ?? makeMockWeather().hourly).slice(0, 18).map((h, idx) => {
+                    const showPrecipitation = h.symbol && (h.symbol.includes('rain') || h.symbol.includes('snow') || h.symbol.includes('sleet'));
+                    const precipitation = h.precipitation || Math.random() * 2;
+                    const windSpeed = h.windSpeed || Math.random() * 10 + 2;
+                    
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-white/10 backdrop-blur-sm rounded-lg p-1 md:p-1.5 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md flex-shrink-0 min-w-[70px] md:min-w-[80px]"
+                      >
+                        <div className="text-blue-200 text-xs font-medium mb-1">
+                          {fmtTimeHM(parseISO(h.timeISO))}
+                        </div>
+                        <div className="text-lg md:text-xl mb-1 drop-shadow-sm">
+                          {symbolToEmoji(h.symbol)}
+                        </div>
+                        <div className="text-xs md:text-sm text-white font-bold mb-1">
+                          {Math.round(h.tempC)}°
+                        </div>
+                        <div className="text-xs text-blue-200">
+                          {showPrecipitation ? (
+                            `💧 ${precipitation.toFixed(1)}mm`
+                          ) : (
+                            `💨 ${windSpeed.toFixed(1)}m/s`
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Daily forecast section */}
+            <div>
+              <h3 className="text-blue-200 text-sm md:text-base font-semibold mb-2 flex items-center gap-2">
+                <span>📅</span> Neste dager
+              </h3>
+              <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex gap-1 md:gap-2 pb-2">
+                  {(weather?.forecast ?? Array.from({length: 5}, (_, i) => ({
+                    date: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    minTemp: Math.round(Math.random() * 10 + 5),
+                    maxTemp: Math.round(Math.random() * 10 + 15),
+                    symbol: ['clearsky_day', 'cloudy', 'partlycloudy_day', 'rain', 'snow'][Math.floor(Math.random() * 5)]
+                  }))).slice(0, 7).map((day, idx) => {
+                    const date = new Date(day.date);
+                    const dayName = date.toLocaleDateString('nb-NO', { weekday: 'short' });
+                    
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-white/10 backdrop-blur-sm rounded-lg p-1 md:p-1.5 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md flex-shrink-0 min-w-[70px] md:min-w-[80px]"
+                      >
+                        <div className="text-blue-200 text-xs font-medium mb-1 capitalize">
+                          {dayName}
+                        </div>
+                        <div className="text-lg md:text-xl mb-1 drop-shadow-sm">
+                          {symbolToEmoji(day.symbol)}
+                        </div>
+                        <div className="text-xs text-white font-bold mb-1">
+                          {Math.round(day.maxTemp)}°
+                        </div>
+                        <div className="text-xs text-blue-200">
+                          {Math.round(day.minTemp)}°
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
             </div>
           </div>
 
