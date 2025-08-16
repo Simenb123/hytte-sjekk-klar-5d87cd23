@@ -310,71 +310,133 @@ serve(async (req) => {
 
         let accessToken = tokens.access_token;
 
-        // Check if token needs refresh
-        if (tokens.expiry_date && tokens.expiry_date < Date.now()) {
+        let refreshedTokens = null;
+        
+        // Check if token needs refresh or try with current token first
+        const shouldRefresh = tokens.expiry_date && tokens.expiry_date < Date.now();
+        
+        if (shouldRefresh && tokens.refresh_token) {
           console.log('🔄 Access token expired, refreshing...');
-          if (tokens.refresh_token) {
-            const refreshedTokens = await refreshAccessToken(
+          try {
+            const newTokens = await refreshAccessToken(
               tokens.refresh_token, 
               googleClientId, 
               googleClientSecret
             );
-            accessToken = refreshedTokens.access_token;
-            // Return refreshed tokens to client
-            return new Response(JSON.stringify({
-              success: true,
-              refreshedTokens: {
-                ...tokens,
-                access_token: refreshedTokens.access_token,
-                expiry_date: Date.now() + (refreshedTokens.expires_in * 1000)
-              }
-            }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-          } else {
+            accessToken = newTokens.access_token;
+            refreshedTokens = {
+              ...tokens,
+              access_token: newTokens.access_token,
+              expiry_date: Date.now() + ((newTokens.expires_in || 3600) * 1000)
+            };
+            console.log('✅ Token refreshed successfully');
+          } catch (refreshError) {
+            console.error('❌ Token refresh failed:', refreshError);
             return new Response(JSON.stringify({ 
-              error: 'Token expired and no refresh token available',
+              error: 'Token refresh failed',
+              details: refreshError.message,
               requiresReauth: true
             }), {
               status: 401,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
           }
+        } else if (shouldRefresh && !tokens.refresh_token) {
+          return new Response(JSON.stringify({ 
+            error: 'Token expired and no refresh token available',
+            requiresReauth: true
+          }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
         }
 
         try {
+          let result = null;
+          
           if (requestData.action === 'list_events') {
             const events = await fetchEvents(accessToken);
-            return new Response(JSON.stringify({ 
+            result = { 
               success: true,
               events: events
-            }), {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-          }
-          
-          if (requestData.action === 'get_calendars') {
+            };
+          } else if (requestData.action === 'get_calendars') {
             const calendars = await fetchCalendars(accessToken);
-            return new Response(JSON.stringify({ 
+            result = { 
               success: true,
               calendars: calendars
+            };
+          } else {
+            return new Response(JSON.stringify({ 
+              error: `Unsupported action: ${requestData.action}` 
             }), {
+              status: 400,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
           }
           
-          return new Response(JSON.stringify({ 
-            error: `Unsupported action: ${requestData.action}` 
-          }), {
-            status: 400,
+          // Include refreshed tokens if we refreshed them
+          if (refreshedTokens) {
+            result.refreshedTokens = refreshedTokens;
+          }
+          
+          return new Response(JSON.stringify(result), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
 
         } catch (error) {
           console.error(`❌ Google API error for action ${requestData.action}:`, error);
           
-          // Check if it's an auth error
-          if (error.message.includes('401') || error.message.includes('Invalid Credentials')) {
+          // Check if it's an auth error that requires token refresh
+          const isAuthError = error.message.includes('401') || 
+                             error.message.includes('Invalid Credentials') ||
+                             error.message.includes('UNAUTHENTICATED');
+          
+          if (isAuthError && !shouldRefresh && tokens.refresh_token) {
+            console.log('🔄 Auth error detected, attempting token refresh...');
+            try {
+              const newTokens = await refreshAccessToken(
+                tokens.refresh_token, 
+                googleClientId, 
+                googleClientSecret
+              );
+              
+              refreshedTokens = {
+                ...tokens,
+                access_token: newTokens.access_token,
+                expiry_date: Date.now() + ((newTokens.expires_in || 3600) * 1000)
+              };
+              
+              // Retry the operation with refreshed token
+              let retryResult = null;
+              if (requestData.action === 'list_events') {
+                const events = await fetchEvents(newTokens.access_token);
+                retryResult = { 
+                  success: true,
+                  events: events,
+                  refreshedTokens: refreshedTokens
+                };
+              } else if (requestData.action === 'get_calendars') {
+                const calendars = await fetchCalendars(newTokens.access_token);
+                retryResult = { 
+                  success: true,
+                  calendars: calendars,
+                  refreshedTokens: refreshedTokens
+                };
+              }
+              
+              if (retryResult) {
+                console.log('✅ Operation succeeded after token refresh');
+                return new Response(JSON.stringify(retryResult), {
+                  headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+              }
+            } catch (refreshError) {
+              console.error('❌ Token refresh retry failed:', refreshError);
+            }
+          }
+          
+          if (isAuthError) {
             return new Response(JSON.stringify({ 
               error: 'Authentication failed',
               details: error.message,

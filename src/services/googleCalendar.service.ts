@@ -64,6 +64,14 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
       throw new Error(data.error);
     }
 
+    // Handle auth errors that require re-authentication
+    if (data?.requiresReauth) {
+      console.log('❌ Re-authentication required, clearing stored tokens');
+      const { removeGoogleTokens } = await import('@/utils/tokenStorage');
+      removeGoogleTokens();
+      throw new Error('Autentisering utløpt. Vennligst koble til Google Calendar på nytt.');
+    }
+
     if (data?.events) {
       console.log(`Successfully fetched ${data.events.length} events`);
       
@@ -71,6 +79,10 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
       if (data.refreshedTokens) {
         console.log('Received refreshed tokens from events fetch, updating storage');
         await storeGoogleTokens(data.refreshedTokens);
+        // Emit event for other components to know tokens were refreshed
+        window.dispatchEvent(new CustomEvent('google-tokens-refreshed', { 
+          detail: { refreshedTokens: data.refreshedTokens } 
+        }));
       }
       
       return data.events;
@@ -128,6 +140,14 @@ export const fetchCalendarList = async (tokens: GoogleOAuthTokens): Promise<Goog
       throw new Error(data.error);
     }
 
+    // Handle auth errors that require re-authentication
+    if (data?.requiresReauth) {
+      console.log('❌ Re-authentication required, clearing stored tokens');
+      const { removeGoogleTokens } = await import('@/utils/tokenStorage');
+      removeGoogleTokens();
+      throw new Error('Autentisering utløpt. Vennligst koble til Google Calendar på nytt.');
+    }
+
     if (data?.calendars) {
       console.log(`Successfully fetched ${data.calendars.length} calendars`);
       
@@ -135,6 +155,10 @@ export const fetchCalendarList = async (tokens: GoogleOAuthTokens): Promise<Goog
       if (data.refreshedTokens) {
         console.log('Received refreshed tokens from calendars fetch, updating storage');
         await storeGoogleTokens(data.refreshedTokens);
+        // Emit event for other components to know tokens were refreshed
+        window.dispatchEvent(new CustomEvent('google-tokens-refreshed', { 
+          detail: { refreshedTokens: data.refreshedTokens } 
+        }));
       }
       
       return data.calendars;

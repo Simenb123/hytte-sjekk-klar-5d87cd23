@@ -52,7 +52,7 @@ export function GoogleCalendarProvider({ children }: { children: React.ReactNode
     isInitializedRef.current = true;
   }, [fetchGoogleEvents, fetchGoogleCalendars]);
 
-  // Listen for OAuth success events and update state immediately
+  // Listen for OAuth success events and token refresh events
   useEffect(() => {
     const handleOAuthSuccess = () => {
       console.log('🔄 GoogleCalendarProvider: OAuth success event received, checking for tokens...');
@@ -74,10 +74,22 @@ export function GoogleCalendarProvider({ children }: { children: React.ReactNode
       }
     };
 
+    const handleTokensRefreshed = (event: CustomEvent) => {
+      console.log('🔄 GoogleCalendarProvider: Tokens refreshed event received, updating state');
+      if (event.detail?.refreshedTokens) {
+        setState(prev => ({
+          ...prev,
+          googleTokens: event.detail.refreshedTokens
+        }));
+      }
+    };
+
     window.addEventListener('google-oauth-success', handleOAuthSuccess);
+    window.addEventListener('google-tokens-refreshed', handleTokensRefreshed as EventListener);
     
     return () => {
       window.removeEventListener('google-oauth-success', handleOAuthSuccess);
+      window.removeEventListener('google-tokens-refreshed', handleTokensRefreshed as EventListener);
     };
   }, [fetchGoogleEvents, fetchGoogleCalendars]);
 
