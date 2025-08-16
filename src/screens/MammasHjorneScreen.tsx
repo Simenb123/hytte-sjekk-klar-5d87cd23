@@ -701,208 +701,233 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
   return (
     <div 
-      className="flex-1 bg-gray-950 p-6 pt-4 w-full min-h-screen max-w-[1400px] mx-auto"
+      className="flex-1 bg-gray-950 w-full min-h-screen"
       style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
     >
-      {/* skjult admin trigger */}
-      <button
-        onClick={handleCornerTap}
-        className="absolute top-0 right-0 w-30 h-30 z-20 opacity-0"
-        aria-label="Skjult adminområde"
-      />
+      {/* iPad 11 optimert responsive container */}
+      <div className="min-h-screen px-4 py-4 
+                      md:px-6 md:py-6 
+                      lg:px-8 lg:py-8 lg:max-w-[1400px] lg:mx-auto
+                      portrait:max-w-[834px] portrait:mx-auto
+                      landscape:max-w-[1194px] landscape:mx-auto">
+        
+        {/* skjult admin trigger */}
+        <button
+          onClick={handleCornerTap}
+          className="absolute top-0 right-0 w-30 h-30 z-20 opacity-0"
+          aria-label="Skjult adminområde"
+        />
 
-      {/* Header */}
-      <div className="mb-4">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <div className="text-4xl text-gray-200 font-semibold leading-10 mb-2">
-              I dag er det{' '}
-              {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
-            </div>
-            <div className="text-8xl text-white font-bold tracking-wide leading-none mb-2">
-              {fmtTimeHM(now)}
-            </div>
-            <div className="flex items-center gap-3 min-h-7">
-              <span className="text-lg text-gray-400">
-                Sist oppdatert {lastUpdated ? fmtTimeHM(parseISO(lastUpdated)) : '—'}
-              </span>
-              {!online && (
-                <span className="px-3 py-1.5 bg-yellow-900 text-yellow-200 rounded-lg text-sm font-medium">
-                  Frakoblet
+        {/* Header - responsiv for iPad 11 */}
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col portrait:flex-col landscape:flex-row 
+                          md:flex-row justify-between items-start gap-4 md:gap-0">
+            
+            {/* Dato og tid - tilpasser til orientation */}
+            <div className="flex-1 order-2 portrait:order-1 landscape:order-1 md:order-1">
+              <div className="text-2xl portrait:text-3xl landscape:text-4xl 
+                              md:text-4xl lg:text-4xl text-gray-200 font-semibold 
+                              leading-tight mb-2">
+                I dag er det{' '}
+                {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
+              </div>
+              <div className="text-5xl portrait:text-6xl landscape:text-7xl 
+                              md:text-8xl lg:text-8xl text-white font-bold 
+                              tracking-wide leading-none mb-2">
+                {fmtTimeHM(now)}
+              </div>
+              <div className="flex flex-col portrait:flex-row landscape:flex-row 
+                              md:flex-row items-start portrait:items-center 
+                              landscape:items-center md:items-center gap-2 md:gap-3 min-h-7">
+                <span className="text-sm portrait:text-base landscape:text-lg 
+                                 md:text-lg text-gray-400">
+                  Sist oppdatert {lastUpdated ? fmtTimeHM(parseISO(lastUpdated)) : '—'}
                 </span>
-              )}
+                {!online && (
+                  <span className="px-3 py-1.5 bg-yellow-900 text-yellow-200 
+                                   rounded-lg text-sm font-medium">
+                    Frakoblet
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="ml-8">
-            <MammasLogo silhouetteUrl={silhouetteUrl} />
+            
+            {/* Logo - tilpasser til orientation */}
+            <div className="flex-shrink-0 order-1 portrait:order-2 landscape:order-2 
+                            md:order-2 md:ml-8 portrait:self-center landscape:self-start">
+              <MammasLogo silhouetteUrl={silhouetteUrl} />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex-1 flex gap-8 mt-6">
-        {/* Vær */}
-        <div className={`flex-1 bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-8 min-h-[400px] backdrop-blur-sm`}>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-4xl text-white font-bold tracking-wide">Været</h2>
-            <LocationDropdown 
-              locations={weatherLocations}
-              selectedLocation={selectedLocation}
-              onLocationChange={handleLocationChange}
-            />
-          </div>
-          <div className="text-blue-200 text-xl mb-8 font-medium">{weather?.locationName || selectedLocation.name}</div>
+        {/* Main content - responsiv layout for iPad 11 */}
+        <div className="flex-1 flex flex-col portrait:flex-col landscape:flex-row 
+                        lg:flex-row gap-6 lg:gap-8 mt-4 md:mt-6">
           
-          {/* Current weather card */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/20 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-6">
-                <div className="text-8xl drop-shadow-lg">
-                  {symbolToEmoji(weather?.now.symbol ?? 'clearsky')}
-                </div>
-                <div>
-                  <div className="text-6xl text-white font-bold leading-none mb-1">
-                    {Math.round(weather?.now.tempC ?? 18)}°
+          {/* Vær - responsiv for iPad 11 */}
+          <div className={`flex-1 bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-6 md:p-8 min-h-[400px] backdrop-blur-sm`}>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4 sm:gap-0">
+              <h2 className="text-3xl md:text-4xl text-white font-bold tracking-wide">Været</h2>
+              <LocationDropdown 
+                locations={weatherLocations}
+                selectedLocation={selectedLocation}
+                onLocationChange={handleLocationChange}
+              />
+            </div>
+            <div className="text-blue-200 text-lg md:text-xl mb-6 md:mb-8 font-medium">{weather?.locationName || selectedLocation.name}</div>
+            
+            {/* Current weather card - responsiv */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-6 mb-4 md:mb-6 border border-white/20 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4 sm:gap-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                  <div className="text-6xl md:text-8xl drop-shadow-lg text-center sm:text-left">
+                    {symbolToEmoji(weather?.now.symbol ?? 'clearsky')}
                   </div>
-                  <div className="text-blue-200 text-lg mb-2">Nå</div>
-                  <div className="text-blue-200 text-sm">
-                    Føles som {Math.round((weather?.now.tempC ?? 18) + (Math.random() * 3 - 1.5))}°
+                  <div className="text-center sm:text-left">
+                    <div className="text-5xl md:text-6xl text-white font-bold leading-none mb-1">
+                      {Math.round(weather?.now.tempC ?? 18)}°
+                    </div>
+                    <div className="text-blue-200 text-base md:text-lg mb-2">Nå</div>
+                    <div className="text-blue-200 text-sm">
+                      Føles som {Math.round((weather?.now.tempC ?? 18) + (Math.random() * 3 - 1.5))}°
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center sm:text-right">
+                  <div className="text-blue-200 text-sm mb-1">Vind</div>
+                  <div className="text-white text-lg md:text-xl font-semibold mb-3">
+                    {typeof weather?.now.windMs === 'number' ? weather.now.windMs.toFixed(1) : '2.1'} m/s
+                  </div>
+                  <div className="text-blue-200 text-sm mb-1">Fuktighet</div>
+                  <div className="text-white text-base md:text-lg font-semibold">
+                    {Math.round(60 + Math.random() * 30)}%
                   </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-blue-200 text-sm mb-1">Vind</div>
-                <div className="text-white text-xl font-semibold mb-3">
-                  {typeof weather?.now.windMs === 'number' ? weather.now.windMs.toFixed(1) : '2.1'} m/s
+              
+              {/* Weather details grid - responsiv */}
+              <div className="grid grid-cols-3 gap-2 md:gap-3">
+                <div className="bg-black/10 rounded-lg p-2 md:p-3 text-center">
+                  <div className="text-blue-200 text-xs mb-1">Lufttrykk</div>
+                  <div className="text-white text-xs md:text-sm font-semibold">
+                    {Math.round(1013 + Math.random() * 20)} hPa
+                  </div>
                 </div>
-                <div className="text-blue-200 text-sm mb-1">Fuktighet</div>
-                <div className="text-white text-lg font-semibold">
-                  {Math.round(60 + Math.random() * 30)}%
+                <div className="bg-black/10 rounded-lg p-2 md:p-3 text-center">
+                  <div className="text-blue-200 text-xs mb-1">UV-indeks</div>
+                  <div className="text-white text-xs md:text-sm font-semibold">
+                    {isNight(now) ? 0 : Math.round(Math.random() * 8)}
+                  </div>
+                </div>
+                <div className="bg-black/10 rounded-lg p-2 md:p-3 text-center">
+                  <div className="text-blue-200 text-xs mb-1">Sikt</div>
+                  <div className="text-white text-xs md:text-sm font-semibold">
+                    {Math.round(8 + Math.random() * 7)} km
+                  </div>
                 </div>
               </div>
             </div>
             
-            {/* Weather details grid */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-black/10 rounded-lg p-3 text-center">
-                <div className="text-blue-200 text-xs mb-1">Lufttrykk</div>
-                <div className="text-white text-sm font-semibold">
-                  {Math.round(1013 + Math.random() * 20)} hPa
-                </div>
-              </div>
-              <div className="bg-black/10 rounded-lg p-3 text-center">
-                <div className="text-blue-200 text-xs mb-1">UV-indeks</div>
-                <div className="text-white text-sm font-semibold">
-                  {isNight(now) ? 0 : Math.round(Math.random() * 8)}
-                </div>
-              </div>
-              <div className="bg-black/10 rounded-lg p-3 text-center">
-                <div className="text-blue-200 text-xs mb-1">Sikt</div>
-                <div className="text-white text-sm font-semibold">
-                  {Math.round(8 + Math.random() * 7)} km
-                </div>
+            {/* Enhanced hourly forecast - responsiv */}
+            <div>
+              <h3 className="text-blue-200 text-base md:text-lg font-semibold mb-3 flex items-center gap-2">
+                <span>⏰</span> Neste timer
+              </h3>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-3">
+                {(weather?.hourly ?? makeMockWeather().hourly).slice(0, 6).map((h, idx) => {
+                  const precipitation = Math.random() * 2;
+                  
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-white/10 backdrop-blur-sm rounded-xl p-2 md:p-3 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md"
+                    >
+                      <div className="text-blue-200 text-xs font-medium mb-2">
+                        {fmtTimeHM(parseISO(h.timeISO))}
+                      </div>
+                      <div className="text-2xl md:text-3xl mb-2 drop-shadow-sm">
+                        {symbolToEmoji(h.symbol)}
+                      </div>
+                      <div className="text-base md:text-lg text-white font-bold mb-2">
+                        {Math.round(h.tempC)}°
+                      </div>
+                      <div className="text-xs text-blue-200">
+                        💧 {precipitation.toFixed(1)}mm
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
-          
-          {/* Enhanced hourly forecast */}
-          <div>
-            <h3 className="text-blue-200 text-lg font-semibold mb-3 flex items-center gap-2">
-              <span>⏰</span> Neste timer
-            </h3>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {(weather?.hourly ?? makeMockWeather().hourly).slice(0, 6).map((h, idx) => {
-                const precipitation = Math.random() * 2;
-                
-                return (
-                  <div
-                    key={idx}
-                    className="min-w-[75px] bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md"
-                  >
-                    <div className="text-blue-200 text-xs font-medium mb-2">
-                      {fmtTimeHM(parseISO(h.timeISO))}
-                    </div>
-                    <div className="text-3xl mb-2 drop-shadow-sm">
-                      {symbolToEmoji(h.symbol)}
-                    </div>
-                    <div className="text-lg text-white font-bold mb-2">
-                      {Math.round(h.tempC)}°
-                    </div>
-                    <div className="text-xs text-blue-200">
-                      💧 {precipitation.toFixed(1)}mm
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
 
-        {/* Kalender */}
-        <div className="flex-1 bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-8 min-h-[400px] backdrop-blur-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-3xl text-white font-bold leading-8">Neste avtaler</h2>
-            <div className="flex items-center gap-2">
-              {isGoogleConnected ? (
-                <div className="flex items-center gap-2 text-green-300">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <span className="text-sm">Google Calendar</span>
+          {/* Kalender - responsiv for iPad 11 */}
+          <div className="flex-1 bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-6 md:p-8 min-h-[400px] backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
+              <h2 className="text-2xl md:text-3xl text-white font-bold leading-8">Neste avtaler</h2>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                {isGoogleConnected ? (
+                  <div className="flex items-center gap-2 text-green-300">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <span className="text-sm">Google Calendar</span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={onConnectGoogle}
+                    className="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-3 rounded-lg transition-colors min-h-[44px] w-full sm:w-auto"
+                  >
+                    Koble til Google
+                  </button>
+                )}
+              </div>
+            </div>
+            {googleConnectionError && (
+              <div className="text-orange-300 text-sm mb-3 bg-orange-900/20 p-2 rounded-lg">
+                Feil: {googleConnectionError}
+              </div>
+            )}
+            {isGoogleConnected && events.length === 0 && (
+              <div className="text-blue-300 text-sm mb-3 bg-blue-900/20 p-3 rounded-lg">
+                <div className="font-semibold mb-2">Ingen avtaler funnet</div>
+                <div className="text-xs">
+                  Hvis andre familiemedlemmer skal se avtalene, må kalenderen deles i Google Calendar. 
+                  Hver person må også koble sin egen Google-konto til appen.
                 </div>
+              </div>
+            )}
+            <div className="overflow-y-auto pb-6 max-h-[300px] portrait:max-h-[400px] landscape:max-h-[300px]">
+              {/* I dag */}
+              <h3 className="text-xl md:text-2xl text-gray-300 mb-3 mt-2 font-semibold">I dag</h3>
+              {grouped.evToday.length === 0 ? (
+                <div className="text-lg md:text-xl text-gray-400 leading-7">Ingen avtaler i dag.</div>
               ) : (
-                <button
-                  onClick={onConnectGoogle}
-                  className="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-1 rounded-lg transition-colors"
-                >
-                  Koble til Google
-                </button>
+                grouped.evToday.map((ev) => <EventRow key={ev.id} ev={ev} />)
+              )}
+
+              {/* I morgen */}
+              <h3 className="text-xl md:text-2xl text-gray-300 mb-3 mt-4 font-semibold">I morgen</h3>
+              {grouped.evTomorrow.length === 0 ? (
+                <div className="text-lg md:text-xl text-gray-400 leading-7">Ingen avtaler i morgen.</div>
+              ) : (
+                grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} />)
+              )}
+
+              {/* Denne uken */}
+              {grouped.evThisWeek.length > 0 && (
+                <>
+                  <h3 className="text-xl md:text-2xl text-gray-300 mb-3 mt-4 font-semibold">Denne uken</h3>
+                  {grouped.evThisWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
+                </>
+              )}
+
+              {/* Neste uke */}
+              {grouped.evNextWeek.length > 0 && (
+                <>
+                  <h3 className="text-xl md:text-2xl text-gray-300 mb-3 mt-4 font-semibold">Neste uke</h3>
+                  {grouped.evNextWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
+                </>
               )}
             </div>
-          </div>
-          {googleConnectionError && (
-            <div className="text-orange-300 text-sm mb-3 bg-orange-900/20 p-2 rounded-lg">
-              Feil: {googleConnectionError}
-            </div>
-          )}
-          {isGoogleConnected && events.length === 0 && (
-            <div className="text-blue-300 text-sm mb-3 bg-blue-900/20 p-3 rounded-lg">
-              <div className="font-semibold mb-2">Ingen avtaler funnet</div>
-              <div className="text-xs">
-                Hvis andre familiemedlemmer skal se avtalene, må kalenderen deles i Google Calendar. 
-                Hver person må også koble sin egen Google-konto til appen.
-              </div>
-            </div>
-          )}
-          <div className="overflow-y-auto pb-6">
-            {/* I dag */}
-            <h3 className="text-2xl text-gray-300 mb-3 mt-2 font-semibold">I dag</h3>
-            {grouped.evToday.length === 0 ? (
-              <div className="text-xl text-gray-400 leading-7">Ingen avtaler i dag.</div>
-            ) : (
-              grouped.evToday.map((ev) => <EventRow key={ev.id} ev={ev} />)
-            )}
-
-            {/* I morgen */}
-            <h3 className="text-2xl text-gray-300 mb-3 mt-4 font-semibold">I morgen</h3>
-            {grouped.evTomorrow.length === 0 ? (
-              <div className="text-xl text-gray-400 leading-7">Ingen avtaler i morgen.</div>
-            ) : (
-              grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} />)
-            )}
-
-            {/* Denne uken */}
-            {grouped.evThisWeek.length > 0 && (
-              <>
-                <h3 className="text-2xl text-gray-300 mb-3 mt-4 font-semibold">Denne uken</h3>
-                {grouped.evThisWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
-              </>
-            )}
-
-            {/* Neste uke */}
-            {grouped.evNextWeek.length > 0 && (
-              <>
-                <h3 className="text-2xl text-gray-300 mb-3 mt-4 font-semibold">Neste uke</h3>
-                {grouped.evNextWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
-              </>
-            )}
           </div>
         </div>
       </div>
