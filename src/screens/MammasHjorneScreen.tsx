@@ -704,12 +704,12 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       className="flex-1 bg-gray-950 w-full min-h-screen"
       style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
     >
-      {/* iPad 11 optimert responsive container */}
-      <div className="min-h-screen px-4 py-4 
-                      md:px-6 md:py-6 
-                      lg:px-8 lg:py-8 lg:max-w-[1400px] lg:mx-auto
+      {/* iPad 11 optimert responsive container - redusert padding for bedre plassbruk */}
+      <div className="min-h-screen px-2 py-2 
+                      md:px-4 md:py-3 
+                      lg:px-6 lg:py-4 lg:max-w-[1400px] lg:mx-auto
                       portrait:max-w-[834px] portrait:mx-auto
-                      landscape:max-w-[1194px] landscape:mx-auto">
+                      landscape:max-w-[1194px] landscape:mx-auto landscape:py-2">
         
         {/* skjult admin trigger */}
         <button
@@ -718,122 +718,131 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
           aria-label="Skjult adminområde"
         />
 
-        {/* Header - responsiv for iPad 11 */}
-        <div className="mb-6 md:mb-8">
+        {/* Header - komprimert for iPad 11 landscape */}
+        <div className="mb-3 md:mb-4">
           <div className="flex flex-col portrait:flex-col landscape:flex-row 
-                          md:flex-row justify-between items-start gap-4 md:gap-0">
+                          md:flex-row justify-between items-start gap-3 md:gap-0">
             
-            {/* Dato og tid - tilpasser til orientation */}
+            {/* Dato og tid - reduserte størrelser for landscape */}
             <div className="flex-1 order-2 portrait:order-1 landscape:order-1 md:order-1">
-              <div className="text-2xl portrait:text-3xl landscape:text-4xl 
-                              md:text-4xl lg:text-4xl text-gray-200 font-semibold 
-                              leading-tight mb-2">
+              <div className="text-xl portrait:text-2xl landscape:text-2xl 
+                              md:text-3xl lg:text-3xl text-gray-200 font-semibold 
+                              leading-tight mb-1">
                 I dag er det{' '}
                 {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
               </div>
-              <div className="text-5xl portrait:text-6xl landscape:text-7xl 
-                              md:text-8xl lg:text-8xl text-white font-bold 
-                              tracking-wide leading-none mb-2">
+              <div className="text-4xl portrait:text-5xl landscape:text-5xl 
+                              md:text-6xl lg:text-7xl text-white font-bold 
+                              tracking-wide leading-none mb-1">
                 {fmtTimeHM(now)}
               </div>
               <div className="flex flex-col portrait:flex-row landscape:flex-row 
                               md:flex-row items-start portrait:items-center 
-                              landscape:items-center md:items-center gap-2 md:gap-3 min-h-7">
-                <span className="text-sm portrait:text-base landscape:text-lg 
-                                 md:text-lg text-gray-400">
+                              landscape:items-center md:items-center gap-2 md:gap-3 min-h-6">
+                <span className="text-xs portrait:text-sm landscape:text-sm 
+                                 md:text-base text-gray-400">
                   Sist oppdatert {lastUpdated ? fmtTimeHM(parseISO(lastUpdated)) : '—'}
                 </span>
                 {!online && (
-                  <span className="px-3 py-1.5 bg-yellow-900 text-yellow-200 
-                                   rounded-lg text-sm font-medium">
+                  <span className="px-2 py-1 bg-yellow-900 text-yellow-200 
+                                   rounded-lg text-xs font-medium">
                     Frakoblet
                   </span>
                 )}
               </div>
             </div>
             
-            {/* Logo - tilpasser til orientation */}
+            {/* Logo - mindre for landscape */}
             <div className="flex-shrink-0 order-1 portrait:order-2 landscape:order-2 
-                            md:order-2 md:ml-8 portrait:self-center landscape:self-start">
-              <MammasLogo silhouetteUrl={silhouetteUrl} />
+                            md:order-2 md:ml-6 portrait:self-center landscape:self-start">
+              <div className="flex items-center gap-2 px-2 py-1 bg-gray-800 rounded-xl landscape:scale-75">
+                <div className="w-16 h-16 landscape:w-12 landscape:h-12 rounded-full bg-amber-500 flex items-center justify-center overflow-hidden">
+                  <img 
+                    src="/lovable-uploads/3d8c6965-c80d-4939-82fe-1571dd5475fc.png" 
+                    alt="Mamma profil ikon" 
+                    className="w-14 h-14 landscape:w-10 landscape:h-10 object-cover"
+                  />
+                </div>
+                <span className="text-xl landscape:text-lg font-bold text-white">Mamma's hjørne</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Main content - responsiv layout for iPad 11 */}
+        {/* Main content - komprimert for iPad 11 landscape */}
         <div className="flex-1 flex flex-col portrait:flex-col landscape:flex-row 
-                        lg:flex-row gap-6 lg:gap-8 mt-4 md:mt-6">
+                        lg:flex-row gap-4 lg:gap-6 mt-2 md:mt-3">
           
-          {/* Vær - bredere i landscape view */}
-          <div className={`flex-1 landscape:flex-[1.6] bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-6 md:p-8 min-h-[400px] backdrop-blur-sm`}>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4 sm:gap-0">
-              <h2 className="text-3xl md:text-4xl text-white font-bold tracking-wide">Været</h2>
+          {/* Vær - bredere i landscape view, komprimert høyde */}
+          <div className={`flex-1 landscape:flex-[1.6] bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-4 md:p-6 min-h-[280px] landscape:min-h-[280px] backdrop-blur-sm`}>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0">
+              <h2 className="text-2xl md:text-3xl text-white font-bold tracking-wide">Været</h2>
               <LocationDropdown 
                 locations={weatherLocations}
                 selectedLocation={selectedLocation}
                 onLocationChange={handleLocationChange}
               />
             </div>
-            <div className="text-blue-200 text-lg md:text-xl mb-6 md:mb-8 font-medium">{weather?.locationName || selectedLocation.name}</div>
+            <div className="text-blue-200 text-base md:text-lg mb-4 font-medium">{weather?.locationName || selectedLocation.name}</div>
             
-            {/* Current weather card - responsiv */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-6 mb-4 md:mb-6 border border-white/20 shadow-lg">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4 sm:gap-0">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-                  <div className="text-6xl md:text-8xl drop-shadow-lg text-center sm:text-left">
+            {/* Current weather card - komprimert */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 md:p-4 mb-3 md:mb-4 border border-white/20 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3 sm:gap-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <div className="text-4xl md:text-6xl drop-shadow-lg text-center sm:text-left">
                     {symbolToEmoji(weather?.now.symbol ?? 'clearsky')}
                   </div>
                   <div className="text-center sm:text-left">
-                    <div className="text-5xl md:text-6xl text-white font-bold leading-none mb-1">
+                    <div className="text-3xl md:text-4xl text-white font-bold leading-none mb-1">
                       {Math.round(weather?.now.tempC ?? 18)}°
                     </div>
-                    <div className="text-blue-200 text-base md:text-lg mb-2">Nå</div>
-                    <div className="text-blue-200 text-sm">
+                    <div className="text-blue-200 text-sm md:text-base mb-1">Nå</div>
+                    <div className="text-blue-200 text-xs">
                       Føles som {Math.round((weather?.now.tempC ?? 18) + (Math.random() * 3 - 1.5))}°
                     </div>
                   </div>
                 </div>
                 <div className="text-center sm:text-right">
-                  <div className="text-blue-200 text-sm mb-1">Vind</div>
-                  <div className="text-white text-lg md:text-xl font-semibold mb-3">
+                  <div className="text-blue-200 text-xs mb-1">Vind</div>
+                  <div className="text-white text-base md:text-lg font-semibold mb-2">
                     {typeof weather?.now.windMs === 'number' ? weather.now.windMs.toFixed(1) : '2.1'} m/s
                   </div>
-                  <div className="text-blue-200 text-sm mb-1">Fuktighet</div>
-                  <div className="text-white text-base md:text-lg font-semibold">
+                  <div className="text-blue-200 text-xs mb-1">Fuktighet</div>
+                  <div className="text-white text-sm md:text-base font-semibold">
                     {Math.round(60 + Math.random() * 30)}%
                   </div>
                 </div>
               </div>
               
-              {/* Weather details grid - responsiv */}
-              <div className="grid grid-cols-3 gap-2 md:gap-3">
-                <div className="bg-black/10 rounded-lg p-2 md:p-3 text-center">
+              {/* Weather details grid - komprimert */}
+              <div className="grid grid-cols-3 gap-1 md:gap-2">
+                <div className="bg-black/10 rounded-lg p-1.5 md:p-2 text-center">
                   <div className="text-blue-200 text-xs mb-1">Lufttrykk</div>
-                  <div className="text-white text-xs md:text-sm font-semibold">
+                  <div className="text-white text-xs font-semibold">
                     {Math.round(1013 + Math.random() * 20)} hPa
                   </div>
                 </div>
-                <div className="bg-black/10 rounded-lg p-2 md:p-3 text-center">
+                <div className="bg-black/10 rounded-lg p-1.5 md:p-2 text-center">
                   <div className="text-blue-200 text-xs mb-1">UV-indeks</div>
-                  <div className="text-white text-xs md:text-sm font-semibold">
+                  <div className="text-white text-xs font-semibold">
                     {isNight(now) ? 0 : Math.round(Math.random() * 8)}
                   </div>
                 </div>
-                <div className="bg-black/10 rounded-lg p-2 md:p-3 text-center">
+                <div className="bg-black/10 rounded-lg p-1.5 md:p-2 text-center">
                   <div className="text-blue-200 text-xs mb-1">Sikt</div>
-                  <div className="text-white text-xs md:text-sm font-semibold">
+                  <div className="text-white text-xs font-semibold">
                     {Math.round(8 + Math.random() * 7)} km
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Enhanced hourly forecast - responsiv */}
+            {/* Enhanced hourly forecast - komprimert for iPad 11 */}
             <div>
-              <h3 className="text-blue-200 text-base md:text-lg font-semibold mb-3 flex items-center gap-2">
+              <h3 className="text-blue-200 text-sm md:text-base font-semibold mb-2 flex items-center gap-2">
                 <span>⏰</span> Neste timer
               </h3>
-               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-3">
+               <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 md:gap-2">
                  {(weather?.hourly ?? makeMockWeather().hourly).slice(0, 6).map((h, idx) => {
                    const showPrecipitation = h.symbol && (h.symbol.includes('rain') || h.symbol.includes('snow') || h.symbol.includes('sleet'));
                    const precipitation = h.precipitation || Math.random() * 2;
@@ -842,15 +851,15 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                    return (
                      <div
                        key={idx}
-                       className="bg-white/10 backdrop-blur-sm rounded-xl p-1.5 md:p-2 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md"
+                       className="bg-white/10 backdrop-blur-sm rounded-lg p-1 md:p-1.5 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md"
                      >
                        <div className="text-blue-200 text-xs font-medium mb-1">
                          {fmtTimeHM(parseISO(h.timeISO))}
                        </div>
-                       <div className="text-xl md:text-2xl mb-1 drop-shadow-sm">
+                       <div className="text-lg md:text-xl mb-1 drop-shadow-sm">
                          {symbolToEmoji(h.symbol)}
                        </div>
-                       <div className="text-sm md:text-base text-white font-bold mb-1">
+                       <div className="text-xs md:text-sm text-white font-bold mb-1">
                          {Math.round(h.tempC)}°
                        </div>
                        <div className="text-xs text-blue-200">
@@ -867,8 +876,8 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             </div>
           </div>
 
-          {/* Kalender - smalere i landscape view */}
-          <div className="flex-1 landscape:flex-[0.8] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-6 md:p-8 min-h-[400px] backdrop-blur-sm">
+          {/* Kalender - smalere i landscape view, komprimert høyde */}
+          <div className="flex-1 landscape:flex-[0.8] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[280px] landscape:min-h-[280px] backdrop-blur-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
               <h2 className="text-2xl md:text-3xl text-white font-bold leading-8">Neste avtaler</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
@@ -901,19 +910,19 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                 </div>
               </div>
             )}
-            <div className="overflow-y-auto pb-6 max-h-[300px] portrait:max-h-[400px] landscape:max-h-[300px]">
+            <div className="overflow-y-auto pb-4 max-h-[200px] portrait:max-h-[300px] landscape:max-h-[200px]">
               {/* I dag */}
-              <h3 className="text-xl md:text-2xl text-gray-300 mb-3 mt-2 font-semibold">I dag</h3>
+              <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-1 font-semibold">I dag</h3>
               {grouped.evToday.length === 0 ? (
-                <div className="text-lg md:text-xl text-gray-400 leading-7">Ingen avtaler i dag.</div>
+                <div className="text-base md:text-lg text-gray-400 leading-6">Ingen avtaler i dag.</div>
               ) : (
                 grouped.evToday.map((ev) => <EventRow key={ev.id} ev={ev} />)
               )}
 
               {/* I morgen */}
-              <h3 className="text-xl md:text-2xl text-gray-300 mb-3 mt-4 font-semibold">I morgen</h3>
+              <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">I morgen</h3>
               {grouped.evTomorrow.length === 0 ? (
-                <div className="text-lg md:text-xl text-gray-400 leading-7">Ingen avtaler i morgen.</div>
+                <div className="text-base md:text-lg text-gray-400 leading-6">Ingen avtaler i morgen.</div>
               ) : (
                 grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} />)
               )}
@@ -921,7 +930,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               {/* Denne uken */}
               {grouped.evThisWeek.length > 0 && (
                 <>
-                  <h3 className="text-xl md:text-2xl text-gray-300 mb-3 mt-4 font-semibold">Denne uken</h3>
+                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">Denne uken</h3>
                   {grouped.evThisWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
                 </>
               )}
@@ -929,7 +938,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               {/* Neste uke */}
               {grouped.evNextWeek.length > 0 && (
                 <>
-                  <h3 className="text-xl md:text-2xl text-gray-300 mb-3 mt-4 font-semibold">Neste uke</h3>
+                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">Neste uke</h3>
                   {grouped.evNextWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
                 </>
               )}
