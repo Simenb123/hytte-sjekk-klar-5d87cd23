@@ -8,6 +8,7 @@ import { GoogleAuthErrorView } from './google/GoogleAuthErrorView';
 import { isEdgeFunctionError, isAuthError } from './google/utils';
 import { useConnectionRetry } from '@/hooks/google-calendar/useConnectionRetry';
 import { GoogleCalendarDebugPanel } from './GoogleCalendarDebugPanel';
+import { GoogleCalendarSettings } from './GoogleCalendarSettings';
 import type { GoogleEvent } from '@/types/googleCalendar.types';
 
 interface GoogleCalendarTabProps {
@@ -101,6 +102,8 @@ export const GoogleCalendarTab: React.FC<GoogleCalendarTabProps> = ({
   return (
     <div className="space-y-4">
       <GoogleCalendarDebugPanel />
+      
+      <GoogleCalendarSettings />
       
       <Card>
         <CardHeader>

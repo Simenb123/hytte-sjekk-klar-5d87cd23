@@ -1,22 +1,32 @@
 
 import { GoogleCalendarEvent } from './types.ts';
 
-export const fetchEvents = async (accessToken: string) => {
+export const fetchEvents = async (accessToken: string, filters?: {
+  selectedCalendars?: string[];
+  filterWeekEvents?: boolean;
+  filterHolidays?: boolean;
+}) => {
   const now = new Date();
   const threeMonthsLater = new Date(now);
   threeMonthsLater.setMonth(now.getMonth() + 3);
 
-  // Fetch events from all calendars the user has access to
-  console.log('Fetching events from all accessible calendars');
+  console.log('Fetching events from accessible calendars with filters:', filters);
   
   // First get the calendar list
   const { items: calendars } = await fetchCalendars(accessToken);
   console.log(`Found ${calendars.length} calendars`);
   
+  // Filter calendars based on selection
+  const calendarsToFetch = filters?.selectedCalendars && filters.selectedCalendars.length > 0
+    ? calendars.filter(cal => filters.selectedCalendars!.includes(cal.id))
+    : calendars;
+    
+  console.log(`Fetching from ${calendarsToFetch.length} selected calendars`);
+  
   let allEvents: any[] = [];
   
-  // Fetch events from each calendar
-  for (const calendar of calendars) {
+  // Fetch events from each selected calendar
+  for (const calendar of calendarsToFetch) {
     try {
       console.log(`Fetching events from calendar: ${calendar.summary} (${calendar.id})`);
       const calendarResponse = await fetch(
@@ -38,13 +48,50 @@ export const fetchEvents = async (accessToken: string) => {
       const events = calendarData.items || [];
       console.log(`Found ${events.length} events in calendar ${calendar.summary}`);
       
-      // Add calendar info to each event for debugging
-      events.forEach((event: any) => {
+      // Add calendar info to each event and apply filtering
+      let filteredEvents = events.map((event: any) => {
         event.calendarSummary = calendar.summary;
         event.calendarId = calendar.id;
+        return event;
       });
       
-      allEvents = allEvents.concat(events);
+      // Apply event filtering
+      if (filters) {
+        filteredEvents = filteredEvents.filter((event: any) => {
+          const summary = event.summary?.toLowerCase() || '';
+          
+          // Filter week events
+          if (filters.filterWeekEvents) {
+            if (summary.includes('uke ') || 
+                summary.includes('week ') ||
+                summary.includes('ukenr') ||
+                summary.includes('kalenderwoche') ||
+                /uke \d+/i.test(summary) ||
+                /week \d+/i.test(summary)) {
+              return false;
+            }
+          }
+          
+          // Filter holidays
+          if (filters.filterHolidays) {
+            if (summary.includes('helligdag') ||
+                summary.includes('holiday') ||
+                summary.includes('ferie') ||
+                summary.includes('vacation') ||
+                summary.includes('jul') ||
+                summary.includes('påske') ||
+                summary.includes('pinse') ||
+                summary.includes('christmas') ||
+                summary.includes('easter')) {
+              return false;
+            }
+          }
+          
+          return true;
+        });
+      }
+      
+      allEvents = allEvents.concat(filteredEvents);
     } catch (error) {
       console.error(`Error fetching events from calendar ${calendar.summary}:`, error);
       continue; // Skip this calendar but continue with others
@@ -87,7 +134,7 @@ export const fetchEvents = async (accessToken: string) => {
     return startA - startB;
   });
 
-  console.log(`Total events found across all calendars: ${normalizedEvents.length}`);
+  console.log(`Total events found across selected calendars after filtering: ${normalizedEvents.length}`);
   
   return {
     items: normalizedEvents,

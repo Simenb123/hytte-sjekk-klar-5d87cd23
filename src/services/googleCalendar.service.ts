@@ -8,6 +8,11 @@ import { storeGoogleTokens } from '@/utils/tokenStorage';
  * Henter kalender-hendelser fra Google Calendar via Edge Function
  */
 export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<GoogleEvent[]> => {
+  // Get filters from localStorage
+  const filtersString = localStorage.getItem('googleCalendarFilters');
+  const filters = filtersString ? JSON.parse(filtersString) : null;
+  console.log('Using calendar filters:', filters);
+
   try {
     console.log('🔍 DEBUG: Starting fetchCalendarEvents');
     console.log('🔍 DEBUG: Input tokens validation:', {
@@ -32,7 +37,8 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
     
     const requestBody = { 
       action: 'list_events',
-      tokens
+      tokens,
+      filters
     };
     
     console.log('🔍 DEBUG: Request body structure:', {
