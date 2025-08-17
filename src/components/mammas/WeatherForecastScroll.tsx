@@ -1,5 +1,4 @@
 import React from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { parseISO, format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 
@@ -36,12 +35,20 @@ export const WeatherForecastScroll: React.FC<WeatherForecastScrollProps> = ({
         <span>⏰</span> 
         Neste timer 
         <span className="text-xs text-blue-300">
-          (viser {Math.min(defaultHours, displayData.length)}, scroll for mer)
+          (viser {Math.min(defaultHours, displayData.length)}, scroll for mer →)
         </span>
       </h3>
-      <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex gap-1 md:gap-2 pb-2">
-          {displayData.map((hour, idx) => {
+      <div className="relative">
+        <div 
+          className="w-full h-[120px] overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(255,255,255,0.2) transparent'
+          }}
+        >
+          <div className="flex gap-1 md:gap-2 pb-2 h-full whitespace-nowrap">
+            {displayData.map((hour, idx) => {
             const showPrecipitation = hour.symbol && (
               hour.symbol.includes('rain') || 
               hour.symbol.includes('snow') || 
@@ -81,8 +88,9 @@ export const WeatherForecastScroll: React.FC<WeatherForecastScrollProps> = ({
               </div>
             );
           })}
+          </div>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 };
