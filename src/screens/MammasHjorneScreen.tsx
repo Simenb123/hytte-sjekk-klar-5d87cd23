@@ -816,8 +816,6 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             <WeatherForecastScroll
               hourlyData={weather?.hourly ?? makeMockWeather().hourly}
               symbolToEmoji={symbolToEmoji}
-              defaultHours={6}
-              maxHours={14}
             />
 
             {/* Daily forecast with scrolling */}
