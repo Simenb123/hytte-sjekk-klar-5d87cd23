@@ -747,8 +747,8 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         <div className="flex-1 flex flex-col portrait:flex-col landscape:flex-row 
                         lg:flex-row gap-4 lg:gap-6 mt-2 md:mt-3">
           
-          {/* Vær - bredere i landscape view, komprimert høyde */}
-          <div className={`flex-1 landscape:flex-[1.6] bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-4 md:p-6 min-h-[280px] landscape:min-h-[280px] backdrop-blur-sm`}>
+          {/* Vær - lik bredde som avtaler */}
+          <div className={`flex-1 landscape:flex-1 bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-3 md:p-4 min-h-[280px] landscape:min-h-[280px] backdrop-blur-sm`}>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0">
               <h2 className="text-2xl md:text-3xl text-white font-bold tracking-wide">Været</h2>
               <LocationDropdown 
@@ -759,8 +759,8 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             </div>
             <div className="text-blue-200 text-base md:text-lg mb-4 font-medium">{weather?.locationName || selectedLocation.name}</div>
             
-            {/* Current weather card - komprimert */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 md:p-4 mb-3 md:mb-4 border border-white/20 shadow-lg">
+            {/* Current weather card - mer komprimert */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 md:p-3 mb-2 md:mb-3 border border-white/20 shadow-lg">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3 sm:gap-0">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <div className="text-4xl md:text-6xl drop-shadow-lg text-center sm:text-left">
@@ -788,22 +788,22 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                 </div>
               </div>
               
-              {/* Weather details grid - komprimert */}
-              <div className="grid grid-cols-3 gap-1 md:gap-2">
-                <div className="bg-black/10 rounded-lg p-1.5 md:p-2 text-center">
-                  <div className="text-blue-200 text-xs mb-1">Lufttrykk</div>
+              {/* Weather details grid - mindre padding */}
+              <div className="grid grid-cols-3 gap-1">
+                <div className="bg-black/10 rounded-lg p-1 text-center">
+                  <div className="text-blue-200 text-xs mb-0.5">Lufttrykk</div>
                   <div className="text-white text-xs font-semibold">
                     {Math.round(1013 + Math.random() * 20)} hPa
                   </div>
                 </div>
-                <div className="bg-black/10 rounded-lg p-1.5 md:p-2 text-center">
-                  <div className="text-blue-200 text-xs mb-1">UV-indeks</div>
+                <div className="bg-black/10 rounded-lg p-1 text-center">
+                  <div className="text-blue-200 text-xs mb-0.5">UV-indeks</div>
                   <div className="text-white text-xs font-semibold">
                     {isNight(now) ? 0 : Math.round(Math.random() * 8)}
                   </div>
                 </div>
-                <div className="bg-black/10 rounded-lg p-1.5 md:p-2 text-center">
-                  <div className="text-blue-200 text-xs mb-1">Sikt</div>
+                <div className="bg-black/10 rounded-lg p-1 text-center">
+                  <div className="text-blue-200 text-xs mb-0.5">Sikt</div>
                   <div className="text-white text-xs font-semibold">
                     {Math.round(8 + Math.random() * 7)} km
                   </div>

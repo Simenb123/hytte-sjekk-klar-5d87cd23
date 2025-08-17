@@ -39,15 +39,17 @@ export const WeatherForecastScroll: React.FC<WeatherForecastScrollProps> = ({
         </span>
       </h3>
       <div className="relative">
+        {/* Gradient fade indicators */}
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-blue-600/30 to-transparent pointer-events-none z-10 rounded-r-lg"></div>
         <div 
-          className="w-full h-[120px] overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+          className="w-full h-[110px] overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
           style={{ 
             WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'thin',
             scrollbarColor: 'rgba(255,255,255,0.2) transparent'
           }}
         >
-          <div className="flex gap-1 md:gap-2 pb-2 h-full whitespace-nowrap">
+          <div className="flex gap-1 pb-2 h-full whitespace-nowrap">
             {displayData.map((hour, idx) => {
             const showPrecipitation = hour.symbol && (
               hour.symbol.includes('rain') || 
@@ -63,26 +65,26 @@ export const WeatherForecastScroll: React.FC<WeatherForecastScrollProps> = ({
             return (
               <div
                 key={idx}
-                className={`bg-white/10 backdrop-blur-sm rounded-lg p-1 md:p-1.5 text-center border transition-all shadow-md flex-shrink-0 min-w-[65px] md:min-w-[75px] ${
+                className={`bg-white/10 backdrop-blur-sm rounded-lg p-1 text-center border transition-all shadow-md flex-shrink-0 min-w-[55px] cursor-pointer ${
                   isInDefault 
                     ? 'border-white/30 hover:bg-white/25' 
                     : 'border-white/15 hover:bg-white/20 opacity-90'
                 }`}
               >
-                <div className="text-blue-200 text-xs font-medium mb-1">
+                <div className="text-blue-200 text-xs font-medium mb-0.5">
                   {fmtTimeHM(parseISO(hour.timeISO))}
                 </div>
-                <div className="text-lg md:text-xl mb-1 drop-shadow-sm">
+                <div className="text-lg mb-0.5 drop-shadow-sm">
                   {symbolToEmoji(hour.symbol)}
                 </div>
-                <div className="text-xs md:text-sm text-white font-bold mb-1">
+                <div className="text-xs text-white font-bold mb-0.5">
                   {Math.round(hour.tempC)}°
                 </div>
                 <div className="text-xs text-blue-200">
                   {showPrecipitation ? (
-                    `💧 ${precipitation.toFixed(1)}`
+                    `💧${precipitation.toFixed(1)}`
                   ) : (
-                    `💨 ${windSpeed.toFixed(1)}`
+                    `💨${windSpeed.toFixed(1)}`
                   )}
                 </div>
               </div>
