@@ -60,14 +60,27 @@ export const fetchEvents = async (accessToken: string, filters?: {
         filteredEvents = filteredEvents.filter((event: any) => {
           const summary = event.summary?.toLowerCase() || '';
           
-          // Filter week events
+          // Filter week events - improved regex to catch more formats
           if (filters.filterWeekEvents) {
-            if (summary.includes('uke ') || 
-                summary.includes('week ') ||
-                summary.includes('ukenr') ||
-                summary.includes('kalenderwoche') ||
-                /uke \d+/i.test(summary) ||
-                /week \d+/i.test(summary)) {
+            // More comprehensive regex patterns to catch various week formats
+            const weekPatterns = [
+              /uke \d+( i \d+)?/i,       // "Uke 34" or "Uke 34 i 2025"
+              /week \d+( in \d+)?/i,     // "Week 34" or "Week 34 in 2025"
+              /week \d+( of \d+)?/i,     // "Week 34 of 2025"
+              /ukenr\.? \d+/i,           // "Ukenr 34" or "Ukenr. 34"
+              /kalenderwoche \d+/i,      // "Kalenderwoche 34"
+              /^uke \d+$/i,              // Exactly "Uke 34"
+              /^\d+ uke/i                // "34 uke"
+            ];
+            
+            const isWeekEvent = weekPatterns.some(pattern => pattern.test(summary)) ||
+                               summary.includes('uke ') ||
+                               summary.includes('week ') ||
+                               summary.includes('ukenr') ||
+                               summary.includes('kalenderwoche');
+            
+            if (isWeekEvent) {
+              console.log(`🔍 Filtering out week event: "${event.summary}"`);
               return false;
             }
           }

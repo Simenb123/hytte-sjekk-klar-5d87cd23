@@ -25,17 +25,28 @@ export const GoogleCalendarSettings: React.FC = () => {
   const [settings, setSettings] = useState<CalendarSettings>(DEFAULT_SETTINGS);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Load settings from localStorage
+  // Load settings from localStorage and ensure filters are initialized
   useEffect(() => {
     const savedSettings = localStorage.getItem('googleCalendarSettings');
+    let loadedSettings = DEFAULT_SETTINGS;
+    
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings);
-        setSettings(parsed);
+        loadedSettings = { ...DEFAULT_SETTINGS, ...parsed };
       } catch (error) {
         console.error('Error parsing saved calendar settings:', error);
       }
     }
+    
+    setSettings(loadedSettings);
+    
+    // Ensure googleCalendarFilters is initialized in localStorage
+    localStorage.setItem('googleCalendarFilters', JSON.stringify({
+      selectedCalendars: loadedSettings.selectedCalendars,
+      filterWeekEvents: loadedSettings.filterWeekEvents,
+      filterHolidays: loadedSettings.filterHolidays,
+    }));
   }, []);
 
   // Save settings to localStorage and apply them
