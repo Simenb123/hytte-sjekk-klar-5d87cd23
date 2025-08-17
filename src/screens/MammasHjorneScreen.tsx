@@ -13,7 +13,10 @@ import { LocationPicker } from '@/components/location/LocationPicker';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SyncStatusIndicator } from '@/components/mammas/SyncStatusIndicator';
 import { SwipeRefresh } from '@/components/mammas/SwipeRefresh';
+import { EnhancedEventRow } from '@/components/mammas/EnhancedEventRow';
+import { WeatherForecastScroll } from '@/components/mammas/WeatherForecastScroll';
 import { useAdaptivePolling } from '@/hooks/useAdaptivePolling';
+import { groupEventsByDate } from '@/utils/eventGrouping';
 
 // ---------- Types ----------
 export type Event = {
@@ -345,32 +348,9 @@ function LocationDropdown({
   );
 }
 
+// Legacy EventRow - keeping for compatibility but using EnhancedEventRow in main render
 function EventRow({ ev }: { ev: Event }) {
-  const s = parseISO(ev.start);
-  const e = parseISO(ev.end);
-
-  const badge = isNow(ev.start, ev.end)
-    ? { label: 'Nå', cssClass: 'bg-green-600' }
-    : inNextHours(ev.start, 3)
-    ? { label: 'Snart', cssClass: 'bg-orange-600' }
-    : inNextHours(ev.start, 24)
-    ? { label: 'I morgen', cssClass: 'bg-blue-600' }
-    : { label: 'Utover', cssClass: 'bg-gray-600' };
-
-  return (
-    <div className="flex items-center gap-3 py-4 border-b border-gray-700 min-h-[80px]">
-      <div className={`px-3.5 py-2 rounded-full text-xs text-white font-bold min-w-[80px] text-center ${badge.cssClass}`}>
-        {badge.label}
-      </div>
-      <div className="flex-1">
-        <div className="text-white font-semibold text-xl leading-7">{ev.title}</div>
-        <div className="text-gray-400 text-lg mt-1 leading-6">
-          {ev.allDay ? 'Hele dagen' : `${fmtTimeHM(s)}–${fmtTimeHM(e)}`}
-          {ev.location ? `  ·  ${ev.location}` : ''}
-        </div>
-      </div>
-    </div>
-  );
+  return <EnhancedEventRow ev={ev} />;
 }
 
 function Toggle({ val, onChange }: { val: boolean; onChange: (v: boolean) => void }) {
@@ -575,61 +555,19 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
     return () => clearInterval(t);
   }, [onHeartbeat, online, events.length, lastUpdated, weather?.updatedISO, usingMock]);
 
-  // grouping - extended to include this week and next week
+  // gruppér events per dag (inkludert multi-day events)
   const grouped = useMemo(() => {
-    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const isSameDay = (a: Date, b: Date) => startOfDay(a).getTime() === startOfDay(b).getTime();
-    const isWithinDays = (eventDate: Date, fromDate: Date, days: number) => {
-      const diffMs = eventDate.getTime() - fromDate.getTime();
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      return diffDays >= 0 && diffDays < days;
-    };
-
-    const evToday: Event[] = [];
-    const evTomorrow: Event[] = [];
-    const evThisWeek: Event[] = [];
-    const evNextWeek: Event[] = [];
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    console.log('Mammas hjørne - processing events:', events.length);
-    
-    events.forEach((ev) => {
-      const s = parseISO(ev.start);
-      console.log('Processing event:', ev.title, 'at', s);
-      
-      if (isSameDay(s, today)) {
-        evToday.push(ev);
-        console.log('Added to today:', ev.title);
-      } else if (isSameDay(s, tomorrow)) {
-        evTomorrow.push(ev);
-        console.log('Added to tomorrow:', ev.title);
-      } else if (isWithinDays(s, today, 7)) {
-        evThisWeek.push(ev);
-        console.log('Added to this week:', ev.title);
-      } else if (isWithinDays(s, today, 14)) {
-        evNextWeek.push(ev);
-        console.log('Added to next week:', ev.title);
-      }
-    });
-
-    const sortByStart = (a: Event, b: Event) =>
-      parseISO(a.start).getTime() - parseISO(b.start).getTime();
-
-    evToday.sort(sortByStart);
-    evTomorrow.sort(sortByStart);
-    evThisWeek.sort(sortByStart);
-    evNextWeek.sort(sortByStart);
+    console.log('Grouping events:', events.length);
+    const result = groupEventsByDate(events);
     
     console.log('Event groups:', {
-      today: evToday.length,
-      tomorrow: evTomorrow.length, 
-      thisWeek: evThisWeek.length,
-      nextWeek: evNextWeek.length
+      today: result.evToday.length,
+      tomorrow: result.evTomorrow.length, 
+      thisWeek: result.evThisWeek.length,
+      nextWeek: result.evNextWeek.length
     });
     
-    return { evToday, evTomorrow, evThisWeek, evNextWeek };
+    return result;
   }, [events]);
 
   const withinNight = forceNight || isNight(now);
@@ -874,44 +812,12 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             </div>
             
             {/* Enhanced hourly forecast with scrolling */}
-            <div>
-              <h3 className="text-blue-200 text-sm md:text-base font-semibold mb-2 flex items-center gap-2">
-                <span>⏰</span> Neste timer
-              </h3>
-              <ScrollArea className="w-full whitespace-nowrap">
-                <div className="flex gap-1 md:gap-2 pb-2">
-                  {(weather?.hourly ?? makeMockWeather().hourly).slice(0, 18).map((h, idx) => {
-                    const showPrecipitation = h.symbol && (h.symbol.includes('rain') || h.symbol.includes('snow') || h.symbol.includes('sleet'));
-                    const precipitation = h.precipitation || Math.random() * 2;
-                    const windSpeed = h.windSpeed || Math.random() * 10 + 2;
-                    
-                    return (
-                      <div
-                        key={idx}
-                        className="bg-white/10 backdrop-blur-sm rounded-lg p-1 md:p-1.5 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md flex-shrink-0 min-w-[70px] md:min-w-[80px]"
-                      >
-                        <div className="text-blue-200 text-xs font-medium mb-1">
-                          {fmtTimeHM(parseISO(h.timeISO))}
-                        </div>
-                        <div className="text-lg md:text-xl mb-1 drop-shadow-sm">
-                          {symbolToEmoji(h.symbol)}
-                        </div>
-                        <div className="text-xs md:text-sm text-white font-bold mb-1">
-                          {Math.round(h.tempC)}°
-                        </div>
-                        <div className="text-xs text-blue-200">
-                          {showPrecipitation ? (
-                            `💧 ${precipitation.toFixed(1)}mm`
-                          ) : (
-                            `💨 ${windSpeed.toFixed(1)}m/s`
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </div>
+            <WeatherForecastScroll
+              hourlyData={weather?.hourly ?? makeMockWeather().hourly}
+              symbolToEmoji={symbolToEmoji}
+              defaultHours={6}
+              maxHours={14}
+            />
 
             {/* Daily forecast section */}
             <div>
@@ -954,8 +860,8 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             </div>
           </div>
 
-          {/* Kalender - smalere i landscape view, komprimert høyde */}
-          <div className="flex-1 landscape:flex-[0.8] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[280px] landscape:min-h-[280px] backdrop-blur-sm">
+          {/* Kalender - smalere i landscape view, økt høyde for bedre plass */}
+          <div className="flex-1 landscape:flex-[0.8] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
               <h2 className="text-2xl md:text-3xl text-white font-bold leading-8">Neste avtaler</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
@@ -1000,7 +906,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               </div>
             )}
             <SwipeRefresh onRefresh={handleManualRefresh} disabled={isSyncing}>
-              <div className="overflow-y-auto pb-4 max-h-[200px] portrait:max-h-[300px] landscape:max-h-[200px]">
+              <div className="overflow-y-auto pb-4 max-h-[240px] portrait:max-h-[350px] landscape:max-h-[220px]">
               {/* I dag */}
               <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-1 font-semibold">I dag</h3>
               {grouped.evToday.length === 0 ? (
