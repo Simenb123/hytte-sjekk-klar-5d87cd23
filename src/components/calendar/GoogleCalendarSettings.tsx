@@ -4,10 +4,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Settings, RefreshCw, Bug, Trash2 } from 'lucide-react';
+import { Settings, RefreshCw } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useGoogleCalendar } from '@/contexts/GoogleCalendarContext';
-import { clearGoogleCalendarCache, debugCalendarFilters, logCurrentSettings } from '@/utils/debugGoogleCalendar';
+import { debugCalendarFilters } from '@/utils/debugGoogleCalendar';
 
 interface CalendarSettings {
   selectedCalendars: string[];
@@ -70,19 +70,6 @@ export const GoogleCalendarSettings: React.FC = () => {
     fetchGoogleEvents();
   };
 
-  const handleClearCache = () => {
-    clearGoogleCalendarCache();
-    window.location.reload();
-  };
-
-  const handleDebugSettings = () => {
-    logCurrentSettings();
-    debugCalendarFilters({
-      selectedCalendars: settings.selectedCalendars,
-      filterWeekEvents: settings.filterWeekEvents,
-      filterHolidays: settings.filterHolidays,
-    });
-  };
 
   const handleCalendarToggle = (calendarId: string, enabled: boolean) => {
     const newSelectedCalendars = enabled
@@ -221,27 +208,6 @@ export const GoogleCalendarSettings: React.FC = () => {
                 </div>
               </div>
 
-              {/* Debug Section */}
-              <div className="flex gap-2 border-t pt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDebugSettings}
-                  className="flex items-center gap-2"
-                >
-                  <Bug className="h-4 w-4" />
-                  Debug Filters
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleClearCache}
-                  className="flex items-center gap-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Clear Cache
-                </Button>
-              </div>
               
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {googleCalendars.map((calendar) => {
