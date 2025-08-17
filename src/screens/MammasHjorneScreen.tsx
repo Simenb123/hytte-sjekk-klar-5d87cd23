@@ -833,7 +833,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
           </div>
 
           {/* Kalender - smalere i landscape view, økt høyde for bedre plass */}
-          <div className="flex-1 landscape:flex-[0.8] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm">
+          <div className="flex-1 landscape:flex-[0.8] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm flex flex-col">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
               <h2 className="text-2xl md:text-3xl text-white font-bold leading-8">Neste avtaler</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
@@ -878,7 +878,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               </div>
             )}
             <SwipeRefresh onRefresh={handleManualRefresh} disabled={isSyncing}>
-              <div className="overflow-y-auto pb-4 max-h-[240px] portrait:max-h-[350px] landscape:max-h-[220px]">
+              <div className="overflow-y-auto pb-4 flex-1">
               {/* I dag */}
               <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-1 font-semibold">I dag</h3>
               {grouped.evToday.length === 0 ? (
