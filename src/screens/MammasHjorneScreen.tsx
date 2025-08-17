@@ -676,11 +676,11 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
   return (
     <div 
-      className="flex-1 bg-gray-950 w-full min-h-screen"
+      className="flex-1 bg-gray-950 w-full h-screen overflow-hidden"
       style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
     >
       {/* iPad 11 optimert responsive container - redusert padding for bedre plassbruk */}
-      <div className="min-h-screen px-2 py-2 
+      <div className="h-full px-2 py-2 
                       md:px-4 md:py-3 
                       lg:px-6 lg:py-4 lg:max-w-[1400px] lg:mx-auto
                       portrait:max-w-[834px] portrait:mx-auto
