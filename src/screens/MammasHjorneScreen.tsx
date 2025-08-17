@@ -15,6 +15,7 @@ import { SyncStatusIndicator } from '@/components/mammas/SyncStatusIndicator';
 import { SwipeRefresh } from '@/components/mammas/SwipeRefresh';
 import { EnhancedEventRow } from '@/components/mammas/EnhancedEventRow';
 import { WeatherForecastScroll } from '@/components/mammas/WeatherForecastScroll';
+import { DayForecastScroll } from '@/components/mammas/DayForecastScroll';
 import { useAdaptivePolling } from '@/hooks/useAdaptivePolling';
 import { groupEventsByDate } from '@/utils/eventGrouping';
 
@@ -819,45 +820,18 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               maxHours={14}
             />
 
-            {/* Daily forecast section */}
-            <div>
-              <h3 className="text-blue-200 text-sm md:text-base font-semibold mb-2 flex items-center gap-2">
-                <span>📅</span> Neste dager
-              </h3>
-              <ScrollArea className="w-full whitespace-nowrap">
-                <div className="flex gap-1 md:gap-2 pb-2">
-                  {(weather?.forecast ?? Array.from({length: 5}, (_, i) => ({
-                    date: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    minTemp: Math.round(Math.random() * 10 + 5),
-                    maxTemp: Math.round(Math.random() * 10 + 15),
-                    symbol: ['clearsky_day', 'cloudy', 'partlycloudy_day', 'rain', 'snow'][Math.floor(Math.random() * 5)]
-                  }))).slice(0, 7).map((day, idx) => {
-                    const date = new Date(day.date);
-                    const dayName = date.toLocaleDateString('nb-NO', { weekday: 'short' });
-                    
-                    return (
-                      <div
-                        key={idx}
-                        className="bg-white/10 backdrop-blur-sm rounded-lg p-1 md:p-1.5 text-center border border-white/20 hover:bg-white/20 transition-colors shadow-md flex-shrink-0 min-w-[70px] md:min-w-[80px]"
-                      >
-                        <div className="text-blue-200 text-xs font-medium mb-1 capitalize">
-                          {dayName}
-                        </div>
-                        <div className="text-lg md:text-xl mb-1 drop-shadow-sm">
-                          {symbolToEmoji(day.symbol)}
-                        </div>
-                        <div className="text-xs text-white font-bold mb-1">
-                          {Math.round(day.maxTemp)}°
-                        </div>
-                        <div className="text-xs text-blue-200">
-                          {Math.round(day.minTemp)}°
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </div>
+            {/* Daily forecast with scrolling */}
+            <DayForecastScroll
+              dailyData={weather?.forecast ?? Array.from({length: 14}, (_, i) => ({
+                date: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                minTemp: Math.round(Math.random() * 10 + 5),
+                maxTemp: Math.round(Math.random() * 10 + 15),
+                symbol: ['clearsky_day', 'cloudy', 'partlycloudy_day', 'rain', 'snow'][Math.floor(Math.random() * 5)]
+              }))}
+              symbolToEmoji={symbolToEmoji}
+              defaultDays={6}
+              maxDays={14}
+            />
           </div>
 
           {/* Kalender - smalere i landscape view, økt høyde for bedre plass */}
