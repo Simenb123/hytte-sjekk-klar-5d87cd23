@@ -11,6 +11,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { SilhouetteUploader } from '@/components/admin/SilhouetteUploader';
 import { LocationPicker } from '@/components/location/LocationPicker';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SyncStatusIndicator } from '@/components/mammas/SyncStatusIndicator';
+import { SwipeRefresh } from '@/components/mammas/SwipeRefresh';
+import { useAdaptivePolling } from '@/hooks/useAdaptivePolling';
 
 // ---------- Types ----------
 export type Event = {
@@ -82,6 +85,11 @@ export type MammasHjorneProps = {
   isGoogleConnected?: boolean;
   onConnectGoogle?: () => Promise<boolean>;
   googleConnectionError?: string | null;
+  onManualRefresh?: () => Promise<void>;
+  onReconnectGoogle?: () => Promise<void>;
+  isSyncing?: boolean;
+  lastSyncTime?: string;
+  performSync?: () => Promise<void>;
 };
 
 // ---------- Konstanter ----------
@@ -397,6 +405,11 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   isGoogleConnected = false,
   onConnectGoogle,
   googleConnectionError,
+  onManualRefresh,
+  onReconnectGoogle,
+  isSyncing = false,
+  lastSyncTime,
+  performSync,
 }) => {
 
   // Lokasjoner for værvarsel
@@ -502,7 +515,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
     })();
   }, []);
 
-  // polling + realtime
+  // Enhanced data loading with sync integration
   const loadAll = async () => {
     try {
       let ev = events;
@@ -524,14 +537,14 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         [STORAGE_UPDATED_AT, ts],
       ]);
     } catch (e) {
-      // beholder cache
+      console.error('Data loading error:', e);
     }
   };
 
+
   useEffect(() => {
     loadAll();
-    const t = setInterval(loadAll, POLL_MS);
-
+    
     let unsub: undefined | (() => void);
     if (initRealtime) {
       try {
@@ -539,7 +552,6 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       } catch { /* empty */ }
     }
     return () => {
-      clearInterval(t);
       if (unsub) unsub();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -621,6 +633,22 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   }, [events]);
 
   const withinNight = forceNight || isNight(now);
+
+  // Manual refresh that integrates with sync system
+  const handleManualRefresh = async () => {
+    if (onManualRefresh) {
+      await onManualRefresh();
+    }
+    await loadAll();
+  };
+
+  // Adaptive polling setup
+  useAdaptivePolling({
+    onPoll: performSync || loadAll,
+    events,
+    isNightMode: withinNight,
+    isConnected: isGoogleConnected
+  });
 
   // skjult admin-trigger (5 taps øverst høyre)
   const handleCornerTap = () => {
@@ -931,17 +959,28 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
               <h2 className="text-2xl md:text-3xl text-white font-bold leading-8">Neste avtaler</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                {isGoogleConnected ? (
-                  <div className="flex items-center gap-2 text-green-300">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-sm">Google Calendar</span>
-                  </div>
-                ) : (
+                <SyncStatusIndicator
+                  isConnected={isGoogleConnected}
+                  isOnline={online}
+                  lastSyncTime={lastSyncTime}
+                  syncError={googleConnectionError}
+                  isLoading={isSyncing}
+                  className="text-xs"
+                />
+                {!isGoogleConnected && (
                   <button
                     onClick={onConnectGoogle}
                     className="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-3 rounded-lg transition-colors min-h-[44px] w-full sm:w-auto"
                   >
                     Koble til Google
+                  </button>
+                )}
+                {isGoogleConnected && googleConnectionError && onReconnectGoogle && (
+                  <button
+                    onClick={onReconnectGoogle}
+                    className="text-xs bg-orange-600/80 hover:bg-orange-600 text-white px-3 py-3 rounded-lg transition-colors min-h-[44px] w-full sm:w-auto"
+                  >
+                    Koble på nytt
                   </button>
                 )}
               </div>
@@ -960,7 +999,8 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                 </div>
               </div>
             )}
-            <div className="overflow-y-auto pb-4 max-h-[200px] portrait:max-h-[300px] landscape:max-h-[200px]">
+            <SwipeRefresh onRefresh={handleManualRefresh} disabled={isSyncing}>
+              <div className="overflow-y-auto pb-4 max-h-[200px] portrait:max-h-[300px] landscape:max-h-[200px]">
               {/* I dag */}
               <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-1 font-semibold">I dag</h3>
               {grouped.evToday.length === 0 ? (
@@ -992,7 +1032,8 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                   {grouped.evNextWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
                 </>
               )}
-            </div>
+              </div>
+            </SwipeRefresh>
           </div>
         </div>
       </div>
@@ -1110,9 +1151,10 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             <div className="flex justify-end gap-4">
               <button
                 className="bg-gray-900 bg-opacity-30 text-gray-200 px-6 py-4 rounded-xl text-lg font-bold"
-                onClick={() => loadAll()}
+                onClick={handleManualRefresh}
+                disabled={isSyncing}
               >
-                Oppdater nå
+                {isSyncing ? 'Oppdaterer...' : 'Oppdater nå'}
               </button>
               <button
                 className="bg-blue-600 text-white px-6 py-4 rounded-xl text-lg font-bold"

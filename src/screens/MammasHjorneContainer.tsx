@@ -7,6 +7,7 @@ import MammasHjorneScreen, {
 import { supabase } from '@/integrations/supabase/client';
 import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME } from '@/config';
 import { useGoogleCalendar } from '@/hooks/google-calendar';
+import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync';
 
 const MammasHjorneContainer: React.FC = () => {
   const { 
@@ -16,6 +17,15 @@ const MammasHjorneContainer: React.FC = () => {
     fetchError,
     isLoadingEvents
   } = useGoogleCalendar();
+
+  const {
+    isLoading: isSyncing,
+    lastSyncTime,
+    error: syncError,
+    manualRefresh,
+    reconnect,
+    performSync
+  } = useGoogleCalendarSync();
 
   const fetchEvents = async (): Promise<Event[]> => {
     console.log('MammasHjorne fetchEvents called - State:', {
@@ -138,7 +148,12 @@ const MammasHjorneContainer: React.FC = () => {
       onHeartbeat={onHeartbeat}
       isGoogleConnected={isGoogleConnected}
       onConnectGoogle={connectGoogleCalendar}
-      googleConnectionError={fetchError}
+      googleConnectionError={fetchError || syncError}
+      onManualRefresh={manualRefresh}
+      onReconnectGoogle={reconnect}
+      isSyncing={isSyncing}
+      lastSyncTime={lastSyncTime}
+      performSync={performSync}
     />
   );
 };
