@@ -699,10 +699,10 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
           <div className="flex flex-col portrait:flex-col landscape:flex-row 
                           md:flex-row justify-between items-start gap-3 md:gap-0">
             
-            {/* Dato og tid - reduserte størrelser for landscape */}
+            {/* Dato og tid - større skrift for hovedoverskrift */}
             <div className="flex-1 order-2 portrait:order-1 landscape:order-1 md:order-1">
-              <div className="text-xl portrait:text-2xl landscape:text-2xl 
-                              md:text-3xl lg:text-3xl text-gray-200 font-semibold 
+              <div className="text-2xl portrait:text-3xl landscape:text-3xl 
+                              md:text-4xl lg:text-5xl text-gray-200 font-bold 
                               leading-tight mb-1">
                 I dag er det{' '}
                 {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
@@ -710,15 +710,11 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               <div className="text-4xl portrait:text-5xl landscape:text-5xl 
                               md:text-6xl lg:text-7xl text-white font-bold 
                               tracking-wide leading-none mb-1">
-                {fmtTimeHM(now)}
+                Klokken er: {fmtTimeHM(now)}
               </div>
               <div className="flex flex-col portrait:flex-row landscape:flex-row 
                               md:flex-row items-start portrait:items-center 
                               landscape:items-center md:items-center gap-2 md:gap-3 min-h-6">
-                <span className="text-xs portrait:text-sm landscape:text-sm 
-                                 md:text-base text-gray-400">
-                  Sist oppdatert {lastUpdated ? fmtTimeHM(parseISO(lastUpdated)) : '—'}
-                </span>
                 {!online && (
                   <span className="px-2 py-1 bg-yellow-900 text-yellow-200 
                                    rounded-lg text-xs font-medium">
@@ -749,17 +745,17 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         <div className="flex-1 flex flex-col portrait:flex-col landscape:flex-row 
                         lg:flex-row gap-4 lg:gap-6 mt-2 md:mt-3">
           
-          {/* Vær - lik bredde som avtaler */}
-          <div className={`flex-1 landscape:flex-1 bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-3 md:p-4 min-h-[280px] landscape:min-h-[280px] backdrop-blur-sm`}>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 sm:gap-0">
-              <h2 className="text-2xl md:text-3xl text-white font-bold tracking-wide">Været</h2>
+          {/* Vær - komprimert størrelse */}
+          <div className={`flex-1 landscape:flex-[0.9] bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-3 md:p-4 min-h-[240px] landscape:min-h-[240px] backdrop-blur-sm`}>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 gap-2 sm:gap-0">
+              <h2 className="text-xl md:text-2xl text-white font-bold tracking-wide">Været</h2>
               <LocationDropdown 
                 locations={weatherLocations}
                 selectedLocation={selectedLocation}
                 onLocationChange={handleLocationChange}
               />
             </div>
-            <div className="text-blue-200 text-base md:text-lg mb-4 font-medium">{weather?.locationName || selectedLocation.name}</div>
+            <div className="text-blue-200 text-sm md:text-base mb-3 font-medium">{weather?.locationName || selectedLocation.name}</div>
             
             {/* Current weather card - mer komprimert */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 md:p-3 mb-2 md:mb-3 border border-white/20 shadow-lg">
@@ -833,8 +829,8 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             />
           </div>
 
-          {/* Kalender - smalere i landscape view, økt høyde for bedre plass */}
-          <div className="flex-1 landscape:flex-[0.8] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm flex flex-col">
+          {/* Kalender - mer plass for avtaler */}
+          <div className="flex-1 landscape:flex-[1.1] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm flex flex-col">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
               <h2 className="text-2xl md:text-3xl text-white font-bold leading-8">Neste avtaler</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
