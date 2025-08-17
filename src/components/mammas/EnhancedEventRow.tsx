@@ -1,6 +1,7 @@
 import React from 'react';
 import { parseISO, isSameDay, format } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import { formatTimeUntilEvent } from '@/utils/timeUntilEvent';
 
 export type Event = {
   id: string;
@@ -38,6 +39,7 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate }) =
   
   const multiDay = isMultiDay(ev.start, ev.end);
   const showDate = !isSameDay(start, today);
+  const timeUntil = formatTimeUntilEvent(ev.start, ev.end, today);
 
   const formatDateTime = () => {
     if (ev.allDay) {
@@ -70,6 +72,11 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate }) =
         <div className="text-gray-300 text-lg leading-relaxed">
           {formatDateTime()}
         </div>
+        {timeUntil && (
+          <div className="text-gray-400 text-base leading-relaxed">
+            🕒 {timeUntil}
+          </div>
+        )}
         {ev.location && (
           <div className="text-gray-400 text-base leading-relaxed">
             📍 {ev.location}
