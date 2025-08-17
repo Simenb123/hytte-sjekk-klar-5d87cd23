@@ -677,7 +677,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
   return (
     <div 
-      className="flex-1 bg-gray-950 w-full h-screen overflow-hidden"
+      className="flex-1 bg-gray-950 w-full min-h-screen"
       style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
     >
       {/* iPad 11 optimert responsive container - redusert padding for bedre plassbruk */}
@@ -830,7 +830,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
           </div>
 
           {/* Kalender - mer plass for avtaler */}
-          <div className="flex-1 landscape:flex-[1.1] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm flex flex-col">
+          <div className="flex-1 landscape:flex-[1.1] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm flex flex-col max-h-[calc(100vh-240px)]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
               <h2 className="text-2xl md:text-3xl text-white font-bold leading-8">Neste avtaler</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
@@ -877,19 +877,19 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             <SwipeRefresh onRefresh={handleManualRefresh} disabled={isSyncing}>
               <div className="overflow-y-auto pb-4 flex-1">
               {/* I dag */}
-              <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-1 font-semibold">I dag</h3>
-              {grouped.evToday.length === 0 ? (
-                <div className="text-base md:text-lg text-gray-400 leading-6">Ingen avtaler i dag.</div>
-              ) : (
-                grouped.evToday.map((ev) => <EventRow key={ev.id} ev={ev} />)
+              {grouped.evToday.length > 0 && (
+                <>
+                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-1 font-semibold">I dag</h3>
+                  {grouped.evToday.map((ev) => <EventRow key={ev.id} ev={ev} />)}
+                </>
               )}
 
               {/* I morgen */}
-              <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">I morgen</h3>
-              {grouped.evTomorrow.length === 0 ? (
-                <div className="text-base md:text-lg text-gray-400 leading-6">Ingen avtaler i morgen.</div>
-              ) : (
-                grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} />)
+              {grouped.evTomorrow.length > 0 && (
+                <>
+                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">I morgen</h3>
+                  {grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} />)}
+                </>
               )}
 
               {/* Denne uken */}
