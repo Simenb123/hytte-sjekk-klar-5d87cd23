@@ -11,7 +11,25 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
   // Get filters from localStorage
   const filtersString = localStorage.getItem('googleCalendarFilters');
   const filters = filtersString ? JSON.parse(filtersString) : null;
-  console.log('Using calendar filters:', filters);
+  console.log('🔍 FRONTEND - Using calendar filters:', filters);
+  
+  // FRONTEND REGEX TESTING - Test week event filtering locally first
+  if (filters?.filterWeekEvents) {
+    console.log('🧪 FRONTEND REGEX TEST - Testing week patterns locally');
+    const testEvents = ['Uke 34 i 2025', 'Normal meeting', 'Week 34', 'uke 35'];
+    const weekPatterns = [
+      /uke \d+( i \d+)?/i,
+      /^uke \d+/i,
+      /uke/i,
+      /week \d+/i
+    ];
+    
+    testEvents.forEach(testTitle => {
+      const lowerTitle = testTitle.toLowerCase();
+      const shouldFilter = weekPatterns.some(pattern => pattern.test(lowerTitle));
+      console.log(`🧪 FRONTEND TEST - "${testTitle}" -> should filter: ${shouldFilter}`);
+    });
+  }
 
   try {
     console.log('🔍 DEBUG: Starting fetchCalendarEvents');
@@ -79,7 +97,38 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
     }
 
     if (data?.events) {
-      console.log(`Successfully fetched ${data.events.length} events`);
+      console.log(`Successfully fetched ${data.events.length} events from Edge Function`);
+      
+      // FRONTEND BACKUP FILTERING - Apply additional filtering as safety net
+      let finalEvents = data.events;
+      if (filters?.filterWeekEvents) {
+        console.log('🛡️ FRONTEND BACKUP - Applying frontend week event filtering as backup');
+        const originalCount = finalEvents.length;
+        
+        finalEvents = finalEvents.filter((event: GoogleEvent) => {
+          const title = event.summary?.toLowerCase() || '';
+          const originalTitle = event.summary || '';
+          
+          const weekPatterns = [
+            /uke \d+( i \d+)?/i,
+            /^uke \d+/i,
+            /uke/i,
+            /week \d+/i,
+            /ukenr/i
+          ];
+          
+          const isWeekEvent = weekPatterns.some(pattern => pattern.test(title));
+          
+          if (isWeekEvent) {
+            console.log(`🛡️ FRONTEND BACKUP - Filtering out: "${originalTitle}"`);
+            return false;
+          }
+          
+          return true;
+        });
+        
+        console.log(`🛡️ FRONTEND BACKUP - Filtered ${originalCount} -> ${finalEvents.length} events`);
+      }
       
       // Handle refreshed tokens if provided
       if (data.refreshedTokens) {
@@ -91,7 +140,7 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
         }));
       }
       
-      return data.events;
+      return finalEvents;
     }
 
     return [];

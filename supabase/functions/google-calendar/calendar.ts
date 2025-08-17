@@ -10,9 +10,13 @@ export const fetchEvents = async (accessToken: string, filters?: {
   const threeMonthsLater = new Date(now);
   threeMonthsLater.setMonth(now.getMonth() + 3);
 
-  console.log('🔍 FILTER DEBUG - Starting fetchEvents with filters:', JSON.stringify(filters, null, 2));
-  console.log('🔍 FILTER DEBUG - filterWeekEvents is:', filters?.filterWeekEvents, 'type:', typeof filters?.filterWeekEvents);
-  console.log('🔍 FILTER DEBUG - filterHolidays is:', filters?.filterHolidays, 'type:', typeof filters?.filterHolidays);
+  // FORCED REDEPLOYMENT CHANGE v2.1 - Enhanced aggressive logging
+  console.log('🚀 REDEPLOYED VERSION 2.1 - Starting fetchEvents with ULTRA DETAILED logging');
+  console.log('🔍 ULTRA DEBUG - Raw filters object:', JSON.stringify(filters, null, 2));
+  console.log('🔍 ULTRA DEBUG - filterWeekEvents:', filters?.filterWeekEvents, 'typeof:', typeof filters?.filterWeekEvents);
+  console.log('🔍 ULTRA DEBUG - filterHolidays:', filters?.filterHolidays, 'typeof:', typeof filters?.filterHolidays);
+  console.log('🔍 ULTRA DEBUG - selectedCalendars:', filters?.selectedCalendars, 'length:', filters?.selectedCalendars?.length);
+  console.log('🔍 ULTRA DEBUG - Timestamp:', new Date().toISOString());
   
   // First get the calendar list
   const { items: calendars } = await fetchCalendars(accessToken);
@@ -66,53 +70,64 @@ export const fetchEvents = async (accessToken: string, filters?: {
           
           console.log(`🔍 FILTER DEBUG - Processing event: "${originalSummary}" (lowercase: "${summary}")`);
           
-          // Filter week events - improved regex to catch more formats
+          // ULTRA ENHANCED WEEK FILTERING v2.1
           if (filters.filterWeekEvents) {
-            console.log(`🔍 FILTER DEBUG - Week filtering is ENABLED, checking event: "${originalSummary}"`);
+            console.log(`🚀 ULTRA DEBUG - Week filtering ENABLED, analyzing: "${originalSummary}"`);
+            console.log(`🚀 ULTRA DEBUG - Lowercase version: "${summary}"`);
             
-            // More comprehensive regex patterns to catch various week formats
+            // Test exact text match first for "Uke 34 i 2025"
+            const exactTestCase = summary === 'uke 34 i 2025';
+            console.log(`🚀 ULTRA DEBUG - Exact match test for 'uke 34 i 2025': ${exactTestCase}`);
+            
+            // Enhanced regex patterns with ultra-detailed testing
             const weekPatterns = [
-              /uke \d+( i \d+)?/i,       // "Uke 34" or "Uke 34 i 2025"
-              /week \d+( in \d+)?/i,     // "Week 34" or "Week 34 in 2025"
-              /week \d+( of \d+)?/i,     // "Week 34 of 2025"
-              /ukenr\.? \d+/i,           // "Ukenr 34" or "Ukenr. 34"
-              /kalenderwoche \d+/i,      // "Kalenderwoche 34"
-              /^uke \d+$/i,              // Exactly "Uke 34"
-              /^\d+ uke/i                // "34 uke"
+              { pattern: /uke \d+( i \d+)?/i, name: 'Norwegian Uke' },
+              { pattern: /^uke \d+/i, name: 'Starts with Uke' },
+              { pattern: /uke/i, name: 'Contains Uke' },
+              { pattern: /week \d+/i, name: 'English Week' },
+              { pattern: /ukenr/i, name: 'Week Number' },
+              { pattern: /\d+\s*uke/i, name: 'Number Uke' }
             ];
             
-            // Test each pattern individually for debugging
-            const regexMatches = weekPatterns.map((pattern, index) => {
+            let isWeekEvent = false;
+            
+            // Test each pattern with ultra-detailed logging
+            weekPatterns.forEach(({ pattern, name }, index) => {
               const matches = pattern.test(summary);
-              if (matches) {
-                console.log(`🔍 FILTER DEBUG - Pattern ${index} (${pattern}) MATCHED: "${originalSummary}"`);
+              const matchesOriginal = pattern.test(originalSummary);
+              console.log(`🚀 ULTRA DEBUG - Pattern ${index} "${name}" (${pattern}):`);
+              console.log(`   - Test on lowercase "${summary}": ${matches}`);
+              console.log(`   - Test on original "${originalSummary}": ${matchesOriginal}`);
+              if (matches || matchesOriginal) {
+                isWeekEvent = true;
+                console.log(`🚫 ULTRA DEBUG - WEEK PATTERN MATCHED! Pattern: ${name}`);
               }
-              return matches;
             });
             
-            const stringMatches = [
-              summary.includes('uke '),
-              summary.includes('week '),
-              summary.includes('ukenr'),
-              summary.includes('kalenderwoche')
+            // Additional string contains tests
+            const stringTests = [
+              { test: summary.includes('uke'), name: 'includes uke' },
+              { test: summary.includes('week'), name: 'includes week' },
+              { test: originalSummary.toLowerCase().includes('uke'), name: 'original includes uke' }
             ];
             
-            stringMatches.forEach((match, index) => {
-              if (match) {
-                console.log(`🔍 FILTER DEBUG - String pattern ${index} MATCHED: "${originalSummary}"`);
+            stringTests.forEach(({ test, name }) => {
+              console.log(`🚀 ULTRA DEBUG - String test "${name}": ${test}`);
+              if (test) {
+                isWeekEvent = true;
+                console.log(`🚫 ULTRA DEBUG - STRING TEST MATCHED! Test: ${name}`);
               }
             });
-            
-            const isWeekEvent = regexMatches.some(Boolean) || stringMatches.some(Boolean);
             
             if (isWeekEvent) {
-              console.log(`🚫 FILTER DEBUG - FILTERING OUT week event: "${originalSummary}"`);
+              console.log(`🚫🚫🚫 ULTRA DEBUG - FILTERING OUT WEEK EVENT: "${originalSummary}"`);
+              console.log(`🚫🚫🚫 ULTRA DEBUG - Event will be REMOVED from results`);
               return false;
             } else {
-              console.log(`✅ FILTER DEBUG - NOT a week event, keeping: "${originalSummary}"`);
+              console.log(`✅✅✅ ULTRA DEBUG - NOT a week event, KEEPING: "${originalSummary}"`);
             }
           } else {
-            console.log(`🔍 FILTER DEBUG - Week filtering is DISABLED for event: "${originalSummary}"`);
+            console.log(`🔍 ULTRA DEBUG - Week filtering DISABLED for: "${originalSummary}"`);
           }
           
           // Filter holidays
