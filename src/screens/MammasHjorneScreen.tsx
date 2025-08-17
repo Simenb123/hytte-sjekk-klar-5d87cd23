@@ -18,6 +18,7 @@ import { WeatherForecastScroll } from '@/components/mammas/WeatherForecastScroll
 import { DayForecastScroll } from '@/components/mammas/DayForecastScroll';
 import { useAdaptivePolling } from '@/hooks/useAdaptivePolling';
 import { groupEventsByDate } from '@/utils/eventGrouping';
+import { clearGoogleCalendarCache, debugCalendarFilters, logCurrentSettings } from '@/utils/debugGoogleCalendar';
 
 // ---------- Types ----------
 export type Event = {
@@ -914,6 +915,32 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             </SwipeRefresh>
           </div>
         </div>
+      </div>
+
+      {/* Debug Section - Temporary for debugging week filtering */}
+      <div className="fixed bottom-4 right-4 z-40 flex gap-2">
+        <button
+          onClick={() => {
+            clearGoogleCalendarCache();
+            window.location.reload();
+          }}
+          className="bg-red-600/80 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-medium"
+        >
+          Clear Cache
+        </button>
+        <button
+          onClick={() => {
+            debugCalendarFilters({
+              filterWeekEvents: true,
+              filterHolidays: false,
+              selectedCalendars: []
+            });
+            logCurrentSettings();
+          }}
+          className="bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-medium"
+        >
+          Debug Filters
+        </button>
       </div>
 
       {/* FaceTime/SMS-knapper */}

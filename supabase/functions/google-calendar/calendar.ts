@@ -10,7 +10,9 @@ export const fetchEvents = async (accessToken: string, filters?: {
   const threeMonthsLater = new Date(now);
   threeMonthsLater.setMonth(now.getMonth() + 3);
 
-  console.log('Fetching events from accessible calendars with filters:', filters);
+  console.log('🔍 FILTER DEBUG - Starting fetchEvents with filters:', JSON.stringify(filters, null, 2));
+  console.log('🔍 FILTER DEBUG - filterWeekEvents is:', filters?.filterWeekEvents, 'type:', typeof filters?.filterWeekEvents);
+  console.log('🔍 FILTER DEBUG - filterHolidays is:', filters?.filterHolidays, 'type:', typeof filters?.filterHolidays);
   
   // First get the calendar list
   const { items: calendars } = await fetchCalendars(accessToken);
@@ -55,13 +57,19 @@ export const fetchEvents = async (accessToken: string, filters?: {
         return event;
       });
       
-      // Apply event filtering
+      // Apply event filtering with detailed logging
       if (filters) {
+        console.log(`🔍 FILTER DEBUG - Starting to filter ${filteredEvents.length} events from calendar ${calendar.summary}`);
         filteredEvents = filteredEvents.filter((event: any) => {
           const summary = event.summary?.toLowerCase() || '';
+          const originalSummary = event.summary || '';
+          
+          console.log(`🔍 FILTER DEBUG - Processing event: "${originalSummary}" (lowercase: "${summary}")`);
           
           // Filter week events - improved regex to catch more formats
           if (filters.filterWeekEvents) {
+            console.log(`🔍 FILTER DEBUG - Week filtering is ENABLED, checking event: "${originalSummary}"`);
+            
             // More comprehensive regex patterns to catch various week formats
             const weekPatterns = [
               /uke \d+( i \d+)?/i,       // "Uke 34" or "Uke 34 i 2025"
@@ -73,21 +81,44 @@ export const fetchEvents = async (accessToken: string, filters?: {
               /^\d+ uke/i                // "34 uke"
             ];
             
-            const isWeekEvent = weekPatterns.some(pattern => pattern.test(summary)) ||
-                               summary.includes('uke ') ||
-                               summary.includes('week ') ||
-                               summary.includes('ukenr') ||
-                               summary.includes('kalenderwoche');
+            // Test each pattern individually for debugging
+            const regexMatches = weekPatterns.map((pattern, index) => {
+              const matches = pattern.test(summary);
+              if (matches) {
+                console.log(`🔍 FILTER DEBUG - Pattern ${index} (${pattern}) MATCHED: "${originalSummary}"`);
+              }
+              return matches;
+            });
+            
+            const stringMatches = [
+              summary.includes('uke '),
+              summary.includes('week '),
+              summary.includes('ukenr'),
+              summary.includes('kalenderwoche')
+            ];
+            
+            stringMatches.forEach((match, index) => {
+              if (match) {
+                console.log(`🔍 FILTER DEBUG - String pattern ${index} MATCHED: "${originalSummary}"`);
+              }
+            });
+            
+            const isWeekEvent = regexMatches.some(Boolean) || stringMatches.some(Boolean);
             
             if (isWeekEvent) {
-              console.log(`🔍 Filtering out week event: "${event.summary}"`);
+              console.log(`🚫 FILTER DEBUG - FILTERING OUT week event: "${originalSummary}"`);
               return false;
+            } else {
+              console.log(`✅ FILTER DEBUG - NOT a week event, keeping: "${originalSummary}"`);
             }
+          } else {
+            console.log(`🔍 FILTER DEBUG - Week filtering is DISABLED for event: "${originalSummary}"`);
           }
           
           // Filter holidays
           if (filters.filterHolidays) {
-            if (summary.includes('helligdag') ||
+            console.log(`🔍 FILTER DEBUG - Holiday filtering is ENABLED for event: "${originalSummary}"`);
+            const isHoliday = summary.includes('helligdag') ||
                 summary.includes('holiday') ||
                 summary.includes('ferie') ||
                 summary.includes('vacation') ||
@@ -95,13 +126,23 @@ export const fetchEvents = async (accessToken: string, filters?: {
                 summary.includes('påske') ||
                 summary.includes('pinse') ||
                 summary.includes('christmas') ||
-                summary.includes('easter')) {
+                summary.includes('easter');
+            
+            if (isHoliday) {
+              console.log(`🚫 FILTER DEBUG - FILTERING OUT holiday event: "${originalSummary}"`);
               return false;
             }
+          } else {
+            console.log(`🔍 FILTER DEBUG - Holiday filtering is DISABLED for event: "${originalSummary}"`);
           }
           
+          console.log(`✅ FILTER DEBUG - Event passed all filters: "${originalSummary}"`);
           return true;
         });
+        
+        console.log(`🔍 FILTER DEBUG - After filtering: ${filteredEvents.length} events remaining from calendar ${calendar.summary}`);
+      } else {
+        console.log(`🔍 FILTER DEBUG - No filters applied to calendar ${calendar.summary}`);
       }
       
       allEvents = allEvents.concat(filteredEvents);
@@ -147,7 +188,12 @@ export const fetchEvents = async (accessToken: string, filters?: {
     return startA - startB;
   });
 
-  console.log(`Total events found across selected calendars after filtering: ${normalizedEvents.length}`);
+  console.log(`✅ FILTER DEBUG - Total events found across selected calendars after filtering: ${normalizedEvents.length}`);
+  
+  // Final debug summary
+  normalizedEvents.forEach((event, index) => {
+    console.log(`📋 FINAL EVENT ${index + 1}: "${event.summary}" from ${event.calendarSummary}`);
+  });
   
   return {
     items: normalizedEvents,

@@ -4,9 +4,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Settings, RefreshCw } from 'lucide-react';
+import { Settings, RefreshCw, Bug, Trash2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useGoogleCalendar } from '@/contexts/GoogleCalendarContext';
+import { clearGoogleCalendarCache, debugCalendarFilters, logCurrentSettings } from '@/utils/debugGoogleCalendar';
 
 interface CalendarSettings {
   selectedCalendars: string[];
@@ -51,18 +52,36 @@ export const GoogleCalendarSettings: React.FC = () => {
 
   // Save settings to localStorage and apply them
   const updateSettings = (newSettings: CalendarSettings) => {
+    console.log('📝 Updating calendar settings:', newSettings);
     setSettings(newSettings);
     localStorage.setItem('googleCalendarSettings', JSON.stringify(newSettings));
     
     // Store settings for the Edge Function to use
-    localStorage.setItem('googleCalendarFilters', JSON.stringify({
+    const filters = {
       selectedCalendars: newSettings.selectedCalendars,
       filterWeekEvents: newSettings.filterWeekEvents,
       filterHolidays: newSettings.filterHolidays,
-    }));
+    };
+    
+    localStorage.setItem('googleCalendarFilters', JSON.stringify(filters));
+    debugCalendarFilters(filters);
     
     // Refresh events with new settings
     fetchGoogleEvents();
+  };
+
+  const handleClearCache = () => {
+    clearGoogleCalendarCache();
+    window.location.reload();
+  };
+
+  const handleDebugSettings = () => {
+    logCurrentSettings();
+    debugCalendarFilters({
+      selectedCalendars: settings.selectedCalendars,
+      filterWeekEvents: settings.filterWeekEvents,
+      filterHolidays: settings.filterHolidays,
+    });
   };
 
   const handleCalendarToggle = (calendarId: string, enabled: boolean) => {
@@ -200,6 +219,28 @@ export const GoogleCalendarSettings: React.FC = () => {
                     <RefreshCw className="h-4 w-4" />
                   </Button>
                 </div>
+              </div>
+
+              {/* Debug Section */}
+              <div className="flex gap-2 border-t pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDebugSettings}
+                  className="flex items-center gap-2"
+                >
+                  <Bug className="h-4 w-4" />
+                  Debug Filters
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleClearCache}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Clear Cache
+                </Button>
               </div>
               
               <div className="space-y-3 max-h-64 overflow-y-auto">
