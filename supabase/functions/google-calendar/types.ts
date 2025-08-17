@@ -47,6 +47,11 @@ export interface RequestData {
     shareWith?: string[];
   };
   useSharedCalendar?: boolean;
+  filters?: {
+    selectedCalendars?: string[];
+    filterWeekEvents?: boolean;
+    filterHolidays?: boolean;
+  };
 }
 
 export interface CalendarSharingInfo {

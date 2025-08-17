@@ -148,8 +148,9 @@ export const handleCalendarOperations = async (requestData: RequestData): Promis
       switch (action) {
         case 'list_events':
           console.log('📅 Fetching calendar events');
-          const events = await fetchEvents(validTokens.access_token);
-          console.log(`✅ Fetched ${events.length} events`);
+          console.log('📦 Using filters from request:', requestData.filters);
+          const events = await fetchEvents(validTokens.access_token, requestData.filters);
+          console.log(`✅ Fetched ${events.length} events total`);
           
           return new Response(
             JSON.stringify({
