@@ -269,6 +269,9 @@ async function fetchWebResults(query: string) {
 serve(async (req) => {
   console.log('AI Helper Function started successfully');
   
+  // Declare variables that will be used throughout the function
+  let allRelevantDocs = [];
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -450,7 +453,6 @@ ${weatherData.forecast.map(day => `
     try {
       // Generate multiple search queries for better results
       const searchQueries = generateSearchQueries(userQuery, norskTid);
-      let allRelevantDocs = [];
 
       // Search with each query
       for (const query of searchQueries) {
