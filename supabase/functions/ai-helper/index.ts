@@ -805,21 +805,53 @@ Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret
     console.log('Sending request to OpenAI:', {
       model: image ? 'gpt-5-2025-08-07' : 'gpt-5-mini-2025-08-07',
       messageCount: messages.length,
-      hasImage: !!image
+      hasImage: !!image,
+      totalInputLength: messages.reduce((sum, msg) => sum + (typeof msg.content === 'string' ? msg.content.length : 0), 0)
     });
 
     const completion = await openai.chat.completions.create({
-      model: image ? 'gpt-5-2025-08-07' : 'gpt-5-mini-2025-08-07', // Use flagship for images
+      model: image ? 'gpt-5-2025-08-07' : 'gpt-5-mini-2025-08-07',
       messages: messages,
-      max_completion_tokens: 1500,
+      max_completion_tokens: 8000, // Increased from 1500 to handle GPT-5 reasoning tokens
+      reasoning_effort: 'low', // Reduce internal reasoning tokens
     });
 
     console.log('OpenAI response received:', {
       hasContent: !!completion.choices[0]?.message?.content,
-      contentLength: completion.choices[0]?.message?.content?.length || 0
+      contentLength: completion.choices[0]?.message?.content?.length || 0,
+      finishReason: completion.choices[0]?.finish_reason,
+      hasRefusal: !!completion.choices[0]?.message?.refusal,
+      usage: completion.usage
     });
 
+    // Check for refusal (policy rejection)
+    if (completion.choices[0]?.message?.refusal) {
+      console.error('OpenAI refusal:', completion.choices[0].message.refusal);
+      return new Response(JSON.stringify({ 
+        error: 'AI-hjelperen kan ikke behandle denne forespørselen på grunn av sikkerhetshensyn. Prøv å omformulere.',
+        details: 'OpenAI policy refusal'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
     let reply = completion.choices[0].message.content;
+
+    // Check for empty response
+    if (!reply || reply.trim() === '') {
+      console.error('Empty response from OpenAI:', {
+        finishReason: completion.choices[0]?.finish_reason,
+        usage: completion.usage
+      });
+      return new Response(JSON.stringify({ 
+        error: 'AI-hjelperen ga ikke noe svar. Dette kan skyldes for kompleks forespørsel. Prøv å forenkle.',
+        details: `Finish reason: ${completion.choices[0]?.finish_reason}`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      });
+    }
 
     // Post-process AI response to remove problematic statements and improve personalization
     if (reply) {
