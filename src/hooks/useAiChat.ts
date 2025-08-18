@@ -84,9 +84,20 @@ export function useAiChat() {
         }
       );
 
-      if (functionError) throw functionError;
+      if (functionError) {
+        console.error('Supabase function error:', functionError);
+        throw functionError;
+      }
 
-      if (data.error) throw new Error(data.error);
+      if (data.error) {
+        console.error('AI helper returned error:', data.error, data.details);
+        throw new Error(data.error);
+      }
+
+      if (!data.reply) {
+        console.error('AI helper returned no reply:', data);
+        throw new Error('AI-hjelperen ga ikke noe svar. Prøv igjen.');
+      }
 
       // Merge image-based actions with contextual actions from AI helper
       const allSuggestedActions = [
@@ -106,8 +117,11 @@ export function useAiChat() {
       };
     } catch (err: unknown) {
       console.error('Error calling ai-helper function:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Ukjent feil';
+      console.error('Error details:', errorMessage);
+      
       setError(
-        'Beklager, noe gikk galt. Vennligst prøv igjen. Hvis problemet vedvarer, kan det hende API-nøkkelen for OpenAI mangler.'
+        `AI-hjelperen svarte ikke: ${errorMessage}. Prøv igjen eller kontakt support hvis problemet vedvarer.`
       );
       return { reply: null, analysis: null, suggestedActions: [], actionData: null };
     } finally {

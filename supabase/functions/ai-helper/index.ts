@@ -802,10 +802,21 @@ Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret
       }),
     ];
 
+    console.log('Sending request to OpenAI:', {
+      model: image ? 'gpt-5-2025-08-07' : 'gpt-5-mini-2025-08-07',
+      messageCount: messages.length,
+      hasImage: !!image
+    });
+
     const completion = await openai.chat.completions.create({
-      model: image ? 'gpt-5-mini-2025-08-07' : 'gpt-5-mini-2025-08-07',
+      model: image ? 'gpt-5-2025-08-07' : 'gpt-5-mini-2025-08-07', // Use flagship for images
       messages: messages,
-      max_completion_tokens: 1000,
+      max_completion_tokens: 1500,
+    });
+
+    console.log('OpenAI response received:', {
+      hasContent: !!completion.choices[0]?.message?.content,
+      contentLength: completion.choices[0]?.message?.content?.length || 0
     });
 
     let reply = completion.choices[0].message.content;
@@ -895,7 +906,16 @@ Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret
     });
   } catch (error) {
     console.error('Error processing request:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    
+    return new Response(JSON.stringify({ 
+      error: error.message || 'En ukjent feil oppstod i AI-hjelperen',
+      details: error.name || 'Unknown error'
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
