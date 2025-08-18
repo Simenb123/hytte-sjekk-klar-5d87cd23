@@ -597,196 +597,117 @@ ${topDocs.map(doc => {
       'Annet': []
     };
 
-    let inventoryContext = "Inventarlisten er for øyeblikket ikke tilgjengelig.";
+    // Get inventory context - only show search-relevant items
+    let inventoryContext = "";
     if (inventoryItems && inventoryItems.length > 0) {
-      // Group items by location for better organization
-      const itemsByLocation = inventoryItems.reduce((acc, item) => {
-        const location = item.primary_location || 'ukjent';
-        if (!acc[location]) acc[location] = [];
-        acc[location].push(item);
-        return acc;
-      }, {});
+      console.log(`Found ${inventoryItems.length} inventory items`);
+      
+      // For now, just show a summary count by category (no detailed items)
+      const categoryGroups: { [key: string]: number } = {};
+      inventoryItems.forEach(item => {
+        const category = item.category || 'Annet';
+        categoryGroups[category] = (categoryGroups[category] || 0) + 1;
+      });
 
-      inventoryContext = `
-**Inventarliste (${inventoryItems.length} gjenstander):**
+      const categorySummary = Object.entries(categoryGroups)
+        .map(([category, count]) => `${category}: ${count}`)
+        .join(', ');
 
-**Tilgjengelige kategorier og underkategorier:**
-${Object.entries(categoryData).map(([cat, subcats]) => 
-  `- ${cat}: ${subcats.join(', ')}`
-).join('\n')}
-
-**Inventar etter lokasjon:**
-${Object.entries(itemsByLocation).map(([location, items]) => `
-**${location.charAt(0).toUpperCase() + location.slice(1)} (${items.length} gjenstander):**
-${items.map(item => {
-  const owner = item.family_members?.name || item.owner || 'Ukjent';
-  const subcategory = item.subcategory ? ` → ${item.subcategory}` : '';
-  const images = item.item_images?.length > 0 ? ` [${item.item_images.length} bilde(r)]` : '';
-  
-  return `- **${item.name}**${images}
-    Kategori: ${item.category || 'N/A'}${subcategory}
-    Beskrivelse: ${item.description || 'N/A'}
-    Merke: ${item.brand || 'N/A'} | Farge: ${item.color || 'N/A'} | Størrelse: ${item.size || 'N/A'}
-    Plassering: ${item.location || 'N/A'}${item.shelf ? ` (${item.shelf})` : ''}
-    Eier/tilhører: ${owner}
-    Notater: ${item.notes || 'N/A'}`;
-}).join('\n')}
-`).join('\n')}
-
-**Inventar-søketips:** Du kan søke etter gjenstander basert på navn, kategori, merke, farge, størrelse, eier, eller notater.
-      `.trim();
+      inventoryContext = `Inventar (${inventoryItems.length} items): ${categorySummary}`;
+    } else {
+      inventoryContext = "Ingen inventar.";
     }
 
-    const systemPrompt = `
-Du er "Hyttehjelperen", en intelligent og hjelpsom AI-assistent for Gaustablikk familiehytte.
-Du har kunnskap om hytta, utstyr, håndteringer, værforhold og praktiske råd.
-Vær alltid hyggelig, presis og bruk tilgjengelig informasjon effektivt.
+    // Slim system prompt - only role, format, and rules
+    const systemPrompt = `Du er en hjelpsom AI-assistent for en hytte-app. 
 
-**NÅVÆRENDE DATO OG TID:**
-${norskTid} (Årstid: ${årstid}, Måned: ${månedsnavn})
+ROLLE:
+- Hjelp brukere med hytteadministrasjon, inventar, vær og aktiviteter
+- Vær vennlig, praktisk og handlingsorientert
+- Skriv på norsk
 
-${userContext}
+FORMAT:
+- Gi korte, konkrete svar
+- Foreslå relevante handlinger når mulig
+- Hvis du får et bilde, analyser det og foreslå handlinger
 
-${weatherContext}
+FOKUSOMRÅDER:
+1. Bookinger og sjekklister
+2. Inventarstyring  
+3. Værbaserte aktivitetsforslag
+4. Dokumenthjelp
+5. Vinkjeller
 
-${documentContext}
+Bruk konteksten som følger for å gi personlige, relevante svar.`;
 
-${inventoryContext}
+    // Gather relevant documents context - drastically reduced
+    let documentContext = "";
+    if (documents && documents.length > 0) {
+      console.log(`Found ${documents.length} relevant documents`);
+      
+      // Limit to max 2 documents and 500 chars each
+      const limitedDocs = documents.slice(0, 2);
+      documentContext = `Dokumenter:
+${limitedDocs.map((doc, index) => {
+        const preview = doc.summary || (doc.content ? doc.content.substring(0, 500) : '');
+        return `${index + 1}. ${doc.title}: ${preview}${preview.length > 500 ? '...' : ''}`;
+      }).join('\n')}`;
+    } else {
+      documentContext = "Ingen dokumenter funnet.";
+    }
 
-${searchContext}
+    // Get user profile info
+    let profile: any = null;
+    try {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (user) {
+        const { data: profileData } = await supabaseClient
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', user.id)
+          .single();
+        profile = profileData;
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
 
-**SPESIALKUNNSKAP - Hytte på Gaustablikk:**
-- **Lokasjon:** Vatnedalsvegen 27, Gaustablikk (1200 moh) - fantastisk utsikt mot Gaustatoppen
-- **Rutiner:** 
-  - Ankomst: Strøm/vann på → varmepumpe komfort → sjekk alt fungerer
-  - Avreise: Varmepumpe økonomi → kraner lukket → vinduer/dører stengt → strøm av anneks
-- **Sesongråd:** Tilpass aktiviteter og forberedelser til vær og årstid
-- **Utstyr:** Bruk dokumenter og inventarliste for spesifikk informasjon
+    // Get weather data
+    const weatherData = await fetchWeatherData();
 
-${image ? '**BILDEANALYSE:** Du har mottatt et bilde som du MÅ analysere grundig. Beskriv detaljert hva du ser i bildet og gi praktiske råd basert på innholdet. Du har full evne til bildeanalyse og kan se alt i bildet. ALDRI si at du ikke kan se eller analysere bilder - du kan det perfekt!' : ''}
-
-**PERSONALISERING OG INTELLIGENS - KRITISKE REGLER:**
-
-**AVGJØRENDE PERSONALISERING:**
-1. **Kjønnsspesifikke anbefalinger:** ALLTID tilpass forslag til brukerens kjønn
-   - Hvis bruker er mann → anbefal herreprodukter, herrestørrelser, herreklær
-   - Hvis bruker er kvinne → anbefal dameprodukter, damestørrelser, dameklær
-   - Hvis bruker er barn → anbefal barneprodukter tilpasset alder
-
-2. **Familierolleforståelse og eierskap:** FORSTÅ brukerens rolle og familieeierskap
-   - ALDRI anbefal andres klær/utstyr uten å spørre eller klargjøre eierskap først
-   - Når du ser klær/utstyr som tilhører andre familiemedlemmer, si tydelig hvem det tilhører
-   - Spør alltid "Er dette dine klær eller tilhører de [familiemedlem]?" når eierskap er uklart
-   - Gi bare anbefalinger for brukerens egne ting eller spør om tillatelse før du foreslår å bruke andres ting
-
-3. **Alderstilpassede råd:** Gi råd som passer brukerens alder og livssituasjon
-   - Barn → aktiviteter og utstyr tilpasset barnealder
-   - Voksne → praktiske løsninger og ansvar
-   - Eldre → komfort og tilgjengelighet
-
-**SMART ASSISTANSEREGLER:**
-4. **Konneksjoner:** Forstå sammenhenger mellom begreper (gressklipper = kantklipper, hageutstyr, etc.)
-5. **Kontekst først:** Bruk ALLTID tilgjengelige dokumenter og inventar før generelle råd
-6. **Værbaserte råd:** Kombiner nåværende vær med aktivitetsforslag og forberedelser
-7. **Konkrete svar:** Gi spesifikke instruksjoner basert på faktisk tilgjengelig utstyr og informasjon
-8. **Referanser:** Nevn eksplisitt hvor informasjonen kommer fra (dokumenter, inventar, etc.)
-
-**EKSEMPLER PÅ FEIL SOM ALDRI SKAL SKJE:**
-❌ "Du kan låne mors klær" (til en sønn)
-❌ "Bruk fars jakke" (til en datter)
-❌ "Dette passer for voksne" (til et barn)
-❌ Generiske råd uten personalisering
-
-**EKSEMPLER PÅ RIKTIGE ANBEFALINGER:**
-✅ "Jeg ser du er mann, så anbefaler herreclothing fra inventaret"
-✅ "Som forelder kan du bruke..."
-✅ "Basert på din alder og rolle i familien..."
-✅ "Dette passer perfekt for deg som [rolle/kjønn/alder]"
-
-**INVENTAR-INTELLIGENS:**
-6. **Klesforslag:** Kombiner værforhold med tilgjengelige klær i inventaret for praktiske anbefalinger
-   - ALLTID sjekk eierskap før du anbefaler klær fra inventaret
-   - Hvis klærne tilhører andre familiemedlemmer, nevn dette eksplisitt
-   - Gi shoppinglenker for nye klær når inventaret ikke har passende alternativer
-   
-   **SHOPPING-LENKER FOR KLESTIPS:**
-   - Herr: [Zalando Herr](https://www.zalando.no/herretoy/), [H&M Herr](https://www2.hm.com/no_no/herrer.html)
-   - Dame: [Zalando Dame](https://www.zalando.no/dameklær/), [H&M Dame](https://www2.hm.com/no_no/damer.html)
-   - Barn: [Zalando Barn](https://www.zalando.no/barn/), [H&M Barn](https://www2.hm.com/no_no/barn.html)
-   - Sport: [XXL](https://www.xxl.no/), [Intersport](https://www.intersport.no/)
-   - Alltid inkluder konkrete produktlenker når du gir klestips!
-7. **Aktivitetsutstyr:** Koble aktiviteter med relevant utstyr fra inventaret (ski, sykler, fotballutstyr, etc.)
-8. **Sesongtilpassning:** Foreslå sesongriktig utstyr basert på nåværende årstid og inventarliste
-9. **Organisering:** Hjelp med å finne og organisere inventar basert på lokasjon (hjemme/hytta/reiser)
-10. **Pakkelister:** Lag smarte pakkelister basert på aktiviteter og tilgjengelig inventar
-
-**KONTEKST-INTELLIGENS FOR FORSLAG:**
-11. **Sjekklistepunkt-identifikasjon:** Når brukeren nevner:
-    - "Vi må huske å..." → Foreslå sjekklistepunkt
-    - "Neste gang bør vi..." → Foreslå sjekklistepunkt
-    - "Problemet er at..." → Foreslå sjekklistepunkt for vedlikehold
-    - "Det funker ikke..." → Foreslå sjekklistepunkt for reparasjon
-    - Beskriver vedlikehold, sjekker eller oppgaver → Foreslå sjekklistepunkt
-
-12. **Smart handlingsgjenkjenning:**
-    - Når brukeren beskriver gjenstander → Foreslå inventarregistrering
-    - Når brukeren nevner dokumenter/instruksjoner → Foreslå dokumentlagring
-    - Når brukeren snakker om opplevelser/minner → Foreslå hyttebokinnlegg
-    - Når brukeren viser/snakker om vin → Foreslå vinlagerregistrering
-
-**KRITISK REGEL - INVENTAR LENKER:** Når du refererer til spesifikke inventargjenstander, bruk ALLTID dette formatet: [ITEM:{item_id}:{item_name}]
-Eksempel: "Jeg anbefaler [ITEM:abc123:Rød vinterjakke] for dagens vær" - dette vil bli en klikkbar lenke.
-
-**INTELLIGENTE HANDLINGSFORSLAG:**
-Når du får bilder eller analyser som kan kobles til app-funksjoner, foreslå konkrete handlinger:
-
-For bilder/chat som inkluderer:
-- **Inventargjenstander** → Foreslå: "Vil du legge til dette i inventarlisten?"
-- **Vindokumenter/Instruksjoner** → Foreslå: "Lagre dette under dokumenter"
-- **Vinflasker** → Foreslå: "Legg til i vinlageret"
-- **Opplevelser/Minner** → Foreslå: "Lagre i hytteboka"
-- **Problemer/Vedlikehold** → Foreslå: "Lag sjekklistepunkt for dette"
-
-**CONTEXT-AWARE SUGGESTIONS:**
-Analyser samtaleinnhold for å identifisere:
-- Når brukeren snakker om noe som bør sjekkes/huskes → Foreslå sjekklistepunkt
-- Når brukeren beskriver gjenstander → Foreslå inventarregistrering
-- Når brukeren omtaler dokumenter/instruksjoner → Foreslå dokumentlagring
-
-**INVENTAR-EKSEMPLER FRA AKTUELLE DATA:**
-For å gi konkrete forslag, her er noen aktuelle inventargjenstander du bør referere til med lenker:
-${inventoryItems?.slice(0, 10).map(item => `- [ITEM:${item.id}:${item.name}] (${item.category}) - ${item.description || 'Ingen beskrivelse'}`).join('\n') || 'Ingen inventar tilgjengelig'}
-
-**SPESIALKUNNSKAP - Hytte på Gaustablikk:**
-**FORBEDRET FORSTÅELSE:**
-- "Gressklipper" inkluderer kantklippere, plenklipper, Ryobi-utstyr
-- "Snømåking/snøfjerning" inkluderer snøfreser, snøskuffe, snøplog, vintermaskiner
-- "Oppbevaring" = garasje, bod, lager, plassering av utstyr  
-- "Vedlikehold" = service, reparasjon, skjøtsel av utstyr
-- "Batteri/elektrisk" = lading, strøm, Ryobi-system
-- "Vinter/snø" = snøutstyr, vintermaskiner, snørydding, frostbeskyttelse
-- Tidsreferanser som "igår/nylig/sist" = søk bredere i dokumenter
-
-**BILDEBESKRIVELSER:** Du har tilgang til AI-genererte beskrivelser av bilder i dokumentene som gir ytterligere kontekst og detaljer om utstyr, instruksjoner og forhold.
-
-**VIKTIG:** Bruk ALLTID [ITEM:id:navn] formatet når du nevner spesifikke inventargjenstander slik at brukeren kan klikke direkte på dem!
-
-**INTELLIGENTE HANDLINGSFORSLAG I SVAR:**
-Når du gir svar, analyser om brukerens melding indikerer behov for konkrete handlinger:
-
-- Hvis brukeren beskriver noe som bør huskes: "Basert på det du beskriver, vil du at jeg skal foreslå et sjekklistepunkt for dette?"
-- Hvis brukeren snakker om gjenstander: "Skal jeg hjelpe deg å registrere dette i inventaret?"
-- Hvis brukeren nevner opplevelser: "Dette høres ut som noe som ville passe i hytteboka!"
-- Hvis brukeren snakker om instruksjoner/dokumenter: "Vil du lagre denne informasjonen som et dokument?"
-
-Vær proaktiv med å foreslå relevante handlinger som kan hjelpe brukeren organisere informasjonen bedre.
-
-Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret basert på tilgjengelig informasjon.
-    `;
+    // Context as separate message - only when relevant
+    const contextMessage = [];
+    if (weatherData || documentContext !== "Ingen dokumenter funnet." || inventoryContext !== "Ingen inventar.") {
+      const contextParts = [];
+      
+      if (weatherData) {
+        contextParts.push(`Vær: ${weatherData.current.condition} ${weatherData.current.temperature}°C`);
+      }
+      
+      if (documentContext !== "Ingen dokumenter funnet.") {
+        contextParts.push(documentContext);
+      }
+      
+      if (inventoryContext !== "Ingen inventar.") {
+        contextParts.push(inventoryContext);
+      }
+      
+      if (profile?.first_name) {
+        contextParts.push(`Bruker: ${profile.first_name} ${profile.last_name || ''}`);
+      }
+      
+      if (contextParts.length > 0) {
+        contextMessage.push({
+          role: 'user' as const,
+          content: `Kontekst:\n${contextParts.join('\n')}`
+        });
+      }
+    }
 
     // Prepare messages with optional image
     const messages = [
       { role: 'system', content: systemPrompt },
+      ...contextMessage,
       ...history.map((msg: HistoryMessage) => {
         if (msg.role === 'user' && image && msg === history[history.length - 1]) {
           // Add image to the last user message
