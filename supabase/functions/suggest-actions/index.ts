@@ -79,7 +79,7 @@ Hvis ingen relevante handlinger identifiseres, returner en tom array for suggest
 `;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5-mini-2025-08-07',
       messages: [
         { role: 'system', content: systemPrompt },
         {
@@ -93,6 +93,7 @@ ${context ? `Kontekst: ${context}` : ''}
 Hvilke handlinger bør foreslås basert på denne samtalen?`
         }
       ],
+      max_completion_tokens: 500,
       response_format: { type: 'json_object' }
     });
 

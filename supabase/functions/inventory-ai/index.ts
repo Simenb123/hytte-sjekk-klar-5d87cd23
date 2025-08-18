@@ -167,7 +167,7 @@ VIKTIGE INSTRUKSJONER:
 `;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-5-mini-2025-08-07',
       messages: [
         { role: 'system', content: systemPrompt },
         {
@@ -178,6 +178,7 @@ VIKTIGE INSTRUKSJONER:
           ]
         }
       ],
+      max_completion_tokens: 800,
       response_format: { type: 'json_object' }
     });
 

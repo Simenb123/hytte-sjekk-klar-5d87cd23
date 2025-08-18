@@ -803,8 +803,9 @@ Analyser brukerens spørsmål grundig og gi det mest relevante, praktiske svaret
     ];
 
     const completion = await openai.chat.completions.create({
-      model: image ? 'gpt-4o-mini' : 'gpt-4o-mini',
+      model: image ? 'gpt-5-mini-2025-08-07' : 'gpt-5-mini-2025-08-07',
       messages: messages,
+      max_completion_tokens: 1000,
     });
 
     let reply = completion.choices[0].message.content;
