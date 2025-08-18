@@ -267,6 +267,8 @@ async function fetchWebResults(query: string) {
 }
 
 serve(async (req) => {
+  console.log('AI Helper Function started successfully');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -640,20 +642,20 @@ FOKUSOMRÅDER:
 
 Bruk konteksten som følger for å gi personlige, relevante svar.`;
 
-    // Gather relevant documents context - drastically reduced
-    let documentContext = "";
-    if (documents && documents.length > 0) {
-      console.log(`Found ${documents.length} relevant documents`);
+    // Process documents from the earlier search
+    let processedDocumentContext = "";
+    if (allRelevantDocs && allRelevantDocs.length > 0) {
+      console.log(`Found ${allRelevantDocs.length} relevant documents`);
       
       // Limit to max 2 documents and 500 chars each
-      const limitedDocs = documents.slice(0, 2);
-      documentContext = `Dokumenter:
+      const limitedDocs = allRelevantDocs.slice(0, 2);
+      processedDocumentContext = `Dokumenter:
 ${limitedDocs.map((doc, index) => {
         const preview = doc.summary || (doc.content ? doc.content.substring(0, 500) : '');
         return `${index + 1}. ${doc.title}: ${preview}${preview.length > 500 ? '...' : ''}`;
       }).join('\n')}`;
     } else {
-      documentContext = "Ingen dokumenter funnet.";
+      processedDocumentContext = "Ingen dokumenter funnet.";
     }
 
     // Get user profile info
@@ -684,8 +686,8 @@ ${limitedDocs.map((doc, index) => {
         contextParts.push(`Vær: ${weatherData.current.condition} ${weatherData.current.temperature}°C`);
       }
       
-      if (documentContext !== "Ingen dokumenter funnet.") {
-        contextParts.push(documentContext);
+      if (processedDocumentContext !== "Ingen dokumenter funnet.") {
+        contextParts.push(processedDocumentContext);
       }
       
       if (inventoryContext !== "Ingen inventar.") {
@@ -734,7 +736,6 @@ ${limitedDocs.map((doc, index) => {
       model: image ? 'gpt-5-2025-08-07' : 'gpt-5-mini-2025-08-07',
       messages: messages,
       max_completion_tokens: 8000, // Increased from 1500 to handle GPT-5 reasoning tokens
-      reasoning_effort: 'low', // Reduce internal reasoning tokens
     });
 
     console.log('OpenAI response received:', {
