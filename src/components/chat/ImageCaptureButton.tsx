@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Image as ImageIcon, X } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Camera, Image as ImageIcon, X, Send } from 'lucide-react';
 import { useImageCapture } from '@/hooks/useImageCapture';
 
 interface ImageCaptureButtonProps {
@@ -33,95 +34,123 @@ const ImageCaptureButton: React.FC<ImageCaptureButtonProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      {hasImages ? (
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex flex-wrap gap-2 max-w-xs">
-            {capturedImages.map((image, index) => (
-              <div key={index} className="relative">
-                <img 
-                  src={image} 
-                  alt={`Captured ${index + 1}`} 
-                  className="w-16 h-16 object-cover rounded-lg border shadow-sm"
-                />
+    <TooltipProvider>
+      <div className="flex items-center gap-1">
+        {hasImages ? (
+          <div className="flex items-center gap-1">
+            {/* Compact thumbnails */}
+            <div className="flex gap-1 mr-2">
+              {capturedImages.slice(0, 2).map((image, index) => (
+                <div key={index} className="relative">
+                  <img 
+                    src={image} 
+                    alt={`Captured ${index + 1}`} 
+                    className="w-8 h-8 object-cover rounded border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => removeImage(index)}
+                    className="absolute -top-1 -right-1 w-3 h-3 p-0 rounded-full"
+                  >
+                    <X className="h-1.5 w-1.5" />
+                  </Button>
+                </div>
+              ))}
+              {capturedImages.length > 2 && (
+                <div className="w-8 h-8 rounded border bg-muted flex items-center justify-center text-xs">
+                  +{capturedImages.length - 2}
+                </div>
+              )}
+            </div>
+            
+            {/* Add more button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Button
                   type="button"
-                  variant="destructive"
+                  variant="outline"
                   size="sm"
-                  onClick={() => removeImage(index)}
-                  className="absolute -top-1 -right-1 w-5 h-5 p-0 rounded-full"
+                  onClick={selectFromGallery}
+                  disabled={disabled || isCapturing}
                 >
-                  <X className="h-2 w-2" />
+                  <ImageIcon className="h-4 w-4" />
                 </Button>
-              </div>
-            ))}
-          </div>
-          
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={captureFromCamera}
-              disabled={disabled || isCapturing}
-              className="text-xs px-2 py-1"
-            >
-              + Flere bilder
-            </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Legg til flere bilder</p>
+              </TooltipContent>
+            </Tooltip>
             
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onClick={handleSendImages}
-              disabled={disabled}
-              className="text-xs px-3 py-1"
-            >
-              Send {capturedImages.length} bilde{capturedImages.length > 1 ? 'r' : ''}
-            </Button>
+            {/* Send button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={handleSendImages}
+                  disabled={disabled}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Send {capturedImages.length} bilde{capturedImages.length > 1 ? 'r' : ''}</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground text-center">
-            Velg flere bilder for bedre AI-analyse
-          </p>
-          
-          <Button
-            type="button"
-            variant="default"
-            size="sm"
-            onClick={selectFromGallery}
-            disabled={disabled || isCapturing}
-            className="w-full"
-          >
-            <ImageIcon className="h-4 w-4 mr-2" />
-            Velg flere fra bibliotek
-          </Button>
-          
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={captureFromCamera}
-            disabled={disabled || isCapturing}
-            className="w-full"
-          >
-            <Camera className="h-4 w-4 mr-2" />
-            Ta bilde med kamera
-          </Button>
-        </div>
-      )}
-      
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        onChange={handleFileSelect}
-        className="hidden"
-      />
-    </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            {/* Gallery button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={selectFromGallery}
+                  disabled={disabled || isCapturing}
+                >
+                  <ImageIcon className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Velg fra bibliotek</p>
+              </TooltipContent>
+            </Tooltip>
+            
+            {/* Camera button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={captureFromCamera}
+                  disabled={disabled || isCapturing}
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Ta bilde med kamera</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
+        
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+      </div>
+    </TooltipProvider>
   );
 };
 
