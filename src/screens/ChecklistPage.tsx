@@ -1,4 +1,4 @@
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getChecklistForCategory } from "@/services/checklist.service";
 import { useAuth } from '@/hooks/useAuth';
@@ -8,17 +8,20 @@ import { logItemCompletion } from "@/services/checklist.service";
 import { toast } from "sonner";
 import BookingChecklistActions from "@/components/checklist/BookingChecklistActions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle, Loader2, Calendar, User } from "lucide-react";
+import { CheckCircle, Loader2, Calendar, User, ArrowRight, PartyPopper } from "lucide-react";
 import Layout from "@/layout/Layout";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useBookings } from "@/hooks/useBookings";
 import { useMemo } from "react";
 
 export default function ChecklistPage() {
   const { category } = useParams<{ category: ChecklistCategory }>();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const bookingIdFromUrl = searchParams.get('booking');
   
   const { user } = useAuth();
@@ -65,6 +68,14 @@ export default function ChecklistPage() {
   const totalItems = areas?.reduce((acc, area) => acc + area.items.length, 0) || 0;
   const completedItems = areas?.reduce((acc, area) => acc + area.items.filter(item => item.isCompleted).length, 0) || 0;
   const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  const isCompleted = progress >= 100;
+
+  // Next step logic
+  const categoryOrder = ['før_ankomst', 'ankomst', 'opphold', 'avreise', 'årlig_vedlikehold'];
+  const currentIndex = categoryOrder.indexOf(category || '');
+  const nextCategory = currentIndex >= 0 && currentIndex < categoryOrder.length - 1 
+    ? categoryOrder[currentIndex + 1] 
+    : null;
 
   if (isLoading) {
     return (
@@ -124,6 +135,30 @@ export default function ChecklistPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Success Banner */}
+        {isCompleted && totalItems > 0 && (
+          <Alert className="mb-6 border-green-200 bg-green-50">
+            <PartyPopper className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">
+                  Gratulerer! Du har fullført alle oppgaver i "{pageTitle}".
+                </span>
+                {nextCategory && (
+                  <Button
+                    size="sm"
+                    onClick={() => navigate(`/checklist/${nextCategory}${selectedBooking ? `?booking=${selectedBooking.id}` : ''}`)}
+                    className="bg-green-600 hover:bg-green-700 text-white ml-4"
+                  >
+                    <ArrowRight className="h-4 w-4 mr-1" />
+                    Neste: {checklistCategories[nextCategory as ChecklistCategory]}
+                  </Button>
+                )}
+              </div>
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Booking Checklist Actions */}

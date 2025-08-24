@@ -89,18 +89,20 @@ export const BookingStatusCard: React.FC<BookingStatusCardProps> = ({
             {statusInfo.description}
           </div>
           
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Sjekkliste fremgang</span>
-              <span className="font-medium">{progress}% ({completedItems}/{totalItems})</span>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Sjekkliste fremgang</span>
+                <span className={`font-medium ${progress >= 100 ? 'text-green-600' : ''}`}>
+                  {progress >= 100 ? '✓ Alle sjekklister fullført' : `${progress}% (${completedItems}/${totalItems})`}
+                </span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all duration-300 ${progress >= 100 ? 'bg-green-600' : 'bg-primary'}`}
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-secondary rounded-full h-2">
-              <div
-                className="bg-primary h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>
