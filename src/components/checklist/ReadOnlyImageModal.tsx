@@ -101,7 +101,7 @@ export function ReadOnlyImageModal({ imageUrl, alt, isOpen, onClose }: ReadOnlyI
 
       {/* Image container */}
       <div 
-        className="relative max-w-full max-h-full overflow-hidden cursor-move"
+        className="relative max-w-full max-h-full overflow-hidden cursor-move flex items-center justify-center"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -110,7 +110,7 @@ export function ReadOnlyImageModal({ imageUrl, alt, isOpen, onClose }: ReadOnlyI
         <img
           src={imageUrl}
           alt={alt}
-          className="max-w-none transition-transform duration-200 ease-in-out"
+          className="max-w-full max-h-full object-contain transition-transform duration-200 ease-in-out"
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
             cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
