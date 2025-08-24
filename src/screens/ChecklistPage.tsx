@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getChecklistForCategory } from "@/services/checklist.service";
 import { useAuth } from '@/hooks/useAuth';
 import { ChecklistCategory, checklistCategories } from "@/models/checklist";
-import ChecklistItem from "@/components/checklist/ChecklistItem";
+import CompactChecklistItem from "@/components/checklist/CompactChecklistItem";
 import { logItemCompletion } from "@/services/checklist.service";
 import { toast } from "sonner";
 import BookingChecklistActions from "@/components/checklist/BookingChecklistActions";
@@ -187,7 +187,7 @@ export default function ChecklistPage() {
                 <AccordionContent className="pt-0">
                   <div className="divide-y divide-gray-100 border-t border-gray-100">
                      {area.items.map((item) => (
-                       <ChecklistItem
+                       <CompactChecklistItem
                          key={item.id}
                          id={item.id}
                          text={item.text}
