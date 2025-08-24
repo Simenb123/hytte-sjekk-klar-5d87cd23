@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import ChecklistItem from './ChecklistItem';
+import CompactChecklistItem from './CompactChecklistItem';
 
 interface AreaChecklistItemProps {
   item: {
@@ -26,7 +26,7 @@ const AreaChecklistItem: React.FC<AreaChecklistItemProps> = ({ item, onToggle, c
   };
   
   return (
-    <ChecklistItem
+    <CompactChecklistItem
       id={item.id}
       text={item.text}
       isCompleted={item.isCompleted}

@@ -24,7 +24,7 @@ const AreaChecklistContainer: React.FC<AreaChecklistContainerProps> = ({ items, 
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+    <div className="bg-card rounded-xl border border-border overflow-hidden mb-6">
       {items.map((item) => (
         <AreaChecklistItem
           key={item.id}
