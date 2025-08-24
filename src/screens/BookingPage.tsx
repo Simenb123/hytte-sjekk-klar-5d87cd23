@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BookingFamilyMembers from '@/components/booking/BookingFamilyMembers';
 import BookingListItem from '@/components/booking/BookingListItem';
+import { BookingSections } from '@/components/booking/BookingSections';
 import { CalendarSection } from '@/components/calendar/CalendarSection';
 import { GoogleCalendarSection } from '@/components/calendar/GoogleCalendarSection';
 import { GoogleCalendarConnectView } from '@/components/calendar/GoogleCalendarConnectView';
@@ -344,63 +345,14 @@ const BookingPage = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4">
-                {bookings.map((booking) => {
-                  const status = getBookingStatus(booking.from, booking.to);
-                  const checklistCategory = getChecklistCategory(booking.from, booking.to);
-                  return (
-                    <Card key={booking.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="text-lg">{booking.title}</CardTitle>
-                            {booking.description && (
-                              <CardDescription className="mt-1">
-                                {booking.description}
-                              </CardDescription>
-                            )}
-                          </div>
-                          {getStatusBadge(status)}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                          <div className="flex items-center gap-2">
-                            <CalendarIcon className="h-4 w-4" />
-                            <span>
-                              {formatDate(booking.from)} - {formatDate(booking.to)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
-                            <span>Hytta</span>
-                          </div>
-                        </div>
-                        <BookingFamilyMembers familyMembers={booking.familyMembers || []} />
-                        <BookingProgress bookingId={booking.id} category={checklistCategory} />
-                        <div className="mt-3 flex gap-2 flex-wrap">
-                          <Link to={`/checklist/${getChecklistCategory(booking.from, booking.to)}`} className="text-sm text-blue-600 underline">
-                            Gå til sjekkliste
-                          </Link>
-                          {status === 'completed' && (
-                            <Link to="/hyttebok" className="text-sm text-purple-600 underline">
-                              Skriv i hytteboka
-                            </Link>
-                          )}
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleEditBooking(booking)}
-                            className="ml-auto"
-                          >
-                            Rediger
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+              <BookingSections
+                bookings={bookings}
+                onEditBooking={handleEditBooking}
+                formatDate={formatDate}
+                getBookingStatus={getBookingStatus}
+                getChecklistCategory={getChecklistCategory}
+                getStatusBadge={getStatusBadge}
+              />
             )}
           </TabsContent>
 
@@ -427,16 +379,16 @@ const BookingPage = () => {
               ) : bookings.length === 0 ? (
                 <p className="text-center py-4 text-gray-500">Ingen bookinger funnet</p>
               ) : (
-                <div>
-                  {bookings.map(booking => (
-                    <BookingListItem
-                      key={booking.id}
-                      booking={booking}
-                      onEdit={handleEditBooking}
-                      onDelete={deleteBooking}
-                    />
-                  ))}
-                </div>
+                <BookingSections
+                  bookings={bookings}
+                  onEditBooking={handleEditBooking}
+                  onDeleteBooking={deleteBooking}
+                  showActions={false}
+                  formatDate={formatDate}
+                  getBookingStatus={getBookingStatus}
+                  getChecklistCategory={getChecklistCategory}
+                  getStatusBadge={getStatusBadge}
+                />
               )}
             </div>
           </TabsContent>
