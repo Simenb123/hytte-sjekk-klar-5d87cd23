@@ -142,7 +142,7 @@ export default function ChecklistPage() {
           <Alert className="mb-6 border-green-200 bg-green-50">
             <PartyPopper className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <span className="font-medium">
                   Gratulerer! Du har fullført alle oppgaver i "{pageTitle}".
                 </span>
@@ -150,10 +150,13 @@ export default function ChecklistPage() {
                   <Button
                     size="sm"
                     onClick={() => navigate(`/checklist/${nextCategory}${selectedBooking ? `?booking=${selectedBooking.id}` : ''}`)}
-                    className="bg-green-600 hover:bg-green-700 text-white ml-4"
+                    className="bg-green-600 hover:bg-green-700 text-white flex-shrink-0 w-full sm:w-auto"
                   >
-                    <ArrowRight className="h-4 w-4 mr-1" />
-                    Neste: {checklistCategories[nextCategory as ChecklistCategory]}
+                    <ArrowRight className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span className="truncate">
+                      <span className="hidden sm:inline">Fortsett: </span>
+                      {checklistCategories[nextCategory as ChecklistCategory]}
+                    </span>
                   </Button>
                 )}
               </div>
