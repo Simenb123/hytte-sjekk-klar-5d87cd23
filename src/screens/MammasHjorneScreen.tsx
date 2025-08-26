@@ -18,6 +18,7 @@ import { WeatherForecastScroll } from '@/components/mammas/WeatherForecastScroll
 import { DayForecastScroll } from '@/components/mammas/DayForecastScroll';
 import { useAdaptivePolling } from '@/hooks/useAdaptivePolling';
 import { groupEventsByDate } from '@/utils/eventGrouping';
+import { formatTimeUntilEvent } from '@/utils/timeUntilEvent';
 import { clearGoogleCalendarCache, debugCalendarFilters, logCurrentSettings } from '@/utils/debugGoogleCalendar';
 
 // ---------- Types ----------
@@ -839,7 +840,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               {/* I dag */}
               {grouped.evToday.length > 0 && (
                 <>
-                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-1 font-semibold">I dag</h3>
+                  <h3 className="text-lg md:text-xl font-bold text-green-300 bg-green-900/50 px-3 py-2 rounded-lg inline-block border border-green-500/30 mb-2 mt-1">I dag</h3>
                   {grouped.evToday.map((ev) => <EventRow key={ev.id} ev={ev} />)}
                 </>
               )}
@@ -852,14 +853,16 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                 </>
               )}
 
-              {/* Kommende */}
-              {(grouped.evThisWeek.length > 0 || grouped.evNextWeek.length > 0) && (
-                <>
-                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-6 font-semibold">Kommende</h3>
-                  {grouped.evThisWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
-                  {grouped.evNextWeek.slice(0, 3).map((ev) => <EventRow key={ev.id} ev={ev} />)}
-                </>
-              )}
+              {/* Neste hendelse tidsangivelse */}
+              {(() => {
+                const nextEvent = grouped.evThisWeek[0] || grouped.evNextWeek[0];
+                const timeUntil = nextEvent ? formatTimeUntilEvent(nextEvent.start, nextEvent.end, now) : null;
+                return timeUntil && (
+                  <div className="text-gray-300 text-lg font-medium mt-6">
+                    🕒 {timeUntil}
+                  </div>
+                );
+              })()}
               </div>
             </SwipeRefresh>
           </div>

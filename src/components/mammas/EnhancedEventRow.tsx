@@ -72,12 +72,8 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate }) =
         <div className="text-gray-200 text-lg leading-tight font-medium">
           {formatDateTime()}
         </div>
-        {timeUntil && (
-          <div className={`text-xl leading-tight font-bold ${
-            timeUntil === "Pågår nå" 
-              ? "text-green-300 bg-green-900/50 px-3 py-2 rounded-lg inline-block w-fit border border-green-500/30" 
-              : "text-gray-300"
-          }`}>
+        {timeUntil && timeUntil !== "Pågår nå" && (
+          <div className="text-gray-300 text-xl leading-tight font-bold">
             🕒 {timeUntil}
           </div>
         )}
