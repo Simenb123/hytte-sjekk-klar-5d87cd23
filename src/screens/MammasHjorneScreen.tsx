@@ -446,7 +446,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
   const [forceNight, setForceNight] = useState(false);
   const [showFT, setShowFT] = useState(showFaceTime);
-  const [showWeatherForecast, setShowWeatherForecast] = useState(true);
+  const [showWeatherForecast, setShowWeatherForecast] = useState(false);
 
   // pixel shift (1–2 px per time)
   const [shift, setShift] = useState({ x: 0, y: 0 });
