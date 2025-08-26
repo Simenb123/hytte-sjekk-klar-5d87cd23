@@ -446,6 +446,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
   const [forceNight, setForceNight] = useState(false);
   const [showFT, setShowFT] = useState(showFaceTime);
+  const [showWeatherForecast, setShowWeatherForecast] = useState(true);
 
   // pixel shift (1–2 px per time)
   const [shift, setShift] = useState({ x: 0, y: 0 });
@@ -485,14 +486,16 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   useEffect(() => {
     (async () => {
       try {
-        const [e, w, u] = await Promise.all([
+        const [e, w, u, showWeather] = await Promise.all([
           storage.getItem(STORAGE_EVENTS),
           storage.getItem(STORAGE_WEATHER),
           storage.getItem(STORAGE_UPDATED_AT),
+          storage.getItem('mh_show_weather_v1'),
         ]);
         if (e) setEvents(JSON.parse(e));
         if (w) setWeather(JSON.parse(w));
         if (u) setLastUpdated(u);
+        if (showWeather !== null) setShowWeatherForecast(showWeather === 'true');
       } catch { /* empty */ }
     })();
   }, []);
@@ -745,92 +748,94 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         <div className="flex-1 flex flex-col portrait:flex-col landscape:flex-row 
                         lg:flex-row gap-4 lg:gap-6 mt-2 md:mt-3">
           
-          {/* Vær - komprimert størrelse */}
-          <div className={`flex-1 landscape:flex-[0.9] bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-3 md:p-4 min-h-[240px] landscape:min-h-[240px] backdrop-blur-sm`}>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 gap-2 sm:gap-0">
-              <h2 className="text-xl md:text-2xl text-white font-bold tracking-wide">Været</h2>
-              <LocationDropdown 
-                locations={weatherLocations}
-                selectedLocation={selectedLocation}
-                onLocationChange={handleLocationChange}
-              />
-            </div>
-            <div className="text-blue-200 text-sm md:text-base mb-3 font-medium">{weather?.locationName || selectedLocation.name}</div>
-            
-            {/* Current weather card - mer komprimert */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 md:p-3 mb-2 md:mb-3 border border-white/20 shadow-lg">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3 sm:gap-0">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                  <div className="text-4xl md:text-6xl drop-shadow-lg text-center sm:text-left">
-                    {symbolToEmoji(weather?.now.symbol ?? 'clearsky')}
-                  </div>
-                  <div className="text-center sm:text-left">
-                    <div className="text-3xl md:text-4xl text-white font-bold leading-none mb-1">
-                      {Math.round(weather?.now.tempC ?? 18)}°
+          {/* Vær - komprimert størrelse - kun vis hvis aktivert */}
+          {showWeatherForecast && (
+            <div className={`flex-1 landscape:flex-[0.9] bg-gradient-to-br ${getWeatherGradientClass(weather?.now.symbol ?? 'clearsky', isNight(now))} border border-blue-500/20 rounded-2xl p-3 md:p-4 min-h-[240px] landscape:min-h-[240px] backdrop-blur-sm`}>
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 gap-2 sm:gap-0">
+                <h2 className="text-xl md:text-2xl text-white font-bold tracking-wide">Været</h2>
+                <LocationDropdown 
+                  locations={weatherLocations}
+                  selectedLocation={selectedLocation}
+                  onLocationChange={handleLocationChange}
+                />
+              </div>
+              <div className="text-blue-200 text-sm md:text-base mb-3 font-medium">{weather?.locationName || selectedLocation.name}</div>
+              
+              {/* Current weather card - mer komprimert */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 md:p-3 mb-2 md:mb-3 border border-white/20 shadow-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3 sm:gap-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                    <div className="text-4xl md:text-6xl drop-shadow-lg text-center sm:text-left">
+                      {symbolToEmoji(weather?.now.symbol ?? 'clearsky')}
                     </div>
-                    <div className="text-blue-200 text-sm md:text-base mb-1">Nå</div>
-                    <div className="text-blue-200 text-xs">
-                      Føles som {Math.round((weather?.now.tempC ?? 18) + (Math.random() * 3 - 1.5))}°
+                    <div className="text-center sm:text-left">
+                      <div className="text-3xl md:text-4xl text-white font-bold leading-none mb-1">
+                        {Math.round(weather?.now.tempC ?? 18)}°
+                      </div>
+                      <div className="text-blue-200 text-sm md:text-base mb-1">Nå</div>
+                      <div className="text-blue-200 text-xs">
+                        Føles som {Math.round((weather?.now.tempC ?? 18) + (Math.random() * 3 - 1.5))}°
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center sm:text-right">
+                    <div className="text-blue-200 text-xs mb-1">Vind</div>
+                    <div className="text-white text-base md:text-lg font-semibold mb-2">
+                      {typeof weather?.now.windMs === 'number' ? weather.now.windMs.toFixed(1) : '2.1'} m/s
+                    </div>
+                    <div className="text-blue-200 text-xs mb-1">Fuktighet</div>
+                    <div className="text-white text-sm md:text-base font-semibold">
+                      {Math.round(60 + Math.random() * 30)}%
                     </div>
                   </div>
                 </div>
-                <div className="text-center sm:text-right">
-                  <div className="text-blue-200 text-xs mb-1">Vind</div>
-                  <div className="text-white text-base md:text-lg font-semibold mb-2">
-                    {typeof weather?.now.windMs === 'number' ? weather.now.windMs.toFixed(1) : '2.1'} m/s
+                
+                {/* Weather details grid - mindre padding */}
+                <div className="grid grid-cols-3 gap-1">
+                  <div className="bg-black/10 rounded-lg p-1 text-center">
+                    <div className="text-blue-200 text-xs mb-0.5">Lufttrykk</div>
+                    <div className="text-white text-xs font-semibold">
+                      {Math.round(1013 + Math.random() * 20)} hPa
+                    </div>
                   </div>
-                  <div className="text-blue-200 text-xs mb-1">Fuktighet</div>
-                  <div className="text-white text-sm md:text-base font-semibold">
-                    {Math.round(60 + Math.random() * 30)}%
+                  <div className="bg-black/10 rounded-lg p-1 text-center">
+                    <div className="text-blue-200 text-xs mb-0.5">UV-indeks</div>
+                    <div className="text-white text-xs font-semibold">
+                      {isNight(now) ? 0 : Math.round(Math.random() * 8)}
+                    </div>
+                  </div>
+                  <div className="bg-black/10 rounded-lg p-1 text-center">
+                    <div className="text-blue-200 text-xs mb-0.5">Sikt</div>
+                    <div className="text-white text-xs font-semibold">
+                      {Math.round(8 + Math.random() * 7)} km
+                    </div>
                   </div>
                 </div>
               </div>
               
-              {/* Weather details grid - mindre padding */}
-              <div className="grid grid-cols-3 gap-1">
-                <div className="bg-black/10 rounded-lg p-1 text-center">
-                  <div className="text-blue-200 text-xs mb-0.5">Lufttrykk</div>
-                  <div className="text-white text-xs font-semibold">
-                    {Math.round(1013 + Math.random() * 20)} hPa
-                  </div>
-                </div>
-                <div className="bg-black/10 rounded-lg p-1 text-center">
-                  <div className="text-blue-200 text-xs mb-0.5">UV-indeks</div>
-                  <div className="text-white text-xs font-semibold">
-                    {isNight(now) ? 0 : Math.round(Math.random() * 8)}
-                  </div>
-                </div>
-                <div className="bg-black/10 rounded-lg p-1 text-center">
-                  <div className="text-blue-200 text-xs mb-0.5">Sikt</div>
-                  <div className="text-white text-xs font-semibold">
-                    {Math.round(8 + Math.random() * 7)} km
-                  </div>
-                </div>
-              </div>
+              {/* Enhanced hourly forecast with scrolling */}
+              <WeatherForecastScroll
+                hourlyData={weather?.hourly ?? makeMockWeather().hourly}
+                symbolToEmoji={symbolToEmoji}
+              />
+
+              {/* Daily forecast with scrolling */}
+              <DayForecastScroll
+                dailyData={weather?.forecast ?? Array.from({length: 14}, (_, i) => ({
+                  date: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                  minTemp: Math.round(Math.random() * 10 + 5),
+                  maxTemp: Math.round(Math.random() * 10 + 15),
+                  symbol: ['clearsky_day', 'cloudy', 'partlycloudy_day', 'rain', 'snow'][Math.floor(Math.random() * 5)]
+                }))}
+                symbolToEmoji={symbolToEmoji}
+                defaultDays={6}
+                maxDays={14}
+              />
             </div>
-            
-            {/* Enhanced hourly forecast with scrolling */}
-            <WeatherForecastScroll
-              hourlyData={weather?.hourly ?? makeMockWeather().hourly}
-              symbolToEmoji={symbolToEmoji}
-            />
+          )}
 
-            {/* Daily forecast with scrolling */}
-            <DayForecastScroll
-              dailyData={weather?.forecast ?? Array.from({length: 14}, (_, i) => ({
-                date: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                minTemp: Math.round(Math.random() * 10 + 5),
-                maxTemp: Math.round(Math.random() * 10 + 15),
-                symbol: ['clearsky_day', 'cloudy', 'partlycloudy_day', 'rain', 'snow'][Math.floor(Math.random() * 5)]
-              }))}
-              symbolToEmoji={symbolToEmoji}
-              defaultDays={6}
-              maxDays={14}
-            />
-          </div>
-
-          {/* Kalender - mer plass for avtaler */}
-          <div className="flex-1 landscape:flex-[1.1] bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm flex flex-col max-h-[calc(100vh-240px)]">
+          {/* Kalender - mer plass for avtaler - tar full bredde hvis værvarsel er skjult */}
+          <div className={`flex-1 ${showWeatherForecast ? 'landscape:flex-[1.1]' : ''} bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm flex flex-col max-h-[calc(100vh-240px)]`}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
               <h2 className="text-2xl md:text-3xl text-white font-bold leading-8">Neste avtaler</h2>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
@@ -989,6 +994,17 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             <div className="flex items-center justify-between py-3 min-h-[56px]">
               <span className="text-gray-300 text-lg flex-1">Nattmodus nå</span>
               <Toggle val={forceNight} onChange={setForceNight} />
+            </div>
+            
+            <div className="flex items-center justify-between py-3 min-h-[56px]">
+              <span className="text-gray-300 text-lg flex-1">Vis værvarsel</span>
+              <Toggle 
+                val={showWeatherForecast} 
+                onChange={(val) => {
+                  setShowWeatherForecast(val);
+                  storage.multiSet([['mh_show_weather_v1', val.toString()]]);
+                }} 
+              />
             </div>
             
             <div className="flex items-center justify-between py-3 min-h-[56px]">
