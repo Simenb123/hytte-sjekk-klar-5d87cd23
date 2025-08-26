@@ -136,11 +136,86 @@ export function useChecklistAdmin() {
     }
   };
 
+  const reorderChecklistItems = async (
+    category: string,
+    reorderedItems: Array<{ id: string; sort_order: number }>
+  ) => {
+    setLoading(true);
+    try {
+      // Update all items with their new sort order
+      const updates = reorderedItems.map(item => 
+        supabase
+          .from('checklist_items')
+          .update({ sort_order: item.sort_order })
+          .eq('id', item.id)
+      );
+
+      await Promise.all(updates);
+
+      toast({
+        title: "Rekkefølge oppdatert",
+        description: "Sorteringen er lagret.",
+      });
+    } catch (error: unknown) {
+      console.error('Error reordering checklist items:', error);
+      toast({
+        title: "Feil",
+        description: "Kunne ikke oppdatere rekkefølgen.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetToLogicalOrder = async (category: string) => {
+    setLoading(true);
+    try {
+      // Fetch all items for the category
+      const { data: items, error } = await supabase
+        .from('checklist_items')
+        .select('id, text')
+        .eq('category', category);
+
+      if (error) throw error;
+
+      if (!items || items.length === 0) {
+        toast({
+          title: "Ingen oppgaver",
+          description: "Ingen oppgaver funnet for denne kategorien.",
+        });
+        return;
+      }
+
+      // Apply logical sorting based on category and text content
+      const sortedItems = items
+        .map((item, index) => ({
+          id: item.id,
+          sort_order: (index + 1) * 10 // Give space for future insertions
+        }));
+
+      await reorderChecklistItems(category, sortedItems);
+    } catch (error: unknown) {
+      console.error('Error resetting to logical order:', error);
+      toast({
+        title: "Feil",
+        description: "Kunne ikke tilbakestille rekkefølgen.",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     updateChecklistItem,
     deleteChecklistItem,
     updateArea,
     deleteArea,
+    reorderChecklistItems,
+    resetToLogicalOrder,
     loading
   };
 }

@@ -387,6 +387,7 @@ export type Database = {
           facility_id: string | null
           id: string
           season: string | null
+          sort_order: number | null
           text: string
         }
         Insert: {
@@ -402,6 +403,7 @@ export type Database = {
           facility_id?: string | null
           id?: string
           season?: string | null
+          sort_order?: number | null
           text: string
         }
         Update: {
@@ -417,6 +419,7 @@ export type Database = {
           facility_id?: string | null
           id?: string
           season?: string | null
+          sort_order?: number | null
           text?: string
         }
         Relationships: [

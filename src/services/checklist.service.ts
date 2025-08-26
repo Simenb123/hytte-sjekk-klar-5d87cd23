@@ -34,7 +34,7 @@ export const fetchChecklistItems = async (
     query = query.in('season', [season, 'all']);
   }
   
-  const { data, error } = await query.order('created_at');
+  const { data, error } = await query.order('sort_order', { ascending: true }).order('created_at');
 
   if (error) {
     console.error(`[fetchChecklistItems] Error fetching ${category} items:`, error);
