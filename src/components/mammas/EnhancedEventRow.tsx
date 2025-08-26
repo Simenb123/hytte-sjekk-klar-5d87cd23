@@ -64,25 +64,25 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate }) =
   };
 
   return (
-    <div className="py-8 border-b border-gray-600/30 last:border-b-0">
-      <div className="flex flex-col gap-4">
-        <div className="text-white font-bold text-3xl leading-relaxed">
+    <div className="py-2 border-b border-gray-600/30 last:border-b-0">
+      <div className="flex flex-col gap-2">
+        <div className="text-white font-bold text-xl leading-tight">
           {ev.title}
         </div>
-        <div className="text-gray-200 text-2xl leading-relaxed font-medium">
+        <div className="text-gray-200 text-lg leading-tight font-medium">
           {formatDateTime()}
         </div>
         {timeUntil && (
-          <div className={`text-2xl leading-relaxed font-bold ${
+          <div className={`text-xl leading-tight font-bold ${
             timeUntil === "Pågår nå" 
-              ? "text-green-300 bg-green-900/50 px-4 py-3 rounded-xl inline-block w-fit border-2 border-green-500/30" 
+              ? "text-green-300 bg-green-900/50 px-3 py-2 rounded-lg inline-block w-fit border border-green-500/30" 
               : "text-gray-300"
           }`}>
             🕒 {timeUntil}
           </div>
         )}
         {ev.location && (
-          <div className="text-gray-300 text-xl leading-relaxed">
+          <div className="text-gray-300 text-lg leading-tight">
             📍 {ev.location}
           </div>
         )}

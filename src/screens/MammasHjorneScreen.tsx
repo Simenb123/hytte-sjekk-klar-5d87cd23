@@ -704,14 +704,12 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             
             {/* Dato og tid - større skrift for hovedoverskrift */}
             <div className="flex-1 order-2 portrait:order-1 landscape:order-1 md:order-1">
-              <div className="text-3xl portrait:text-4xl landscape:text-4xl 
-                              md:text-5xl lg:text-6xl text-gray-200 font-bold 
-                              leading-tight mb-1">
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold 
+                              leading-tight mb-1 text-green-300 bg-green-900/50 px-4 py-2 rounded-xl inline-block border border-green-500/30">
                 I dag er det{' '}
                 {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
               </div>
-              <div className="text-5xl portrait:text-6xl landscape:text-6xl 
-                              md:text-7xl lg:text-8xl text-white font-bold 
+              <div className="text-3xl md:text-4xl lg:text-5xl text-white font-bold 
                               tracking-wide leading-none mb-1">
                 Klokken er: {fmtTimeHM(now)}
               </div>
@@ -834,14 +832,14 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
           )}
 
           {/* Kalender - mer plass for avtaler - tar full bredde hvis værvarsel er skjult */}
-          <div className={`flex-1 ${showWeatherForecast ? 'landscape:flex-[1.1]' : ''} bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm flex flex-col max-h-[calc(100vh-240px)]`}>
+          <div className={`flex-1 ${showWeatherForecast ? 'landscape:flex-[1.1]' : ''} bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-3 md:p-4 min-h-[200px] landscape:min-h-[200px] backdrop-blur-sm flex flex-col max-h-[calc(100vh-180px)]`}>
             {/* Technical details moved to admin panel for cleaner interface */}
             <SwipeRefresh onRefresh={handleManualRefresh} disabled={isSyncing}>
               <div className="overflow-y-auto pb-4 flex-1">
               {/* I dag */}
               {grouped.evToday.length > 0 && (
                 <>
-                  <h3 className="text-2xl md:text-3xl text-gray-300 mb-2 mt-1 font-semibold">I dag</h3>
+                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-1 font-semibold">I dag</h3>
                   {grouped.evToday.map((ev) => <EventRow key={ev.id} ev={ev} />)}
                 </>
               )}
@@ -849,7 +847,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               {/* I morgen */}
               {grouped.evTomorrow.length > 0 && (
                 <>
-                  <h3 className="text-2xl md:text-3xl text-gray-300 mb-2 mt-3 font-semibold">I morgen</h3>
+                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">I morgen</h3>
                   {grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} />)}
                 </>
               )}
@@ -857,7 +855,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               {/* Kommende */}
               {(grouped.evThisWeek.length > 0 || grouped.evNextWeek.length > 0) && (
                 <>
-                  <h3 className="text-2xl md:text-3xl text-gray-300 mb-2 mt-6 font-semibold">Kommende</h3>
+                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-6 font-semibold">Kommende</h3>
                   {grouped.evThisWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
                   {grouped.evNextWeek.slice(0, 3).map((ev) => <EventRow key={ev.id} ev={ev} />)}
                 </>
