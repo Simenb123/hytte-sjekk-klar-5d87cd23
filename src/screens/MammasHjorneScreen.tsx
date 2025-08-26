@@ -730,15 +730,14 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             {/* Logo - mindre for landscape */}
             <div className="flex-shrink-0 order-1 portrait:order-2 landscape:order-2 
                             md:order-2 md:ml-6 portrait:self-center landscape:self-start">
-              <div className="flex items-center gap-2 px-2 py-1 bg-gray-800 rounded-xl landscape:scale-75">
-                <div className="w-16 h-16 landscape:w-12 landscape:h-12 rounded-full bg-amber-500 flex items-center justify-center overflow-hidden">
+              <div className="flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center overflow-hidden">
                   <img 
                     src="/lovable-uploads/3d8c6965-c80d-4939-82fe-1571dd5475fc.png" 
                     alt="Mamma profil ikon" 
-                    className="w-14 h-14 landscape:w-10 landscape:h-10 object-cover"
+                    className="w-10 h-10 object-cover"
                   />
                 </div>
-                <span className="text-xl landscape:text-lg font-bold text-white">Mamma's hjørne</span>
               </div>
             </div>
           </div>
@@ -836,49 +835,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
           {/* Kalender - mer plass for avtaler - tar full bredde hvis værvarsel er skjult */}
           <div className={`flex-1 ${showWeatherForecast ? 'landscape:flex-[1.1]' : ''} bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-4 md:p-6 min-h-[320px] landscape:min-h-[300px] backdrop-blur-sm flex flex-col max-h-[calc(100vh-240px)]`}>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3 sm:gap-0">
-              
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <SyncStatusIndicator
-                  isConnected={isGoogleConnected}
-                  isOnline={online}
-                  lastSyncTime={lastSyncTime}
-                  syncError={googleConnectionError}
-                  isLoading={isSyncing}
-                  className="text-xs"
-                />
-                {!isGoogleConnected && (
-                  <button
-                    onClick={onConnectGoogle}
-                    className="text-xs bg-blue-600/80 hover:bg-blue-600 text-white px-3 py-3 rounded-lg transition-colors min-h-[44px] w-full sm:w-auto"
-                  >
-                    Koble til Google
-                  </button>
-                )}
-                {isGoogleConnected && googleConnectionError && onReconnectGoogle && (
-                  <button
-                    onClick={onReconnectGoogle}
-                    className="text-xs bg-orange-600/80 hover:bg-orange-600 text-white px-3 py-3 rounded-lg transition-colors min-h-[44px] w-full sm:w-auto"
-                  >
-                    Koble på nytt
-                  </button>
-                )}
-              </div>
-            </div>
-            {googleConnectionError && (
-              <div className="text-orange-300 text-sm mb-3 bg-orange-900/20 p-2 rounded-lg">
-                Feil: {googleConnectionError}
-              </div>
-            )}
-            {isGoogleConnected && events.length === 0 && (
-              <div className="text-blue-300 text-sm mb-3 bg-blue-900/20 p-3 rounded-lg">
-                <div className="font-semibold mb-2">Ingen avtaler funnet</div>
-                <div className="text-xs">
-                  Hvis andre familiemedlemmer skal se avtalene, må kalenderen deles i Google Calendar. 
-                  Hver person må også koble sin egen Google-konto til appen.
-                </div>
-              </div>
-            )}
+            {/* Technical details moved to admin panel for cleaner interface */}
             <SwipeRefresh onRefresh={handleManualRefresh} disabled={isSyncing}>
               <div className="overflow-y-auto pb-4 flex-1">
               {/* I dag */}
@@ -897,19 +854,12 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                 </>
               )}
 
-              {/* Denne uken */}
-              {grouped.evThisWeek.length > 0 && (
+              {/* Kommende */}
+              {(grouped.evThisWeek.length > 0 || grouped.evNextWeek.length > 0) && (
                 <>
-                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">Denne uken</h3>
+                  <h3 className="text-2xl md:text-3xl text-gray-300 mb-2 mt-6 font-semibold">Kommende</h3>
                   {grouped.evThisWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
-                </>
-              )}
-
-              {/* Neste uke */}
-              {grouped.evNextWeek.length > 0 && (
-                <>
-                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">Neste uke</h3>
-                  {grouped.evNextWeek.map((ev) => <EventRow key={ev.id} ev={ev} />)}
+                  {grouped.evNextWeek.slice(0, 3).map((ev) => <EventRow key={ev.id} ev={ev} />)}
                 </>
               )}
               </div>
