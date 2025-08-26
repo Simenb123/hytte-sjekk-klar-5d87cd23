@@ -8,6 +8,7 @@ export type Event = {
   location?: string;
   attendees?: string[];
   allDay?: boolean;
+  isContinuing?: boolean; // Mark for continuing events
 };
 
 export type EventGroups = {
@@ -61,6 +62,19 @@ export const groupEventsByDate = (events: Event[]): EventGroups => {
     // Check if event starts within next week
     else if (isWithinDays(start, today, 14)) {
       evNextWeek.push(ev);
+    }
+  });
+
+  // Second pass: Add continuing events to tomorrow section
+  events.forEach((ev) => {
+    const start = parseISO(ev.start);
+    
+    // If event is active tomorrow but doesn't start tomorrow, add it as continuing
+    if (!isSameDay(start, tomorrow) && isEventOnDate(ev, tomorrow)) {
+      evTomorrow.push({
+        ...ev,
+        isContinuing: true
+      });
     }
   });
 

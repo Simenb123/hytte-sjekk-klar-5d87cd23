@@ -11,6 +11,7 @@ export type Event = {
   location?: string;
   attendees?: string[];
   allDay?: boolean;
+  isContinuing?: boolean; // Mark for continuing events
 };
 
 interface EventRowProps {
@@ -67,7 +68,7 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate }) =
     <div className="py-2 border-b border-gray-600/30 last:border-b-0">
       <div className="flex flex-col gap-2">
         <div className="text-white font-bold text-xl leading-tight">
-          {ev.title}
+          {ev.title}{ev.isContinuing ? ' (fortsetter)' : ''}
         </div>
         <div className="text-gray-200 text-lg leading-tight font-medium">
           {formatDateTime()}
