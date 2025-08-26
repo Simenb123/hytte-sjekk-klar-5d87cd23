@@ -47,21 +47,30 @@ export const groupEventsByDate = (events: Event[]): EventGroups => {
     const start = parseISO(ev.start);
     const end = parseISO(ev.end);
     
+    let addedToTodayOrTomorrow = false;
+    
     // Check if event is active today (including multi-day events)
     if (isEventOnDate(ev, today)) {
       evToday.push(ev);
+      addedToTodayOrTomorrow = true;
     }
+    
     // Check if event is active tomorrow (including multi-day events)
-    else if (isEventOnDate(ev, tomorrow)) {
+    if (isEventOnDate(ev, tomorrow)) {
       evTomorrow.push(ev);
+      addedToTodayOrTomorrow = true;
     }
-    // Check for events within this week (but not today/tomorrow)
-    else if (isWithinDays(start, today, 7)) {
-      evThisWeek.push(ev);
-    }
-    // Check for events within next week
-    else if (isWithinDays(start, today, 14)) {
-      evNextWeek.push(ev);
+    
+    // Only add to week sections if not already added to today/tomorrow
+    if (!addedToTodayOrTomorrow) {
+      // Check for events within this week
+      if (isWithinDays(start, today, 7)) {
+        evThisWeek.push(ev);
+      }
+      // Check for events within next week
+      else if (isWithinDays(start, today, 14)) {
+        evNextWeek.push(ev);
+      }
     }
   });
 
