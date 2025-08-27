@@ -17,6 +17,7 @@ export type Event = {
 interface EventRowProps {
   ev: Event;
   currentDate?: Date;
+  hideTimingForTomorrow?: boolean;
 }
 
 const fmtTime = (date: Date): string => {
@@ -33,7 +34,7 @@ const isMultiDay = (startISO: string, endISO: string): boolean => {
   return !isSameDay(start, end);
 };
 
-export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate }) => {
+export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate, hideTimingForTomorrow = false }) => {
   const start = parseISO(ev.start);
   const end = parseISO(ev.end);
   const today = currentDate || new Date();
@@ -41,6 +42,10 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate }) =
   const multiDay = isMultiDay(ev.start, ev.end);
   const showDate = !isSameDay(start, today);
   const timeUntil = formatTimeUntilEvent(ev.start, ev.end, today);
+  
+  // Hide timing for tomorrow events when it's shown in header (except for continuing events)
+  const shouldShowTiming = timeUntil && timeUntil !== "Pågår nå" && 
+    (!hideTimingForTomorrow || ev.isContinuing || !timeUntil.includes('Om 1 dag'));
 
   const formatDateTime = () => {
     if (ev.allDay) {
@@ -73,7 +78,7 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate }) =
         <div className="text-gray-200 text-lg leading-tight font-medium">
           {formatDateTime()}
         </div>
-        {timeUntil && timeUntil !== "Pågår nå" && (
+        {shouldShowTiming && (
           <div className="text-gray-300 text-xl leading-tight font-bold">
             🕒 {timeUntil}
           </div>

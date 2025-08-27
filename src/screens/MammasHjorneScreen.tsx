@@ -352,8 +352,8 @@ function LocationDropdown({
 }
 
 // Legacy EventRow - keeping for compatibility but using EnhancedEventRow in main render
-function EventRow({ ev }: { ev: Event }) {
-  return <EnhancedEventRow ev={ev} />;
+function EventRow({ ev, hideTimingForTomorrow }: { ev: Event; hideTimingForTomorrow?: boolean }) {
+  return <EnhancedEventRow ev={ev} hideTimingForTomorrow={hideTimingForTomorrow} />;
 }
 
 function Toggle({ val, onChange }: { val: boolean; onChange: (v: boolean) => void }) {
@@ -848,8 +848,20 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               {/* I morgen */}
               {grouped.evTomorrow.length > 0 && (
                 <>
-                  <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">I morgen</h3>
-                  {grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} />)}
+                  {(() => {
+                    const firstTomorrowEvent = grouped.evTomorrow[0];
+                    const timeUntilTomorrow = firstTomorrowEvent && !firstTomorrowEvent.isContinuing 
+                      ? formatTimeUntilEvent(firstTomorrowEvent.start, firstTomorrowEvent.end, now) 
+                      : null;
+                    const headerText = timeUntilTomorrow 
+                      ? `I morgen - ${timeUntilTomorrow}`
+                      : 'I morgen';
+                    
+                    return (
+                      <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">{headerText}</h3>
+                    );
+                  })()}
+                  {grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} hideTimingForTomorrow={true} />)}
                 </>
               )}
 
