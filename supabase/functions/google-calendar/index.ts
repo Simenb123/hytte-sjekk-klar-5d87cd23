@@ -355,8 +355,7 @@ serve(async (req) => {
           let result = null;
           
           if (requestData.action === 'list_events') {
-            const filters = requestData.filters;
-            const events = await fetchEvents(accessToken, filters);
+            const events = await fetchEvents(accessToken);
             result = { 
               success: true,
               events: events
@@ -411,8 +410,7 @@ serve(async (req) => {
               // Retry the operation with refreshed token
               let retryResult = null;
               if (requestData.action === 'list_events') {
-                const filters = requestData.filters;
-                const events = await fetchEvents(newTokens.access_token, filters);
+                const events = await fetchEvents(newTokens.access_token);
                 retryResult = { 
                   success: true,
                   events: events,
