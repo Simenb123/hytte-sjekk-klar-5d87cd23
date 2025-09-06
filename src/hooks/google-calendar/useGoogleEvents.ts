@@ -2,6 +2,7 @@
 import { useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { fetchCalendarEvents, fetchCalendarList } from '@/services/googleCalendar.service';
+import { googleCalendarCache } from '@/utils/googleCalendarCache';
 import type { GoogleOAuthTokens, GoogleCalendarState } from '@/types/googleCalendar.types';
 
 // Rate limiting and caching utilities
@@ -26,8 +27,36 @@ export function useGoogleEvents(
     
     if (!tokens || !tokens.access_token) {
       console.warn('No valid tokens available for fetching events');
+      
+      // Try to use cached events as fallback
+      const cachedEvents = googleCalendarCache.getEvents();
+      if (cachedEvents && cachedEvents.length > 0) {
+        console.log('🔄 Using cached events as fallback (no tokens)');
+        setState(prev => ({ 
+          ...prev, 
+          googleEvents: cachedEvents,
+          fetchError: 'Offline mode: Using cached events. Reconnect for latest data.' 
+        }));
+        return;
+      }
+      
       setState(prev => ({ ...prev, fetchError: 'Ingen gyldige tokens tilgjengelig' }));
       return;
+    }
+
+    // Check cache first (unless forcing refresh)
+    if (!forceRefresh) {
+      const cachedEvents = googleCalendarCache.getEvents();
+      if (cachedEvents && googleCalendarCache.isValid()) {
+        const cacheAge = googleCalendarCache.getCacheAge();
+        console.log(`📦 Using cached Google events (${cacheAge} minutes old)`);
+        setState(prev => ({ 
+          ...prev, 
+          googleEvents: cachedEvents,
+          fetchError: null
+        }));
+        return;
+      }
     }
 
     // Prevent concurrent calls
@@ -41,14 +70,27 @@ export function useGoogleEvents(
     const timeSinceLastFetch = now - lastEventsFetchRef.current;
     if (timeSinceLastFetch < RATE_LIMIT_DELAY && !forceRefresh) {
       console.log(`Rate limited: ${RATE_LIMIT_DELAY - timeSinceLastFetch}ms remaining`);
+      
+      // Use cached events during rate limit
+      const cachedEvents = googleCalendarCache.getEvents();
+      if (cachedEvents && cachedEvents.length > 0) {
+        console.log('📦 Using cached events during rate limit');
+        const waitTime = Math.ceil((RATE_LIMIT_DELAY - timeSinceLastFetch) / 1000);
+        setState(prev => ({ 
+          ...prev, 
+          googleEvents: cachedEvents,
+          fetchError: `Rate limited (${waitTime}s). Showing cached events.` 
+        }));
+        return;
+      }
       return;
     }
 
-    // Check cache first
+    // Check memory cache
     if (!forceRefresh && eventsCacheRef.current) {
       const cacheAge = now - eventsCacheRef.current.timestamp;
       if (cacheAge < CACHE_DURATION) {
-        console.log('Using cached events data');
+        console.log('Using memory cached events data');
         setState(prev => ({ ...prev, googleEvents: eventsCacheRef.current?.data || [] }));
         return;
       }
@@ -69,8 +111,9 @@ export function useGoogleEvents(
         
         const events = await fetchCalendarEvents(tokens);
         
-        // Cache successful result
+        // Cache successful result in both memory and persistent storage
         eventsCacheRef.current = { data: events, timestamp: now };
+        googleCalendarCache.storeEvents(events);
         retryCountRef.current.events = 0;
         
         setState(prev => ({ ...prev, googleEvents: events }));
@@ -88,10 +131,34 @@ export function useGoogleEvents(
             const backoffDelay = INITIAL_BACKOFF * Math.pow(2, retryCount);
             console.log(`Rate limit hit, retrying in ${backoffDelay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
             
+            // Use cached events during retry wait
+            const cachedEvents = googleCalendarCache.getEvents();
+            if (cachedEvents && cachedEvents.length > 0) {
+              console.log('📦 Using cached events during rate limit retry');
+              setState(prev => ({ 
+                ...prev, 
+                googleEvents: cachedEvents,
+                fetchError: `Rate limited. Retrying in ${Math.ceil(backoffDelay / 1000)}s. Showing cached events.`
+              }));
+            }
+            
             await new Promise(resolve => setTimeout(resolve, backoffDelay));
             return executeWithRetry(retryCount + 1);
           } else {
             const errorMessage = 'Google Calendar API kvote overskredet. Prøv igjen om noen minutter.';
+            
+            // Use cached events as final fallback
+            const cachedEvents = googleCalendarCache.getEvents();
+            if (cachedEvents && cachedEvents.length > 0) {
+              console.log('📦 Using cached events due to quota exceeded');
+              setState(prev => ({ 
+                ...prev, 
+                googleEvents: cachedEvents,
+                fetchError: `${errorMessage} Showing cached events.`
+              }));
+              return;
+            }
+            
             toast.warning(errorMessage);
             setState(prev => ({ ...prev, fetchError: errorMessage }));
             return;
@@ -106,12 +173,36 @@ export function useGoogleEvents(
             err.message?.includes('requiresReauth') ||
             err.message?.includes('Authentication failed')) {
           console.log('Authentication error detected, disconnecting Google Calendar');
+          
+          // Use cached events even with auth error
+          const cachedEvents = googleCalendarCache.getEvents();
+          if (cachedEvents && cachedEvents.length > 0) {
+            console.log('📦 Using cached events due to auth error');
+            setState(prev => ({ 
+              ...prev, 
+              googleEvents: cachedEvents,
+              fetchError: 'Authentication failed. Showing cached events. Please reconnect.'
+            }));
+          }
+          
           disconnectGoogleCalendar();
           toast.error('Google Calendar-tilgangen er utløpt. Vennligst koble til på nytt.');
           return;
         }
 
-        // Handle other errors
+        // Handle other errors - use cache as fallback
+        const cachedEvents = googleCalendarCache.getEvents();
+        if (cachedEvents && cachedEvents.length > 0) {
+          console.log('📦 Using cached events due to error:', err.message);
+          setState(prev => ({ 
+            ...prev, 
+            googleEvents: cachedEvents,
+            fetchError: `Network error. Showing cached events. (${err.message})`
+          }));
+          return;
+        }
+
+        // Handle other errors normally if no cache
         if (!err.message?.includes('Edge Function') &&
             !err.message?.includes('Failed to fetch') &&
             !err.message?.includes('Kunne ikke koble til')) {
@@ -127,8 +218,18 @@ export function useGoogleEvents(
     try {
       await executeWithRetry();
     } catch (error) {
-      // Final error handling
+      // Final error handling with cache fallback
       console.error('Final error in fetchGoogleEvents:', error);
+      
+      const cachedEvents = googleCalendarCache.getEvents();
+      if (cachedEvents && cachedEvents.length > 0) {
+        console.log('📦 Using cached events as final fallback');
+        setState(prev => ({ 
+          ...prev, 
+          googleEvents: cachedEvents,
+          fetchError: 'Service unavailable. Showing cached events.'
+        }));
+      }
     } finally {
       isLoadingRef.current.events = false;
       setState(prev => ({ ...prev, isLoadingEvents: false }));
