@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { fetchEvents, fetchCalendars } from './calendar.ts';
 
 console.log("🚀 Google Calendar Edge Function starting up...");
 
@@ -98,81 +99,6 @@ const refreshAccessToken = async (refreshToken: string, clientId: string, client
   return tokens;
 };
 
-// Fetch Google Calendar events
-const fetchEvents = async (accessToken: string) => {
-  console.log('📅 Fetching calendar events');
-  
-  // First get list of calendars
-  const calendarsResponse = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  });
-
-  if (!calendarsResponse.ok) {
-    const errorText = await calendarsResponse.text();
-    console.error('Calendar API error when fetching calendars:', errorText);
-    throw new Error(`Failed to fetch calendars: ${errorText}`);
-  }
-
-  const calendarsData = await calendarsResponse.json();
-  const calendars = calendarsData.items || [];
-  console.log(`Found ${calendars.length} calendars`);
-
-  // Fetch events from all calendars
-  const now = new Date();
-  const oneMonthLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-  
-  const allEvents = [];
-  
-  for (const calendar of calendars) {
-    try {
-      const eventsResponse = await fetch(
-        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendar.id)}/events?` +
-        `timeMin=${now.toISOString()}&` +
-        `timeMax=${oneMonthLater.toISOString()}&` +
-        `singleEvents=true&` +
-        `orderBy=startTime&` +
-        `maxResults=50`,
-        {
-          headers: { 'Authorization': `Bearer ${accessToken}` }
-        }
-      );
-
-      if (eventsResponse.ok) {
-        const eventsData = await eventsResponse.json();
-        const events = (eventsData.items || []).map((event: any) => ({
-          ...event,
-          calendarSummary: calendar.summary,
-          calendarId: calendar.id
-        }));
-        allEvents.push(...events);
-      }
-    } catch (error) {
-      console.warn(`Failed to fetch events from calendar ${calendar.summary}:`, error);
-    }
-  }
-
-  console.log(`✅ Fetched ${allEvents.length} events total`);
-  return allEvents;
-};
-
-// Fetch Google Calendars
-const fetchCalendars = async (accessToken: string) => {
-  console.log('📋 Fetching calendar list');
-  
-  const response = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList', {
-    headers: { 'Authorization': `Bearer ${accessToken}` }
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Calendar API error when fetching calendars:', errorText);
-    throw new Error(`Failed to fetch calendars: ${errorText}`);
-  }
-
-  const data = await response.json();
-  console.log(`✅ Fetched ${data.items?.length || 0} calendars`);
-  return data.items || [];
-};
 
 serve(async (req) => {
   console.log(`\n🔵 === NEW REQUEST === ${new Date().toISOString()} ===`);
@@ -355,16 +281,17 @@ serve(async (req) => {
           let result = null;
           
           if (requestData.action === 'list_events') {
-            const events = await fetchEvents(accessToken);
+            const filters = requestData.filters;
+            const eventsData = await fetchEvents(accessToken, filters);
             result = { 
               success: true,
-              events: events
+              events: eventsData.items || eventsData
             };
           } else if (requestData.action === 'get_calendars') {
-            const calendars = await fetchCalendars(accessToken);
+            const calendarsData = await fetchCalendars(accessToken);
             result = { 
               success: true,
-              calendars: calendars
+              calendars: calendarsData.items || calendarsData
             };
           } else {
             return new Response(JSON.stringify({ 
@@ -410,17 +337,18 @@ serve(async (req) => {
               // Retry the operation with refreshed token
               let retryResult = null;
               if (requestData.action === 'list_events') {
-                const events = await fetchEvents(newTokens.access_token);
+                const filters = requestData.filters;
+                const eventsData = await fetchEvents(newTokens.access_token, filters);
                 retryResult = { 
                   success: true,
-                  events: events,
+                  events: eventsData.items || eventsData,
                   refreshedTokens: refreshedTokens
                 };
               } else if (requestData.action === 'get_calendars') {
-                const calendars = await fetchCalendars(newTokens.access_token);
+                const calendarsData = await fetchCalendars(newTokens.access_token);
                 retryResult = { 
                   success: true,
-                  calendars: calendars,
+                  calendars: calendarsData.items || calendarsData,
                   refreshedTokens: refreshedTokens
                 };
               }
