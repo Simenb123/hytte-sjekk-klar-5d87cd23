@@ -48,12 +48,17 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate, hid
     (!hideTimingForTomorrow || ev.isContinuing || !timeUntil.includes('Om 1 dag'));
 
   const formatDateTime = () => {
+    // For tomorrow events (when hideTimingForTomorrow is true), show simplified format
+    const isTomorrowEvent = hideTimingForTomorrow;
+    
     if (ev.allDay) {
       if (multiDay) {
-        return `${fmtDateFull(start)} - ${fmtDateFull(end)} (hele dagen)`;
+        return isTomorrowEvent 
+          ? `${fmtDateFull(start)} - ${fmtDateFull(end)} (hele dagen)`
+          : `${fmtDateFull(start)} - ${fmtDateFull(end)} (hele dagen)`;
       }
       if (showDate) {
-        return `${fmtDateFull(start)} (hele dagen)`;
+        return isTomorrowEvent ? 'Hele dagen' : `${fmtDateFull(start)} (hele dagen)`;
       }
       return 'Hele dagen';
     }
@@ -63,7 +68,9 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate, hid
     }
     
     if (showDate) {
-      return `${fmtDateFull(start)} klokken ${fmtTime(start)}–${fmtTime(end)}`;
+      return isTomorrowEvent 
+        ? `Klokken ${fmtTime(start)}–${fmtTime(end)}`
+        : `${fmtDateFull(start)} klokken ${fmtTime(start)}–${fmtTime(end)}`;
     }
     
     return `Klokken ${fmtTime(start)}–${fmtTime(end)}`;
@@ -75,7 +82,7 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate, hid
         <div className="text-white font-bold text-xl leading-tight">
           {ev.title}{ev.isContinuing ? ' (fortsetter)' : ''}
         </div>
-        <div className="text-gray-200 text-lg leading-tight font-medium">
+        <div className="text-gray-200 text-base leading-tight font-medium">
           {formatDateTime()}
         </div>
         {shouldShowTiming && (
@@ -84,8 +91,8 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate, hid
           </div>
         )}
         {ev.location && (
-          <div className="text-gray-300 text-lg leading-tight">
-            📍 {ev.location}
+          <div className="text-gray-300 text-base leading-tight">
+            📍 {ev.location.replace(', Norge', '')}
           </div>
         )}
       </div>
