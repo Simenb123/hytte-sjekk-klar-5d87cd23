@@ -390,9 +390,9 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   onHeartbeat,
   showFaceTime = false,
   contacts = [
-    { name: 'Simen', relation: '', number: '+4748075204', type: 'call' },
-    { name: 'Eivind', relation: '', number: '+4741815832', type: 'call' },
-    { name: 'Knut', relation: '', number: '+4795917304', type: 'call' },
+    { name: 'Simen', relation: '', number: '+4748075204', type: 'audio' },
+    { name: 'Eivind', relation: '', number: '+4741815832', type: 'audio' },
+    { name: 'Knut', relation: '', number: '+4795917304', type: 'audio' },
   ],
   isGoogleConnected = false,
   onConnectGoogle,
