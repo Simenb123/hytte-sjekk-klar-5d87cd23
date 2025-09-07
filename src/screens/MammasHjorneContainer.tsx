@@ -156,6 +156,7 @@ const MammasHjorneContainer: React.FC = () => {
         isSyncing={isSyncing}
         lastSyncTime={lastSyncTime}
         performSync={performSync}
+        showFaceTime={true}
       />
     </>
   );

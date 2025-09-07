@@ -23,6 +23,11 @@ import { GoogleCalendarHealthMonitor } from '@/components/calendar/GoogleCalenda
 import { testGoogleCalendarSecrets } from '@/utils/testGoogleSecrets';
 import { clearGoogleCalendarCache } from '@/utils/debugGoogleCalendar';
 import { formatTimeUntilEvent } from '@/utils/timeUntilEvent';
+import { Switch } from '@/components/ui/switch';
+import SimpleBookingForm from '@/components/booking/SimpleBookingForm';
+import { createCalendarEvent } from '@/services/googleCalendar.service';
+import { useGoogleCalendar } from '@/hooks/google-calendar';
+import { clearAllGoogleTokens } from '@/utils/clearGoogleTokens';
 
 // ---------- Types ----------
 export type Event = {
@@ -451,6 +456,9 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   const [forceNight, setForceNight] = useState(false);
   const [showFT, setShowFT] = useState(showFaceTime);
   const [showWeatherForecast, setShowWeatherForecast] = useState(false);
+  const [isBookingSubmitting, setIsBookingSubmitting] = useState(false);
+  
+  const { googleTokens } = useGoogleCalendar();
 
   // pixel shift (1–2 px per time)
   const [shift, setShift] = useState({ x: 0, y: 0 });
@@ -587,6 +595,31 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       await onManualRefresh();
     }
     await loadAll();
+  };
+
+  const handleQuickBooking = async (data: any) => {
+    setIsBookingSubmitting(true);
+    try {
+      if (googleTokens) {
+        await createCalendarEvent(
+          googleTokens,
+          {
+            title: data.title,
+            startDate: data.startDate.toISOString(),
+            endDate: data.endDate.toISOString(),
+          },
+          false // Don't use shared calendar for quick bookings
+        );
+        toast.success('Booking lagt til i Google Calendar');
+      } else {
+        toast.error('Ikke tilkoblet Google Calendar');
+      }
+    } catch (error) {
+      console.error('Error creating quick booking:', error);
+      toast.error('Kunne ikke lage booking');
+    } finally {
+      setIsBookingSubmitting(false);
+    }
   };
 
   // Adaptive polling setup
@@ -961,141 +994,183 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       {adminVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-45 flex justify-end z-50">
           <div className="bg-gray-800 rounded-tl-3xl rounded-tr-3xl p-8 max-h-[80%] overflow-y-auto w-full max-w-lg">
-            <h3 className="text-2xl text-white font-extrabold mb-6">Admin Panel</h3>
-            
-            {/* Google Calendar Section */}
-            <div className="mb-6 border-b border-gray-700 pb-4">
-              <h4 className="text-gray-300 text-lg font-semibold mb-3">Google Calendar</h4>
-               <GoogleCalendarHealthMonitor showDebugInfo={true} />
-               
-               <div className="flex flex-wrap gap-2 mt-4">
-                 <button
-                   onClick={async () => {
-                     if (onConnectGoogle) {
-                       toast.info('Kobler til Google Calendar...');
-                       await onConnectGoogle();
-                     }
-                   }}
-                   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                   disabled={isGoogleConnected}
-                 >
-                   {isGoogleConnected ? 'Tilkoblet' : 'Koble til'}
-                 </button>
-                 
-                 <button
-                   onClick={async () => {
-                     if (onReconnectGoogle) {
-                       toast.info('Gjenoppretter Google Calendar...');
-                       await onReconnectGoogle();
-                     }
-                   }}
-                   className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                 >
-                   Reconnect
-                 </button>
-                 
-                 <button
-                   onClick={() => {
-                     clearGoogleCalendarCache();
-                     toast.success('Google Calendar cache tømt');
-                   }}
-                   className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                 >
-                   Clear Cache
-                 </button>
-                 
-                 <button
-                   onClick={async () => {
-                     try {
-                       await testGoogleCalendarSecrets();
-                       toast.success('Google secrets test fullført');
-                     } catch (error) {
-                       toast.error('Google secrets test feilet');
-                     }
-                   }}
-                   className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                 >
-                   Test Secrets
-                 </button>
-               </div>
-            </div>
-            
-            {/* General Settings Section */}
-            <div className="mb-6">
-              <h4 className="text-gray-300 text-lg font-semibold mb-3">Generelle innstillinger</h4>
-              
-              <div className="flex items-center justify-between py-3 min-h-[56px]">
-                <span className="text-gray-300 text-base flex-1">Nattmodus nå</span>
-                <Toggle val={forceNight} onChange={setForceNight} />
-              </div>
-              
-              <div className="flex items-center justify-between py-3 min-h-[56px]">
-                <span className="text-gray-300 text-base flex-1">Vis værvarsel</span>
-                <Toggle 
-                  val={showWeatherForecast} 
-                  onChange={(val) => {
-                    setShowWeatherForecast(val);
-                    storage.multiSet([['mh_show_weather_v1', val.toString()]]);
-                  }} 
-                />
-              </div>
-              
-              <div className="flex items-center justify-between py-3 min-h-[56px]">
-                <span className="text-gray-300 text-base flex-1">Vis FaceTime/SMS</span>
-                <Toggle val={showFT} onChange={setShowFT} />
-              </div>
-              
-              <div className="flex items-center justify-between py-3 min-h-[56px]">
-                <span className="text-gray-300 text-base flex-1">Bruk mock-data</span>
-                <Toggle val={usingMock} onChange={setUsingMock} />
-              </div>
-            </div>
+            <div className="space-y-6">
+              <div className="flex flex-col space-y-4">
+                <h3 className="text-2xl text-white font-extrabold mb-2">Admin Panel</h3>
+                
+                {/* Quick Booking Section */}
+                <div className="space-y-4 border-b border-gray-700 pb-4">
+                  <h4 className="text-gray-300 text-lg font-semibold">Hurtig Booking</h4>
+                  <SimpleBookingForm 
+                    onSubmit={handleQuickBooking}
+                    isSubmitting={isBookingSubmitting}
+                    googleIntegration={isGoogleConnected}
+                  />
+                </div>
 
-            {/* Silhouette and Location Section */}
-            <div className="mb-6 border-t border-gray-700 pt-4">
-              <h4 className="text-gray-300 text-lg font-semibold mb-3">Personalisering</h4>
-              
-              {/* Silhouette uploader */}
-              <SilhouetteUploader 
-                onSilhouetteGenerated={setSilhouetteUrl}
-                currentSilhouette={silhouetteUrl}
-              />
+                {/* Contacts Section */}
+                <div className="space-y-4 border-b border-gray-700 pb-4">
+                  <h4 className="text-gray-300 text-lg font-semibold">Kontakter</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button 
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                      onClick={() => openLink('facetime://+4741234567')}
+                    >
+                      🎥 Ring Simen
+                    </button>
+                    <button 
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                      onClick={() => openLink('sms://+4741234567')}
+                    >
+                      💬 SMS Simen
+                    </button>
+                  </div>
+                </div>
 
-              {/* Location Selector */}
-              <div className="mt-4">
-                <h5 className="text-gray-300 text-base font-medium mb-3">Værlokasjon</h5>
-                <LocationPicker
-                  currentLocation={currentWeatherLocation}
-                  onLocationSelect={handleLocationSelect}
-                />
+                {/* Google Calendar Admin Section */}
+                <div className="space-y-4 border-b border-gray-700 pb-4">
+                  <h4 className="text-gray-300 text-lg font-semibold">Google Calendar</h4>
+                  <GoogleCalendarHealthMonitor showDebugInfo={true} />
+                  
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={async () => {
+                        if (onConnectGoogle) {
+                          toast.info('Kobler til Google Calendar...');
+                          await onConnectGoogle();
+                        }
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                      disabled={isGoogleConnected}
+                    >
+                      {isGoogleConnected ? 'Tilkoblet' : 'Koble til'}
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        if (onReconnectGoogle) {
+                          toast.info('Gjenoppretter Google Calendar...');
+                          await onReconnectGoogle();
+                        }
+                      }}
+                      className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Reconnect
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        clearGoogleCalendarCache();
+                        toast.success('Google Calendar cache tømt');
+                      }}
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Clear Cache
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        try {
+                          await testGoogleCalendarSecrets();
+                          toast.success('Google secrets test fullført');
+                        } catch (error) {
+                          toast.error('Google secrets test feilet');
+                        }
+                      }}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Test Secrets
+                    </button>
+                  </div>
+                </div>
+
+                {/* General Settings Section */}
+                <div className="space-y-4 border-b border-gray-700 pb-4">
+                  <h4 className="text-gray-300 text-lg font-semibold">Innstillinger</h4>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-300 text-base">Nattmodus nå</span>
+                    <Switch
+                      checked={forceNight}
+                      onCheckedChange={setForceNight}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-300 text-base">Vis værvarsel</span>
+                    <Switch
+                      checked={showWeatherForecast}
+                      onCheckedChange={(val) => {
+                        setShowWeatherForecast(val);
+                        storage.multiSet([['mh_show_weather_v1', val.toString()]]);
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-300 text-base">Vis FaceTime/SMS</span>
+                    <Switch
+                      checked={showFT}
+                      onCheckedChange={setShowFT}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-300 text-base">Bruk mock-data</span>
+                    <Switch
+                      checked={usingMock}
+                      onCheckedChange={setUsingMock}
+                    />
+                  </div>
+                </div>
+
+                {/* Silhouette and Location Section */}
+                <div className="space-y-4 border-b border-gray-700 pb-4">
+                  <h4 className="text-gray-300 text-lg font-semibold">Personalisering</h4>
+                  
+                  {/* Silhouette uploader */}
+                  <SilhouetteUploader 
+                    onSilhouetteGenerated={setSilhouetteUrl}
+                    currentSilhouette={silhouetteUrl}
+                  />
+
+                  {/* Location Selector */}
+                  <div className="mt-4">
+                    <h5 className="text-gray-300 text-base font-medium mb-3">Værlokasjon</h5>
+                    <LocationPicker
+                      currentLocation={currentWeatherLocation}
+                      onLocationSelect={handleLocationSelect}
+                    />
+                  </div>
+                </div>
+                
+                {/* Status Section */}
+                <div className="space-y-4">
+                  <h4 className="text-gray-300 text-lg font-semibold">Status</h4>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-300 text-base">Online status</span>
+                    <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                      online ? 'bg-green-900 text-green-200' : 'bg-yellow-900 text-yellow-200'
+                    }`}>
+                      {online ? 'Online' : 'Offline'}
+                    </span>
+                  </div>
+                  
+                   {lastSyncTime && (
+                      <div className="flex items-center justify-between py-2">
+                        <span className="text-gray-300 text-base">Siste sync</span>
+                        <span className="text-gray-400 text-sm">
+                          {new Date(lastSyncTime).toLocaleTimeString('no-NO')}
+                        </span>
+                      </div>
+                    )}
+                </div>
               </div>
-            </div>
-            
-            {/* Status Section */}
-            <div className="mb-6 border-t border-gray-700 pt-4">
-              <h4 className="text-gray-300 text-lg font-semibold mb-3">Status</h4>
-              
-              <div className="flex items-center justify-between py-3 min-h-[56px]">
-                <span className="text-gray-300 text-base flex-1">Online status</span>
-                <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                  online ? 'bg-green-900 text-green-200' : 'bg-yellow-900 text-yellow-200'
-                }`}>
-                  {online ? 'Online' : 'Offline'}
-                </span>
-              </div>
-              
-               {lastSyncTime && (
-                 <div className="flex items-center justify-between py-3 min-h-[56px]">
-                   <span className="text-gray-300 text-base flex-1">Siste sync</span>
-                   <span className="text-gray-400 text-sm">
-                     {new Date(lastSyncTime).toLocaleTimeString('no-NO')}
-                   </span>
-                 </div>
-               )}
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
+            <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-gray-700">
               <button
                 className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-3 rounded-xl text-base font-medium transition-colors"
                 onClick={handleManualRefresh}
