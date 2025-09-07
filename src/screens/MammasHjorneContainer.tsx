@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { WEATHER_LAT, WEATHER_LON, LOCATION_NAME } from '@/config';
 import { useGoogleCalendar } from '@/hooks/google-calendar';
 import { useGoogleCalendarSync } from '@/hooks/useGoogleCalendarSync';
-import { GoogleCalendarHealthMonitor } from '@/components/calendar/GoogleCalendarHealthMonitor';
+
 
 const MammasHjorneContainer: React.FC = () => {
   const { 
@@ -143,7 +143,6 @@ const MammasHjorneContainer: React.FC = () => {
 
   return (
     <>
-      <GoogleCalendarHealthMonitor showDebugInfo={!isGoogleConnected || !!fetchError || !!syncError} />
       <MammasHjorneScreen
         fetchEvents={fetchEvents}
         fetchWeather={fetchWeather}

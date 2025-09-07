@@ -18,8 +18,11 @@ import { WeatherForecastScroll } from '@/components/mammas/WeatherForecastScroll
 import { DayForecastScroll } from '@/components/mammas/DayForecastScroll';
 import { useAdaptivePolling } from '@/hooks/useAdaptivePolling';
 import { groupEventsByDate } from '@/utils/eventGrouping';
+import { toast } from 'sonner';
+import { GoogleCalendarHealthMonitor } from '@/components/calendar/GoogleCalendarHealthMonitor';
+import { testGoogleCalendarSecrets } from '@/utils/testGoogleSecrets';
+import { clearGoogleCalendarCache } from '@/utils/debugGoogleCalendar';
 import { formatTimeUntilEvent } from '@/utils/timeUntilEvent';
-import { clearGoogleCalendarCache, debugCalendarFilters, logCurrentSettings } from '@/utils/debugGoogleCalendar';
 
 // ---------- Types ----------
 export type Event = {
@@ -726,17 +729,23 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               </div>
             </div>
             
-            {/* Logo - mindre for landscape */}
+            {/* Logo - mindre for landscape - CLICKABLE ADMIN ACCESS */}
             <div className="flex-shrink-0 order-1 portrait:order-2 landscape:order-2 
                             md:order-2 md:ml-6 portrait:self-center landscape:self-start">
               <div className="flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center overflow-hidden">
+                <button 
+                  onClick={() => setAdminVisible(true)}
+                  className="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center overflow-hidden 
+                           hover:bg-amber-400 transition-colors duration-200 transform hover:scale-105 
+                           active:scale-95 cursor-pointer"
+                  title="Admin"
+                >
                   <img 
                     src="/lovable-uploads/3d8c6965-c80d-4939-82fe-1571dd5475fc.png" 
-                    alt="Mamma profil ikon" 
+                    alt="Mamma profil ikon - Klikk for admin" 
                     className="w-10 h-10 object-cover"
                   />
-                </div>
+                </button>
               </div>
             </div>
           </div>
@@ -951,68 +960,151 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       {/* Admin-panel */}
       {adminVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-45 flex justify-end z-50">
-          <div className="bg-gray-800 rounded-tl-3xl rounded-tr-3xl p-8 max-h-[80%] overflow-y-auto w-full max-w-md">
-            <h3 className="text-2xl text-white font-extrabold mb-4">Admin</h3>
+          <div className="bg-gray-800 rounded-tl-3xl rounded-tr-3xl p-8 max-h-[80%] overflow-y-auto w-full max-w-lg">
+            <h3 className="text-2xl text-white font-extrabold mb-6">Admin Panel</h3>
             
-            <div className="flex items-center justify-between py-3 min-h-[56px]">
-              <span className="text-gray-300 text-lg flex-1">Nattmodus nå</span>
-              <Toggle val={forceNight} onChange={setForceNight} />
+            {/* Google Calendar Section */}
+            <div className="mb-6 border-b border-gray-700 pb-4">
+              <h4 className="text-gray-300 text-lg font-semibold mb-3">Google Calendar</h4>
+               <GoogleCalendarHealthMonitor showDebugInfo={true} />
+               
+               <div className="flex flex-wrap gap-2 mt-4">
+                 <button
+                   onClick={async () => {
+                     if (onConnectGoogle) {
+                       toast.info('Kobler til Google Calendar...');
+                       await onConnectGoogle();
+                     }
+                   }}
+                   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                   disabled={isGoogleConnected}
+                 >
+                   {isGoogleConnected ? 'Tilkoblet' : 'Koble til'}
+                 </button>
+                 
+                 <button
+                   onClick={async () => {
+                     if (onReconnectGoogle) {
+                       toast.info('Gjenoppretter Google Calendar...');
+                       await onReconnectGoogle();
+                     }
+                   }}
+                   className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                 >
+                   Reconnect
+                 </button>
+                 
+                 <button
+                   onClick={() => {
+                     clearGoogleCalendarCache();
+                     toast.success('Google Calendar cache tømt');
+                   }}
+                   className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                 >
+                   Clear Cache
+                 </button>
+                 
+                 <button
+                   onClick={async () => {
+                     try {
+                       await testGoogleCalendarSecrets();
+                       toast.success('Google secrets test fullført');
+                     } catch (error) {
+                       toast.error('Google secrets test feilet');
+                     }
+                   }}
+                   className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                 >
+                   Test Secrets
+                 </button>
+               </div>
             </div>
             
-            <div className="flex items-center justify-between py-3 min-h-[56px]">
-              <span className="text-gray-300 text-lg flex-1">Vis værvarsel</span>
-              <Toggle 
-                val={showWeatherForecast} 
-                onChange={(val) => {
-                  setShowWeatherForecast(val);
-                  storage.multiSet([['mh_show_weather_v1', val.toString()]]);
-                }} 
-              />
+            {/* General Settings Section */}
+            <div className="mb-6">
+              <h4 className="text-gray-300 text-lg font-semibold mb-3">Generelle innstillinger</h4>
+              
+              <div className="flex items-center justify-between py-3 min-h-[56px]">
+                <span className="text-gray-300 text-base flex-1">Nattmodus nå</span>
+                <Toggle val={forceNight} onChange={setForceNight} />
+              </div>
+              
+              <div className="flex items-center justify-between py-3 min-h-[56px]">
+                <span className="text-gray-300 text-base flex-1">Vis værvarsel</span>
+                <Toggle 
+                  val={showWeatherForecast} 
+                  onChange={(val) => {
+                    setShowWeatherForecast(val);
+                    storage.multiSet([['mh_show_weather_v1', val.toString()]]);
+                  }} 
+                />
+              </div>
+              
+              <div className="flex items-center justify-between py-3 min-h-[56px]">
+                <span className="text-gray-300 text-base flex-1">Vis FaceTime/SMS</span>
+                <Toggle val={showFT} onChange={setShowFT} />
+              </div>
+              
+              <div className="flex items-center justify-between py-3 min-h-[56px]">
+                <span className="text-gray-300 text-base flex-1">Bruk mock-data</span>
+                <Toggle val={usingMock} onChange={setUsingMock} />
+              </div>
             </div>
-            
-            <div className="flex items-center justify-between py-3 min-h-[56px]">
-              <span className="text-gray-300 text-lg flex-1">Vis FaceTime/SMS</span>
-              <Toggle val={showFT} onChange={setShowFT} />
-            </div>
-            
-            <div className="flex items-center justify-between py-3 min-h-[56px]">
-              <span className="text-gray-300 text-lg flex-1">Bruk mock-data</span>
-              <Toggle val={usingMock} onChange={setUsingMock} />
-            </div>
-            
-            {/* Silhouette uploader */}
-            <SilhouetteUploader 
-              onSilhouetteGenerated={setSilhouetteUrl}
-              currentSilhouette={silhouetteUrl}
-            />
 
-            {/* Location Selector */}
-            <div className="border-t border-gray-700 pt-4 mt-4">
-              <h4 className="text-gray-300 text-lg font-semibold mb-3">Værlokasjon</h4>
-              <LocationPicker
-                currentLocation={currentWeatherLocation}
-                onLocationSelect={handleLocationSelect}
+            {/* Silhouette and Location Section */}
+            <div className="mb-6 border-t border-gray-700 pt-4">
+              <h4 className="text-gray-300 text-lg font-semibold mb-3">Personalisering</h4>
+              
+              {/* Silhouette uploader */}
+              <SilhouetteUploader 
+                onSilhouetteGenerated={setSilhouetteUrl}
+                currentSilhouette={silhouetteUrl}
               />
+
+              {/* Location Selector */}
+              <div className="mt-4">
+                <h5 className="text-gray-300 text-base font-medium mb-3">Værlokasjon</h5>
+                <LocationPicker
+                  currentLocation={currentWeatherLocation}
+                  onLocationSelect={handleLocationSelect}
+                />
+              </div>
             </div>
             
-            <div className="flex items-center justify-between py-3 min-h-[56px] border-t border-gray-700 mt-4 pt-4">
-              <span className="text-gray-300 text-lg flex-1">Online</span>
-              <span className="px-3 py-1.5 bg-yellow-900 text-yellow-200 rounded-lg text-sm">
-                {online ? 'Online' : 'Offline'}
-              </span>
+            {/* Status Section */}
+            <div className="mb-6 border-t border-gray-700 pt-4">
+              <h4 className="text-gray-300 text-lg font-semibold mb-3">Status</h4>
+              
+              <div className="flex items-center justify-between py-3 min-h-[56px]">
+                <span className="text-gray-300 text-base flex-1">Online status</span>
+                <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                  online ? 'bg-green-900 text-green-200' : 'bg-yellow-900 text-yellow-200'
+                }`}>
+                  {online ? 'Online' : 'Offline'}
+                </span>
+              </div>
+              
+               {lastSyncTime && (
+                 <div className="flex items-center justify-between py-3 min-h-[56px]">
+                   <span className="text-gray-300 text-base flex-1">Siste sync</span>
+                   <span className="text-gray-400 text-sm">
+                     {new Date(lastSyncTime).toLocaleTimeString('no-NO')}
+                   </span>
+                 </div>
+               )}
             </div>
 
-            <div className="h-3" />
-            <div className="flex justify-end gap-4">
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
               <button
-                className="bg-gray-900 bg-opacity-30 text-gray-200 px-6 py-4 rounded-xl text-lg font-bold"
+                className="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-3 rounded-xl text-base font-medium transition-colors"
                 onClick={handleManualRefresh}
                 disabled={isSyncing}
               >
                 {isSyncing ? 'Oppdaterer...' : 'Oppdater nå'}
               </button>
               <button
-                className="bg-blue-600 text-white px-6 py-4 rounded-xl text-lg font-bold"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-base font-medium transition-colors"
                 onClick={() => setAdminVisible(false)}
               >
                 Lukk
