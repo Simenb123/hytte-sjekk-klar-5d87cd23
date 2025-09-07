@@ -389,9 +389,9 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   onHeartbeat,
   showFaceTime = false,
   contacts = [
-    { name: 'Ola', relation: 'Sønn', number: '+47XXXXXXXX', type: 'video' },
-    { name: 'Kari', relation: 'Datter', number: '+47XXXXXXXX', type: 'audio' },
-    { name: 'Eva', relation: 'Venninne', number: '+47XXXXXXXX', type: 'sms' },
+    { name: 'Simen Bjørndalen', relation: 'Familie', number: '+4748075204', type: 'video' },
+    { name: 'Eivind Bjørndalen', relation: 'Familie', number: '+4741815832', type: 'video' },
+    { name: 'Knut', relation: 'Kontakt', number: '+4795917304', type: 'audio' },
   ],
   isGoogleConnected = false,
   onConnectGoogle,
@@ -1014,13 +1014,25 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                   <div className="grid grid-cols-2 gap-2">
                     <button 
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                      onClick={() => openLink('facetime://+4741234567')}
+                      onClick={() => openLink('facetime://+4748075204')}
                     >
                       🎥 Ring Simen
                     </button>
                     <button 
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                      onClick={() => openLink('facetime://+4741815832')}
+                    >
+                      🎥 Ring Eivind
+                    </button>
+                    <button 
+                      className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                      onClick={() => openLink('facetime-audio://+4795917304')}
+                    >
+                      📞 Ring Knut
+                    </button>
+                    <button 
                       className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                      onClick={() => openLink('sms://+4741234567')}
+                      onClick={() => openLink('sms://+4748075204')}
                     >
                       💬 SMS Simen
                     </button>
