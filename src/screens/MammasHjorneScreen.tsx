@@ -389,9 +389,9 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   onHeartbeat,
   showFaceTime = false,
   contacts = [
-    { name: 'Simen Bjørndalen', relation: 'Familie', number: '+4748075204', type: 'video' },
-    { name: 'Eivind Bjørndalen', relation: 'Familie', number: '+4741815832', type: 'video' },
-    { name: 'Knut', relation: 'Kontakt', number: '+4795917304', type: 'audio' },
+    { name: 'Simen', relation: '', number: '+4748075204', type: 'call' },
+    { name: 'Eivind', relation: '', number: '+4741815832', type: 'call' },
+    { name: 'Knut', relation: '', number: '+4795917304', type: 'call' },
   ],
   isGoogleConnected = false,
   onConnectGoogle,
@@ -1014,19 +1014,19 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                   <div className="grid grid-cols-2 gap-2">
                     <button 
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                      onClick={() => openLink('facetime://+4748075204')}
+                      onClick={() => openLink('tel://+4748075204')}
                     >
-                      🎥 Ring Simen
+                      📞 Ring Simen
                     </button>
                     <button 
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                      onClick={() => openLink('facetime://+4741815832')}
+                      onClick={() => openLink('tel://+4741815832')}
                     >
-                      🎥 Ring Eivind
+                      📞 Ring Eivind
                     </button>
                     <button 
-                      className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                      onClick={() => openLink('facetime-audio://+4795917304')}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                      onClick={() => openLink('tel://+4795917304')}
                     >
                       📞 Ring Knut
                     </button>
