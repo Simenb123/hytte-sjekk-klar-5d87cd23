@@ -1014,7 +1014,19 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
           <div className="bg-gray-800 rounded-tl-3xl rounded-tr-3xl p-8 max-h-[80%] overflow-y-auto w-full max-w-lg">
             <div className="space-y-6">
               <div className="flex flex-col space-y-4">
-                <h3 className="text-2xl text-white font-extrabold mb-2">Admin Panel</h3>
+                {/* Header with back button */}
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-2xl text-white font-extrabold">Admin Panel</h3>
+                  <button
+                    onClick={() => setAdminVisible(false)}
+                    className="bg-gray-700 hover:bg-gray-600 text-gray-200 p-2 rounded-lg transition-colors"
+                    title="Tilbake"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
                 
                 {/* Quick Booking Section */}
                 <div className="space-y-4 border-b border-gray-700 pb-4">
