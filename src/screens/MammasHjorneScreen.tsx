@@ -28,6 +28,7 @@ import SimpleBookingForm from '@/components/booking/SimpleBookingForm';
 import { createCalendarEvent } from '@/services/googleCalendar.service';
 import { useGoogleCalendar } from '@/hooks/google-calendar';
 import { clearAllGoogleTokens } from '@/utils/clearGoogleTokens';
+import { RefreshCw } from 'lucide-react';
 
 // ---------- Types ----------
 export type Event = {
@@ -876,6 +877,23 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
           {/* Kalender - mer plass for avtaler - tar full bredde hvis værvarsel er skjult */}
           <div className={`flex-1 ${showWeatherForecast ? 'landscape:flex-[1.1]' : ''} bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-3 md:p-4 min-h-[200px] landscape:min-h-[200px] backdrop-blur-sm flex flex-col max-h-[calc(100vh-180px)]`}>
+            {/* Calendar header with refresh button */}
+            <div className="flex justify-between items-center mb-3">
+              <h2 className="text-xl md:text-2xl text-white font-bold tracking-wide">Avtaler</h2>
+              <button
+                onClick={handleManualRefresh}
+                disabled={isSyncing}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isSyncing 
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+                title="Oppdater avtaler"
+              >
+                <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                {isSyncing ? 'Oppdaterer...' : 'Oppdater'}
+              </button>
+            </div>
             {/* Technical details moved to admin panel for cleaner interface */}
             <SwipeRefresh onRefresh={handleManualRefresh} disabled={isSyncing}>
               <div className="overflow-y-auto pb-4 flex-1">
