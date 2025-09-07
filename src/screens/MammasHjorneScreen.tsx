@@ -1026,25 +1026,25 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                   />
                 </div>
 
-                {/* Contacts Section */}
+                {/* Contacts Section - Using FaceTime Audio for iPad compatibility */}
                 <div className="space-y-4 border-b border-gray-700 pb-4">
                   <h4 className="text-gray-300 text-lg font-semibold">Kontakter</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <button 
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                      onClick={() => openLink('tel://+4748075204')}
+                      onClick={() => openLink('facetime-audio://+4748075204')}
                     >
                       📞 Ring Simen
                     </button>
                     <button 
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                      onClick={() => openLink('tel://+4741815832')}
+                      onClick={() => openLink('facetime-audio://+4741815832')}
                     >
                       📞 Ring Eivind
                     </button>
                     <button 
                       className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                      onClick={() => openLink('tel://+4795917304')}
+                      onClick={() => openLink('facetime-audio://+4795917304')}
                     >
                       📞 Ring Knut
                     </button>
