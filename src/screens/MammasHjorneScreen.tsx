@@ -925,16 +925,35 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                 </>
               )}
 
-              {/* Neste hendelse tidsangivelse */}
-              {(() => {
-                const nextEvent = grouped.evThisWeek[0] || grouped.evNextWeek[0];
-                const timeUntil = nextEvent ? formatTimeUntilEvent(nextEvent.start, nextEvent.end, now) : null;
-                return timeUntil && (
-                  <div className="text-gray-300 text-lg font-medium mt-6">
-                    🕒 {timeUntil}
-                  </div>
-                );
-              })()}
+              {/* Denne uken */}
+              {grouped.evThisWeek.length > 0 && (
+                <>
+                  {(() => {
+                    const firstEvent = grouped.evThisWeek[0];
+                    const timeUntil = formatTimeUntilEvent(firstEvent.start, firstEvent.end, now);
+                    const headerText = `Denne uken${timeUntil ? ` - ${timeUntil}` : ''}`;
+                    return (
+                      <h3 className="text-lg md:text-xl text-gray-400 mb-2 mt-6 font-semibold">{headerText}</h3>
+                    );
+                  })()}
+                  {grouped.evThisWeek.slice(0, 4).map((ev) => <EventRow key={ev.id} ev={ev} hideTimingForTomorrow={false} />)}
+                </>
+              )}
+
+              {/* Neste uke */}
+              {grouped.evNextWeek.length > 0 && (
+                <>
+                  {(() => {
+                    const firstEvent = grouped.evNextWeek[0];
+                    const timeUntil = formatTimeUntilEvent(firstEvent.start, firstEvent.end, now);
+                    const headerText = `Neste uke${timeUntil ? ` - ${timeUntil}` : ''}`;
+                    return (
+                      <h3 className="text-lg md:text-xl text-gray-500 mb-2 mt-6 font-semibold">{headerText}</h3>
+                    );
+                  })()}
+                  {grouped.evNextWeek.slice(0, 2).map((ev) => <EventRow key={ev.id} ev={ev} hideTimingForTomorrow={false} />)}
+                </>
+              )}
               </div>
             </SwipeRefresh>
           </div>
