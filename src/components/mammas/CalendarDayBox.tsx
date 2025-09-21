@@ -49,17 +49,14 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
       onClick={onClick}
     >
       {/* Header */}
-      <div className="mb-2">
+      <div className="mb-1">
         {dayLabel && (
           <div className={`text-xs font-bold mb-1 ${labelColor}`}>
             {dayLabel}
           </div>
         )}
         <div className="text-white text-base md:text-lg font-bold capitalize">
-          {dayName}
-        </div>
-        <div className="text-gray-300 text-xs">
-          {dayNumber}. {monthName}
+          {dayName} <span className="text-gray-300 text-xs font-normal">{dayNumber}. {monthName}</span>
         </div>
       </div>
 
