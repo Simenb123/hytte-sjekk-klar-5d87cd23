@@ -44,8 +44,7 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate, hid
   const timeUntil = formatTimeUntilEvent(ev.start, ev.end, today);
   
   // Hide timing for tomorrow events when it's shown in header (except for continuing events)
-  const shouldShowTiming = timeUntil && timeUntil !== "Pågår nå" && 
-    (!hideTimingForTomorrow || ev.isContinuing || !timeUntil.includes('Om 1 dag'));
+  const shouldShowTiming = timeUntil && timeUntil !== "Pågår nå" && !hideTimingForTomorrow;
 
   const formatDateTime = () => {
     // For tomorrow events (when hideTimingForTomorrow is true), show simplified format
@@ -77,21 +76,21 @@ export const EnhancedEventRow: React.FC<EventRowProps> = ({ ev, currentDate, hid
   };
 
   return (
-    <div className="py-2 border-b border-gray-600/30 last:border-b-0">
-      <div className="flex flex-col gap-2">
-        <div className="text-white font-bold text-xl leading-tight">
+    <div className="py-3 border-b border-gray-600/20 last:border-b-0">
+      <div className="flex flex-col gap-1.5">
+        <div className="text-white font-bold text-2xl leading-tight">
           {ev.title}{ev.isContinuing ? ' (fortsetter)' : ''}
         </div>
-        <div className="text-gray-200 text-base leading-tight font-medium">
+        <div className="text-gray-300 text-sm leading-tight">
           {formatDateTime()}
         </div>
         {shouldShowTiming && (
-          <div className="text-gray-300 text-xl leading-tight font-bold">
+          <div className="text-blue-200 text-lg leading-tight font-semibold">
             🕒 {timeUntil}
           </div>
         )}
         {ev.location && (
-          <div className="text-gray-300 text-base leading-tight">
+          <div className="text-gray-400 text-sm leading-tight">
             📍 {ev.location.replace(', Norge', '')}
           </div>
         )}
