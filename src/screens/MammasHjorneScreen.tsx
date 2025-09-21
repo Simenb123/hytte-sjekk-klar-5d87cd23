@@ -700,8 +700,31 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       >
         <div className="flex-1 flex items-center justify-center px-8">
           <div className="text-center">
-            <div className="text-9xl text-gray-200 font-bold tracking-wider leading-none mb-4">
-              {fmtTimeHM(now)}
+            <div className="flex items-center justify-center gap-8 mb-4">
+              <div className="text-9xl text-gray-200 font-bold tracking-wider leading-none">
+                {fmtTimeHM(now)}
+              </div>
+              {/* FaceTime/SMS-knapper i nattmodus */}
+              {showFT && (
+                <div className="flex flex-col gap-3">
+                  {contacts.map((c, i) => (
+                    <button
+                      key={i}
+                      className="bg-blue-600 rounded-xl px-4 py-2 min-h-[48px] min-w-[100px] text-center hover:bg-blue-700 transition-colors"
+                      onClick={() => openLink(dialHref(c) || '')}
+                    >
+                      <div className="text-white text-lg font-bold">
+                        {c.type === 'video'
+                          ? '🎥'
+                          : c.type === 'audio'
+                          ? '📞'
+                          : '💬'}{' '}
+                        {c.name}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="text-3xl text-gray-400 leading-9">
               I dag: {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
@@ -743,9 +766,32 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             
             {/* Dato og tid - komprimert uten unødvendig tekst */}
             <div className="flex-1 order-2 portrait:order-1 landscape:order-1 md:order-1">
-              <div className="text-3xl md:text-4xl lg:text-5xl text-white font-bold 
-                              tracking-wide leading-none mb-1">
-                Klokken er: {fmtTimeHM(now)}
+              <div className="flex items-center gap-4 mb-1">
+                <div className="text-3xl md:text-4xl lg:text-5xl text-white font-bold 
+                                tracking-wide leading-none">
+                  Klokken er: {fmtTimeHM(now)}
+                </div>
+                {/* FaceTime/SMS-knapper i dagmodus */}
+                {showFT && (
+                  <div className="flex gap-2">
+                    {contacts.map((c, i) => (
+                      <button
+                        key={i}
+                        className="bg-blue-600 rounded-lg px-3 py-2 min-h-[36px] text-center hover:bg-blue-700 transition-colors"
+                        onClick={() => openLink(dialHref(c) || '')}
+                      >
+                        <div className="text-white text-sm font-bold">
+                          {c.type === 'video'
+                            ? '🎥'
+                            : c.type === 'audio'
+                            ? '📞'
+                            : '💬'}{' '}
+                          {c.name}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex flex-col portrait:flex-row landscape:flex-row 
                               md:flex-row items-start portrait:items-center 
@@ -905,30 +951,6 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       </div>
 
 
-      {/* FaceTime/SMS-knapper */}
-      {showFT && (
-        <div className="flex gap-4 mt-5">
-          {contacts.map((c, i) => (
-            <button
-              key={i}
-              className="bg-blue-600 rounded-2xl px-6 py-4 min-h-[72px] min-w-[120px] text-center"
-              onClick={() => openLink(dialHref(c) || '')}
-            >
-              <div className="text-white text-xl font-bold">
-                {c.type === 'video'
-                  ? '🎥'
-                  : c.type === 'audio'
-                  ? '📞'
-                  : '💬'}{' '}
-                {c.name}
-              </div>
-              {c.relation && (
-                <div className="text-white text-base opacity-90">{c.relation}</div>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* PIN modal */}
       {adminArmed && (
