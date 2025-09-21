@@ -51,7 +51,7 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
       {/* Header */}
       <div className="mb-2">
         {dayLabel && (
-          <div className={`text-base md:text-lg lg:text-xl font-bold mb-1 ${labelColor}`}>
+          <div className={`text-xl md:text-2xl lg:text-3xl font-bold mb-1 ${labelColor}`}>
             {dayLabel}
           </div>
         )}
