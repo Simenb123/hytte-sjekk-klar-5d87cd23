@@ -51,31 +51,31 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
       {/* Header */}
       <div className="mb-2">
         {dayLabel && (
-          <div className={`text-sm md:text-base font-bold mb-1 ${labelColor}`}>
+          <div className={`text-base md:text-lg lg:text-xl font-bold mb-1 ${labelColor}`}>
             {dayLabel}
           </div>
         )}
-        <div className="text-white text-lg md:text-xl lg:text-2xl font-bold capitalize">
-          {dayName} <span className="text-gray-300 text-sm md:text-base font-normal">{dayNumber}. {monthName}</span>
+        <div className="text-white text-xl md:text-2xl lg:text-3xl font-bold capitalize">
+          {dayName} <span className="text-gray-300 text-base md:text-lg font-normal">{dayNumber}. {monthName}</span>
         </div>
       </div>
 
       {/* Events */}
       <div className="space-y-3">
         {events.length === 0 ? (
-          <div className="text-gray-400 text-base md:text-lg">Ingen avtaler</div>
+          <div className="text-gray-400 text-lg md:text-xl">Ingen avtaler</div>
         ) : events.length <= 3 ? (
           // Show event titles directly for few events
           events.map((event, index) => (
             <div key={event.id} className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${getEventColor(index)}`} />
-              <div className="text-white text-base md:text-lg truncate">{event.title}</div>
+              <div className="text-white text-lg md:text-xl truncate">{event.title}</div>
             </div>
           ))
         ) : (
           // Show count and indicators for many events
           <>
-            <div className="text-white text-base md:text-lg font-medium">
+            <div className="text-white text-lg md:text-xl font-medium">
               {events.length} avtaler
             </div>
             <div className="flex gap-1.5">
@@ -83,7 +83,7 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
                 <div key={index} className={`w-3 h-3 rounded-full ${getEventColor(index)}`} />
               ))}
               {events.length > 5 && (
-                <div className="text-gray-400 text-sm md:text-base ml-1">+{events.length - 5}</div>
+                <div className="text-gray-400 text-base md:text-lg ml-1">+{events.length - 5}</div>
               )}
             </div>
           </>
@@ -93,7 +93,7 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
       {/* Today time indicator */}
       {isToday && events.length > 0 && (
         <div className="mt-4 pt-3 border-t border-green-500/30">
-          <div className="text-green-300 text-sm md:text-base">
+          <div className="text-green-300 text-base md:text-lg">
             Neste: {format(new Date(events[0].start), 'HH:mm')}
           </div>
         </div>
