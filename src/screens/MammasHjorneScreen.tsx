@@ -695,7 +695,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   if (withinNight) {
     return (
       <div 
-        className="flex-1 bg-gray-950 p-8 pt-6 w-full min-h-screen"
+        className="flex-1 bg-gray-950 p-8 pt-8 w-full min-h-screen"
         style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
       >
          <div className="flex-1 flex items-center justify-center px-8">
@@ -761,11 +761,11 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
       style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
     >
       {/* iPad 11 optimert responsive container - redusert padding for bedre plassbruk */}
-      <div className="h-full px-2 py-2 
-                      md:px-4 md:py-3 
-                      lg:px-6 lg:py-4 lg:max-w-[1400px] lg:mx-auto
+      <div className="h-full px-2 py-4 
+                      md:px-4 md:py-4 
+                      lg:px-6 lg:py-6 lg:max-w-[1400px] lg:mx-auto
                       portrait:max-w-[834px] portrait:mx-auto
-                      landscape:max-w-[1194px] landscape:mx-auto landscape:py-2">
+                      landscape:max-w-[1194px] landscape:mx-auto landscape:py-3">
         
         {/* skjult admin trigger */}
         <button
@@ -859,7 +859,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
         {/* Main content - komprimert for iPad 11 landscape */}
         <div className="flex-1 flex flex-col portrait:flex-col landscape:flex-row 
-                        lg:flex-row gap-4 lg:gap-6 mt-2 md:mt-3">
+                        lg:flex-row gap-4 lg:gap-6 mt-1 md:mt-2">
           
           {/* Vær - komprimert størrelse - kun vis hvis aktivert */}
           {showWeatherForecast && (
