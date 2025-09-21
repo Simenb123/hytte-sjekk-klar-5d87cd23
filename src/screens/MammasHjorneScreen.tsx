@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SyncStatusIndicator } from '@/components/mammas/SyncStatusIndicator';
 import { SwipeRefresh } from '@/components/mammas/SwipeRefresh';
 import { EnhancedEventRow } from '@/components/mammas/EnhancedEventRow';
+import WeeklyCalendarGrid from '@/components/mammas/WeeklyCalendarGrid';
 import { WeatherForecastScroll } from '@/components/mammas/WeatherForecastScroll';
 import { DayForecastScroll } from '@/components/mammas/DayForecastScroll';
 import { useAdaptivePolling } from '@/hooks/useAdaptivePolling';
@@ -740,13 +741,8 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
           <div className="flex flex-col portrait:flex-col landscape:flex-row 
                           md:flex-row justify-between items-start gap-3 md:gap-0">
             
-            {/* Dato og tid - større skrift for hovedoverskrift */}
+            {/* Dato og tid - komprimert uten unødvendig tekst */}
             <div className="flex-1 order-2 portrait:order-1 landscape:order-1 md:order-1">
-              <div className="text-xl md:text-2xl lg:text-3xl font-bold 
-                              leading-tight mb-1 text-green-300 bg-green-900/50 px-4 py-2 rounded-xl inline-block border border-green-500/30">
-                I dag er det{' '}
-                {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
-              </div>
               <div className="text-3xl md:text-4xl lg:text-5xl text-white font-bold 
                               tracking-wide leading-none mb-1">
                 Klokken er: {fmtTimeHM(now)}
@@ -897,63 +893,11 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             {/* Technical details moved to admin panel for cleaner interface */}
             <SwipeRefresh onRefresh={handleManualRefresh} disabled={isSyncing}>
               <div className="overflow-y-auto pb-4 flex-1">
-              {/* I dag */}
-              {grouped.evToday.length > 0 && (
-                <>
-                  <h3 className="text-lg md:text-xl font-bold text-green-300 bg-green-900/50 px-3 py-2 rounded-lg inline-block border border-green-500/30 mb-2 mt-1">I dag</h3>
-                  {grouped.evToday.map((ev) => <EventRow key={ev.id} ev={ev} />)}
-                </>
-              )}
-
-              {/* I morgen */}
-              {grouped.evTomorrow.length > 0 && (
-                <>
-                  {(() => {
-                    const firstTomorrowEvent = grouped.evTomorrow[0];
-                    const timeUntilTomorrow = firstTomorrowEvent && !firstTomorrowEvent.isContinuing 
-                      ? formatTimeUntilEvent(firstTomorrowEvent.start, firstTomorrowEvent.end, now) 
-                      : null;
-                    const headerText = timeUntilTomorrow 
-                      ? `I morgen - ${timeUntilTomorrow}`
-                      : 'I morgen';
-                    
-                    return (
-                      <h3 className="text-lg md:text-xl text-gray-300 mb-2 mt-3 font-semibold">{headerText}</h3>
-                    );
-                  })()}
-                  {grouped.evTomorrow.map((ev) => <EventRow key={ev.id} ev={ev} hideTimingForTomorrow={true} />)}
-                </>
-              )}
-
-              {/* Denne uken */}
-              {grouped.evThisWeek.length > 0 && (
-                <>
-                  {(() => {
-                    const firstEvent = grouped.evThisWeek[0];
-                    const timeUntil = formatTimeUntilEvent(firstEvent.start, firstEvent.end, now);
-                    const headerText = `Denne uken${timeUntil ? ` - ${timeUntil}` : ''}`;
-                    return (
-                      <h3 className="text-lg md:text-xl text-gray-400 mb-2 mt-6 font-semibold">{headerText}</h3>
-                    );
-                  })()}
-                  {grouped.evThisWeek.slice(0, 4).map((ev) => <EventRow key={ev.id} ev={ev} hideTimingForTomorrow={false} />)}
-                </>
-              )}
-
-              {/* Neste uke */}
-              {grouped.evNextWeek.length > 0 && (
-                <>
-                  {(() => {
-                    const firstEvent = grouped.evNextWeek[0];
-                    const timeUntil = formatTimeUntilEvent(firstEvent.start, firstEvent.end, now);
-                    const headerText = `Neste uke${timeUntil ? ` - ${timeUntil}` : ''}`;
-                    return (
-                      <h3 className="text-lg md:text-xl text-gray-500 mb-2 mt-6 font-semibold">{headerText}</h3>
-                    );
-                  })()}
-                  {grouped.evNextWeek.slice(0, 2).map((ev) => <EventRow key={ev.id} ev={ev} hideTimingForTomorrow={false} />)}
-                </>
-              )}
+              {/* 2x2 Calendar Grid */}
+              <WeeklyCalendarGrid 
+                events={[...grouped.evToday, ...grouped.evTomorrow, ...grouped.evThisWeek, ...grouped.evNextWeek]}
+                currentDate={now}
+              />
               </div>
             </SwipeRefresh>
           </div>
