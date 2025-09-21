@@ -64,7 +64,7 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
       <div className="space-y-3">
         {events.length === 0 ? (
           <div className="text-gray-400 text-base md:text-lg">Ingen avtaler</div>
-        ) : events.length <= 2 ? (
+        ) : events.length <= 3 ? (
           // Show event titles directly for few events
           events.map((event, index) => (
             <div key={event.id} className="flex items-center gap-2">
