@@ -709,20 +709,20 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
                  {showFT && (
                    <>
                      {contacts.map((c, i) => (
-                       <button
-                         key={i}
-                         className="bg-blue-600 rounded-xl px-4 py-2 min-h-[48px] min-w-[100px] text-center hover:bg-blue-700 transition-colors"
-                         onClick={() => openLink(dialHref(c) || '')}
-                       >
-                         <div className="text-white text-lg font-bold">
-                           {c.type === 'video'
-                             ? '🎥'
-                             : c.type === 'audio'
-                             ? '📞'
-                             : '💬'}{' '}
-                           {c.name}
-                         </div>
-                       </button>
+                        <button
+                          key={i}
+                          className="bg-blue-600 rounded-xl px-6 py-4 min-h-[60px] min-w-[140px] text-center hover:bg-blue-700 transition-colors"
+                          onClick={() => openLink(dialHref(c) || '')}
+                        >
+                          <div className="text-white text-xl font-bold">
+                            {c.type === 'video'
+                              ? '🎥'
+                              : c.type === 'audio'
+                              ? '📞'
+                              : '💬'}{' '}
+                            {c.name}
+                          </div>
+                        </button>
                      ))}
                    </>
                  )}
@@ -782,30 +782,30 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             {/* Dato og tid - komprimert uten unødvendig tekst */}
             <div className="flex-1 order-2 portrait:order-1 landscape:order-1 md:order-1">
               <div className="flex items-center gap-4 mb-1">
-                 <div className="text-3xl md:text-4xl lg:text-5xl text-white font-bold 
-                                 tracking-wide leading-none">
-                   Klokken er: {fmtTimeHM(now)}
-                 </div>
+                  <div className="text-3xl md:text-4xl lg:text-5xl text-white font-bold 
+                                  tracking-wide leading-none">
+                    Kl: {fmtTimeHM(now)}
+                  </div>
                  {/* FaceTime/SMS-knapper og Refresh-knapp i dagmodus */}
                  <div className="flex gap-2 items-center">
                    {showFT && (
                      <>
-                       {contacts.map((c, i) => (
-                         <button
-                           key={i}
-                           className="bg-blue-600 rounded-lg px-3 py-2 min-h-[36px] text-center hover:bg-blue-700 transition-colors"
-                           onClick={() => openLink(dialHref(c) || '')}
-                         >
-                           <div className="text-white text-sm font-bold">
-                             {c.type === 'video'
-                               ? '🎥'
-                               : c.type === 'audio'
-                               ? '📞'
-                               : '💬'}{' '}
-                             {c.name}
-                           </div>
-                         </button>
-                       ))}
+                        {contacts.map((c, i) => (
+                          <button
+                            key={i}
+                            className="bg-blue-600 rounded-lg px-4 py-3 min-h-[48px] min-w-[120px] text-center hover:bg-blue-700 transition-colors"
+                            onClick={() => openLink(dialHref(c) || '')}
+                          >
+                            <div className="text-white text-base md:text-lg font-bold">
+                              {c.type === 'video'
+                                ? '🎥'
+                                : c.type === 'audio'
+                                ? '📞'
+                                : '💬'}{' '}
+                              {c.name}
+                            </div>
+                          </button>
+                        ))}
                      </>
                    )}
                    {/* Refresh-knapp */}
