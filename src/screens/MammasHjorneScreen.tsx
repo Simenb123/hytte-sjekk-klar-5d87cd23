@@ -698,34 +698,49 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
         className="flex-1 bg-gray-950 p-8 pt-6 w-full min-h-screen"
         style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
       >
-        <div className="flex-1 flex items-center justify-center px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-8 mb-4">
-              <div className="text-9xl text-gray-200 font-bold tracking-wider leading-none">
-                {fmtTimeHM(now)}
-              </div>
-              {/* FaceTime/SMS-knapper i nattmodus */}
-              {showFT && (
-                <div className="flex flex-col gap-3">
-                  {contacts.map((c, i) => (
-                    <button
-                      key={i}
-                      className="bg-blue-600 rounded-xl px-4 py-2 min-h-[48px] min-w-[100px] text-center hover:bg-blue-700 transition-colors"
-                      onClick={() => openLink(dialHref(c) || '')}
-                    >
-                      <div className="text-white text-lg font-bold">
-                        {c.type === 'video'
-                          ? '🎥'
-                          : c.type === 'audio'
-                          ? '📞'
-                          : '💬'}{' '}
-                        {c.name}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+         <div className="flex-1 flex items-center justify-center px-8">
+           <div className="text-center">
+             <div className="flex items-center justify-center gap-8 mb-4">
+               <div className="text-9xl text-gray-200 font-bold tracking-wider leading-none">
+                 {fmtTimeHM(now)}
+               </div>
+               {/* FaceTime/SMS-knapper og Refresh-knapp i nattmodus */}
+               <div className="flex flex-col gap-3">
+                 {showFT && (
+                   <>
+                     {contacts.map((c, i) => (
+                       <button
+                         key={i}
+                         className="bg-blue-600 rounded-xl px-4 py-2 min-h-[48px] min-w-[100px] text-center hover:bg-blue-700 transition-colors"
+                         onClick={() => openLink(dialHref(c) || '')}
+                       >
+                         <div className="text-white text-lg font-bold">
+                           {c.type === 'video'
+                             ? '🎥'
+                             : c.type === 'audio'
+                             ? '📞'
+                             : '💬'}{' '}
+                           {c.name}
+                         </div>
+                       </button>
+                     ))}
+                   </>
+                 )}
+                 {/* Refresh-knapp */}
+                 <button
+                   onClick={handleManualRefresh}
+                   disabled={isSyncing}
+                   className={`flex items-center justify-center min-h-[48px] min-w-[48px] rounded-xl transition-colors ${
+                     isSyncing 
+                       ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                       : 'bg-blue-600 hover:bg-blue-700 text-white'
+                   }`}
+                   title="Oppdater avtaler"
+                 >
+                   <RefreshCw className={`h-6 w-6 ${isSyncing ? 'animate-spin' : ''}`} />
+                 </button>
+               </div>
+             </div>
             <div className="text-3xl text-gray-400 leading-9">
               I dag: {fmtDateFull(now).replace(/^([a-zæøå]+)/i, (m) => m.toUpperCase())}
             </div>
@@ -767,31 +782,46 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
             {/* Dato og tid - komprimert uten unødvendig tekst */}
             <div className="flex-1 order-2 portrait:order-1 landscape:order-1 md:order-1">
               <div className="flex items-center gap-4 mb-1">
-                <div className="text-3xl md:text-4xl lg:text-5xl text-white font-bold 
-                                tracking-wide leading-none">
-                  Klokken er: {fmtTimeHM(now)}
-                </div>
-                {/* FaceTime/SMS-knapper i dagmodus */}
-                {showFT && (
-                  <div className="flex gap-2">
-                    {contacts.map((c, i) => (
-                      <button
-                        key={i}
-                        className="bg-blue-600 rounded-lg px-3 py-2 min-h-[36px] text-center hover:bg-blue-700 transition-colors"
-                        onClick={() => openLink(dialHref(c) || '')}
-                      >
-                        <div className="text-white text-sm font-bold">
-                          {c.type === 'video'
-                            ? '🎥'
-                            : c.type === 'audio'
-                            ? '📞'
-                            : '💬'}{' '}
-                          {c.name}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                 <div className="text-3xl md:text-4xl lg:text-5xl text-white font-bold 
+                                 tracking-wide leading-none">
+                   Klokken er: {fmtTimeHM(now)}
+                 </div>
+                 {/* FaceTime/SMS-knapper og Refresh-knapp i dagmodus */}
+                 <div className="flex gap-2 items-center">
+                   {showFT && (
+                     <>
+                       {contacts.map((c, i) => (
+                         <button
+                           key={i}
+                           className="bg-blue-600 rounded-lg px-3 py-2 min-h-[36px] text-center hover:bg-blue-700 transition-colors"
+                           onClick={() => openLink(dialHref(c) || '')}
+                         >
+                           <div className="text-white text-sm font-bold">
+                             {c.type === 'video'
+                               ? '🎥'
+                               : c.type === 'audio'
+                               ? '📞'
+                               : '💬'}{' '}
+                             {c.name}
+                           </div>
+                         </button>
+                       ))}
+                     </>
+                   )}
+                   {/* Refresh-knapp */}
+                   <button
+                     onClick={handleManualRefresh}
+                     disabled={isSyncing}
+                     className={`flex items-center justify-center w-9 h-9 rounded-lg transition-colors ${
+                       isSyncing 
+                         ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                         : 'bg-blue-600 hover:bg-blue-700 text-white'
+                     }`}
+                     title="Oppdater avtaler"
+                   >
+                     <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                   </button>
+                 </div>
               </div>
               <div className="flex flex-col portrait:flex-row landscape:flex-row 
                               md:flex-row items-start portrait:items-center 
@@ -919,23 +949,6 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
           {/* Kalender - mer plass for avtaler - tar full bredde hvis værvarsel er skjult */}
           <div className={`flex-1 ${showWeatherForecast ? 'landscape:flex-[1.1]' : ''} bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-3 md:p-4 min-h-[200px] landscape:min-h-[200px] backdrop-blur-sm flex flex-col max-h-[calc(100vh-180px)]`}>
-            {/* Calendar header with refresh button */}
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-xl md:text-2xl text-white font-bold tracking-wide">Avtaler</h2>
-              <button
-                onClick={handleManualRefresh}
-                disabled={isSyncing}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isSyncing 
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
-                title="Oppdater avtaler"
-              >
-                <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                {isSyncing ? 'Oppdaterer...' : 'Oppdater'}
-              </button>
-            </div>
             {/* Technical details moved to admin panel for cleaner interface */}
             <SwipeRefresh onRefresh={handleManualRefresh} disabled={isSyncing}>
               <div className="overflow-y-auto pb-4 flex-1">
