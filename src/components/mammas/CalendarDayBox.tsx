@@ -15,6 +15,8 @@ interface CalendarDayBoxProps {
   date: Date;
   events: Event[];
   isToday?: boolean;
+  dayLabel?: string;
+  labelColor?: string;
   className?: string;
   onClick?: () => void;
 }
@@ -23,6 +25,8 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
   date,
   events,
   isToday = false,
+  dayLabel,
+  labelColor = 'text-green-400',
   className = '',
   onClick
 }) => {
@@ -45,11 +49,16 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
       onClick={onClick}
     >
       {/* Header */}
-      <div className="mb-3">
-        <div className="text-white text-lg md:text-xl font-bold capitalize">
+      <div className="mb-2">
+        {dayLabel && (
+          <div className={`text-xs font-bold mb-1 ${labelColor}`}>
+            {dayLabel}
+          </div>
+        )}
+        <div className="text-white text-base md:text-lg font-bold capitalize">
           {dayName}
         </div>
-        <div className="text-gray-300 text-sm">
+        <div className="text-gray-300 text-xs">
           {dayNumber}. {monthName}
         </div>
       </div>
