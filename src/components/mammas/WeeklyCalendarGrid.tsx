@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { addDays, startOfDay } from 'date-fns';
+import { addDays, startOfDay, isWithinInterval, isSameDay } from 'date-fns';
 import CalendarDayBox, { Event } from './CalendarDayBox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,8 +32,13 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
     for (let i = 0; i < 6; i++) {
       const date = addDays(today, i);
       const dayEvents = events.filter(event => {
-        const eventDate = startOfDay(new Date(event.start));
-        return eventDate.getTime() === date.getTime();
+        const eventStart = startOfDay(new Date(event.start));
+        const eventEnd = startOfDay(new Date(event.end));
+        
+        // Check if the date falls within the event period (for multi-day events)
+        return isWithinInterval(date, { start: eventStart, end: eventEnd }) || 
+               isSameDay(eventStart, date) || 
+               isSameDay(eventEnd, date);
       });
 
       days.push({
