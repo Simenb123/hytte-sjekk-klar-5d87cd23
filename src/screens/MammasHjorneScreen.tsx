@@ -954,7 +954,7 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
               <div className="overflow-y-auto pb-4 flex-1">
               {/* 2x2 Calendar Grid */}
               <WeeklyCalendarGrid 
-                events={[...grouped.evToday, ...grouped.evTomorrow, ...grouped.evThisWeek, ...grouped.evNextWeek]}
+                events={events}
                 currentDate={now}
               />
               </div>
