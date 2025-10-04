@@ -16,8 +16,8 @@ export function useAdaptivePolling({ onPoll, events, isNightMode, isConnected }:
     // Don't poll if not connected
     if (!isConnected) return null;
 
-    // Night mode: poll every 30 minutes
-    if (isNightMode) return 30 * 60 * 1000;
+    // Night mode: poll every 60 minutes (reduced frequency)
+    if (isNightMode) return 60 * 60 * 1000;
 
     // Check if we have events starting soon (within 2 hours)
     const now = new Date();
@@ -28,11 +28,11 @@ export function useAdaptivePolling({ onPoll, events, isNightMode, isConnected }:
       return eventStart >= now && eventStart <= twoHoursFromNow;
     });
 
-    // If events are starting soon, poll every 2 minutes
-    if (hasUpcomingEvents) return 2 * 60 * 1000;
+    // If events are starting soon, poll every 5 minutes (increased from 2 min to reduce API calls)
+    if (hasUpcomingEvents) return 5 * 60 * 1000;
 
-    // Day time: poll every 15 minutes
-    return 15 * 60 * 1000;
+    // Day time: poll every 30 minutes (increased from 15 min for better cache utilization)
+    return 30 * 60 * 1000;
   }, [isNightMode, events, isConnected]);
 
   const scheduleNextPoll = useCallback(() => {

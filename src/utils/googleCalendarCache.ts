@@ -2,7 +2,8 @@ import type { GoogleEvent } from '@/types/googleCalendar.types';
 
 const CACHE_KEY = 'googleCalendarCache';
 const CACHE_EXPIRY_KEY = 'googleCalendarCacheExpiry';
-const DEFAULT_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+const DEFAULT_CACHE_DURATION = 2 * 60 * 60 * 1000; // 2 hours (increased for better performance)
+const STALE_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours for stale cache
 
 interface CacheData {
   events: GoogleEvent[];
@@ -12,7 +13,7 @@ interface CacheData {
 
 export class GoogleCalendarCache {
   private static instance: GoogleCalendarCache;
-  private version = '1.0';
+  private version = '1.1'; // Updated version for stale-while-revalidate support
 
   static getInstance(): GoogleCalendarCache {
     if (!GoogleCalendarCache.instance) {
@@ -94,6 +95,43 @@ export class GoogleCalendarCache {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Check if stale cache exists (older than fresh but still usable)
+   */
+  hasStaleCache(): boolean {
+    try {
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      if (!cachedData) return false;
+
+      const data: CacheData = JSON.parse(cachedData);
+      const age = Date.now() - data.timestamp;
+      
+      // Stale cache is valid for up to 24 hours
+      return age < STALE_CACHE_DURATION;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get stale events (for stale-while-revalidate pattern)
+   */
+  getStaleEvents(): GoogleEvent[] | null {
+    if (this.hasStaleCache()) {
+      try {
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (!cachedData) return null;
+        
+        const data: CacheData = JSON.parse(cachedData);
+        return data.events;
+      } catch (error) {
+        console.error('Failed to retrieve stale cache:', error);
+        return null;
+      }
+    }
+    return null;
   }
 
   /**

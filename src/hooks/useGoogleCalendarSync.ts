@@ -26,9 +26,20 @@ export function useGoogleCalendarSync() {
   const lastSyncRef = useRef<string | undefined>();
 
   const performSync = useCallback(async (forceRefresh = false) => {
-    if (syncState.isLoading) return;
+    // Allow background refresh even if already loading
+    if (syncState.isLoading && !forceRefresh) {
+      console.log('Sync already in progress, skipping');
+      return;
+    }
 
-    setSyncState(prev => ({ ...prev, isLoading: true, error: null }));
+    // Don't show loading spinner for background refreshes
+    const isBackgroundRefresh = !forceRefresh && syncState.lastSyncTime;
+    
+    setSyncState(prev => ({ 
+      ...prev, 
+      isLoading: forceRefresh || !isBackgroundRefresh, 
+      error: null 
+    }));
 
     try {
       if (!isGoogleConnected) {
@@ -51,19 +62,27 @@ export function useGoogleCalendarSync() {
         retryCount: 0
       }));
 
+      console.log('✅ Calendar sync successful');
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Sync error:', errorMessage);
+      console.error('❌ Sync error:', errorMessage);
       
-      setSyncState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-        retryCount: prev.retryCount + 1
-      }));
+      // Don't show error for background refreshes, just log it
+      if (!isBackgroundRefresh) {
+        setSyncState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: errorMessage,
+          retryCount: prev.retryCount + 1
+        }));
+      } else {
+        console.log('Background sync failed silently, will retry later');
+        setSyncState(prev => ({ ...prev, isLoading: false }));
+      }
 
-      // Auto-retry with exponential backoff (max 3 retries)
-      if (syncState.retryCount < 3) {
+      // Auto-retry with exponential backoff (max 3 retries) only for foreground syncs
+      if (!isBackgroundRefresh && syncState.retryCount < 3) {
         const retryDelay = Math.min(1000 * Math.pow(2, syncState.retryCount), 30000);
         console.log(`Retrying sync in ${retryDelay}ms (attempt ${syncState.retryCount + 1})`);
         
@@ -72,7 +91,7 @@ export function useGoogleCalendarSync() {
         }, retryDelay);
       }
     }
-  }, [isGoogleConnected, fetchGoogleEvents, fetchGoogleCalendars, syncState.isLoading, syncState.retryCount]);
+  }, [isGoogleConnected, fetchGoogleEvents, fetchGoogleCalendars, syncState.isLoading, syncState.retryCount, syncState.lastSyncTime]);
 
   const manualRefresh = useCallback(async () => {
     // Clear any pending retries

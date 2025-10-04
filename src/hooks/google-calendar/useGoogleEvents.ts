@@ -44,18 +44,35 @@ export function useGoogleEvents(
       return;
     }
 
-    // Check cache first (unless forcing refresh)
-    if (!forceRefresh) {
+    // Stale-while-revalidate: Check if we have fresh cached data
+    if (!forceRefresh && googleCalendarCache.isValid()) {
       const cachedEvents = googleCalendarCache.getEvents();
-      if (cachedEvents && googleCalendarCache.isValid()) {
+      if (cachedEvents && cachedEvents.length > 0) {
         const cacheAge = googleCalendarCache.getCacheAge();
-        console.log(`📦 Using cached Google events (${cacheAge} minutes old)`);
+        console.log(`📦 Using fresh cached Google events (${cacheAge} minutes old)`);
         setState(prev => ({ 
           ...prev, 
           googleEvents: cachedEvents,
+          isLoadingEvents: false,
           fetchError: null
         }));
         return;
+      }
+    }
+
+    // If cache is stale but exists, show it immediately while fetching fresh data
+    if (!forceRefresh && googleCalendarCache.hasStaleCache()) {
+      const staleEvents = googleCalendarCache.getStaleEvents();
+      if (staleEvents && staleEvents.length > 0) {
+        const cacheAge = googleCalendarCache.getCacheAge();
+        console.log(`📦 Using stale cached events (${cacheAge} minutes old) while revalidating`);
+        setState(prev => ({
+          ...prev,
+          googleEvents: staleEvents,
+          isLoadingEvents: true, // Keep loading state to show refresh is happening
+          fetchError: null
+        }));
+        // Continue to fetch fresh data below (stale-while-revalidate pattern)
       }
     }
 
