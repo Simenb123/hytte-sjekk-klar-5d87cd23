@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { addDays, startOfDay, endOfDay } from 'date-fns';
+import { addDays, startOfDay, endOfDay, parseISO } from 'date-fns';
 import CalendarDayBox, { Event } from './CalendarDayBox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,11 +32,13 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
     for (let i = 0; i < 6; i++) {
       const date = addDays(today, i);
       const dayEvents = events.filter(event => {
-        // Check if the entire day overlaps with the event
         const dayStart = startOfDay(date);
         const dayEnd = endOfDay(date);
-        const eventStart = new Date(event.start);
-        const eventEnd = new Date(event.end);
+        
+        // Parse dates correctly: date-only strings (YYYY-MM-DD) should be interpreted in local timezone
+        // parseISO handles both "2025-10-09" (date-only) and "2025-10-09T10:00:00Z" (with time) correctly
+        const eventStart = parseISO(event.start);
+        const eventEnd = parseISO(event.end);
         
         // Two intervals overlap if one starts before the other ends
         return eventStart <= dayEnd && eventEnd >= dayStart;

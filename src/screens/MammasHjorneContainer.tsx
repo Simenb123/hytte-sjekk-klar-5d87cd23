@@ -29,63 +29,19 @@ const MammasHjorneContainer: React.FC = () => {
   } = useGoogleCalendarSync();
 
   const fetchEvents = async (): Promise<Event[]> => {
-    console.log('MammasHjorne fetchEvents called - State:', {
-      isGoogleConnected,
-      isLoadingEvents,
-      googleEventsCount: googleEvents.length,
-      fetchError
-    });
-
-    try {
-      // If we're still loading events, wait a bit and return empty for now
-      if (isLoadingEvents) {
-        console.log('Google Calendar events still loading, returning empty array');
-        return [];
-      }
-
-      // If connected and we have events, use them
-      if (isGoogleConnected && googleEvents.length > 0) {
-        console.log('Using Google Calendar events:', googleEvents.length);
-        // Convert Google events to Event format with better debugging
-        const convertedEvents = googleEvents.map(event => {
-          console.log('Converting event:', event.summary, 'from calendar:', event.calendarSummary || 'primary');
-          
-          // Handle both timed and all-day events properly
-          const startTime = event.start.dateTime || event.start.date;
-          const endTime = event.end.dateTime || event.end.date;
-          const isAllDay = event.allDay || !!event.start.date;
-          
-          if (!startTime || !endTime) {
-            console.warn('Event missing start/end time:', event.summary, { start: event.start, end: event.end });
-          }
-          
-          return {
-            id: event.id,
-            title: event.summary,
-            start: startTime || new Date().toISOString(),
-            end: endTime || new Date().toISOString(),
-            location: event.location,
-            attendees: undefined,
-            allDay: isAllDay
-          };
-        });
-        console.log('Converted events:', convertedEvents.length);
-        return convertedEvents;
-      }
-
-      // If connected but no events, still return empty (not mock data)
-      if (isGoogleConnected && googleEvents.length === 0) {
-        console.log('Google Calendar connected but no events found');
-        return [];
-      }
-
-      // Not connected - return empty array 
-      console.log('Google Calendar not connected, returning empty array');
-      return [];
-    } catch (error) {
-      console.error('Error fetching Google Calendar events:', error);
+    if (!isGoogleConnected || googleEvents.length === 0) {
       return [];
     }
+
+    return googleEvents.map(event => ({
+      id: event.id,
+      title: event.summary,
+      start: event.start.dateTime || event.start.date || new Date().toISOString(),
+      end: event.end.dateTime || event.end.date || new Date().toISOString(),
+      location: event.location,
+      attendees: undefined,
+      allDay: event.allDay || !!event.start.date
+    }));
   };
 
   const fetchWeather = async (lat: number = WEATHER_LAT, lon: number = WEATHER_LON): Promise<WeatherSnapshot> => {

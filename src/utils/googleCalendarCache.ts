@@ -2,8 +2,8 @@ import type { GoogleEvent } from '@/types/googleCalendar.types';
 
 const CACHE_KEY = 'googleCalendarCache';
 const CACHE_EXPIRY_KEY = 'googleCalendarCacheExpiry';
-const DEFAULT_CACHE_DURATION = 2 * 60 * 60 * 1000; // 2 hours (increased for better performance)
-const STALE_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours for stale cache
+const DEFAULT_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes fresh cache
+const STALE_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes stale (still usable)
 
 interface CacheData {
   events: GoogleEvent[];
