@@ -175,7 +175,13 @@ export const fetchEvents = async (accessToken: string, filters?: {
     // Convert all-day events to dateTime format for consistent handling
     if (isAllDay) {
       const startDate = new Date(event.start.date + 'T00:00:00');
-      const endDate = new Date(event.end.date + 'T23:59:59');
+      
+      // Google Calendar uses exclusive end dates for all-day events
+      // If event is on Oct 9, Google sends end.date = "2025-10-10" (exclusive)
+      // We need to subtract 1 day to get the actual last day of the event
+      const endDateObj = new Date(event.end.date);
+      endDateObj.setDate(endDateObj.getDate() - 1);
+      const endDate = new Date(endDateObj.toISOString().split('T')[0] + 'T23:59:59');
       
       return {
         ...event,
