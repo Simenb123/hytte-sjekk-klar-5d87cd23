@@ -22,10 +22,15 @@ const isEventOnDate = (event: Event, targetDate: Date): boolean => {
   const start = parseISO(event.start);
   const end = parseISO(event.end);
   
-  // For multi-day events, check if the target date falls within the event period
-  return isWithinInterval(targetDate, { start, end }) || 
-         isSameDay(start, targetDate) || 
-         isSameDay(end, targetDate);
+  // Set target date to start of day for comparison
+  const targetDayStart = new Date(targetDate);
+  targetDayStart.setHours(0, 0, 0, 0);
+  const targetDayEnd = new Date(targetDate);
+  targetDayEnd.setHours(23, 59, 59, 999);
+  
+  // Check if the event overlaps with the target day
+  // Event overlaps if it starts before or on the target day's end AND ends after or on the target day's start
+  return start <= targetDayEnd && end >= targetDayStart;
 };
 
 const isWithinDays = (date: Date, referenceDate: Date, days: number): boolean => {

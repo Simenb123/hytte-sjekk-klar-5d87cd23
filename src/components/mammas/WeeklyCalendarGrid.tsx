@@ -33,12 +33,21 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
       const date = addDays(today, i);
       const dayEvents = events.filter(event => {
         const eventStart = startOfDay(new Date(event.start));
-        const eventEnd = startOfDay(new Date(event.end));
         
-        // Check if the date falls within the event period (for multi-day events)
-        return isWithinInterval(date, { start: eventStart, end: eventEnd }) || 
-               isSameDay(eventStart, date) || 
-               isSameDay(eventEnd, date);
+        // For all-day events, DON'T use startOfDay on end date
+        // The backend has already set it to 23:59:59 of the correct day
+        let eventEnd: Date;
+        if (event.allDay) {
+          // Keep the full timestamp for all-day events (should be 23:59:59)
+          eventEnd = new Date(event.end);
+        } else {
+          // For timed events, use startOfDay for date comparison
+          eventEnd = startOfDay(new Date(event.end));
+        }
+        
+        // Check if the date falls within the event period
+        // Only use isWithinInterval - it handles all cases correctly
+        return isWithinInterval(date, { start: eventStart, end: eventEnd });
       });
 
       days.push({
