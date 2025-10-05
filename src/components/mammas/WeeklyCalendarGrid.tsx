@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { addDays, startOfDay, endOfDay, parseISO } from 'date-fns';
+import { addDays, startOfDay, endOfDay, parseISO, format } from 'date-fns';
+import { nb } from 'date-fns/locale';
 import CalendarDayBox, { Event } from './CalendarDayBox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { format } from 'date-fns';
-import { nb } from 'date-fns/locale';
 
 interface WeeklyCalendarGridProps {
   events: Event[];
