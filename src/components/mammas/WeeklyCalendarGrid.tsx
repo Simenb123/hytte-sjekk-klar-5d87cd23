@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { addDays, startOfDay, isWithinInterval, isSameDay } from 'date-fns';
+import { addDays, startOfDay, endOfDay } from 'date-fns';
 import CalendarDayBox, { Event } from './CalendarDayBox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,22 +32,14 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
     for (let i = 0; i < 6; i++) {
       const date = addDays(today, i);
       const dayEvents = events.filter(event => {
-        const eventStart = startOfDay(new Date(event.start));
+        // Check if the entire day overlaps with the event
+        const dayStart = startOfDay(date);
+        const dayEnd = endOfDay(date);
+        const eventStart = new Date(event.start);
+        const eventEnd = new Date(event.end);
         
-        // For all-day events, DON'T use startOfDay on end date
-        // The backend has already set it to 23:59:59 of the correct day
-        let eventEnd: Date;
-        if (event.allDay) {
-          // Keep the full timestamp for all-day events (should be 23:59:59)
-          eventEnd = new Date(event.end);
-        } else {
-          // For timed events, use startOfDay for date comparison
-          eventEnd = startOfDay(new Date(event.end));
-        }
-        
-        // Check if the date falls within the event period
-        // Only use isWithinInterval - it handles all cases correctly
-        return isWithinInterval(date, { start: eventStart, end: eventEnd });
+        // Two intervals overlap if one starts before the other ends
+        return eventStart <= dayEnd && eventEnd >= dayStart;
       });
 
       days.push({
