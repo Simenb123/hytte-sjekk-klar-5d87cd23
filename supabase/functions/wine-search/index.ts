@@ -80,8 +80,11 @@ serve(async (req) => {
 
     console.log('🍷 Searching Vinmonopolet for:', searchTerm, 'with limit:', limit);
 
-    // Check cache first
-    const cacheKey = `search:${searchTerm.toLowerCase()}`;
+    // Fetch many more products to improve search results
+    const maxResults = Math.min(limit * 100, 2000);
+    
+    // Check cache first (v2 cache key to invalidate old cache)
+    const cacheKey = `search:v2:${searchTerm.toLowerCase()}:${maxResults}`;
     const cached = cache.get(cacheKey);
     const now = Date.now();
 
@@ -113,9 +116,9 @@ serve(async (req) => {
       );
     }
 
-    // Call Vinmonopolet API
-    const apiUrl = `https://apis.vinmonopolet.no/products/v0/details-normal?maxResults=${limit * 2}`;
-    console.log('📡 Calling Vinmonopolet API:', apiUrl);
+    // Call Vinmonopolet API with increased maxResults
+    const apiUrl = `https://apis.vinmonopolet.no/products/v0/details-normal?maxResults=${maxResults}`;
+    console.log('📡 Calling Vinmonopolet API:', apiUrl, 'to fetch up to', maxResults, 'products');
     console.log('🔑 Using API key starting with:', apiKey.substring(0, 8) + '...');
 
     const response = await fetch(apiUrl, {
