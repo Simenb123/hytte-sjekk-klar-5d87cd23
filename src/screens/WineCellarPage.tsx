@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { WineFilters as WineFiltersType } from '@/types/wine';
 
+// Wine cellar page with Vinmonopolet integration
+
 export default function WineCellarPage() {
   const { wines, isLoading, error } = useWineCellar();
   const [filters, setFilters] = useState<WineFiltersType>({
