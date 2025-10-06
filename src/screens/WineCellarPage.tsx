@@ -7,8 +7,10 @@ import { WineFilters } from '@/components/wine/WineFilters';
 import { WineStats } from '@/components/wine/WineStats';
 import { BulkLocationMove } from '@/components/wine/BulkLocationMove';
 import { WineImportExport } from '@/components/wine/WineImportExport';
+import { VinmonopoletSearch } from '@/components/wine/VinmonopoletSearch';
 import { useWineCellar } from '@/hooks/useWineCellar';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { WineFilters as WineFiltersType } from '@/types/wine';
 
 export default function WineCellarPage() {
@@ -157,17 +159,28 @@ export default function WineCellarPage() {
           </div>
         </div>
 
-        <WineStats wines={wines} />
+        <Tabs defaultValue="cellar" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="cellar">Mitt vinlager</TabsTrigger>
+            <TabsTrigger value="search">Søk Vinmonopolet</TabsTrigger>
+          </TabsList>
 
-        <WineFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          availableLocations={availableLocations}
-        />
+          <TabsContent value="cellar" className="space-y-6">
+            <WineStats wines={wines} />
 
-        <div className="mt-6">
-          <WineList wines={filteredAndSortedWines} />
-        </div>
+            <WineFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+              availableLocations={availableLocations}
+            />
+
+            <WineList wines={filteredAndSortedWines} />
+          </TabsContent>
+
+          <TabsContent value="search">
+            <VinmonopoletSearch />
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );

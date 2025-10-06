@@ -99,20 +99,24 @@ export function useWineCellar() {
     },
   });
 
-  const searchVinmonopolet = async (searchTerm: string): Promise<VinmonopolProduct[]> => {
-    try {
+  const searchVinmonopoletMutation = useMutation({
+    mutationFn: async (searchTerm: string) => {
       const { data, error } = await supabase.functions.invoke('wine-search', {
         body: { searchTerm, limit: 20 }
       });
 
       if (error) throw error;
-      return data.products || [];
-    } catch (error) {
+      return (data?.products || []) as VinmonopolProduct[];
+    },
+    onError: (error) => {
       console.error('Error searching Vinmonopolet:', error);
-      toast({ title: 'Feil', description: 'Kunne ikke søke i Vinmonopolet', variant: 'destructive' });
-      return [];
-    }
-  };
+      toast({ 
+        title: 'Feil ved søk', 
+        description: 'Kunne ikke søke i Vinmonopolet. Prøv igjen.', 
+        variant: 'destructive' 
+      });
+    },
+  });
 
   return {
     wines,
@@ -121,7 +125,8 @@ export function useWineCellar() {
     addWine: addWineMutation.mutate,
     updateWine: updateWineMutation.mutate,
     deleteWine: deleteWineMutation.mutate,
-    searchVinmonopolet,
+    searchVinmonopolet: searchVinmonopoletMutation.mutateAsync,
+    isSearching: searchVinmonopoletMutation.isPending,
     isAdding: addWineMutation.isPending,
     isUpdating: updateWineMutation.isPending,
     isDeleting: deleteWineMutation.isPending,
