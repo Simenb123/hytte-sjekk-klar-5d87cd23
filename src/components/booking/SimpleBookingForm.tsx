@@ -152,4 +152,4 @@ const SimpleBookingForm: React.FC<SimpleBookingFormProps> = ({
   );
 };
 
-export default SimpleBookingForm;
+export { SimpleBookingForm };
