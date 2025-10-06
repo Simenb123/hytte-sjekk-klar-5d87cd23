@@ -11,19 +11,26 @@ export function VinmonopoletSearch() {
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState<VinmonopolProduct[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { searchVinmonopolet, isSearching, addWine } = useWineCellar();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchTerm.trim()) return;
 
+    console.log('🔍 Starting Vinmonopolet search for:', searchTerm);
     setHasSearched(true);
+    setErrorMessage(null);
+    
     try {
       const products = await searchVinmonopolet(searchTerm);
+      console.log('✅ Search successful, found', products.length, 'products');
       setResults(products);
-    } catch (error) {
-      console.error('Search error:', error);
+    } catch (error: any) {
+      console.error('❌ Search error:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       setResults([]);
+      setErrorMessage(error?.message || 'Kunne ikke søke i Vinmonopolet. Prøv igjen.');
     }
   };
 
@@ -106,11 +113,22 @@ export function VinmonopoletSearch() {
         </CardContent>
       </Card>
 
-      {hasSearched && (
+      {errorMessage && (
+        <Card className="border-destructive">
+          <CardContent className="p-4">
+            <p className="text-destructive font-medium">⚠️ {errorMessage}</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Sjekk konsollen for mer detaljer eller prøv igjen senere.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {hasSearched && !errorMessage && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">
-              {results.length > 0 ? `Fant ${results.length} viner` : 'Ingen resultater'}
+              {results.length > 0 ? `Fant ${results.length} viner` : 'Ingen resultater funnet'}
             </h3>
           </div>
 

@@ -101,18 +101,35 @@ export function useWineCellar() {
 
   const searchVinmonopoletMutation = useMutation({
     mutationFn: async (searchTerm: string) => {
+      console.log('🔍 useWineCellar: Calling wine-search edge function with:', searchTerm);
+      
       const { data, error } = await supabase.functions.invoke('wine-search', {
         body: { searchTerm, limit: 20 }
       });
 
-      if (error) throw error;
-      return (data?.products || []) as VinmonopolProduct[];
+      console.log('📦 Response from edge function:', { data, error });
+
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw error;
+      }
+      
+      if (data?.error) {
+        console.error('❌ API error in response:', data.error);
+        throw new Error(data.error);
+      }
+
+      const products = data?.products || [];
+      console.log('✅ Successfully fetched', products.length, 'products');
+      
+      return products as VinmonopolProduct[];
     },
-    onError: (error) => {
-      console.error('Error searching Vinmonopolet:', error);
+    onError: (error: any) => {
+      console.error('❌ Search mutation error:', error);
+      const errorMessage = error?.message || 'Kunne ikke søke i Vinmonopolet. Prøv igjen.';
       toast({ 
         title: 'Feil ved søk', 
-        description: 'Kunne ikke søke i Vinmonopolet. Prøv igjen.', 
+        description: errorMessage, 
         variant: 'destructive' 
       });
     },

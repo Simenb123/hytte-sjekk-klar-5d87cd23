@@ -39,11 +39,38 @@ serve(async (req) => {
   }
 
   try {
-    const { searchTerm, limit = 20 } = await req.json();
+    console.log('📥 Received request:', req.method);
+    
+    // Handle both POST and GET requests
+    let searchTerm: string;
+    let limit = 20;
+    
+    if (req.method === 'POST') {
+      try {
+        const body = await req.json();
+        console.log('📦 POST body:', JSON.stringify(body));
+        searchTerm = body.searchTerm;
+        limit = body.limit || 20;
+      } catch (e) {
+        console.error('❌ Failed to parse JSON body:', e);
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON body' }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    } else {
+      const url = new URL(req.url);
+      searchTerm = url.searchParams.get('searchTerm') || '';
+      limit = parseInt(url.searchParams.get('limit') || '20');
+    }
     
     if (!searchTerm || searchTerm.trim().length === 0) {
+      console.log('⚠️ No search term provided');
       return new Response(
-        JSON.stringify({ error: 'Search term is required' }),
+        JSON.stringify({ error: 'Search term is required', searchTerm, received: searchTerm }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -51,7 +78,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('🍷 Searching Vinmonopolet for:', searchTerm);
+    console.log('🍷 Searching Vinmonopolet for:', searchTerm, 'with limit:', limit);
 
     // Check cache first
     const cacheKey = `search:${searchTerm.toLowerCase()}`;
@@ -69,10 +96,16 @@ serve(async (req) => {
 
     // Get API key from environment
     const apiKey = Deno.env.get('VINMONOPOLET_PRIMARY_KEY');
+    console.log('🔑 API Key check:', apiKey ? '✅ Found' : '❌ Missing');
+    
     if (!apiKey) {
-      console.error('❌ VINMONOPOLET_PRIMARY_KEY not configured');
+      console.error('❌ VINMONOPOLET_PRIMARY_KEY not configured in Supabase secrets');
+      console.error('💡 Run: supabase secrets set VINMONOPOLET_PRIMARY_KEY=your_key_here');
       return new Response(
-        JSON.stringify({ error: 'API key not configured' }),
+        JSON.stringify({ 
+          error: 'Vinmonopolet API key not configured',
+          hint: 'Please configure VINMONOPOLET_PRIMARY_KEY in Supabase secrets'
+        }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -83,6 +116,7 @@ serve(async (req) => {
     // Call Vinmonopolet API
     const apiUrl = `https://apis.vinmonopolet.no/products/v0/details-normal?maxResults=${limit * 2}`;
     console.log('📡 Calling Vinmonopolet API:', apiUrl);
+    console.log('🔑 Using API key starting with:', apiKey.substring(0, 8) + '...');
 
     const response = await fetch(apiUrl, {
       headers: {
@@ -91,17 +125,30 @@ serve(async (req) => {
       },
     });
 
+    console.log('📊 API Response status:', response.status, response.statusText);
+
     if (!response.ok) {
       console.error('❌ Vinmonopolet API error:', response.status, response.statusText);
       const errorText = await response.text();
-      console.error('Error details:', errorText);
-      throw new Error(`Vinmonopolet API returned ${response.status}: ${response.statusText}`);
+      console.error('❌ Error details:', errorText);
+      return new Response(
+        JSON.stringify({ 
+          error: `Vinmonopolet API error: ${response.status}`,
+          details: errorText,
+          searchTerm
+        }),
+        { 
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     const data = await response.json();
     const products = data || [];
     
     console.log(`✅ Fetched ${products.length} products from API`);
+    console.log('📦 Sample product:', products[0] ? JSON.stringify(products[0]).substring(0, 200) : 'No products');
 
     // Cache the raw results
     cache.set(cacheKey, {
@@ -124,15 +171,28 @@ serve(async (req) => {
     const transformedProducts = transformProducts(filteredProducts, limit, searchTerm);
 
     console.log(`✅ Returning ${transformedProducts.length} filtered products`);
+    if (transformedProducts.length > 0) {
+      console.log('🍾 Sample result:', JSON.stringify(transformedProducts[0]).substring(0, 200));
+    }
 
     return new Response(
-      JSON.stringify({ products: transformedProducts }),
+      JSON.stringify({ 
+        products: transformedProducts,
+        total: transformedProducts.length,
+        searchTerm,
+        cached: false
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('❌ Error in wine-search:', error);
+    console.error('❌ Error stack:', error.stack);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'Unknown error occurred',
+        stack: error.stack,
+        type: error.constructor.name
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
