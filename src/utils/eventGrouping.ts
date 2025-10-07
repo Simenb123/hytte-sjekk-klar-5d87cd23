@@ -28,8 +28,14 @@ const isEventOnDate = (event: Event, targetDate: Date): boolean => {
   const targetDayEnd = new Date(targetDate);
   targetDayEnd.setHours(23, 59, 59, 999);
   
-  // Check if the event overlaps with the target day
-  // Event overlaps if it starts before or on the target day's end AND ends after or on the target day's start
+  // For all-day events, use stricter logic to avoid "leaking" into next day
+  if (event.allDay) {
+    // All-day event is on this date if it starts at or before end of day
+    // and ends at or after end of day (not just start of day)
+    return start <= targetDayEnd && end >= targetDayEnd;
+  }
+  
+  // For timed events, use standard overlap logic
   return start <= targetDayEnd && end >= targetDayStart;
 };
 

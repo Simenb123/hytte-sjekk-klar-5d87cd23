@@ -174,14 +174,28 @@ export const fetchEvents = async (accessToken: string, filters?: {
     
     // Convert all-day events to dateTime format for consistent handling
     if (isAllDay) {
-      const startDate = new Date(event.start.date + 'T00:00:00');
-      
       // Google Calendar uses exclusive end dates for all-day events
-      // If event is on Oct 9, Google sends end.date = "2025-10-10" (exclusive)
-      // We need to subtract 1 day to get the actual last day of the event
-      const endDateObj = new Date(event.end.date);
-      endDateObj.setDate(endDateObj.getDate() - 1);
-      const endDate = new Date(endDateObj.toISOString().split('T')[0] + 'T23:59:59');
+      // If event is on Oct 9, Google sends start.date = "2025-10-09", end.date = "2025-10-10"
+      // We need to normalize to: start = "2025-10-09T00:00:00", end = "2025-10-09T23:59:59"
+      
+      // Parse dates in UTC to avoid timezone shifts
+      const startDateStr = event.start.date; // "2025-10-09"
+      const endDateStr = event.end.date;     // "2025-10-10"
+      
+      // For all-day events, set start to 00:00:00 and end to 23:59:59 of the ACTUAL last day
+      // Google's end date is exclusive, so we subtract 1 day
+      const startDate = new Date(startDateStr + 'T00:00:00.000Z');
+      
+      // Parse end date and subtract 1 day to get actual last day of event
+      const endDateParts = endDateStr.split('-');
+      const endYear = parseInt(endDateParts[0]);
+      const endMonth = parseInt(endDateParts[1]) - 1; // JS months are 0-indexed
+      const endDay = parseInt(endDateParts[2]);
+      const endDateObj = new Date(Date.UTC(endYear, endMonth, endDay));
+      endDateObj.setUTCDate(endDateObj.getUTCDate() - 1); // Subtract 1 day
+      
+      // Set end time to 23:59:59.999 on the actual last day
+      endDateObj.setUTCHours(23, 59, 59, 999);
       
       return {
         ...event,
@@ -191,7 +205,7 @@ export const fetchEvents = async (accessToken: string, filters?: {
           timeZone: 'Europe/Oslo'
         },
         end: {
-          dateTime: endDate.toISOString(),
+          dateTime: endDateObj.toISOString(),
           timeZone: 'Europe/Oslo'
         }
       };

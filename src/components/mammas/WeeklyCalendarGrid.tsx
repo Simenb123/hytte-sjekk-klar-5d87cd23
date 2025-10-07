@@ -34,13 +34,23 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
         const dayStart = startOfDay(date);
         const dayEnd = endOfDay(date);
         
-        // Parse dates correctly: date-only strings (YYYY-MM-DD) should be interpreted in local timezone
-        // parseISO handles both "2025-10-09" (date-only) and "2025-10-09T10:00:00Z" (with time) correctly
+        // Parse dates correctly
         const eventStart = parseISO(event.start);
         const eventEnd = parseISO(event.end);
         
-        // Two intervals overlap if one starts before the other ends
-        return eventStart <= dayEnd && eventEnd >= dayStart;
+        // For all-day events, we need stricter overlap logic
+        // An all-day event should only show on days it actually covers
+        // Check if event starts before end of day AND ends after start of day
+        // But for all-day events, use strict comparison to avoid "leaking" into next day
+        if (event.allDay) {
+          // For all-day events: event is on this day if it starts at or before this day's end
+          // and ends at or after this day's start, but we need to be more precise
+          // An event ending at 23:59:59 on day X should NOT appear on day X+1
+          return eventStart <= dayEnd && eventEnd >= dayEnd;
+        } else {
+          // For timed events, use standard overlap logic
+          return eventStart <= dayEnd && eventEnd >= dayStart;
+        }
       });
 
       days.push({
