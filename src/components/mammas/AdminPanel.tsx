@@ -158,7 +158,7 @@ export const AdminPanel = ({
                         {online ? 'Online' : 'Offline'}
                       </Badge>
                     </div>
-                    {lastSyncTime && (
+                    {lastSyncTime && lastSyncTime instanceof Date && !isNaN(lastSyncTime.getTime()) && (
                       <div className="flex items-center justify-between">
                         <span className="text-sm">Siste synkronisering</span>
                         <span className="text-sm text-muted-foreground">
