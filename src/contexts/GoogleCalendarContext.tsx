@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useRef, useCallback, useEff
 import { useGoogleAuth } from '@/hooks/google-calendar/useGoogleAuth';
 import { useGoogleEvents } from '@/hooks/google-calendar/useGoogleEvents';
 import { retrieveGoogleTokens } from '@/utils/tokenStorage';
+import { useAuth } from '@/hooks/useAuth';
 import { GoogleCalendarState, initialState } from '@/hooks/google-calendar/types';
 
 interface GoogleCalendarContextType extends GoogleCalendarState {
@@ -15,6 +16,7 @@ interface GoogleCalendarContextType extends GoogleCalendarState {
 const GoogleCalendarContext = createContext<GoogleCalendarContextType | undefined>(undefined);
 
 export function GoogleCalendarProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [state, setState] = useState<GoogleCalendarState>(initialState);
   const isInitializedRef = useRef(false);
   
@@ -22,15 +24,16 @@ export function GoogleCalendarProvider({ children }: { children: React.ReactNode
   const { fetchGoogleEvents, fetchGoogleCalendars } = useGoogleEvents(
     useCallback(() => state.googleTokens, [state.googleTokens]),
     setState,
-    disconnectGoogleCalendar
+    disconnectGoogleCalendar,
+    user?.id
   );
 
   // Load tokens from localStorage on component mount (only once)
   useEffect(() => {
-    if (isInitializedRef.current) return;
+    if (isInitializedRef.current || !user?.id) return;
     
-    console.log('GoogleCalendarProvider: Loading tokens from localStorage (initial load)');
-    const tokens = retrieveGoogleTokens();
+    console.log(`GoogleCalendarProvider: Loading tokens from localStorage for user ${user.id} (initial load)`);
+    const tokens = retrieveGoogleTokens(user.id);
     
     if (tokens) {
       console.log('GoogleCalendarProvider: Found stored tokens, access_token exists:', !!tokens.access_token);
@@ -50,14 +53,16 @@ export function GoogleCalendarProvider({ children }: { children: React.ReactNode
     }
     
     isInitializedRef.current = true;
-  }, [fetchGoogleEvents, fetchGoogleCalendars]);
+  }, [fetchGoogleEvents, fetchGoogleCalendars, user]);
 
   // Listen for OAuth success events and token refresh events
   useEffect(() => {
     const handleOAuthSuccess = () => {
+      if (!user?.id) return;
+      
       console.log('🔄 GoogleCalendarProvider: OAuth success event received, checking for tokens...');
       
-      const tokens = retrieveGoogleTokens();
+      const tokens = retrieveGoogleTokens(user.id);
       if (tokens) {
         console.log('✅ GoogleCalendarProvider: Successfully loaded tokens after OAuth success');
         setState(prev => ({
@@ -91,7 +96,7 @@ export function GoogleCalendarProvider({ children }: { children: React.ReactNode
       window.removeEventListener('google-oauth-success', handleOAuthSuccess);
       window.removeEventListener('google-tokens-refreshed', handleTokensRefreshed as EventListener);
     };
-  }, [fetchGoogleEvents, fetchGoogleCalendars]);
+  }, [fetchGoogleEvents, fetchGoogleCalendars, user]);
 
   // Memoize the refresh functions to pass forceRefresh
   const refreshGoogleEvents = useCallback(() => {

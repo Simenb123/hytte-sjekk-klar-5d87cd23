@@ -13,7 +13,8 @@ const INITIAL_BACKOFF = 1000; // 1 second
 export function useGoogleEvents(
   getTokens: () => GoogleOAuthTokens | null,
   setState: React.Dispatch<React.SetStateAction<GoogleCalendarState>>,
-  disconnectGoogleCalendar: () => void
+  disconnectGoogleCalendar: () => void,
+  userId: string | undefined
 ) {
   const lastEventsFetchRef = useRef<number>(0);
   const lastCalendarsFetchRef = useRef<number>(0);
@@ -93,7 +94,7 @@ export function useGoogleEvents(
 
     const executeWithRetry = async (retryCount = 0): Promise<any> => {
       try {
-        const events = await fetchCalendarEvents(tokens);
+        const events = await fetchCalendarEvents(tokens, userId);
         
         // Cache successful result
         googleCalendarCache.storeEvents(events);
@@ -202,7 +203,7 @@ export function useGoogleEvents(
       isLoadingRef.current.events = false;
       setState(prev => ({ ...prev, isLoadingEvents: false }));
     }
-  }, [getTokens, setState, disconnectGoogleCalendar]);
+  }, [getTokens, setState, disconnectGoogleCalendar, userId]);
 
   const fetchGoogleCalendars = useCallback(async (tokensToUse?: GoogleOAuthTokens, forceRefresh = false) => {
     const tokens = tokensToUse || getTokens();
@@ -232,7 +233,7 @@ export function useGoogleEvents(
 
     const executeWithRetry = async (retryCount = 0): Promise<any> => {
       try {
-        const calendars = await fetchCalendarList(tokens);
+        const calendars = await fetchCalendarList(tokens, userId);
         retryCountRef.current.calendars = 0;
         
         setState(prev => ({ ...prev, googleCalendars: calendars }));
@@ -263,7 +264,7 @@ export function useGoogleEvents(
     } finally {
       isLoadingRef.current.calendars = false;
     }
-  }, [getTokens, setState]);
+  }, [getTokens, setState, userId]);
 
   return {
     fetchGoogleEvents,

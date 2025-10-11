@@ -7,7 +7,7 @@ import { storeGoogleTokens } from '@/utils/tokenStorage';
 /**
  * Henter kalender-hendelser fra Google Calendar via Edge Function
  */
-export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<GoogleEvent[]> => {
+export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens, userId?: string): Promise<GoogleEvent[]> => {
   // Get filters from localStorage
   const filtersString = localStorage.getItem('googleCalendarFilters');
   const filters = filtersString ? JSON.parse(filtersString) : null;
@@ -91,8 +91,10 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
     // Handle auth errors that require re-authentication
     if (data?.requiresReauth) {
       console.log('❌ Re-authentication required, clearing stored tokens');
-      const { removeGoogleTokens } = await import('@/utils/tokenStorage');
-      removeGoogleTokens();
+      if (userId) {
+        const { removeGoogleTokens } = await import('@/utils/tokenStorage');
+        removeGoogleTokens(userId);
+      }
       throw new Error('Autentisering utløpt. Vennligst koble til Google Calendar på nytt.');
     }
 
@@ -131,9 +133,9 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
       }
       
       // Handle refreshed tokens if provided
-      if (data.refreshedTokens) {
+      if (data.refreshedTokens && userId) {
         console.log('Received refreshed tokens from events fetch, updating storage');
-        await storeGoogleTokens(data.refreshedTokens);
+        await storeGoogleTokens(userId, data.refreshedTokens);
         // Emit event for other components to know tokens were refreshed
         window.dispatchEvent(new CustomEvent('google-tokens-refreshed', { 
           detail: { refreshedTokens: data.refreshedTokens } 
@@ -153,7 +155,7 @@ export const fetchCalendarEvents = async (tokens: GoogleOAuthTokens): Promise<Go
 /**
  * Henter kalenderliste fra Google via Edge Function
  */
-export const fetchCalendarList = async (tokens: GoogleOAuthTokens): Promise<GoogleCalendar[]> => {
+export const fetchCalendarList = async (tokens: GoogleOAuthTokens, userId?: string): Promise<GoogleCalendar[]> => {
   try {
     console.log('🔍 DEBUG: Starting fetchCalendarList');
     console.log('🔍 DEBUG: Input tokens validation:', {
@@ -198,8 +200,10 @@ export const fetchCalendarList = async (tokens: GoogleOAuthTokens): Promise<Goog
     // Handle auth errors that require re-authentication
     if (data?.requiresReauth) {
       console.log('❌ Re-authentication required, clearing stored tokens');
-      const { removeGoogleTokens } = await import('@/utils/tokenStorage');
-      removeGoogleTokens();
+      if (userId) {
+        const { removeGoogleTokens } = await import('@/utils/tokenStorage');
+        removeGoogleTokens(userId);
+      }
       throw new Error('Autentisering utløpt. Vennligst koble til Google Calendar på nytt.');
     }
 
@@ -207,9 +211,9 @@ export const fetchCalendarList = async (tokens: GoogleOAuthTokens): Promise<Goog
       console.log(`Successfully fetched ${data.calendars.length} calendars`);
       
       // Handle refreshed tokens if provided
-      if (data.refreshedTokens) {
+      if (data.refreshedTokens && userId) {
         console.log('Received refreshed tokens from calendars fetch, updating storage');
-        await storeGoogleTokens(data.refreshedTokens);
+        await storeGoogleTokens(userId, data.refreshedTokens);
         // Emit event for other components to know tokens were refreshed
         window.dispatchEvent(new CustomEvent('google-tokens-refreshed', { 
           detail: { refreshedTokens: data.refreshedTokens } 

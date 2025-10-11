@@ -1,16 +1,19 @@
 /**
  * Utility to clear all Google Calendar tokens and reset connection state
+ * This clears tokens for all users and legacy tokens
  */
 
 import { removeGoogleTokens } from './tokenStorage';
 
-export const clearAllGoogleTokens = () => {
+export const clearAllGoogleTokens = (userId?: string) => {
   console.log('🗑️ Clearing all Google Calendar tokens...');
   
-  // Remove from localStorage via our utility
-  const removed = removeGoogleTokens();
+  // Remove user-specific tokens if userId provided
+  if (userId) {
+    removeGoogleTokens(userId);
+  }
   
-  // Also clear any other possible storage locations
+  // Also clear any legacy storage locations
   try {
     localStorage.removeItem('googleCalendarTokens');
     localStorage.removeItem('google_calendar_tokens');
@@ -27,8 +30,8 @@ export const clearAllGoogleTokens = () => {
   }
 };
 
-export const forceGoogleReconnection = () => {
-  clearAllGoogleTokens();
+export const forceGoogleReconnection = (userId?: string) => {
+  clearAllGoogleTokens(userId);
   
   // Trigger a page reload to reset all state
   setTimeout(() => {

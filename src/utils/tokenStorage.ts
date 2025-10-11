@@ -1,14 +1,57 @@
 import type { GoogleOAuthTokens } from '@/types/googleCalendar.types';
 
-const TOKENS_KEY = 'googleCalendarTokens';
+const TOKENS_KEY_PREFIX = 'googleCalendarTokens';
+const LEGACY_TOKENS_KEY = 'googleCalendarTokens'; // For migration
 const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY = 100; // ms
 
 /**
+ * Get the user-specific storage key
+ */
+const getUserTokensKey = (userId: string): string => {
+  return `${TOKENS_KEY_PREFIX}_${userId}`;
+};
+
+/**
+ * Migrate legacy tokens (without userId) to user-specific storage
+ * This runs once per user to preserve existing connections
+ */
+export const migrateLegacyTokens = (userId: string): boolean => {
+  try {
+    const legacyTokens = localStorage.getItem(LEGACY_TOKENS_KEY);
+    if (!legacyTokens) {
+      console.log('No legacy tokens to migrate');
+      return false;
+    }
+
+    const userKey = getUserTokensKey(userId);
+    const existingUserTokens = localStorage.getItem(userKey);
+    
+    // Only migrate if user doesn't already have tokens
+    if (!existingUserTokens) {
+      console.log(`Migrating legacy tokens to user-specific key: ${userKey}`);
+      localStorage.setItem(userKey, legacyTokens);
+      localStorage.removeItem(LEGACY_TOKENS_KEY); // Clean up legacy key
+      console.log('✅ Legacy tokens migrated successfully');
+      return true;
+    } else {
+      console.log('User already has tokens, skipping migration');
+      // Still remove legacy key if user has their own tokens
+      localStorage.removeItem(LEGACY_TOKENS_KEY);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error migrating legacy tokens:', error);
+    return false;
+  }
+};
+
+/**
  * Safely store Google OAuth tokens with retry mechanism
  */
-export const storeGoogleTokens = async (tokens: GoogleOAuthTokens): Promise<boolean> => {
+export const storeGoogleTokens = async (userId: string, tokens: GoogleOAuthTokens): Promise<boolean> => {
   console.log('🔍 DEBUG: storeGoogleTokens called with:', {
+    userId,
     tokens_exists: !!tokens,
     access_token_exists: !!tokens?.access_token,
     access_token_type: typeof tokens?.access_token,
@@ -29,18 +72,20 @@ export const storeGoogleTokens = async (tokens: GoogleOAuthTokens): Promise<bool
     return false;
   }
 
+  const tokensKey = getUserTokensKey(userId);
+  
   let attempt = 0;
   while (attempt < MAX_RETRY_ATTEMPTS) {
     try {
-      console.log(`Storage attempt ${attempt + 1} - preparing to store tokens`);
+      console.log(`Storage attempt ${attempt + 1} - preparing to store tokens for user ${userId}`);
       const tokenString = JSON.stringify(tokens);
       console.log(`Token string length: ${tokenString.length} characters`);
       
-      localStorage.setItem(TOKENS_KEY, tokenString);
-      console.log(`Successfully wrote to localStorage with key: ${TOKENS_KEY}`);
+      localStorage.setItem(tokensKey, tokenString);
+      console.log(`Successfully wrote to localStorage with key: ${tokensKey}`);
       
       // Verify storage
-      const stored = localStorage.getItem(TOKENS_KEY);
+      const stored = localStorage.getItem(tokensKey);
       if (stored === tokenString) {
         console.log(`✅ Tokens successfully stored and verified on attempt ${attempt + 1}`);
         
@@ -80,17 +125,22 @@ export const storeGoogleTokens = async (tokens: GoogleOAuthTokens): Promise<bool
 /**
  * Safely retrieve Google OAuth tokens
  */
-export const retrieveGoogleTokens = (): GoogleOAuthTokens | null => {
+export const retrieveGoogleTokens = (userId: string): GoogleOAuthTokens | null => {
   try {
-    console.log('🔍 DEBUG: retrieveGoogleTokens called - checking localStorage...');
-    const stored = localStorage.getItem(TOKENS_KEY);
+    console.log(`🔍 DEBUG: retrieveGoogleTokens called for user ${userId} - checking localStorage...`);
+    
+    // Try to migrate legacy tokens first
+    migrateLegacyTokens(userId);
+    
+    const tokensKey = getUserTokensKey(userId);
+    const stored = localStorage.getItem(tokensKey);
     
     if (!stored) {
-      console.log('❌ No Google Calendar tokens found in localStorage');
+      console.log(`❌ No Google Calendar tokens found in localStorage for user ${userId}`);
       return null;
     }
     
-    console.log(`✅ Found stored tokens in localStorage (${stored.length} characters)`);
+    console.log(`✅ Found stored tokens in localStorage for user ${userId} (${stored.length} characters)`);
     const tokens = JSON.parse(stored) as GoogleOAuthTokens;
     
     // Enhanced validation of token structure
@@ -125,9 +175,12 @@ export const retrieveGoogleTokens = (): GoogleOAuthTokens | null => {
 /**
  * Remove Google OAuth tokens from storage
  */
-export const removeGoogleTokens = (): boolean => {
+export const removeGoogleTokens = (userId: string): boolean => {
   try {
-    localStorage.removeItem(TOKENS_KEY);
+    const tokensKey = getUserTokensKey(userId);
+    localStorage.removeItem(tokensKey);
+    // Also clean up legacy key if it exists
+    localStorage.removeItem(LEGACY_TOKENS_KEY);
     return true;
   } catch (error) {
     console.error('Error removing tokens:', error);
@@ -138,7 +191,7 @@ export const removeGoogleTokens = (): boolean => {
 /**
  * Check if valid tokens exist in storage
  */
-export const hasValidTokens = (): boolean => {
-  const tokens = retrieveGoogleTokens();
+export const hasValidTokens = (userId: string): boolean => {
+  const tokens = retrieveGoogleTokens(userId);
   return !!(tokens?.access_token);
 };

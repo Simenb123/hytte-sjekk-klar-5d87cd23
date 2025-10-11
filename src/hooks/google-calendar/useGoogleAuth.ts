@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { handleOAuthCallback as processOAuthCallback } from '@/services/googleCalendar.service';
 import { storeGoogleTokens, removeGoogleTokens } from '@/utils/tokenStorage';
+import { useAuth } from '@/hooks/useAuth';
 import type { GoogleCalendarState } from './types';
 
 // Popup-based OAuth utility to avoid iframe issues
@@ -44,9 +45,9 @@ function openOAuthPopup(url: string): Promise<boolean> {
         window.removeEventListener('message', messageHandler);
         
         // If tokens were sent directly, store them
-        if (event.data.tokens) {
+        if (event.data.tokens && user?.id) {
           console.log('📦 Storing tokens received from popup');
-          const stored = await storeGoogleTokens(event.data.tokens);
+          const stored = await storeGoogleTokens(user.id, event.data.tokens);
           if (stored) {
             console.log('✅ Tokens stored successfully in parent window');
             // Trigger immediate state update
@@ -84,6 +85,7 @@ function openOAuthPopup(url: string): Promise<boolean> {
 export function useGoogleAuth(
   setState: Dispatch<SetStateAction<GoogleCalendarState>>
 ) {
+  const { user } = useAuth();
   const [isAutoRetrying, setIsAutoRetrying] = useState(false);
   
   const connectGoogleCalendar = useCallback(async () => {
@@ -186,8 +188,13 @@ export function useGoogleAuth(
   const disconnectGoogleCalendar = useCallback(() => {
     console.log('🔴 Disconnecting from Google Calendar...');
     
-    // Clear all possible token storage locations
-    removeGoogleTokens();
+    if (!user?.id) {
+      console.error('Cannot disconnect: No user ID available');
+      return;
+    }
+    
+    // Clear user-specific tokens and legacy tokens
+    removeGoogleTokens(user.id);
     localStorage.removeItem('googleCalendarTokens');
     localStorage.removeItem('google_calendar_tokens'); 
     localStorage.removeItem('google-tokens');
@@ -201,7 +208,7 @@ export function useGoogleAuth(
       fetchError: null
     }));
     toast.success('Koblet fra Google Calendar');
-  }, [setState]);
+  }, [setState, user]);
 
   const handleOAuthCallback = useCallback(async (code: string): Promise<{ success: boolean; tokens?: any }> => {
     setState(prev => ({ ...prev, connectionError: null }));
@@ -243,9 +250,14 @@ export function useGoogleAuth(
         expiry_date: tokens.expiry_date
       });
       
+      if (!user?.id) {
+        console.error('❌ Cannot store tokens: No user ID available');
+        throw new Error('Ingen bruker-ID tilgjengelig for å lagre tokens');
+      }
+      
       // Store tokens using the utility with retry mechanism
       console.log('💾 Calling storeGoogleTokens...');
-      const stored = await storeGoogleTokens(tokens);
+      const stored = await storeGoogleTokens(user.id, tokens);
       console.log('💾 storeGoogleTokens result:', stored);
       
       if (!stored) {
@@ -294,7 +306,7 @@ export function useGoogleAuth(
       }));
     }
     return { success: false };
-  }, [setState]);
+  }, [setState, user]);
 
   return {
     connectGoogleCalendar,

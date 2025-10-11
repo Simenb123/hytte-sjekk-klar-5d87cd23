@@ -36,6 +36,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { createCalendarEvent } from '@/services/googleCalendar.service';
+import { retrieveGoogleTokens } from '@/utils/tokenStorage';
 
 type BookingRow = Database['public']['Tables']['bookings']['Row'];
 
@@ -107,10 +108,10 @@ const NewBookingDialog: React.FC<NewBookingDialogProps> = ({
       if (error) throw error;
 
       // Add to Google Calendar if requested
-      if (data.addToGoogle && googleIntegration) {
+      if (data.addToGoogle && googleIntegration && user?.id) {
         try {
-          const tokens = JSON.parse(localStorage.getItem('googleCalendarTokens') || '{}');
-          if (tokens.access_token) {
+          const tokens = retrieveGoogleTokens(user.id);
+          if (tokens?.access_token) {
             await createCalendarEvent(tokens, {
               title: data.title,
               description: data.description,
