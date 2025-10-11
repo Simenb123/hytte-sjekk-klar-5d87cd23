@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Settings, Calendar, Clock, User, Phone, Plus, Trash2, Edit } from 'lucide-react';
+import { X, Settings, Calendar, Clock, User, Phone, Plus, Trash2, Pencil } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -319,21 +319,45 @@ function ContactsManager({ openLink }: { openLink: (url: string) => void }) {
     setEditingContact(null);
   };
 
+  const handleEditContact = (contact: typeof contacts[0]) => {
+    setFormData({
+      name: contact.name,
+      phone_number: contact.phone_number,
+      contact_type: contact.contact_type,
+      show_on_main: contact.show_on_main,
+      sort_order: contact.sort_order,
+    });
+    setEditingContact(contact.id);
+    setIsAddDialogOpen(true);
+  };
+
   const handleAddContact = () => {
     if (!formData.name || !formData.phone_number || formData.phone_number === '+47') {
       toast.error('Fyll inn navn og nummer');
       return;
     }
     
-    addContact.mutate(
-      { ...formData, sort_order: contacts.length },
-      {
-        onSuccess: () => {
-          setIsAddDialogOpen(false);
-          resetForm();
-        },
-      }
-    );
+    if (editingContact) {
+      updateContact.mutate(
+        { id: editingContact, ...formData },
+        {
+          onSuccess: () => {
+            setIsAddDialogOpen(false);
+            resetForm();
+          },
+        }
+      );
+    } else {
+      addContact.mutate(
+        { ...formData, sort_order: contacts.length },
+        {
+          onSuccess: () => {
+            setIsAddDialogOpen(false);
+            resetForm();
+          },
+        }
+      );
+    }
   };
 
   const handleToggleShowOnMain = (contactId: string, currentValue: boolean) => {
@@ -407,6 +431,14 @@ function ContactsManager({ openLink }: { openLink: (url: string) => void }) {
                   >
                     Ring/Send
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleEditContact(contact)}
+                    title="Rediger"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <Switch
                     checked={contact.show_on_main}
                     onCheckedChange={() => handleToggleShowOnMain(contact.id, contact.show_on_main)}
@@ -426,12 +458,17 @@ function ContactsManager({ openLink }: { openLink: (url: string) => void }) {
         </CardContent>
       </Card>
 
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+        setIsAddDialogOpen(open);
+        if (!open) resetForm();
+      }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Legg til ny kontakt</DialogTitle>
+            <DialogTitle>{editingContact ? 'Rediger kontakt' : 'Legg til ny kontakt'}</DialogTitle>
             <DialogDescription>
-              Opprett en ny hurtigkontakt som du kan ringe eller sende melding til
+              {editingContact 
+                ? 'Endre informasjon om kontakten' 
+                : 'Opprett en ny hurtigkontakt som du kan ringe eller sende melding til'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -482,8 +519,13 @@ function ContactsManager({ openLink }: { openLink: (url: string) => void }) {
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
               Avbryt
             </Button>
-            <Button onClick={handleAddContact} disabled={addContact.isPending}>
-              {addContact.isPending ? 'Lagrer...' : 'Legg til'}
+            <Button 
+              onClick={handleAddContact} 
+              disabled={addContact.isPending || updateContact.isPending}
+            >
+              {(addContact.isPending || updateContact.isPending) 
+                ? 'Lagrer...' 
+                : editingContact ? 'Lagre endringer' : 'Legg til'}
             </Button>
           </DialogFooter>
         </DialogContent>
