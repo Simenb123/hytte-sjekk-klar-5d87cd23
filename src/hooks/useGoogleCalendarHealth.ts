@@ -55,14 +55,26 @@ export function useGoogleCalendarHealth() {
         return false;
       }
 
-      // Check 3: API accessibility test
+      // Check 3: API accessibility test - try to fetch calendars
       const { data, error } = await supabase.functions.invoke('google-calendar', {
-        method: 'GET',
-        body: { action: 'test' }
+        body: { 
+          action: 'get_calendars',
+          tokens: tokens
+        }
       });
 
-      if (error || data?.error) {
-        console.log('❌ Health check failed: API test failed', error || data?.error);
+      if (error) {
+        console.log('❌ Health check failed: API request error', error);
+        return false;
+      }
+
+      if (data?.error) {
+        console.log('❌ Health check failed: API returned error', data.error);
+        return false;
+      }
+
+      if (!data?.calendars) {
+        console.log('❌ Health check failed: Invalid API response (no calendars)', data);
         return false;
       }
 
