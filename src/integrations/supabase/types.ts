@@ -946,6 +946,42 @@ export type Database = {
         }
         Relationships: []
       }
+      quick_contacts: {
+        Row: {
+          contact_type: string
+          created_at: string
+          id: string
+          name: string
+          phone_number: string
+          show_on_main: boolean
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_type: string
+          created_at?: string
+          id?: string
+          name: string
+          phone_number: string
+          show_on_main?: boolean
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_type?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone_number?: string
+          show_on_main?: boolean
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       scheduled_notifications: {
         Row: {
           created_at: string

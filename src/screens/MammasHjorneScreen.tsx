@@ -24,6 +24,7 @@ import { createCalendarEvent } from '@/services/googleCalendar.service';
 import { useGoogleCalendar } from '@/hooks/google-calendar';
 import { clearAllGoogleTokens } from '@/utils/clearGoogleTokens';
 import { RefreshCw } from 'lucide-react';
+import { useMainScreenContacts } from '@/hooks/useQuickContacts';
 
 // ---------- Types ----------
 export type Event = {
@@ -384,11 +385,6 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   initRealtime,
   onHeartbeat,
   showFaceTime = false,
-  contacts = [
-    { name: 'Simen', relation: '', number: '+4748075204', type: 'audio' },
-    { name: 'Eivind', relation: '', number: '+4741815832', type: 'audio' },
-    { name: 'Knut', relation: '', number: '+4795917304', type: 'audio' },
-  ],
   isGoogleConnected = false,
   onConnectGoogle,
   googleConnectionError,
@@ -398,6 +394,18 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   lastSyncTime,
   performSync,
 }) => {
+  // Hent kontakter fra databasen
+  const { data: dbContacts = [] } = useMainScreenContacts();
+  
+  // Konverter database-kontakter til Contact-format
+  const contacts = useMemo(() => {
+    return dbContacts.map(contact => ({
+      name: contact.name,
+      relation: '',
+      number: contact.phone_number,
+      type: contact.contact_type as 'video' | 'audio' | 'sms'
+    }));
+  }, [dbContacts]);
 
   // Lokasjoner for værvarsel
   const weatherLocations: WeatherLocation[] = [

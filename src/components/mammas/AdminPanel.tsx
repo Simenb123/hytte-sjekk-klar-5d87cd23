@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Settings, Calendar, Clock, User, Phone } from 'lucide-react';
+import { X, Settings, Calendar, Clock, User, Phone, Plus, Trash2, Edit } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -13,6 +13,11 @@ import { LocationPicker } from '@/components/location/LocationPicker';
 import { clearGoogleCalendarCache } from '@/utils/debugGoogleCalendar';
 import { testGoogleCalendarSecrets } from '@/utils/testGoogleSecrets';
 import { toast } from 'sonner';
+import { useQuickContacts, useAddQuickContact, useUpdateQuickContact, useDeleteQuickContact, ContactType } from '@/hooks/useQuickContacts';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -276,41 +281,7 @@ export const AdminPanel = ({
               </TabsContent>
 
               <TabsContent value="contacts" className="space-y-4 mt-0">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Hurtigkontakter</CardTitle>
-                    <CardDescription>Ring eller send SMS direkte</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button
-                        onClick={() => openLink('facetime-audio://+4748075204')}
-                        className="h-auto py-3"
-                      >
-                        📞 Ring Simen
-                      </Button>
-                      <Button
-                        onClick={() => openLink('facetime-audio://+4741815832')}
-                        className="h-auto py-3"
-                      >
-                        📞 Ring Eivind
-                      </Button>
-                      <Button
-                        onClick={() => openLink('facetime-audio://+4795917304')}
-                        className="h-auto py-3"
-                      >
-                        📞 Ring Knut
-                      </Button>
-                      <Button
-                        onClick={() => openLink('sms://+4748075204')}
-                        variant="secondary"
-                        className="h-auto py-3"
-                      >
-                        💬 SMS Simen
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <ContactsManager openLink={openLink} />
               </TabsContent>
             </div>
           </Tabs>
@@ -319,3 +290,204 @@ export const AdminPanel = ({
     </div>
   );
 };
+
+// Contact Manager Component
+function ContactsManager({ openLink }: { openLink: (url: string) => void }) {
+  const { data: contacts = [], isLoading } = useQuickContacts();
+  const addContact = useAddQuickContact();
+  const updateContact = useUpdateQuickContact();
+  const deleteContact = useDeleteQuickContact();
+  
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    phone_number: '+47',
+    contact_type: 'audio' as ContactType,
+    show_on_main: false,
+    sort_order: 0,
+  });
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      phone_number: '+47',
+      contact_type: 'audio',
+      show_on_main: false,
+      sort_order: contacts.length,
+    });
+    setEditingContact(null);
+  };
+
+  const handleAddContact = () => {
+    if (!formData.name || !formData.phone_number || formData.phone_number === '+47') {
+      toast.error('Fyll inn navn og nummer');
+      return;
+    }
+    
+    addContact.mutate(
+      { ...formData, sort_order: contacts.length },
+      {
+        onSuccess: () => {
+          setIsAddDialogOpen(false);
+          resetForm();
+        },
+      }
+    );
+  };
+
+  const handleToggleShowOnMain = (contactId: string, currentValue: boolean) => {
+    updateContact.mutate({ id: contactId, show_on_main: !currentValue });
+  };
+
+  const handleDelete = (contactId: string) => {
+    if (confirm('Er du sikker på at du vil slette denne kontakten?')) {
+      deleteContact.mutate(contactId);
+    }
+  };
+
+  const getContactIcon = (type: ContactType) => {
+    switch (type) {
+      case 'video': return '📹';
+      case 'audio': return '📞';
+      case 'sms': return '💬';
+    }
+  };
+
+  const getContactUrl = (contact: typeof contacts[0]) => {
+    switch (contact.contact_type) {
+      case 'video': return `facetime://${contact.phone_number}`;
+      case 'audio': return `facetime-audio://${contact.phone_number}`;
+      case 'sms': return `sms://${contact.phone_number}`;
+    }
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-8">Laster kontakter...</div>;
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-lg">Mine kontakter</CardTitle>
+            <CardDescription>Administrer hurtigkontakter</CardDescription>
+          </div>
+          <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Ny kontakt
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {contacts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Ingen kontakter lagt til ennå
+            </p>
+          ) : (
+            contacts.map((contact) => (
+              <div
+                key={contact.id}
+                className="flex items-center justify-between p-3 bg-muted rounded-lg"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getContactIcon(contact.contact_type)}</span>
+                    <div>
+                      <div className="font-medium">{contact.name}</div>
+                      <div className="text-xs text-muted-foreground">{contact.phone_number}</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openLink(getContactUrl(contact))}
+                  >
+                    Ring/Send
+                  </Button>
+                  <Switch
+                    checked={contact.show_on_main}
+                    onCheckedChange={() => handleToggleShowOnMain(contact.id, contact.show_on_main)}
+                    title="Vis i hovedbilde"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(contact.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Legg til ny kontakt</DialogTitle>
+            <DialogDescription>
+              Opprett en ny hurtigkontakt som du kan ringe eller sende melding til
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Navn</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="F.eks. Simen"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefonnummer</Label>
+              <Input
+                id="phone"
+                value={formData.phone_number}
+                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                placeholder="+4712345678"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Type</Label>
+              <Select
+                value={formData.contact_type}
+                onValueChange={(value) => setFormData({ ...formData, contact_type: value as ContactType })}
+              >
+                <SelectTrigger id="type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="audio">📞 FaceTime Audio / Oppringning</SelectItem>
+                  <SelectItem value="video">📹 FaceTime Video</SelectItem>
+                  <SelectItem value="sms">💬 SMS</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-main"
+                checked={formData.show_on_main}
+                onCheckedChange={(checked) => setFormData({ ...formData, show_on_main: checked })}
+              />
+              <Label htmlFor="show-main">Vis som hurtigknapp i hovedbilde</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              Avbryt
+            </Button>
+            <Button onClick={handleAddContact} disabled={addContact.isPending}>
+              {addContact.isPending ? 'Lagrer...' : 'Legg til'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
