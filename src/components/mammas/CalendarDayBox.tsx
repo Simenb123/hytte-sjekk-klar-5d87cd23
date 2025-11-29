@@ -1,6 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import { formatTimeUntilEvent } from '@/utils/timeUntilEvent';
 
 export interface Event {
   id: string;
@@ -91,13 +92,27 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
       </div>
 
       {/* Today time indicator */}
-      {isToday && events.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-green-500/30">
-          <div className="text-green-300 text-base md:text-lg">
-            Neste: {format(new Date(events[0].start), 'HH:mm')}
+      {isToday && events.length > 0 && (() => {
+        // Find first event that's ongoing or in the future
+        const now = new Date();
+        const relevantEvent = events.find(event => new Date(event.end) > now);
+        
+        if (!relevantEvent) return null;
+        
+        const timeUntil = formatTimeUntilEvent(relevantEvent.start, relevantEvent.end, now);
+        
+        if (!timeUntil) return null;
+        
+        const isOngoing = timeUntil === "Pågår nå";
+        
+        return (
+          <div className="mt-4 pt-3 border-t border-green-500/30">
+            <div className={`text-base md:text-lg font-medium ${isOngoing ? 'text-orange-400' : 'text-green-300'}`}>
+              {isOngoing ? '🔴 Pågår nå' : `🕒 ${timeUntil}`}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

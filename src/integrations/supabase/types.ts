@@ -1165,7 +1165,7 @@ export type Database = {
     }
     Functions: {
       get_users_for_family_linking: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           display_name: string
           id: string
