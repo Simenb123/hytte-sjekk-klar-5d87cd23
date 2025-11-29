@@ -956,10 +956,10 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
           )}
 
           {/* Kalender - mer plass for avtaler - tar full bredde hvis værvarsel er skjult */}
-          <div className={`flex-1 ${showWeatherForecast ? 'landscape:flex-[1.1]' : ''} bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-3 md:p-4 min-h-[200px] landscape:min-h-[200px] backdrop-blur-sm flex flex-col max-h-[calc(100vh-180px)]`}>
+          <div className={`flex-1 ${showWeatherForecast ? 'landscape:flex-[1.1]' : ''} bg-gradient-to-br from-gray-800/60 to-gray-900/40 border border-gray-600/30 rounded-2xl p-3 md:p-4 backdrop-blur-sm flex flex-col h-[calc(100vh-160px)]`}>
             {/* Technical details moved to admin panel for cleaner interface */}
             <SwipeRefresh onRefresh={handleManualRefresh} disabled={isSyncing}>
-              <div className="overflow-y-auto pb-4 flex-1">
+              <div className="pb-4 h-full">
               {/* 2x2 Calendar Grid */}
               <WeeklyCalendarGrid 
                 events={events}

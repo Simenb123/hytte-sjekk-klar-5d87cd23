@@ -76,7 +76,7 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
   return (
     <>
       {/* 3x2 Grid - Larger boxes */}
-      <div className="grid grid-cols-2 grid-rows-3 gap-4 md:gap-6 h-full min-h-[600px]">
+      <div className="grid grid-cols-2 gap-3 h-full" style={{ gridTemplateRows: 'repeat(3, 1fr)' }}>
         {/* Today */}
         <CalendarDayBox
           date={days[0].date}
@@ -84,7 +84,7 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
           isToday={true}
           dayLabel="I DAG"
           labelColor="text-green-400"
-          className="min-h-[180px]"
+          className=""
           onClick={() => handleDayClick(days[0])}
         />
 
@@ -95,7 +95,7 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
           isToday={false}
           dayLabel="I MORGEN"
           labelColor="text-blue-400"
-          className="min-h-[180px]"
+          className=""
           onClick={() => handleDayClick(days[1])}
         />
 
@@ -104,7 +104,7 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
           date={days[2].date}
           events={days[2].events}
           isToday={false}
-          className="min-h-[180px]"
+          className=""
           onClick={() => handleDayClick(days[2])}
         />
 
@@ -113,7 +113,7 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
           date={days[3].date}
           events={days[3].events}
           isToday={false}
-          className="min-h-[180px]"
+          className=""
           onClick={() => handleDayClick(days[3])}
         />
 
@@ -122,7 +122,7 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
           date={days[4].date}
           events={days[4].events}
           isToday={false}
-          className="min-h-[180px]"
+          className=""
           onClick={() => handleDayClick(days[4])}
         />
 
@@ -131,7 +131,7 @@ const WeeklyCalendarGrid: React.FC<WeeklyCalendarGridProps> = ({
           date={days[5].date}
           events={days[5].events}
           isToday={false}
-          className="min-h-[180px]"
+          className=""
           onClick={() => handleDayClick(days[5])}
         />
       </div>
