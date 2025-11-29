@@ -107,8 +107,8 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
         
         return (
           <div className="mt-4 pt-3 border-t border-green-500/30">
-            <div className={`text-base md:text-lg font-medium ${isOngoing ? 'text-orange-400' : 'text-green-300'}`}>
-              {isOngoing ? '🔴 Pågår nå' : `🕒 ${timeUntil}`}
+            <div className={`text-base md:text-lg font-medium ${isOngoing ? 'text-green-400' : 'text-green-300'}`}>
+              {isOngoing ? '🟢 Pågår nå' : `🕒 ${timeUntil}`}
             </div>
           </div>
         );
