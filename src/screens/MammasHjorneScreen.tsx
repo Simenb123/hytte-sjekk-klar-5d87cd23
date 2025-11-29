@@ -697,8 +697,11 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
   if (withinNight) {
     return (
       <div 
-        className="flex-1 bg-gray-950 p-8 pt-8 w-full min-h-screen"
-        style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
+        className="mammas-hjorne-fullscreen bg-gray-950 p-8 pt-8 w-full h-screen overflow-hidden fixed inset-0 flex items-center justify-center"
+        style={{ 
+          touchAction: 'none',
+          transform: `translate(${shift.x}px, ${shift.y}px)` 
+        }}
       >
          <div className="flex-1 flex items-center justify-center px-8">
            <div className="text-center">
@@ -759,11 +762,14 @@ const MammasHjorneScreen: React.FC<MammasHjorneProps> = ({
 
   return (
     <div 
-      className="flex-1 bg-gray-950 w-full min-h-screen"
-      style={{ transform: `translate(${shift.x}px, ${shift.y}px)` }}
+      className="mammas-hjorne-fullscreen bg-gray-950 w-full h-screen overflow-hidden fixed inset-0"
+      style={{ 
+        touchAction: 'none',
+        transform: `translate(${shift.x}px, ${shift.y}px)` 
+      }}
     >
       {/* iPad 11 optimert responsive container - redusert padding for bedre plassbruk */}
-      <div className="h-full px-2 py-4 
+      <div className="h-full px-2 py-4 overflow-hidden
                       md:px-4 md:py-4 
                       lg:px-6 lg:py-6 lg:max-w-[1400px] lg:mx-auto
                       portrait:max-w-[834px] portrait:mx-auto
