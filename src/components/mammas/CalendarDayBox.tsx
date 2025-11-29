@@ -46,37 +46,37 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
 
   return (
     <div 
-      className={`${bgClass} rounded-2xl p-3 md:p-4 cursor-pointer hover:bg-opacity-70 transition-all duration-200 ${className}`}
+      className={`${bgClass} rounded-2xl p-2 md:p-3 cursor-pointer hover:bg-opacity-70 transition-all duration-200 ${className}`}
       onClick={onClick}
     >
       {/* Header */}
       <div className="mb-2">
         {dayLabel && (
-          <div className={`text-xl md:text-2xl lg:text-3xl font-bold mb-1 ${labelColor}`}>
+          <div className={`text-lg md:text-xl lg:text-2xl font-bold mb-1 ${labelColor}`}>
             {dayLabel}
           </div>
         )}
-        <div className="text-white text-xl md:text-2xl lg:text-3xl font-bold capitalize">
+        <div className="text-white text-lg md:text-xl lg:text-2xl font-bold capitalize">
           {dayName} <span className="text-gray-300 text-base md:text-lg font-normal">{dayNumber}. {monthName}</span>
         </div>
       </div>
 
       {/* Events */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {events.length === 0 ? (
-          <div className="text-gray-400 text-lg md:text-xl">Ingen avtaler</div>
+          <div className="text-gray-400 text-base md:text-lg">Ingen avtaler</div>
         ) : events.length <= 3 ? (
           // Show event titles directly for few events
           events.map((event, index) => (
             <div key={event.id} className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${getEventColor(index)}`} />
-              <div className="text-white text-lg md:text-xl truncate">{event.title}</div>
+              <div className="text-white text-base md:text-lg truncate">{event.title}</div>
             </div>
           ))
         ) : (
           // Show count and indicators for many events
           <>
-            <div className="text-white text-lg md:text-xl font-medium">
+            <div className="text-white text-base md:text-lg font-medium">
               {events.length} avtaler
             </div>
             <div className="flex gap-1.5">
@@ -106,8 +106,8 @@ const CalendarDayBox: React.FC<CalendarDayBoxProps> = ({
         const isOngoing = timeUntil === "Pågår nå";
         
         return (
-          <div className="mt-4 pt-3 border-t border-green-500/30">
-            <div className={`text-base md:text-lg font-medium ${isOngoing ? 'text-green-400' : 'text-green-300'}`}>
+          <div className="mt-2 pt-2 border-t border-green-500/30">
+            <div className={`text-sm md:text-base font-medium ${isOngoing ? 'text-green-400' : 'text-green-300'}`}>
               {isOngoing ? '🟢 Pågår nå' : `🕒 ${timeUntil}`}
             </div>
           </div>
