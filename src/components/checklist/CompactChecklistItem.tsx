@@ -157,13 +157,13 @@ export function CompactChecklistItem({
   return (
     <>
       <div 
-        className={`p-3 border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors ${
+        className={`group p-2 border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors ${
           isCompleted ? 'opacity-75' : ''
         }`}
         onClick={handleToggle}
       >
         {/* Main content row */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Checkbox */}
           <Button
             variant="ghost"
@@ -208,7 +208,7 @@ export function CompactChecklistItem({
                       e.stopPropagation();
                       openAppStore();
                     }}
-                    className="w-12 h-12 rounded-lg overflow-hidden border-2 border-border hover:opacity-80 transition-opacity flex-shrink-0"
+                    className="w-20 h-20 rounded-lg overflow-hidden border-2 border-border hover:opacity-80 transition-opacity flex-shrink-0"
                     aria-label={`Åpne ${appName}`}
                   >
                     <img 
@@ -250,7 +250,7 @@ export function CompactChecklistItem({
                 fileInputRef.current?.click();
               }}
               disabled={isUploading}
-              className="h-8 w-8 p-0 flex-shrink-0"
+              className="h-8 w-8 p-0 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
             >
               {isUploading ? (
                 <Upload className="h-4 w-4 animate-spin" />
