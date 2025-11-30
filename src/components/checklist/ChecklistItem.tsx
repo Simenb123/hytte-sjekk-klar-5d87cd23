@@ -148,14 +148,7 @@ export function ChecklistItem({
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            {appIconUrl && (
-              <img 
-                src={appIconUrl} 
-                alt={appName || 'App'} 
-                className="w-6 h-6 rounded-md object-cover"
-              />
-            )}
-            <p className={`text-sm ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+            <p className={`text-sm flex-1 ${isCompleted ? 'line-through text-gray-500' : 'text-gray-900'}`}>
               {text}
             </p>
             {appName && (
@@ -163,21 +156,26 @@ export function ChecklistItem({
                 {appName}
               </Badge>
             )}
+            {appIconUrl && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openAppStore();
+                }}
+                className="w-12 h-12 rounded-lg overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0 no-toggle"
+                aria-label={`Åpne ${appName}`}
+              >
+                <img 
+                  src={appIconUrl} 
+                  alt={appName || 'App'} 
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            )}
           </div>
           
-          {appName && (
+          {(appDescription || assignedTo || completedBy) && (
             <div className="flex items-center gap-2 mt-2 no-toggle">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={openAppStore}
-                className="h-7 text-xs"
-              >
-                <Smartphone className="h-3 w-3 mr-1" />
-                Åpne {appName}
-                <ExternalLink className="h-3 w-3 ml-1" />
-              </Button>
-              
               {appDescription && (
                 <Collapsible open={showAppDetails} onOpenChange={setShowAppDetails}>
                   <CollapsibleTrigger asChild>
@@ -192,6 +190,10 @@ export function ChecklistItem({
                   </CollapsibleContent>
                 </Collapsible>
               )}
+              <FamilyMemberAssignment 
+                assignedTo={assignedTo}
+                completedBy={completedBy}
+              />
             </div>
           )}
           

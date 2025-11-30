@@ -91,14 +91,7 @@ export function ViewOnlyChecklistItem({
           {/* Text content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              {appIconUrl && (
-                <img 
-                  src={appIconUrl} 
-                  alt={appName || 'App'} 
-                  className="w-5 h-5 rounded-sm object-cover flex-shrink-0"
-                />
-              )}
-              <p className={`text-sm leading-5 ${
+              <p className={`text-sm leading-5 flex-1 ${
                 isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'
               }`}>
                 {text}
@@ -111,53 +104,54 @@ export function ViewOnlyChecklistItem({
             </div>
           </div>
 
-          {/* Right side - image thumbnail only */}
-          {imageUrl && (
-            <div className="flex-shrink-0 no-toggle">
+          {/* Right side controls */}
+          <div className="flex items-center gap-2 flex-shrink-0 no-toggle">
+            {/* App icon (clickable) */}
+            {appIconUrl && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openAppStore();
+                }}
+                className="w-12 h-12 rounded-lg overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0"
+                aria-label={`Åpne ${appName}`}
+              >
+                <img 
+                  src={appIconUrl} 
+                  alt={appName || 'App'} 
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            )}
+            
+            {/* Image thumbnail */}
+            {imageUrl && (
               <ImageThumbnail
                 imageUrl={imageUrl}
                 alt="Checklist item"
                 onClick={() => setShowImageModal(true)}
                 className="flex-shrink-0"
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        {/* Secondary row for app controls and assignment */}
-        {(appName || assignedTo || completedBy) && (
+        {/* Secondary row for app description and assignment */}
+        {(appDescription || assignedTo || completedBy) && (
           <div className="mt-2 flex flex-wrap items-center gap-2 no-toggle">
-            {appName && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openAppStore();
-                  }}
-                  className="h-7 text-xs"
-                >
-                  <Smartphone className="h-3 w-3 mr-1" />
-                  Åpne {appName}
-                  <ExternalLink className="h-3 w-3 ml-1" />
-                </Button>
-                
-                {appDescription && (
-                  <Collapsible open={showAppDetails} onOpenChange={setShowAppDetails}>
-                    <CollapsibleTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Info className="h-3 w-3" />
-                      </Button>
-                    </CollapsibleTrigger>
-                  </Collapsible>
-                )}
-              </>
+            {appDescription && (
+              <Collapsible open={showAppDetails} onOpenChange={setShowAppDetails}>
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 w-7 p-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Info className="h-3 w-3" />
+                  </Button>
+                </CollapsibleTrigger>
+              </Collapsible>
             )}
             
             <div className="flex-1">
