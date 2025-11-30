@@ -10,6 +10,11 @@ interface AreaChecklistContainerProps {
     imageUrl?: string;
     assigned_to?: string | null;
     completedBy?: string;
+    app_name?: string | null;
+    app_url_ios?: string | null;
+    app_url_android?: string | null;
+    app_icon_url?: string | null;
+    app_description?: string | null;
   }>;
   onToggleItem: (id: string) => void;
 }
