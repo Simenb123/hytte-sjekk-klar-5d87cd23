@@ -30,7 +30,7 @@ export function ImageThumbnail({ imageUrl, alt, onClick, onDelete, className = "
 
   return (
     <div className={`relative group cursor-pointer ${className}`}>
-      <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
+      <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
         {imageError ? (
           <ImageIcon className="h-6 w-6 text-muted-foreground" />
         ) : (
