@@ -106,33 +106,42 @@ export function ViewOnlyChecklistItem({
 
           {/* Right side controls */}
           <div className="flex items-center gap-2 flex-shrink-0 no-toggle">
-            {/* App icon (clickable) */}
-            {appIconUrl && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openAppStore();
-                }}
-                className="w-12 h-12 rounded-lg overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0"
-                aria-label={`Åpne ${appName}`}
-              >
-                <img 
-                  src={appIconUrl} 
-                  alt={appName || 'App'} 
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            )}
-            
-            {/* Image thumbnail */}
-            {imageUrl && (
-              <ImageThumbnail
-                imageUrl={imageUrl}
-                alt="Checklist item"
-                onClick={() => setShowImageModal(true)}
-                className="flex-shrink-0"
-              />
-            )}
+            {/* Smart image handling: if has app URL, show as clickable icon; otherwise show zoomable thumbnail */}
+            {(() => {
+              const hasAppUrl = appUrlIos || appUrlAndroid;
+              const displayImage = appIconUrl || imageUrl;
+              
+              if (displayImage && hasAppUrl) {
+                // App icon - clickable to open app
+                return (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openAppStore();
+                    }}
+                    className="w-12 h-12 rounded-lg overflow-hidden border-2 border-border hover:opacity-80 transition-opacity flex-shrink-0"
+                    aria-label={`Åpne ${appName}`}
+                  >
+                    <img 
+                      src={displayImage} 
+                      alt={appName || 'App'} 
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                );
+              } else if (imageUrl && !hasAppUrl) {
+                // Regular image - zoomable
+                return (
+                  <ImageThumbnail
+                    imageUrl={imageUrl}
+                    alt="Checklist item"
+                    onClick={() => setShowImageModal(true)}
+                    className="flex-shrink-0"
+                  />
+                );
+              }
+              return null;
+            })()}
           </div>
         </div>
 
@@ -175,8 +184,8 @@ export function ViewOnlyChecklistItem({
         )}
       </div>
 
-      {/* Read-only image modal */}
-      {imageUrl && (
+      {/* Read-only image modal - only for non-app images */}
+      {imageUrl && !(appUrlIos || appUrlAndroid) && (
         <ReadOnlyImageModal
           imageUrl={imageUrl}
           alt="Checklist item"

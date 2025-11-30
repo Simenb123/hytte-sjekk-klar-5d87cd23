@@ -156,22 +156,31 @@ export function ChecklistItem({
                 {appName}
               </Badge>
             )}
-            {appIconUrl && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openAppStore();
-                }}
-                className="w-12 h-12 rounded-lg overflow-hidden hover:opacity-80 transition-opacity flex-shrink-0 no-toggle"
-                aria-label={`Åpne ${appName}`}
-              >
-                <img 
-                  src={appIconUrl} 
-                  alt={appName || 'App'} 
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            )}
+            {/* Smart image handling: if has app URL, show as clickable icon */}
+            {(() => {
+              const hasAppUrl = appUrlIos || appUrlAndroid;
+              const displayImage = appIconUrl || imageUrl;
+              
+              if (displayImage && hasAppUrl) {
+                return (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openAppStore();
+                    }}
+                    className="w-12 h-12 rounded-lg overflow-hidden border-2 border-border hover:opacity-80 transition-opacity flex-shrink-0 no-toggle"
+                    aria-label={`Åpne ${appName}`}
+                  >
+                    <img 
+                      src={displayImage} 
+                      alt={appName || 'App'} 
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                );
+              }
+              return null;
+            })()}
           </div>
           
           {(appDescription || assignedTo || completedBy) && (
@@ -228,7 +237,8 @@ export function ChecklistItem({
         </div>
       </div>
 
-      {imageUrl && (
+      {/* Only show image thumbnail for non-app images */}
+      {imageUrl && !(appUrlIos || appUrlAndroid) && (
         <div className="mt-3">
           <img
             src={imageUrl}
